@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Check, Copy } from "lucide-react"
+import { OverlayScrollbarsComponent } from "overlayscrollbars-react"
 import { cn } from "@/lib/utils"
 
 interface CodeBlockProps {
@@ -39,11 +40,16 @@ export function CodeBlock({ html, code, className }: CodeBlockProps) {
         {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
         {copied ? "Copied" : "Copy"}
       </button>
-      <div
-        className="code-block max-h-[600px] overflow-auto p-5 text-sm leading-relaxed [&_pre]:bg-transparent! [&_pre]:outline-none"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: trusted build-time Shiki output
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      <OverlayScrollbarsComponent
+        defer
+        options={{ scrollbars: { theme: "os-theme-quebi", autoHide: "leave", autoHideDelay: 600 } }}
+        className="code-block max-h-[600px] p-5 text-sm leading-relaxed [&_pre]:bg-transparent! [&_pre]:outline-none"
+      >
+        <div
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: trusted build-time Shiki output
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      </OverlayScrollbarsComponent>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react"
 import { NavLink } from "react-router"
 import { LayoutGrid, Search } from "lucide-react"
+import { OverlayScrollbarsComponent } from "overlayscrollbars-react"
 import { cn } from "@/lib/utils"
 import { registry } from "@/registry"
 import { filterComponents, groupByCategory } from "@/registry/grouping"
@@ -45,7 +46,12 @@ export function ComponentSidebar({ onNavigate }: { onNavigate?: () => void }) {
       </NavLink>
 
       {/* Grouped nav */}
-      <nav className="mt-6 flex-1 space-y-6 overflow-y-auto pb-6">
+      <OverlayScrollbarsComponent
+        element="nav"
+        defer
+        options={{ scrollbars: { theme: "os-theme-quebi", autoHide: "leave", autoHideDelay: 600 } }}
+        className="mt-6 flex-1 space-y-6 pb-6"
+      >
         {groups.length === 0 ? (
           <p className="text-sm text-quebi-fg-subtle">No components match “{query}”.</p>
         ) : (
@@ -75,7 +81,7 @@ export function ComponentSidebar({ onNavigate }: { onNavigate?: () => void }) {
             </div>
           ))
         )}
-      </nav>
+      </OverlayScrollbarsComponent>
 
       <p className="border-cyan-500/10 border-t pt-4 text-xs text-quebi-fg-subtle">
         {total} component{total === 1 ? "" : "s"}

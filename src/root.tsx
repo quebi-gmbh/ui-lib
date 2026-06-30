@@ -1,11 +1,14 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router"
 import { Header } from "@/components/site-header"
 import { Footer } from "@/components/site-footer"
+import { BodyScrollbar } from "@/components/body-scrollbar"
 import "./main.css"
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="bg-quebi-bg">
+    // data-overlayscrollbars-initialize: hides the native scrollbar until
+    // OverlayScrollbars initializes on the body, preventing a flash.
+    <html lang="en" className="bg-quebi-bg" data-overlayscrollbars-initialize>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -15,8 +18,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body>
+      <body data-overlayscrollbars-initialize>
         {children}
+        <BodyScrollbar />
         <ScrollRestoration />
         <Scripts />
       </body>
