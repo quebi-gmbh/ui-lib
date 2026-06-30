@@ -75,3 +75,11 @@ See the [`add-component`](.claude/skills/add-component/SKILL.md) skill — it do
 source → meta → examples → register workflow, the quebi styling rules, and the self-contained
 dependency conventions. The static API and shadcn registry are generated automatically from the
 registry at build time (never hand-edit `public/api` or `public/r`).
+
+## License
+
+[MIT](LICENSE) © quebi GmbH. Use the components freely, commercially or otherwise.
+
+## Thanks
+
+Hosted for free on [GitHub Pages](https://pages.github.com/) — thank you, GitHub.

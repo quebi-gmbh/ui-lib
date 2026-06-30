@@ -17,6 +17,15 @@ export function Footer() {
         </a>
         <span aria-hidden>·</span>
         <a
+          href="https://github.com/quebi-gmbh/ui-lib/blob/main/LICENSE"
+          target="_blank"
+          rel="noreferrer"
+          className="hover:text-white"
+        >
+          MIT License
+        </a>
+        <span aria-hidden>·</span>
+        <a
           href="https://github.com/quebi-gmbh"
           target="_blank"
           rel="noreferrer"
@@ -26,7 +35,19 @@ export function Footer() {
         </a>
       </nav>
       <p className="mt-4 text-center text-xs text-quebi-fg-subtle">
-        © 2026 quebi GmbH · From Germany
+        © 2026 quebi GmbH · From Germany · Open source under MIT
+      </p>
+      <p className="mt-1 text-center text-xs text-quebi-fg-subtle">
+        Hosted for free on{" "}
+        <a
+          href="https://pages.github.com/"
+          target="_blank"
+          rel="noreferrer"
+          className="hover:text-white"
+        >
+          GitHub Pages
+        </a>{" "}
+        — thank you, GitHub.
       </p>
     </footer>
   )

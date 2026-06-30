@@ -2,6 +2,8 @@ import { Link } from "react-router"
 import { ArrowRight, Bot, Boxes, Copy } from "lucide-react"
 import { registry } from "@/registry"
 import { seo } from "@/lib/seo"
+import { CodeBlock } from "@/components/code-block"
+import { skillHighlighted, skillSource } from "@/registry/skill.generated"
 
 export function meta() {
   return seo({
@@ -161,12 +163,59 @@ function ForAgents() {
   )
 }
 
+function ClaudeSkill() {
+  return (
+    <section className="mx-auto w-full max-w-5xl px-6 py-24">
+      <div className="mx-auto max-w-quebi-content text-center">
+        <span className="quebi-eyebrow">Claude skill</span>
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          Teach Claude to use ui-lib
+        </h2>
+        <p className="mt-4 text-base leading-relaxed text-quebi-fg-muted">
+          Drop this skill into Claude Code and it will pull components from the live registry
+          instead of writing them from scratch — for any React project, not just this one.
+        </p>
+      </div>
+
+      <div className="mx-auto mt-10 max-w-3xl">
+        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-quebi-brand">Set it up</p>
+        <ol className="mb-8 space-y-2 text-sm leading-relaxed text-quebi-fg-muted">
+          <li>
+            <span className="text-white">1.</span> Save the skill below to{" "}
+            <code className="text-quebi-fg-subtle">.claude/skills/quebi-ui-lib/SKILL.md</code> in
+            your project (or <code className="text-quebi-fg-subtle">~/.claude/skills/</code> to make
+            it available everywhere).
+          </li>
+          <li>
+            <span className="text-white">2.</span> Or download it directly:{" "}
+            <a
+              href="/skills/quebi-ui-lib/SKILL.md"
+              className="text-quebi-brand hover:text-quebi-brand-hover"
+              download
+            >
+              SKILL.md
+            </a>
+            .
+          </li>
+          <li>
+            <span className="text-white">3.</span> Start a Claude Code session in your project — the
+            skill activates when you ask for a React component.
+          </li>
+        </ol>
+
+        <CodeBlock html={skillHighlighted} code={skillSource} />
+      </div>
+    </section>
+  )
+}
+
 export default function Home() {
   return (
     <>
       <Hero />
       <Features />
       <ForAgents />
+      <ClaudeSkill />
     </>
   )
 }
