@@ -1,0 +1,25 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks"
+import * as TableStories from "./table.stories"
+
+<Meta of={TableStories} name="Docs" />
+
+# Tables & data
+
+Prices live in tables. Numbers always **tabular, right-aligned, mono-spaced**,
+with the currency symbol sitting at the left.
+
+## Plans
+
+<Canvas of={TableStories.Plans} />
+
+## Rules
+
+- **Numerals.** Always `font-variant-numeric: tabular-nums` for prices. Align
+  the decimal with right-align and a consistent number of decimals. Currency
+  symbol stays tight against the number in body rows, detached in hero prices.
+- **Header.** `ink-50` background, `ink-500` text, 12px uppercase with
+  `0.08em` tracking.
+- **Rows.** Hover reveals `ink-50` background. Last row's bottom border is
+  suppressed so the rounded corner reads clean.
+- **Interactive actions.** Edit / inline actions sit in a trailing column
+  using `Button intent="ghost" size="sm"`.

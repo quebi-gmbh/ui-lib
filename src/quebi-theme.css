@@ -1,0 +1,76 @@
+/*
+ * quebi GmbH — Tailwind v4 theme (from the quebi-styleguide skill).
+ * Imported after "tailwindcss" in main.css. The @theme block registers
+ * tokens that Tailwind turns into utilities (bg-quebi-brand, font-sans,
+ * shadow-quebi-glow, rounded-quebi-md, max-w-quebi-content, etc.).
+ */
+
+@theme {
+  /* ---------------- Colors ---------------- */
+  --color-quebi-bg:           #030712;
+  --color-quebi-fg:           #ffffff;
+  --color-quebi-fg-muted:     #9ca3af;
+  --color-quebi-fg-subtle:    #6b7280;
+  --color-quebi-brand:        #2dd4a8;
+  --color-quebi-brand-hover:  #5eead4;
+
+  /* Tailwind also keeps its full default palette — cyan-500, amber-500, red-500,
+     purple-400 are still available as supporting hues, no need to redeclare. */
+
+  /* ---------------- Typography ---------------- */
+  /* Override the default font-sans stack so `font-sans` (Tailwind's default) is Outfit. */
+  --font-sans: "Outfit", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* ---------------- Radii ---------------- */
+  --radius-quebi-sm:   0.5rem;   /* 8px  — buttons, inputs */
+  --radius-quebi-md:   0.75rem;  /* 12px — cards */
+  --radius-quebi-lg:   1rem;     /* 16px — large surfaces */
+
+  /* ---------------- Shadows / glows ---------------- */
+  --shadow-quebi-glow:        0 0 20px rgb(45 212 168 / 0.15);
+  --shadow-quebi-glow-strong: 0 0 30px rgb(45 212 168 / 0.30);
+
+  /* ---------------- Container width ---------------- */
+  /* `--container-*` tokens become `max-w-*` utilities in v4. */
+  --container-quebi-content: 48rem;  /* matches max-w-3xl, just named */
+}
+
+/* ---------------- Custom utilities (v4 @utility syntax) ---------------- */
+
+/* The signature uppercase teal kicker. Use as `<span class="quebi-eyebrow">`. */
+@utility quebi-eyebrow {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-quebi-brand);
+}
+
+/* Hero grid overlay. Use as `<div class="bg-quebi-grid">`. */
+@utility bg-quebi-grid {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* The canonical centered section: `mx-auto w-full max-w-3xl px-6 py-24` */
+@utility quebi-section {
+  margin-inline: auto;
+  width: 100%;
+  max-width: var(--container-quebi-content);
+  padding-inline: 1.5rem;   /* px-6 */
+  padding-block: 6rem;      /* py-24 */
+}
+
+/* ---------------- Sensible base styles ---------------- */
+@layer base {
+  html {
+    background: var(--color-quebi-bg);
+    color: var(--color-quebi-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+}

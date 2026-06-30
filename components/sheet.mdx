@@ -1,0 +1,24 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks"
+import * as SheetStories from "./sheet.stories"
+
+<Meta of={SheetStories} name="Docs" />
+
+# Sheet
+
+Edge-anchored drawer for heavier workflows (editors, filter panels). Same
+surface styling as `Modal`: `bg-surface`, `border border-ink-100`, `shadow-4`.
+Backdrop: `ink-900/40`.
+
+## Right — edit flows
+
+<Canvas of={SheetStories.RightEdit} />
+
+Right-side sheets are the default for editors attached to a list or table.
+Autosave the fields — no explicit Save button, just a Close.
+
+## Bottom — filters
+
+<Canvas of={SheetStories.BottomFilter} />
+
+Bottom sheets for filter / quick-action flows. Always include an explicit
+Apply + Cancel pair; filters shouldn't autosave.

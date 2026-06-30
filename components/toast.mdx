@@ -1,0 +1,23 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks"
+import * as ToastStories from "./toast.stories"
+
+<Meta of={ToastStories} name="Docs" />
+
+# Toast
+
+Transient, non-blocking feedback. Default toast: `ink-900` bg, white text,
+`rounded-md`, `shadow-3`, 14px body.
+
+## Autosave
+
+<Canvas of={ToastStories.Autosave} />
+
+Replace explicit "Save" buttons on pricing / autosave fields with toasts.
+Include the timestamp in the copy (e.g. `Changes autosaved · 14:02`).
+
+## Status toasts
+
+<Canvas of={ToastStories.StatusToasts} />
+
+Success / Warning / Error / Info use the DS status ramps (100-weight bg
+paired with 600-weight text).

@@ -1,0 +1,43 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks"
+import * as FormStories from "./forms.stories"
+
+<Meta of={FormStories} name="Docs" />
+
+# Forms & inputs
+
+Inputs are the heart of Cellestial — every plan, device, and bundle is priced
+through them. They must feel **instant, forgiving, and numerate.**
+
+## Text, number, select
+
+<Canvas of={FormStories.TextNumberSelect} />
+
+- **Field stack.** `Label` (13px / 600 / ink-800) → control → `Description`
+  (12px / ink-500), gap 6px between siblings.
+- **Input.** 14px body text, `py-2.5 px-3`, `ink-200` border, `rounded-sm`.
+  Hover darkens to `ink-300`; focus shifts to `brand-500` border + a 4px
+  `brand-100` ring.
+- **Numeric inputs** should add `font-mono tabular-nums` so decimals align.
+- **Currency / unit addons** use `<InputAddons>` with `<InputPrefix>` / `<InputSuffix>`:
+  ink-50 pill attached to the input on the matching side.
+
+## Error & helper states
+
+<Canvas of={FormStories.ErrorAndHelper} />
+
+- Set `isInvalid` on the `TextField` — the input shifts to a `danger-500`
+  border, the focus ring becomes `danger-100`, and `<FieldError>` renders in
+  `danger-600`.
+- `<Switch>` follows the spec toggle: 44×24 pill, `ink-200` off, `brand-500`
+  on, thumb slides with `ease-spring` over 200ms.
+
+## Checkbox, radio, segmented
+
+<Canvas of={FormStories.CheckboxRadioSegmented} />
+
+- **Checkbox / radio.** 18px squares (`rounded-xs`) / circles, `ink-300`
+  border, `surface` bg. Selected fills to `brand-500` with a white glyph —
+  checkmark for checkboxes, 8px dot for radios.
+- **Segmented.** `ink-50` track with 3px padding, active cell is `surface` +
+  `shadow-1`. Used for mutually exclusive visual-only toggles (e.g. how a price
+  is shown to the customer).

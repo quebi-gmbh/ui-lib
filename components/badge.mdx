@@ -1,0 +1,32 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks"
+import * as BadgeStories from "./badge.stories"
+
+<Meta of={BadgeStories} name="Docs" />
+
+# Badge
+
+Pill-shaped indicator, 12px `font-semibold`, `px-2 py-[3px]`. Every intent
+pairs a 100-weight background with a matching 700/600-weight text.
+
+## Variants
+
+<Canvas of={BadgeStories.Variants} />
+
+- **Neutral** — everyday labels (plan tier, category, counts).
+- **Brand** — feature highlights, "Most popular" pills.
+- **Accent** — "Best value" / deal callouts. Pairs with violet only.
+- **Success / Warning / Danger / Info** — system-feedback only.
+- **AI match** — signature gradient, reserved for AI match surfaces.
+- **Outline** — archived / de-emphasized labels.
+
+## With dot
+
+<Canvas of={BadgeStories.WithDot} />
+
+For live-state indicators, prepend a 6px colored dot glyph (inherits text
+color). Use sparingly — when "Live" / "Draft" / "Overdue" status is the
+primary thing the reader needs to see.
+
+## Playground
+
+<Canvas of={BadgeStories.Playground} />

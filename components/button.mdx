@@ -1,0 +1,89 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks"
+import * as ButtonStories from "./button.stories"
+
+<Meta of={ButtonStories} name="Docs" />
+
+# Buttons
+
+Five variants × four sizes. One primary action per screen. Outline for secondary,
+ghost for tertiary. Danger is reserved for destructive, irreversible actions.
+
+## Variants
+
+<Canvas of={ButtonStories.Variants} />
+
+## Sizes
+
+<Canvas of={ButtonStories.Sizes} />
+
+## Kiosk size
+
+<Canvas of={ButtonStories.KioskSize} />
+
+Kiosk buttons are at least 64px tall and 220px wide. Never use ghost or link
+styles on kiosk — every tap target must be clearly tappable.
+
+## With icons
+
+<Canvas of={ButtonStories.WithIcons} />
+
+## Do / Don't
+
+<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
+  <div
+    style={{
+      border: "1px solid var(--color-ink-100)",
+      borderTop: "3px solid var(--color-success-500)",
+      borderRadius: 12,
+      padding: 16,
+      background: "var(--color-surface)",
+    }}
+  >
+    <div
+      style={{
+        fontSize: 11,
+        fontWeight: 700,
+        textTransform: "uppercase",
+        letterSpacing: "0.1em",
+        color: "var(--color-success-600)",
+        marginBottom: 8,
+      }}
+    >
+      Do
+    </div>
+    <p style={{ fontSize: 14, color: "var(--color-ink-800)", margin: 0 }}>
+      Lead buttons with verbs: "Publish changes", "Add device", "Run match". One violet CTA per
+      screen.
+    </p>
+  </div>
+  <div
+    style={{
+      border: "1px solid var(--color-ink-100)",
+      borderTop: "3px solid var(--color-danger-500)",
+      borderRadius: 12,
+      padding: 16,
+      background: "var(--color-surface)",
+    }}
+  >
+    <div
+      style={{
+        fontSize: 11,
+        fontWeight: 700,
+        textTransform: "uppercase",
+        letterSpacing: "0.1em",
+        color: "var(--color-danger-600)",
+        marginBottom: 8,
+      }}
+    >
+      Don't
+    </div>
+    <p style={{ fontSize: 14, color: "var(--color-ink-800)", margin: 0 }}>
+      "OK", "Submit", or buttons in multiple brand colors. Never two violet buttons competing for
+      attention.
+    </p>
+  </div>
+</div>
+
+## Playground
+
+<Canvas of={ButtonStories.Playground} />

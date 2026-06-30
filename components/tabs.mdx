@@ -1,0 +1,20 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks"
+import * as TabsStories from "./tabs.stories"
+
+<Meta of={TabsStories} name="Docs" />
+
+# Tabs
+
+Used inside editors to switch between related sections of the same surface.
+**Max 5 tabs** — more and you need a sub-page or a sidebar.
+
+<Canvas of={TabsStories.Default} />
+
+## Rules
+
+- **Typography.** `font-body`, 600, 14px. Inactive tabs use `ink-500`; the
+  active tab shifts to `ink-900`.
+- **Indicator.** 3px `brand-500` underline on the active tab, sitting at the
+  list's bottom border (`-bottom-[1px]`) with a subtle 2px radius.
+- **Spacing.** 24px between tabs (8px gap + 16px margin-right).
+- **Hover.** No hover background — the tabs are quiet until selected.
