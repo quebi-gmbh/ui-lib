@@ -1,43 +1,40 @@
-import { useEffect, useState } from "react"
-import { Link, useParams } from "react-router-dom"
+import { Link, data, useParams } from "react-router"
 import { ChevronRight } from "lucide-react"
 import { getComponent } from "@/registry"
+import { componentSources } from "@/registry/sources.generated"
 import { CodeBlock } from "@/components/code-block"
-import NotFound from "./NotFound"
+import { seo } from "@/lib/seo"
+import type { Route } from "./+types/components.$slug"
 
-interface ComponentSource {
-  source: string
-  highlighted: string
+export function loader({ params }: Route.LoaderArgs) {
+  const component = getComponent(params.slug)
+  if (!component) throw data("Not found", { status: 404 })
+  // Return only serializable fields for meta + prerender; the live examples are
+  // read from the in-memory registry in the component (render fns aren't serializable).
+  return {
+    slug: component.slug,
+    name: component.name,
+    description: component.description,
+    category: component.category,
+  }
 }
 
-/** Fetch the build-time API artifact with raw + highlighted source. */
-function useComponentSource(slug: string | undefined) {
-  const [data, setData] = useState<ComponentSource | null>(null)
-
-  useEffect(() => {
-    if (!slug) return
-    let active = true
-    setData(null)
-    fetch(`/api/components/${slug}.json`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((json) => {
-        if (active && json) setData({ source: json.source, highlighted: json.highlighted })
-      })
-      .catch(() => {})
-    return () => {
-      active = false
-    }
-  }, [slug])
-
-  return data
+export function meta({ loaderData: d }: Route.MetaArgs) {
+  if (!d) return seo({ title: "Not found", description: "Component not found.", path: "/components" })
+  return seo({
+    title: d.name,
+    description: d.description,
+    path: `/components/${d.slug}`,
+    image: `/og/${d.slug}.png`,
+  })
 }
 
 export default function ComponentDetail() {
   const { slug } = useParams()
   const component = slug ? getComponent(slug) : undefined
-  const sourceData = useComponentSource(component?.slug)
+  const sourceData = component ? componentSources[component.slug] : undefined
 
-  if (!component) return <NotFound />
+  if (!component) return null
 
   return (
     <div>

@@ -29,13 +29,14 @@ jobs:
 
       - run: bun run build
 
-      # SPA fallback: GitHub Pages serves 404.html for unknown paths.
-      # Copying index.html lets client-side routes (e.g. /components) work on reload.
-      - run: cp dist/index.html dist/404.html
+      # GitHub Pages serves 404.html for any unknown path. React Router emits a
+      # __spa-fallback.html that hydrates any route — use it so non-prerendered
+      # paths still resolve client-side.
+      - run: cp build/client/__spa-fallback.html build/client/404.html
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: build/client
 
   deploy:
     needs: build

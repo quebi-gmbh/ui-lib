@@ -1,10 +1,20 @@
-import { Link } from "react-router-dom"
-import { ArrowRight, Copy, Bot, Boxes } from "lucide-react"
+import { Link } from "react-router"
+import { ArrowRight, Bot, Boxes, Copy } from "lucide-react"
+import { registry } from "@/registry"
+import { seo } from "@/lib/seo"
+
+export function meta() {
+  return seo({
+    title: "quebi ui-lib — React component library",
+    exactTitle: true,
+    description: `A React component library of ${registry.length} accessible components styled with the quebi design system. Copy-paste source, no install required. Built for humans and AI agents.`,
+    path: "/",
+  })
+}
 
 function Hero() {
   return (
     <header className="relative overflow-hidden bg-quebi-bg">
-      {/* Layer 1 — gradient circles */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-40 left-1/2 z-[1] h-[400px] w-[400px] -translate-x-1/2 rounded-full bg-quebi-brand/40 blur-3xl"
@@ -13,10 +23,8 @@ function Hero() {
         aria-hidden="true"
         className="pointer-events-none absolute bottom-0 right-0 z-[1] h-[300px] w-[300px] rounded-full bg-purple-400/20 blur-3xl"
       />
-      {/* Layer 2 — grid overlay */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-quebi-grid" />
 
-      {/* Foreground */}
       <div className="relative z-10 mx-auto flex min-h-[80vh] max-w-quebi-content flex-col items-center justify-center px-6 py-32 text-center">
         <span className="quebi-eyebrow mb-4">React component library</span>
         <h1 className="text-5xl font-bold tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl">
@@ -63,7 +71,7 @@ const features = [
   },
   {
     icon: Boxes,
-    eyebrow: "95 components",
+    eyebrow: `${registry.length} components`,
     title: "Batteries included",
     body: "Charts, forms, overlays, navigation, data display — plus Conform-bound variants for every form element.",
   },

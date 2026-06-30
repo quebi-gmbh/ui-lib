@@ -1,13 +1,10 @@
 import { fileURLToPath } from "node:url"
-import { defineConfig } from "vite"
-import react from "@vitejs/plugin-react"
+import { reactRouter } from "@react-router/dev/vite"
 import tailwindcss from "@tailwindcss/vite"
+import { defineConfig } from "vite"
 
-// Deployed to a custom domain (ui-lib.quebi.de), so base is the root path.
-// If you ever serve from a repo subpath instead, set base to "/<repo>/".
 export default defineConfig({
-  base: "/",
-  plugins: [react(), tailwindcss()],
+  plugins: [tailwindcss(), reactRouter()],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
