@@ -29,3 +29,5 @@ public/sitemap.xml
 public/robots.txt
 public/og/
 .vite-react-ssg-temp/
+src/registry/skill.generated.ts
+public/skills/
