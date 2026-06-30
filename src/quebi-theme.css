@@ -74,3 +74,20 @@
     text-rendering: optimizeLegibility;
   }
 }
+
+/* ---------------- Scrollbars (OverlayScrollbars) ---------------- */
+/* Quebi-themed overlay scrollbars: thin, rounded, cyan-tinted thumb on a
+   transparent track — matching the hairline borders used across the UI.
+   Applied via options.scrollbars.theme: "os-theme-quebi". */
+.os-theme-quebi {
+  --os-size: 12px;
+  --os-padding-perpendicular: 3px;
+  --os-padding-axis: 3px;
+  --os-track-bg: transparent;
+  --os-track-bg-hover: transparent;
+  --os-handle-border-radius: 9999px;
+  --os-handle-bg: rgb(6 182 212 / 0.25); /* cyan-500/25 */
+  --os-handle-bg-hover: rgb(6 182 212 / 0.4);
+  --os-handle-bg-active: rgb(45 212 168 / 0.6); /* quebi-brand on drag */
+  --os-handle-min-size: 32px;
+}
