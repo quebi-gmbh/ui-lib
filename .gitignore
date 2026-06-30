@@ -18,3 +18,14 @@ pnpm-debug.log*
 public/api/
 public/r/
 public/llms.txt
+
+# Generated source-bake module (emitted by generate-api)
+src/registry/sources.generated.ts
+
+# React Router framework mode
+.react-router/
+build/
+public/sitemap.xml
+public/robots.txt
+public/og/
+.vite-react-ssg-temp/

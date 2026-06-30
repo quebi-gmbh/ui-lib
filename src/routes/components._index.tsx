@@ -1,7 +1,16 @@
-import { Link } from "react-router-dom"
+import { Link } from "react-router"
 import { ArrowRight } from "lucide-react"
 import { registry } from "@/registry"
 import { groupByCategory } from "@/registry/grouping"
+import { seo } from "@/lib/seo"
+
+export function meta() {
+  return seo({
+    title: "Components",
+    description: `Browse ${registry.length} accessible React components styled with the quebi design system — buttons, forms, overlays, charts, navigation, and more. Copy-paste source.`,
+    path: "/components",
+  })
+}
 
 export default function Components() {
   const groups = groupByCategory(registry)
