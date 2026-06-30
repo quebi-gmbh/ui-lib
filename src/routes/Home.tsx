@@ -97,11 +97,68 @@ function Features() {
   )
 }
 
+function ForAgents() {
+  const endpoints = [
+    { url: "/llms.txt", desc: "Agent entry point — how to discover and pull components" },
+    { url: "/api/index.json", desc: "Full catalog: every component, metadata, dependencies" },
+    { url: "/api/components/<name>.json", desc: "One component: metadata + raw source" },
+    { url: "/r/<name>.json", desc: "shadcn-compatible registry item" },
+  ]
+  return (
+    <section className="mx-auto w-full max-w-5xl px-6 py-24">
+      <div className="mx-auto max-w-quebi-content text-center">
+        <span className="quebi-eyebrow">For AI agents</span>
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          Built to be pulled by agents
+        </h2>
+        <p className="mt-4 text-base leading-relaxed text-quebi-fg-muted">
+          Every component is published as a static, fetchable API. Point your coding agent at the
+          endpoints below — no scraping, no auth.
+        </p>
+      </div>
+
+      <div className="mx-auto mt-10 max-w-2xl">
+        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-quebi-brand">
+          Add a component with the shadcn CLI
+        </p>
+        <pre className="overflow-x-auto rounded-quebi-md border border-cyan-500/10 bg-quebi-bg p-4 text-sm text-white">
+          <code>npx shadcn@latest add https://ui-lib.quebi.de/r/button.json</code>
+        </pre>
+
+        <p className="mt-8 mb-3 text-xs font-medium uppercase tracking-wider text-quebi-brand">
+          Or fetch the API directly
+        </p>
+        <ul className="divide-y divide-cyan-500/10 overflow-hidden rounded-quebi-md border border-cyan-500/10">
+          {endpoints.map((e) => (
+            <li key={e.url} className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:gap-4">
+              <a
+                href={e.url.includes("<") ? "/api/index.json" : e.url}
+                className="shrink-0 font-mono text-sm text-quebi-brand transition-colors duration-200 hover:text-quebi-brand-hover"
+              >
+                {e.url}
+              </a>
+              <span className="text-sm text-quebi-fg-muted">{e.desc}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 text-center text-sm text-quebi-fg-subtle">
+          Start with{" "}
+          <a href="/llms.txt" className="text-quebi-brand hover:text-quebi-brand-hover">
+            llms.txt
+          </a>{" "}
+          — it documents the whole workflow for agents.
+        </p>
+      </div>
+    </section>
+  )
+}
+
 export default function Home() {
   return (
     <>
       <Hero />
       <Features />
+      <ForAgents />
     </>
   )
 }
