@@ -26,7 +26,7 @@ function el(type: string, props: Record<string, unknown>, children?: unknown) {
   return { type, props: { ...props, children } }
 }
 
-function card(eyebrow: string, title: string, subtitle: string) {
+function card(eyebrow: string, title: string, subtitle: string, logoSrc: string) {
   return el(
     "div",
     {
@@ -42,20 +42,15 @@ function card(eyebrow: string, title: string, subtitle: string) {
       },
     },
     [
-      // top: brand wordmark
-      el("div", { style: { display: "flex", alignItems: "center", gap: "16px" } }, [
-        el("div", {
-          style: { width: "28px", height: "28px", borderRadius: "9999px", backgroundColor: BRAND },
-        }),
-        el("div", { style: { fontSize: "30px", fontWeight: 700, color: FG } }, "quebi ui-lib"),
-      ]),
+      // top: the real quebi logo (viewBox 346×100 → keep aspect ratio)
+      el("img", { src: logoSrc, width: 173, height: 50 }),
       // middle: eyebrow + title
-      el("div", { style: { display: "flex", flexDirection: "column", gap: "12px" } }, [
+      el("div", { style: { display: "flex", flexDirection: "column", gap: "16px" } }, [
         el(
           "div",
           {
             style: {
-              fontSize: "26px",
+              fontSize: "34px",
               fontWeight: 700,
               letterSpacing: "0.08em",
               textTransform: "uppercase",
@@ -71,7 +66,7 @@ function card(eyebrow: string, title: string, subtitle: string) {
         ),
       ]),
       // bottom: subtitle
-      el("div", { style: { fontSize: "30px", color: MUTED } }, subtitle),
+      el("div", { style: { fontSize: "38px", color: MUTED } }, subtitle),
     ],
   )
 }
@@ -81,6 +76,14 @@ type Fonts = Parameters<typeof satori>[1]["fonts"]
 async function render(node: unknown, fonts: Fonts): Promise<Buffer> {
   const svg = await satori(node as Parameters<typeof satori>[0], { width: 1200, height: 630, fonts })
   return new Resvg(svg).render().asPng()
+}
+
+/** Trim to a word boundary near maxLen, adding an ellipsis if cut. */
+function truncate(text: string, maxLen: number): string {
+  if (text.length <= maxLen) return text
+  const cut = text.slice(0, maxLen)
+  const lastSpace = cut.lastIndexOf(" ")
+  return `${cut.slice(0, lastSpace > 0 ? lastSpace : maxLen).trimEnd()}…`
 }
 
 async function loadFont(file: string): Promise<ArrayBuffer> {
@@ -94,6 +97,11 @@ async function main() {
     { name: "Outfit", data: await loadFont("Outfit-700.ttf"), weight: 700, style: "normal" },
   ]
 
+  // The real quebi logo as a data-URI so satori renders it via resvg (handles
+  // the SVG mask the logo uses).
+  const logoSvg = await readFile(join(ROOT, "public/quebi-logo.svg"), "utf8")
+  const logo = `data:image/svg+xml;base64,${Buffer.from(logoSvg).toString("base64")}`
+
   await rm(OG_OUT, { recursive: true, force: true })
   await mkdir(OG_OUT, { recursive: true })
 
@@ -101,7 +109,7 @@ async function main() {
   await writeFile(
     join(OG_OUT, "default.png"),
     await render(
-      card("React component library", "ui-lib", "Copy-paste source, no install required."),
+      card("React component library", "ui-lib", "Copy-paste source, no install required.", logo),
       fonts,
     ),
   )
@@ -110,7 +118,7 @@ async function main() {
   for (const m of metaRegistry) {
     await writeFile(
       join(OG_OUT, `${m.slug}.png`),
-      await render(card(m.category, m.name, m.description.slice(0, 90)), fonts),
+      await render(card(m.category, m.name, truncate(m.description, 80), logo), fonts),
     )
   }
 
