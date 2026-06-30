@@ -1,0 +1,23 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks"
+import * as ModalStories from "./modal.stories"
+
+<Meta of={ModalStories} name="Docs" />
+
+# Modal
+
+Centered overlay dialog. `rounded-2xl` (32px) surface, `border border-ink-100`,
+`shadow-4`. Backdrop: `ink-900/40` with a subtle blur.
+
+## Confirm
+
+<Canvas of={ModalStories.Confirm} />
+
+Destructive actions use `intent="danger"` on the confirm button and an
+explicit description of what the action undoes.
+
+## Form
+
+<Canvas of={ModalStories.Form} />
+
+Lightweight data-entry flows. Keep to one purpose per modal — for anything
+multi-step, use a dedicated page or `Sheet`.

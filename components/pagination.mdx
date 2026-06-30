@@ -1,0 +1,116 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks"
+import * as PaginationStories from "./pagination.stories"
+
+<Meta of={PaginationStories} name="Docs" />
+
+# Pagination
+
+Pagination is **navigation chrome**, not action. It lives under long listings
+(devices, plans, audit log, customer requests) and lets the user move through
+pages without leaving the table's context.
+
+It intentionally does **not** reuse `Button`. Page numbers are not buttons in
+the product-decision sense — they're a row of locations. Using the heavy
+button styling pulled the user's eye away from the table rows and made the
+current page hard to spot among a crowd of outlines. Pagination ships its own
+compact, ink-only styling instead.
+
+## Default
+
+<Canvas of={PaginationStories.Default} />
+
+## At the start / end
+
+When the user can't move further back or forward, the corresponding
+First / Previous or Next / Last controls drop their hover affordance and
+dim to `ink-300`. They stay visible so the row never reflows, but they don't
+invite a click.
+
+<Canvas of={PaginationStories.AtStart} />
+<Canvas of={PaginationStories.AtEnd} />
+
+## Few pages
+
+Under 8 pages, every page renders without a gap. No ellipsis, no truncation.
+
+<Canvas of={PaginationStories.FewPages} />
+
+## Rules
+
+- **Height.** Every target is 32px tall (admin touch target minimum).
+- **Radius.** `rounded-xs` (4px) on every target and the current-page chip.
+- **Type.** `font-body`, 600, 13px, `tabular-nums` on the digits so the row
+  doesn't reflow between pages 9 and 10.
+- **Current page.** Filled `bg-brand-500` + white — the single loud chip in
+  the row. Using the primary brand color here (rather than neutral ink) makes
+  the user's location unmistakable against a busy table.
+- **Other pages.** `text-ink-700`, no border. Hover fills `bg-brand-50` and
+  shifts to `text-brand-700` — high enough contrast to feel tactile without
+  competing with the active chip.
+- **Nav controls.** 32px squares with a 1px `ink-200` border. Hover picks up
+  the brand treatment: `border-brand-500`, `bg-brand-50`, `text-brand-700`.
+  Disabled (no `href`) loses hover and dims to `ink-300`.
+- **Ellipsis.** `ink-500`, non-interactive, same 32px footprint so spacing
+  stays on the grid.
+- **Focus.** 3px `brand-200` outline with a 2px offset — matches the rest of
+  the system.
+- **No emphasis animation.** No hover lift, no colour pulse. Pagination is
+  plumbing; don't draw attention to it.
+
+## Do / Don't
+
+<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16 }}>
+  <div
+    style={{
+      border: "1px solid var(--color-ink-100)",
+      borderTop: "3px solid var(--color-success-500)",
+      borderRadius: 12,
+      padding: 16,
+      background: "var(--color-surface)",
+    }}
+  >
+    <div
+      style={{
+        fontSize: 11,
+        fontWeight: 700,
+        textTransform: "uppercase",
+        letterSpacing: "0.1em",
+        color: "var(--color-success-600)",
+        marginBottom: 8,
+      }}
+    >
+      Do
+    </div>
+    <p style={{ fontSize: 14, color: "var(--color-ink-800)", margin: 0 }}>
+      Keep pagination under the table it paginates. Let the brand-500 chip
+      be the single loud element — everything else stays quiet.
+    </p>
+  </div>
+  <div
+    style={{
+      border: "1px solid var(--color-ink-100)",
+      borderTop: "3px solid var(--color-danger-500)",
+      borderRadius: 12,
+      padding: 16,
+      background: "var(--color-surface)",
+    }}
+  >
+    <div
+      style={{
+        fontSize: 11,
+        fontWeight: 700,
+        textTransform: "uppercase",
+        letterSpacing: "0.1em",
+        color: "var(--color-danger-600)",
+        marginBottom: 8,
+      }}
+    >
+      Don't
+    </div>
+    <p style={{ fontSize: 14, color: "var(--color-ink-800)", margin: 0 }}>
+      Use `Button` to render page numbers — heavy borders crowd the row and
+      bury the current page. Don't reuse the heavier button hover states
+      either; pagination hovers stay compact and subtle.
+    </p>
+  </div>
+</div>

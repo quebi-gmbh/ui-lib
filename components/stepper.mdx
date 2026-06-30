@@ -1,0 +1,27 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks"
+import * as StepperStories from "./stepper.stories"
+
+<Meta of={StepperStories} name="Docs" />
+
+# Stepper
+
+Two variants: **admin** (for editors and multi-step forms) and **kiosk** (for
+the matching wizard footer).
+
+## Admin
+
+<Canvas of={StepperStories.Admin} />
+
+- 32px bullets with labels.
+- States: `upcoming` (ink-100 bg), `done` (brand-500 white), `active` (surface +
+  brand-500 border with a 4px brand-100 ring).
+- The line **after** a done step turns `brand-300` to read as progress fill.
+
+## Kiosk
+
+<Canvas of={StepperStories.Kiosk} />
+
+- 28px bullets, no labels.
+- Done shows `✓`; active keeps the step number with the brand ring.
+- Lives in the kiosk footer on every wizard step.
+- **Never auto-advance a kiosk wizard** — the customer must tap Continue.

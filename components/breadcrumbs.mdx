@@ -1,0 +1,22 @@
+import { Canvas, Meta } from "@storybook/addon-docs/blocks"
+import * as BreadcrumbsStories from "./breadcrumbs.stories"
+
+<Meta of={BreadcrumbsStories} name="Docs" />
+
+# Breadcrumbs
+
+14px trail. Intermediate crumbs in `ink-500`, current crumb in `ink-900
+font-semibold`. Separator glyph (chevron or slash) uses `ink-300`.
+
+## Default
+
+<Canvas of={BreadcrumbsStories.Default} />
+
+Use at the top of detail pages so users can hop back to the parent list.
+
+## Slash separator
+
+<Canvas of={BreadcrumbsStories.Slash} />
+
+Use `separator="slash"` for narrower crumb trails or when stacking crumbs next
+to a page title.
