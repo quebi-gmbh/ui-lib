@@ -2,6 +2,7 @@ import type { ComponentMeta } from "./types"
 import { areaChartMeta } from "./area-chart.meta"
 import { asyncMultipleSelectMeta } from "./async-multiple-select.meta"
 import { asyncSelectMeta } from "./async-select.meta"
+import { asyncTableMeta } from "./async-table.meta"
 import { avatarMeta } from "./avatar.meta"
 import { badgeMeta } from "./badge.meta"
 import { barChartMeta } from "./bar-chart.meta"
@@ -113,6 +114,7 @@ export const metaRegistry: ComponentMeta[] = [
   areaChartMeta,
   asyncMultipleSelectMeta,
   asyncSelectMeta,
+  asyncTableMeta,
   avatarMeta,
   badgeMeta,
   barChartMeta,
