@@ -2,6 +2,7 @@ import type { ComponentEntry } from "./types"
 import { metaRegistry } from "./meta"
 import { areaChartExamples } from "./area-chart.examples"
 import { asyncMultipleSelectExamples } from "./async-multiple-select.examples"
+import { asyncSelectExamples } from "./async-select.examples"
 import { avatarExamples } from "./avatar.examples"
 import { badgeExamples } from "./badge.examples"
 import { barChartExamples } from "./bar-chart.examples"
@@ -26,6 +27,7 @@ import { colorWheelExamples } from "./color-wheel.examples"
 import { comboBoxExamples } from "./combo-box.examples"
 import { commandMenuExamples } from "./command-menu.examples"
 import { conformAsyncMultipleSelectExamples } from "./conform-async-multiple-select.examples"
+import { conformAsyncSelectExamples } from "./conform-async-select.examples"
 import { conformCheckboxExamples } from "./conform-checkbox.examples"
 import { conformColorPickerExamples } from "./conform-color-picker.examples"
 import { conformColorSwatchPickerExamples } from "./conform-color-swatch-picker.examples"
@@ -111,6 +113,7 @@ import { treeExamples } from "./tree.examples"
 const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "area-chart": areaChartExamples,
   "async-multiple-select": asyncMultipleSelectExamples,
+  "async-select": asyncSelectExamples,
   "avatar": avatarExamples,
   "badge": badgeExamples,
   "bar-chart": barChartExamples,
@@ -135,6 +138,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "combo-box": comboBoxExamples,
   "command-menu": commandMenuExamples,
   "conform-async-multiple-select": conformAsyncMultipleSelectExamples,
+  "conform-async-select": conformAsyncSelectExamples,
   "conform-checkbox": conformCheckboxExamples,
   "conform-color-picker": conformColorPickerExamples,
   "conform-color-swatch-picker": conformColorSwatchPickerExamples,
