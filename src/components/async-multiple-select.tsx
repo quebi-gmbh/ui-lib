@@ -82,6 +82,7 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
   const optionId = (key: string) => `${reactId}-opt-${key}`
 
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const popoverRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -158,6 +159,24 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
     if (!open || !activeKey) return
     document.getElementById(`${reactId}-opt-${activeKey}`)?.scrollIntoView({ block: "nearest" })
   }, [activeKey, open, reactId])
+
+  // Close on outside press. The popover is non-modal (so focus stays in the
+  // input), which means react-aria's usePopover runs with isDismissable=false
+  // and won't dismiss on outside interaction — so we own that here. Capture
+  // phase runs before any child handler that might stop propagation.
+  useEffect(() => {
+    if (!open) return
+    const onPointerDown = (e: PointerEvent) => {
+      const target = e.target as Node | null
+      if (!target) return
+      if (containerRef.current?.contains(target)) return
+      if (popoverRef.current?.contains(target)) return
+      setOpen(false)
+      setActiveKey(null)
+    }
+    document.addEventListener("pointerdown", onPointerDown, true)
+    return () => document.removeEventListener("pointerdown", onPointerDown, true)
+  }, [open])
 
   const moveActive = (dir: 1 | -1) => {
     const items = list.items
@@ -295,6 +314,7 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
       </div>
 
       <PopoverContent
+        ref={popoverRef}
         triggerRef={containerRef}
         isOpen={open && !isDisabled}
         onOpenChange={handleOpenChange}
