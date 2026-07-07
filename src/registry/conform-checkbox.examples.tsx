@@ -1,22 +1,26 @@
 import { useForm } from "@conform-to/react"
-import { parseWithZod } from "@conform-to/zod/v4"
-import { z } from "zod"
+import { parseWithValibot } from "@conform-to/valibot"
+import * as v from "valibot"
 import { ConformCheckbox } from "@/components/conform-checkbox"
 import { Button } from "@/components/button"
 import type { ComponentExample } from "./types"
 
-const schema = z.object({
+const schema = v.object({
   // A checkbox submits "on" when checked and nothing when unchecked. Coerce to
   // boolean, then require it to be true.
-  terms: z
-    .preprocess((v) => v === "on" || v === true, z.boolean())
-    .refine((v) => v, "You must accept the terms"),
+  terms: v.pipe(
+    // An unchecked box submits nothing, so default the missing key to false —
+    // otherwise valibot reports a generic "missing key" instead of the message below.
+    v.optional(v.unknown(), () => false),
+    v.transform((value) => value === "on" || value === true),
+    v.check((checked) => checked, "You must accept the terms"),
+  ),
 })
 
 const TermsForm = () => {
   const [form, fields] = useForm({
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema })
+      return parseWithValibot(formData, { schema })
     },
   })
 

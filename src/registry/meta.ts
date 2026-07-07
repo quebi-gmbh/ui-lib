@@ -1,5 +1,6 @@
 import type { ComponentMeta } from "./types"
 import { areaChartMeta } from "./area-chart.meta"
+import { asyncMultipleSelectMeta } from "./async-multiple-select.meta"
 import { avatarMeta } from "./avatar.meta"
 import { badgeMeta } from "./badge.meta"
 import { barChartMeta } from "./bar-chart.meta"
@@ -23,12 +24,14 @@ import { colorThumbMeta } from "./color-thumb.meta"
 import { colorWheelMeta } from "./color-wheel.meta"
 import { comboBoxMeta } from "./combo-box.meta"
 import { commandMenuMeta } from "./command-menu.meta"
+import { conformAsyncMultipleSelectMeta } from "./conform-async-multiple-select.meta"
 import { conformCheckboxMeta } from "./conform-checkbox.meta"
 import { conformColorPickerMeta } from "./conform-color-picker.meta"
 import { conformColorSwatchPickerMeta } from "./conform-color-swatch-picker.meta"
 import { conformDateFieldMeta } from "./conform-date-field.meta"
 import { conformDatePickerMeta } from "./conform-date-picker.meta"
 import { conformFieldMeta } from "./conform-field.meta"
+import { conformMultipleSelectMeta } from "./conform-multiple-select.meta"
 import { conformNumberFieldMeta } from "./conform-number-field.meta"
 import { conformSelectMeta } from "./conform-select.meta"
 import { conformStoragePickerMeta } from "./conform-storage-picker.meta"
@@ -106,6 +109,7 @@ import { treeMeta } from "./tree.meta"
 
 export const metaRegistry: ComponentMeta[] = [
   areaChartMeta,
+  asyncMultipleSelectMeta,
   avatarMeta,
   badgeMeta,
   barChartMeta,
@@ -129,12 +133,14 @@ export const metaRegistry: ComponentMeta[] = [
   colorWheelMeta,
   comboBoxMeta,
   commandMenuMeta,
+  conformAsyncMultipleSelectMeta,
   conformCheckboxMeta,
   conformColorPickerMeta,
   conformColorSwatchPickerMeta,
   conformDateFieldMeta,
   conformDatePickerMeta,
   conformFieldMeta,
+  conformMultipleSelectMeta,
   conformNumberFieldMeta,
   conformSelectMeta,
   conformStoragePickerMeta,

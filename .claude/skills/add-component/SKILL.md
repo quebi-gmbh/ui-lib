@@ -124,9 +124,9 @@ Conform variants wrap a base form component and bind it to a Conform field. Rule
   `src/registry/grouping.ts` — you do not set category to "Conform".
 - **Import the base** via `@/components/<base-slug>` so it becomes a `registryDependency`.
 - **Field prop typing**: use `field: FieldMetadata<any, any, string[]>` — checkbox-style fields
-  surface as `boolean | "on"` depending on the zod schema; only name/default/required/errors are used.
-- The example should use a real `useForm` + zod (`@conform-to/zod/v4`, `parseWithZod`) so validation
-  is demonstrable. See `src/registry/conform-checkbox.examples.tsx`.
+  surface as `boolean | "on"` depending on the valibot schema; only name/default/required/errors are used.
+- The example should use a real `useForm` + valibot (`@conform-to/valibot`, `parseWithValibot`, `import * as v from "valibot"`)
+  so validation is demonstrable. See `src/registry/conform-checkbox.examples.tsx`.
 
 ## Verification checklist
 

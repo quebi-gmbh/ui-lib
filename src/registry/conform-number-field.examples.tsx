@@ -1,19 +1,23 @@
 import { useForm } from "@conform-to/react"
-import { parseWithZod } from "@conform-to/zod/v4"
-import { z } from "zod"
+import { parseWithValibot } from "@conform-to/valibot"
+import * as v from "valibot"
 import { Button } from "@/components/button"
 import { ConformNumberField } from "@/components/conform-number-field"
 import type { ComponentExample } from "./types"
 
-const schema = z.object({
-  // A number field submits a string; coerce it, then require it in range.
-  quantity: z.number({ message: "Quantity is required" }).min(1, "Order at least 1").max(99, "Max 99"),
+const schema = v.object({
+  // A number field submits a string; Conform coerces it to a number, then require it in range.
+  quantity: v.pipe(
+    v.number("Quantity is required"),
+    v.minValue(1, "Order at least 1"),
+    v.maxValue(99, "Max 99"),
+  ),
 })
 
 const QuantityForm = () => {
   const [form, fields] = useForm({
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema })
+      return parseWithValibot(formData, { schema })
     },
   })
 

@@ -6,7 +6,7 @@
       "name": "ui-lib",
       "dependencies": {
         "@conform-to/react": "^1.19.4",
-        "@conform-to/zod": "^1.19.4",
+        "@conform-to/valibot": "^1.19.4",
         "@internationalized/date": "^3.12.2",
         "clsx": "^2.1.1",
         "embla-carousel-react": "^8.6.0",
@@ -23,7 +23,7 @@
         "recharts": "^3.9.1",
         "tailwind-merge": "^3.6.0",
         "tailwind-variants": "^3.2.2",
-        "zod": "^4.4.3",
+        "valibot": "^1.4.2",
       },
       "devDependencies": {
         "@react-router/dev": "^8.1.0",
@@ -103,7 +103,7 @@
 
     "@conform-to/react": ["@conform-to/react@1.19.4", "", { "dependencies": { "@conform-to/dom": "1.19.4" }, "peerDependencies": { "react": ">=18", "react-dom": ">=18" } }, "sha512-Xyw4hbD9467q8PTWW+Nvmf523y814w70eeABRJzVvfnpghGOAWAGt1lpOboAs6sqaKG/eouqifibz/r+PDFZLg=="],
 
-    "@conform-to/zod": ["@conform-to/zod@1.19.4", "", { "dependencies": { "@conform-to/dom": "1.19.4" }, "peerDependencies": { "zod": "^3.21.0 || ^4.0.0" } }, "sha512-g80QtotXLcXWCF86Xou/VpI6i+NBOQxYgLS9YCQYrgV27yilZFJYpgWWBsA8YwodmJVBIYm9RawJba7WnUoddA=="],
+    "@conform-to/valibot": ["@conform-to/valibot@1.19.4", "", { "dependencies": { "@conform-to/dom": "1.19.4" }, "peerDependencies": { "valibot": ">= 0.32.0" } }, "sha512-aAKgNpvycZNK9JIzmWu7Q/ogULRYKTeKsMmWS9h04dZH8jjBe0AKiE7WTWJosGOZjq2Ce/arm7D9//9QmGgyIA=="],
 
     "@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.25.12", "", { "os": "aix", "cpu": "ppc64" }, "sha512-Hhmwd6CInZ3dwpuGTF8fJG6yoWmsToE+vYgD4nytZVxcu1ulHpUQRAB1UJ8+N1Am3Mz4+xOByoQoSZf4D+CpkA=="],
 
@@ -694,8 +694,6 @@
     "yallist": ["yallist@3.1.1", "", {}, "sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g=="],
 
     "yoga-layout": ["yoga-layout@3.2.1", "", {}, "sha512-0LPOt3AxKqMdFBZA3HBAt/t/8vIKq7VaQYbuA8WxCgung+p9TVyKRYdpvCb80HcdTN2NkbIKbhNwKUfm3tQywQ=="],
-
-    "zod": ["zod@4.4.3", "", {}, "sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ=="],
 
     "zwitch": ["zwitch@2.0.4", "", {}, "sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A=="],
 

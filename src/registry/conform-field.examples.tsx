@@ -1,18 +1,18 @@
 import { useForm } from "@conform-to/react"
-import { parseWithZod } from "@conform-to/zod/v4"
-import { z } from "zod"
+import { parseWithValibot } from "@conform-to/valibot"
+import * as v from "valibot"
 import { Button } from "@/components/button"
 import { ConformField } from "@/components/conform-field"
 import type { ComponentExample } from "./types"
 
-const schema = z.object({
-  email: z.string({ error: "Email is required" }).email("Enter a valid email address"),
+const schema = v.object({
+  email: v.pipe(v.string("Email is required"), v.email("Enter a valid email address")),
 })
 
 const SignupForm = () => {
   const [form, fields] = useForm({
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema })
+      return parseWithValibot(formData, { schema })
     },
   })
 
