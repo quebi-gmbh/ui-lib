@@ -2,3 +2,19 @@
 @import "tailwindcss";
 @import "overlayscrollbars/overlayscrollbars.css";
 @import "./quebi-theme.css";
+
+/*
+ * react-aria-components Tailwind variants.
+ *
+ * Registers the RAC state variants the component library relies on —
+ * selected, not-selected, pressed, entering, exiting, dragging, current,
+ * pending, plus the enum variants (orientation-*, placement-*, …). Without
+ * this plugin those variants are unregistered, and Tailwind v4 silently drops
+ * every utility that uses them at build time (so selection/hover/animation
+ * styling never renders — see issue #15).
+ *
+ * The plugin scopes its native-variant overrides (hover, focus, disabled, …)
+ * to elements carrying `data-rac`, so plain (non-RAC) elements keep the
+ * standard `:hover`/`:focus`/`:disabled` behaviour.
+ */
+@plugin "tailwindcss-react-aria-components";
