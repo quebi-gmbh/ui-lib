@@ -95,12 +95,8 @@ export function ScrollArea({
         className={cn(
           "h-full overscroll-auto rounded-[inherit] outline-none transition-shadow",
           "data-has-overflow-y:overscroll-y-contain data-has-overflow-x:overscroll-x-contain",
-          // Slim, cyan-tinted scrollbar — quebi tokens.
-          "[scrollbar-width:thin] [scrollbar-color:color-mix(in_oklab,var(--color-cyan-500)_20%,transparent)_transparent]",
-          "[&::-webkit-scrollbar]:size-2",
-          "[&::-webkit-scrollbar-track]:bg-transparent",
-          "[&::-webkit-scrollbar-thumb]:rounded-quebi-sm [&::-webkit-scrollbar-thumb]:bg-cyan-500/20",
-          "[&::-webkit-scrollbar-thumb:hover]:bg-cyan-500/30",
+          // Slim, cyan-tinted scrollbar — the shared quebi native scrollbar.
+          "quebi-scrollbar",
           orientation === "vertical"
             ? "overflow-x-hidden overflow-y-auto"
             : orientation === "horizontal"

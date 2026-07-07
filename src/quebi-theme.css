@@ -64,6 +64,30 @@
   padding-block: 6rem;      /* py-24 */
 }
 
+/* ---------------- Native scrollbar (dropdowns, scroll areas) ---------------- */
+/* The quebi native scrollbar: thin, transparent track, rounded cyan-tinted
+   thumb. Apply to any overflow container (list boxes, menus, popovers, the
+   ScrollArea viewport) so every scrollable surface looks the same. */
+@utility quebi-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--color-cyan-500) 20%, transparent) transparent;
+
+  &::-webkit-scrollbar {
+    width: 0.5rem;  /* 8px */
+    height: 0.5rem;
+  }
+  &::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: var(--radius-quebi-sm);
+    background-color: color-mix(in oklab, var(--color-cyan-500) 20%, transparent);
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--color-cyan-500) 30%, transparent);
+  }
+}
+
 /* ---------------- Sensible base styles ---------------- */
 @layer base {
   html {
