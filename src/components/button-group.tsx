@@ -16,7 +16,8 @@ import { cn } from "@/lib/utils"
 const buttonGroupStyles = tv({
   base: [
     "flex w-fit items-stretch",
-    // keep focused child above its neighbours so the ring isn't clipped
+    // keep the active child above its neighbours so its border/ring isn't clipped
+    "*:hover:relative *:hover:z-10",
     "*:focus-visible:relative *:focus-visible:z-10",
     // nested groups get breathing room
     "has-[>[data-slot=button-group]]:gap-2",
@@ -26,9 +27,9 @@ const buttonGroupStyles = tv({
   variants: {
     orientation: {
       horizontal:
-        "[&>*:not(:first-child)]:rounded-s-none [&>*:not(:first-child)]:border-l-0 [&>*:not(:last-child)]:rounded-e-none",
+        "[&>*:not(:first-child)]:rounded-s-none [&>*:not(:first-child)]:-ml-px [&>*:not(:last-child)]:rounded-e-none",
       vertical:
-        "flex-col [&>*:not(:first-child)]:rounded-t-none [&>*:not(:first-child)]:border-t-0 [&>*:not(:last-child)]:rounded-b-none",
+        "flex-col [&>*:not(:first-child)]:rounded-t-none [&>*:not(:first-child)]:-mt-px [&>*:not(:last-child)]:rounded-b-none",
     },
   },
   defaultVariants: {
