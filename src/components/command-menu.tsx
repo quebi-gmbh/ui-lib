@@ -193,7 +193,7 @@ const CommandMenuList = <T extends object>({ className, ...props }: MenuProps<T>
     <CollectionRendererContext.Provider value={renderer}>
       <MenuPrimitive
         className={cn(
-          "grid max-h-full flex-1 grid-cols-[auto_1fr] content-start overflow-y-auto border-cyan-500/10 border-t p-2 sm:max-h-110 *:[[role=group]]:mb-6 *:[[role=group]]:last:mb-0",
+          "quebi-scrollbar grid max-h-full flex-1 grid-cols-[auto_1fr] content-start overflow-y-auto border-cyan-500/10 border-t p-2 sm:max-h-110 *:[[role=group]]:mb-6 *:[[role=group]]:last:mb-0",
           className,
         )}
         {...props}
