@@ -1,26 +1,26 @@
 import { useForm } from "@conform-to/react"
-import { parseWithZod } from "@conform-to/zod/v4"
+import { parseWithValibot } from "@conform-to/valibot"
 import { useListData } from "react-stately"
-import { z } from "zod"
+import * as v from "valibot"
 import { Button } from "@/components/button"
 import { ConformColorSwatchPicker } from "@/components/conform-color-swatch-picker"
 import type { ComponentExample } from "./types"
 
-const schema = z.object({
+const schema = v.object({
   // The picker submits a comma-joined string of color keys. Split it back into
   // an array, then require at least one selection.
-  colors: z
-    .preprocess(
-      (v) =>
-        typeof v === "string"
-          ? v
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean)
-          : [],
-      z.array(z.string()),
-    )
-    .refine((arr) => arr.length > 0, "Pick at least one color"),
+  colors: v.pipe(
+    v.unknown(),
+    v.transform((value) =>
+      typeof value === "string"
+        ? value
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : [],
+    ),
+    v.minLength(1, "Pick at least one color"),
+  ),
 })
 
 const ColorsForm = () => {
@@ -30,7 +30,7 @@ const ColorsForm = () => {
 
   const [form, fields] = useForm({
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema })
+      return parseWithValibot(formData, { schema })
     },
   })
 
@@ -59,7 +59,7 @@ const EmptyForm = () => {
 
   const [form, fields] = useForm({
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema })
+      return parseWithValibot(formData, { schema })
     },
   })
 

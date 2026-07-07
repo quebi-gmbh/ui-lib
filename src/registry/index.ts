@@ -1,6 +1,7 @@
 import type { ComponentEntry } from "./types"
 import { metaRegistry } from "./meta"
 import { areaChartExamples } from "./area-chart.examples"
+import { asyncMultipleSelectExamples } from "./async-multiple-select.examples"
 import { avatarExamples } from "./avatar.examples"
 import { badgeExamples } from "./badge.examples"
 import { barChartExamples } from "./bar-chart.examples"
@@ -24,12 +25,14 @@ import { colorThumbExamples } from "./color-thumb.examples"
 import { colorWheelExamples } from "./color-wheel.examples"
 import { comboBoxExamples } from "./combo-box.examples"
 import { commandMenuExamples } from "./command-menu.examples"
+import { conformAsyncMultipleSelectExamples } from "./conform-async-multiple-select.examples"
 import { conformCheckboxExamples } from "./conform-checkbox.examples"
 import { conformColorPickerExamples } from "./conform-color-picker.examples"
 import { conformColorSwatchPickerExamples } from "./conform-color-swatch-picker.examples"
 import { conformDateFieldExamples } from "./conform-date-field.examples"
 import { conformDatePickerExamples } from "./conform-date-picker.examples"
 import { conformFieldExamples } from "./conform-field.examples"
+import { conformMultipleSelectExamples } from "./conform-multiple-select.examples"
 import { conformNumberFieldExamples } from "./conform-number-field.examples"
 import { conformSelectExamples } from "./conform-select.examples"
 import { conformStoragePickerExamples } from "./conform-storage-picker.examples"
@@ -107,6 +110,7 @@ import { treeExamples } from "./tree.examples"
 
 const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "area-chart": areaChartExamples,
+  "async-multiple-select": asyncMultipleSelectExamples,
   "avatar": avatarExamples,
   "badge": badgeExamples,
   "bar-chart": barChartExamples,
@@ -130,12 +134,14 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "color-wheel": colorWheelExamples,
   "combo-box": comboBoxExamples,
   "command-menu": commandMenuExamples,
+  "conform-async-multiple-select": conformAsyncMultipleSelectExamples,
   "conform-checkbox": conformCheckboxExamples,
   "conform-color-picker": conformColorPickerExamples,
   "conform-color-swatch-picker": conformColorSwatchPickerExamples,
   "conform-date-field": conformDateFieldExamples,
   "conform-date-picker": conformDatePickerExamples,
   "conform-field": conformFieldExamples,
+  "conform-multiple-select": conformMultipleSelectExamples,
   "conform-number-field": conformNumberFieldExamples,
   "conform-select": conformSelectExamples,
   "conform-storage-picker": conformStoragePickerExamples,

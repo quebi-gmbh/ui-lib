@@ -1,22 +1,26 @@
 import { useForm } from "@conform-to/react"
-import { parseWithZod } from "@conform-to/zod/v4"
-import { z } from "zod"
+import { parseWithValibot } from "@conform-to/valibot"
+import * as v from "valibot"
 import { Button } from "@/components/button"
 import { ConformDatePicker } from "@/components/conform-date-picker"
 import type { ComponentExample } from "./types"
 
-const schema = z.object({
-  // A date picker submits an ISO `YYYY-MM-DD` string. Require it and check that
-  // it is not in the past.
-  eventDate: z.coerce
-    .date({ error: "Please pick an event date" })
-    .refine((d) => d >= new Date(new Date().toDateString()), "Event date can't be in the past"),
+const schema = v.object({
+  // A date picker submits an ISO `YYYY-MM-DD` string; Conform coerces it to a Date.
+  // Require it and check that it is not in the past.
+  eventDate: v.pipe(
+    v.date("Please pick an event date"),
+    v.check(
+      (d) => d >= new Date(new Date().toDateString()),
+      "Event date can't be in the past",
+    ),
+  ),
 })
 
 const EventForm = () => {
   const [form, fields] = useForm({
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema })
+      return parseWithValibot(formData, { schema })
     },
   })
 

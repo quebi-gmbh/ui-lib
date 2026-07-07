@@ -1,21 +1,19 @@
 import { useForm } from "@conform-to/react"
-import { parseWithZod } from "@conform-to/zod/v4"
-import { z } from "zod"
+import { parseWithValibot } from "@conform-to/valibot"
+import * as v from "valibot"
 import { Button } from "@/components/button"
 import { ConformSelect } from "@/components/conform-select"
 import { SelectItem } from "@/components/select"
 import type { ComponentExample } from "./types"
 
-const schema = z.object({
-  plan: z.enum(["free", "pro", "enterprise"], {
-    message: "Please choose a plan",
-  }),
+const schema = v.object({
+  plan: v.picklist(["free", "pro", "enterprise"], "Please choose a plan"),
 })
 
 const PlanForm = () => {
   const [form, fields] = useForm({
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema })
+      return parseWithValibot(formData, { schema })
     },
   })
 

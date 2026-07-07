@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/checkbox"
 interface ConformCheckboxProps extends Omit<CheckboxProps, "name" | "defaultSelected"> {
   // A boolean-ish field from any form schema. The value type param is loose
   // because checkbox fields surface as boolean | "on" depending on the schema
-  // (e.g. zod preprocess); only name/defaultChecked/required/errors are used.
+  // (e.g. valibot transform); only name/defaultChecked/required/errors are used.
   // biome-ignore lint/suspicious/noExplicitAny: form-schema type params vary per call site
   field: FieldMetadata<any, any, string[]>
   label?: string

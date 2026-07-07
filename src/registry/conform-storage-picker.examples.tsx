@@ -1,17 +1,18 @@
 import { useForm } from "@conform-to/react"
-import { parseWithZod } from "@conform-to/zod/v4"
+import { parseWithValibot } from "@conform-to/valibot"
 import { useListData } from "react-stately"
-import { z } from "zod"
+import * as v from "valibot"
 import { Button } from "@/components/button"
 import { ConformStoragePicker } from "@/components/conform-storage-picker"
 import type { ComponentExample } from "./types"
 
-const schema = z.object({
+const schema = v.object({
   // The picker submits a comma-joined string of storage labels (e.g.
   // "128GB,1TB"). Require at least one selection.
-  storage: z
-    .string({ message: "Pick at least one storage size" })
-    .min(1, "Pick at least one storage size"),
+  storage: v.pipe(
+    v.string("Pick at least one storage size"),
+    v.minLength(1, "Pick at least one storage size"),
+  ),
 })
 
 const StorageForm = () => {
@@ -21,7 +22,7 @@ const StorageForm = () => {
 
   const [form, fields] = useForm({
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema })
+      return parseWithValibot(formData, { schema })
     },
   })
 
@@ -52,7 +53,7 @@ const EmptyStorageForm = () => {
 
   const [form, fields] = useForm({
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema })
+      return parseWithValibot(formData, { schema })
     },
   })
 

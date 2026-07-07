@@ -1,22 +1,26 @@
 import { useForm } from "@conform-to/react"
-import { parseWithZod } from "@conform-to/zod/v4"
-import { z } from "zod"
+import { parseWithValibot } from "@conform-to/valibot"
+import * as v from "valibot"
 import { Button } from "@/components/button"
 import { ConformDateField } from "@/components/conform-date-field"
 import type { ComponentExample } from "./types"
 
-const schema = z.object({
-  // A date field submits an ISO `YYYY-MM-DD` string. Require it and check that it
-  // is not in the past.
-  startDate: z.coerce
-    .date({ error: "Please pick a start date" })
-    .refine((d) => d >= new Date(new Date().toDateString()), "Start date can't be in the past"),
+const schema = v.object({
+  // A date field submits an ISO `YYYY-MM-DD` string; Conform coerces it to a Date.
+  // Require it and check that it is not in the past.
+  startDate: v.pipe(
+    v.date("Please pick a start date"),
+    v.check(
+      (d) => d >= new Date(new Date().toDateString()),
+      "Start date can't be in the past",
+    ),
+  ),
 })
 
 const BookingForm = () => {
   const [form, fields] = useForm({
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema })
+      return parseWithValibot(formData, { schema })
     },
   })
 

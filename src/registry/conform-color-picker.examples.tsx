@@ -1,21 +1,22 @@
 import { useForm } from "@conform-to/react"
-import { parseWithZod } from "@conform-to/zod/v4"
-import { z } from "zod"
+import { parseWithValibot } from "@conform-to/valibot"
+import * as v from "valibot"
 import { Button } from "@/components/button"
 import { ConformColorPicker } from "@/components/conform-color-picker"
 import type { ComponentExample } from "./types"
 
-const schema = z.object({
+const schema = v.object({
   // A hex color string, validated as a 6-digit hex value.
-  brandColor: z
-    .string({ error: "Pick a color" })
-    .regex(/^#[0-9A-Fa-f]{6}$/, "Pick a valid hex color"),
+  brandColor: v.pipe(
+    v.string("Pick a color"),
+    v.regex(/^#[0-9A-Fa-f]{6}$/, "Pick a valid hex color"),
+  ),
 })
 
 const ColorForm = () => {
   const [form, fields] = useForm({
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema })
+      return parseWithValibot(formData, { schema })
     },
   })
 
@@ -39,17 +40,18 @@ const ColorForm = () => {
   )
 }
 
-const schemaWithDefault = z.object({
-  accent: z
-    .string({ error: "Pick a color" })
-    .regex(/^#[0-9A-Fa-f]{6}$/, "Pick a valid hex color"),
+const schemaWithDefault = v.object({
+  accent: v.pipe(
+    v.string("Pick a color"),
+    v.regex(/^#[0-9A-Fa-f]{6}$/, "Pick a valid hex color"),
+  ),
 })
 
 const PrefilledColorForm = () => {
   const [form, fields] = useForm({
     defaultValue: { accent: "#22D3EE" },
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema: schemaWithDefault })
+      return parseWithValibot(formData, { schema: schemaWithDefault })
     },
   })
 
