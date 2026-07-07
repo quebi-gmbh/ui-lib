@@ -3,6 +3,7 @@ import { metaRegistry } from "./meta"
 import { areaChartExamples } from "./area-chart.examples"
 import { asyncMultipleSelectExamples } from "./async-multiple-select.examples"
 import { asyncSelectExamples } from "./async-select.examples"
+import { asyncTableExamples } from "./async-table.examples"
 import { avatarExamples } from "./avatar.examples"
 import { badgeExamples } from "./badge.examples"
 import { barChartExamples } from "./bar-chart.examples"
@@ -114,6 +115,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "area-chart": areaChartExamples,
   "async-multiple-select": asyncMultipleSelectExamples,
   "async-select": asyncSelectExamples,
+  "async-table": asyncTableExamples,
   "avatar": avatarExamples,
   "badge": badgeExamples,
   "bar-chart": barChartExamples,
