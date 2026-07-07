@@ -1,26 +1,22 @@
 "use client"
 
-import { Loader2, Plus } from "lucide-react"
-import { useMemo, useRef, useState } from "react"
-import type { Key, Selection } from "react-aria-components"
+import { Check, Loader2, X } from "lucide-react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { useAsyncList } from "react-stately"
-import { Button } from "@/components/button"
-import { ListBox, ListBoxItem } from "@/components/list-box"
 import { PopoverContent } from "@/components/popover"
-import { SearchField, SearchInput } from "@/components/search-field"
-import { Tag, TagGroup, TagList } from "@/components/tag-group"
 import { cn } from "@/lib/utils"
 
 /**
  * Async Multiple Select — quebi design system
  *
- * A multi-value picker whose options are loaded from a remote source. The
- * dropdown opens on focus and shows the first page of results; typing in the
- * search field re-queries the source live (debounced) and scrolling to the
- * bottom loads the next page. Chosen options render as removable quebi tags —
- * the same control surface as Multiple Select — and out-of-view selections are
- * preserved across searches. Composes Tag Group (selected values), Popover +
- * Search Field + List Box (the dropdown). No apply/cancel — selection is live.
+ * A tokenizer combobox whose options are loaded from a remote source. Selected
+ * values render as removable chips *inline* with a single text input — the input
+ * is the one focus/click target: focusing or typing opens the dropdown and
+ * re-queries the source live (debounced), and scrolling the results loads the
+ * next page. There is no separate search box and no add button, so nothing
+ * double-fires; removing a chip (✕ or Backspace on an empty input) never opens
+ * the menu. Built as an ARIA 1.2 combobox with `aria-activedescendant` keyboard
+ * navigation over the results listbox.
  */
 
 export interface AsyncMultipleSelectOption {
@@ -46,14 +42,12 @@ export interface AsyncMultipleSelectLoadResult<T> {
 export interface AsyncMultipleSelectProps<T extends AsyncMultipleSelectOption> {
   /** Loads a page of options for a given search string / cursor. */
   load: (params: AsyncMultipleSelectLoadParams) => Promise<AsyncMultipleSelectLoadResult<T>>
-  /** Controlled selection (full option objects, so tags can render labels). */
+  /** Controlled selection (full option objects, so chips can render labels). */
   value?: T[]
   /** Uncontrolled initial selection. */
   defaultValue?: T[]
   onChange?: (value: T[]) => void
   placeholder?: string
-  /** Placeholder shown inside the search input. */
-  searchPlaceholder?: string
   /** Debounce (ms) before a keystroke re-queries the source. */
   searchDelay?: number
   isDisabled?: boolean
@@ -61,6 +55,7 @@ export interface AsyncMultipleSelectProps<T extends AsyncMultipleSelectOption> {
   /** When set, the selection is mirrored into hidden inputs for form submission. */
   name?: string
   className?: string
+  id?: string
   "aria-label"?: string
 }
 
@@ -73,19 +68,26 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
   value,
   defaultValue,
   onChange,
-  placeholder = "No selected items",
-  searchPlaceholder = "Search…",
+  placeholder = "Select…",
   searchDelay = 250,
   isDisabled,
   isInvalid,
   name,
   className,
+  id,
   "aria-label": ariaLabel = "Select items",
 }: AsyncMultipleSelectProps<T>) {
-  const triggerRef = useRef<HTMLDivElement | null>(null)
+  const reactId = useId()
+  const listboxId = `${reactId}-listbox`
+  const optionId = (key: string) => `${reactId}-opt-${key}`
+
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const reopenGuard = useRef(false)
+
   const [open, setOpen] = useState(false)
+  const [inputValue, setInputValue] = useState("")
+  const [activeKey, setActiveKey] = useState<string | null>(null)
 
   const list = useAsyncList<T>({
     async load({ signal, cursor, filterText }) {
@@ -94,7 +96,7 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
     },
   })
 
-  // Selection is tracked as a map of full option objects so tags stay labelled
+  // Selection is tracked as a map of full option objects so chips stay labelled
   // even when the option scrolls out of the currently loaded page.
   const isControlled = value !== undefined
   const [internal, setInternal] = useState<Map<string, T>>(() => toMap(defaultValue ?? []))
@@ -106,46 +108,96 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
     onChange?.(Array.from(next.values()))
   }
 
-  const openList = () => {
-    if (isDisabled || reopenGuard.current) return
-    setOpen(true)
+  const openMenu = () => {
+    if (!isDisabled) setOpen(true)
   }
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next)
-    if (!next) {
-      // Focus is restored to the trigger on close — suppress the re-open that
-      // the restored focus would otherwise trigger.
-      reopenGuard.current = true
-      setTimeout(() => {
-        reopenGuard.current = false
-      }, 150)
-    }
+    if (!next) setActiveKey(null)
   }
 
-  const handleSearchChange = (search: string) => {
+  const runSearch = (text: string) => {
+    setInputValue(text)
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => list.setFilterText(search), searchDelay)
+    debounceRef.current = setTimeout(() => list.setFilterText(text), searchDelay)
   }
 
-  const handleSelectionChange = (keys: Selection) => {
-    const visibleKeys =
-      keys === "all"
-        ? new Set(list.items.map(keyOf))
-        : new Set(Array.from(keys, (k) => String(k)))
+  const toggle = (key: string) => {
     const next = new Map(selected)
-    for (const item of list.items) {
-      const k = keyOf(item)
-      if (visibleKeys.has(k)) next.set(k, item)
-      else next.delete(k)
+    if (next.has(key)) {
+      next.delete(key)
+    } else {
+      const item = list.items.find((i) => keyOf(i) === key)
+      if (item) next.set(key, item)
     }
     commit(next)
   }
 
-  const handleRemove = (keys: Set<Key>) => {
+  const removeKey = (key: string) => {
+    if (!selected.has(key)) return
     const next = new Map(selected)
-    for (const k of keys) next.delete(String(k))
+    next.delete(key)
     commit(next)
+  }
+
+  // Keep the keyboard-highlighted option valid as the list filters/paginates.
+  useEffect(() => {
+    if (!open) return
+    if (list.items.length === 0) {
+      setActiveKey(null)
+      return
+    }
+    setActiveKey((prev) =>
+      prev && list.items.some((i) => keyOf(i) === prev) ? prev : keyOf(list.items[0]),
+    )
+  }, [open, list.items])
+
+  // Scroll the active option into view during keyboard navigation.
+  useEffect(() => {
+    if (!open || !activeKey) return
+    document.getElementById(`${reactId}-opt-${activeKey}`)?.scrollIntoView({ block: "nearest" })
+  }, [activeKey, open, reactId])
+
+  const moveActive = (dir: 1 | -1) => {
+    const items = list.items
+    if (items.length === 0) return
+    const idx = activeKey ? items.findIndex((i) => keyOf(i) === activeKey) : -1
+    const nextIdx = idx === -1 ? (dir === 1 ? 0 : items.length - 1) : (idx + dir + items.length) % items.length
+    setActiveKey(keyOf(items[nextIdx]))
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault()
+        if (open) moveActive(1)
+        else openMenu()
+        break
+      case "ArrowUp":
+        e.preventDefault()
+        if (open) moveActive(-1)
+        else openMenu()
+        break
+      case "Enter":
+        if (open && activeKey) {
+          e.preventDefault()
+          toggle(activeKey)
+        }
+        break
+      case "Escape":
+        if (open) {
+          e.preventDefault()
+          handleOpenChange(false)
+        }
+        break
+      case "Backspace":
+        if (inputValue === "" && selectedItems.length > 0) {
+          e.preventDefault()
+          removeKey(keyOf(selectedItems[selectedItems.length - 1]))
+        }
+        break
+    }
   }
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -159,75 +211,107 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
   const isLoading = list.loadingState === "loading" || list.loadingState === "filtering"
 
   return (
-    <div className={cn("w-full", className)} data-slot="control">
-      {/** biome-ignore lint/a11y/useKeyWithClickEvents: focus/press already open the popover; the click only forwards a bare-surface click to the add control */}
+    <div className={cn("w-full", className)}>
+      {/** biome-ignore lint/a11y/noStaticElementInteractions: the control surface forwards bare-surface clicks to the combobox input; all real semantics live on the input/options */}
       <div
-        ref={triggerRef}
-        onFocusCapture={openList}
-        onClick={openList}
-        aria-disabled={isDisabled || undefined}
+        ref={containerRef}
+        onMouseDown={(e) => {
+          // Clicking the bare surface (padding) — not a chip, ✕, or the input —
+          // focuses the input without stealing it from those controls.
+          if (e.target === e.currentTarget && !isDisabled) {
+            e.preventDefault()
+            inputRef.current?.focus()
+            openMenu()
+          }
+        }}
         data-invalid={isInvalid || undefined}
         className={cn(
-          "flex w-full items-center gap-2 rounded-quebi-sm border border-cyan-500/10 bg-white/[0.02] p-1.5",
+          "flex w-full flex-wrap items-center gap-1.5 rounded-quebi-sm border border-cyan-500/10 bg-white/[0.02] p-1.5",
           "transition-colors duration-150 focus-within:border-quebi-brand",
           isInvalid && "border-red-500",
-          isDisabled && "cursor-not-allowed opacity-50",
+          isDisabled ? "cursor-not-allowed opacity-50" : "cursor-text",
         )}
       >
-        <TagGroup
+        {selectedItems.map((item) => {
+          const k = keyOf(item)
+          return (
+            <span
+              key={k}
+              data-slot="chip"
+              className="inline-flex items-center gap-x-1 rounded-full border border-cyan-500/10 bg-white/[0.03] py-0.5 pe-1 ps-2.5 font-medium text-quebi-fg-muted text-xs"
+            >
+              {item.name}
+              {!isDisabled && (
+                <button
+                  type="button"
+                  aria-label={`Remove ${item.name}`}
+                  tabIndex={-1}
+                  // Keep focus in the input so removing a chip never opens/closes
+                  // the menu or blurs the field.
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    removeKey(k)
+                  }}
+                  className={cn(
+                    "flex size-4 shrink-0 items-center justify-center rounded-full text-quebi-fg-subtle outline-none transition-colors duration-150",
+                    "hover:bg-cyan-500/10 hover:text-white focus-visible:ring-2 focus-visible:ring-quebi-brand/50",
+                  )}
+                >
+                  <X className="size-3" strokeWidth={2.5} aria-hidden="true" />
+                </button>
+              )}
+            </span>
+          )
+        })}
+
+        <input
+          ref={inputRef}
+          id={id}
+          type="text"
+          // biome-ignore lint/a11y/useSemanticElements: ARIA 1.2 combobox is authored on the text input
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={open ? listboxId : undefined}
+          aria-autocomplete="list"
+          aria-activedescendant={open && activeKey ? optionId(activeKey) : undefined}
           aria-label={ariaLabel}
-          onRemove={isDisabled ? undefined : handleRemove}
-          className="flex-1"
-        >
-          <TagList
-            items={selectedItems}
-            renderEmptyState={() => (
-              <span className="ps-1.5 text-quebi-fg-subtle text-sm italic">{placeholder}</span>
-            )}
-          >
-            {(item) => <Tag>{item.name}</Tag>}
-          </TagList>
-        </TagGroup>
-        <Button
-          intent="outline"
-          size="sq-xs"
-          isCircle
-          isDisabled={isDisabled}
-          onPress={() => setOpen((o) => !o)}
-          className="shrink-0 self-end"
-          aria-label="Add item"
-        >
-          <Plus data-slot="icon" aria-hidden="true" />
-        </Button>
+          aria-invalid={isInvalid || undefined}
+          disabled={isDisabled}
+          value={inputValue}
+          placeholder={selectedItems.length === 0 ? placeholder : undefined}
+          onChange={(e) => {
+            runSearch(e.target.value)
+            openMenu()
+          }}
+          onFocus={openMenu}
+          onClick={openMenu}
+          onKeyDown={handleKeyDown}
+          className={cn(
+            "min-w-24 flex-1 bg-transparent px-1.5 py-0.5 text-sm text-white outline-none",
+            "placeholder:text-quebi-fg-subtle placeholder:italic",
+          )}
+        />
       </div>
 
       <PopoverContent
-        triggerRef={triggerRef}
-        isOpen={open}
+        triggerRef={containerRef}
+        isOpen={open && !isDisabled}
         onOpenChange={handleOpenChange}
-        placement="bottom"
-        className="flex w-(--trigger-width) flex-col p-0"
+        isNonModal
+        placement="bottom start"
+        className="w-(--trigger-width) p-0"
       >
-        <SearchField
-          autoFocus
+        <div
+          // biome-ignore lint/a11y/useFocusableInteractive: the listbox uses virtual focus via the combobox input's aria-activedescendant
+          role="listbox"
+          id={listboxId}
+          aria-multiselectable="true"
           aria-label={ariaLabel}
-          onChange={handleSearchChange}
-          className="border-b border-cyan-500/10"
-        >
-          <SearchInput
-            placeholder={searchPlaceholder}
-            className="border-none bg-transparent outline-hidden focus:ring-0"
-          />
-        </SearchField>
-        <ListBox
-          aria-label={ariaLabel}
-          selectionMode="multiple"
-          selectedKeys={new Set(selected.keys())}
-          onSelectionChange={handleSelectionChange}
           onScroll={handleScroll}
-          items={list.items}
-          className="rounded-none border-0 bg-transparent shadow-none"
-          renderEmptyState={() => (
+          className="max-h-72 overflow-y-auto overscroll-contain p-1 [scrollbar-width:thin]"
+        >
+          {list.items.length === 0 ? (
             <div className="flex items-center justify-center gap-2 py-6 text-quebi-fg-subtle text-sm">
               {isLoading ? (
                 <>
@@ -238,15 +322,44 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
                 "No results"
               )}
             </div>
+          ) : (
+            list.items.map((item) => {
+              const k = keyOf(item)
+              const isSel = selected.has(k)
+              const isActive = activeKey === k
+              return (
+                // biome-ignore lint/a11y/useFocusableInteractive: options use virtual focus via the combobox input's aria-activedescendant
+                // biome-ignore lint/a11y/useKeyWithClickEvents: keyboard is handled centrally on the combobox input (Enter toggles the active option)
+                <div
+                  key={k}
+                  id={optionId(k)}
+                  role="option"
+                  aria-selected={isSel}
+                  // Keep focus in the input while clicking an option.
+                  onMouseDown={(e) => e.preventDefault()}
+                  onMouseEnter={() => setActiveKey(k)}
+                  onClick={() => toggle(k)}
+                  className={cn(
+                    "flex cursor-pointer items-center gap-2 rounded-quebi-sm px-2.5 py-1.5 text-sm text-white outline-none transition-colors duration-150",
+                    isActive && "bg-white/[0.05]",
+                    isSel && "text-quebi-brand",
+                  )}
+                >
+                  <Check
+                    className={cn("size-4 shrink-0", isSel ? "opacity-100" : "opacity-0")}
+                    aria-hidden="true"
+                  />
+                  <span className="flex-1 truncate">{item.name}</span>
+                </div>
+              )
+            })
           )}
-        >
-          {(item) => <ListBoxItem id={keyOf(item)}>{item.name}</ListBoxItem>}
-        </ListBox>
-        {list.loadingState === "loadingMore" && (
-          <div className="flex items-center justify-center border-t border-cyan-500/10 py-2">
-            <Loader2 className="size-4 animate-spin text-quebi-fg-subtle" aria-hidden="true" />
-          </div>
-        )}
+          {list.loadingState === "loadingMore" && (
+            <div className="flex items-center justify-center py-2">
+              <Loader2 className="size-4 animate-spin text-quebi-fg-subtle" aria-hidden="true" />
+            </div>
+          )}
+        </div>
       </PopoverContent>
 
       {name &&
