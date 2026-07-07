@@ -329,7 +329,7 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
           aria-multiselectable="true"
           aria-label={ariaLabel}
           onScroll={handleScroll}
-          className="max-h-72 overflow-y-auto overscroll-contain p-1 [scrollbar-width:thin]"
+          className="max-h-72 overflow-y-auto overscroll-contain p-1 [scrollbar-width:thin] [&::-webkit-scrollbar]:size-0.5"
         >
           {list.items.length === 0 ? (
             <div className="flex items-center justify-center gap-2 py-6 text-quebi-fg-subtle text-sm">
