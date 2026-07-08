@@ -11,11 +11,9 @@ import { FieldError, Label } from "@/components/field"
 
 interface ConformAsyncSelectProps<T extends AsyncSelectOption>
   extends Omit<AsyncSelectProps<T>, "name" | "defaultValue" | "isInvalid"> {
-  // A single-value select field from any form schema. Only
-  // name/id/initialValue/errors are read off the metadata; the value type param
-  // is loose because schemas vary per call site.
-  // biome-ignore lint/suspicious/noExplicitAny: form-schema type params vary per call site
-  field: FieldMetadata<any, any, string[]>
+  // A single-value select bound to a string form value. Only
+  // name/id/initialValue/errors are read off the metadata.
+  field: FieldMetadata<string>
   label?: string
   /**
    * Initial selection as a full option object so the input can show its label.

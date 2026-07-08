@@ -4,8 +4,7 @@ import { DateTime, FormattedDate, RelativeTime, ShortDate } from "./formatted-da
 
 describe("FormattedDate Components", () => {
   const testDate = new Date("2024-03-15T14:30:00.000Z")
-  // biome-ignore lint/suspicious/noExplicitAny: vitest v3 spyOn type inference
-  let mockDateNow: any
+  let mockDateNow: ReturnType<typeof vi.spyOn>
 
   beforeEach(() => {
     // Mock Date.now() for consistent relative time tests

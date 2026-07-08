@@ -39,10 +39,10 @@ export function normalizeStorageValue(value: string | number): number {
 }
 
 interface ConformStoragePickerProps {
-  // Loose value type param: the field carries a comma-joined string of storage
-  // labels; only name/default/required/errors/valid are read here.
-  // biome-ignore lint/suspicious/noExplicitAny: form-schema type params vary per call site
-  field: FieldMetadata<any, any, string[]>
+  // A list-backed field: the storage labels surface as a comma-joined string on
+  // the wire (`string`) or an array after parsing (`string[]`); only
+  // name/default/required/errors/valid are read off the metadata.
+  field: FieldMetadata<string | string[]>
   label?: string
   list: ListData<{ id: number; name: string }>
   description?: string

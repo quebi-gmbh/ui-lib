@@ -12,11 +12,10 @@ interface ConformDatePickerProps
     DatePickerProps<DateValue>,
     "children" | "name" | "defaultValue" | "isRequired" | "isInvalid"
   > {
-  // A date field from any form schema. The value type param is loose because the
-  // wire value is an ISO string while react-aria works with DateValue objects;
-  // only name/initialValue/required/errors are used here.
-  // biome-ignore lint/suspicious/noExplicitAny: form-schema type params vary per call site
-  field: FieldMetadata<any, any, string[]>
+  // A date field: the wire value is an ISO string that Conform coerces to a Date,
+  // so the metadata carries `Date | string`. Only
+  // name/initialValue/required/errors are read off the metadata.
+  field: FieldMetadata<Date | string>
   label?: string
 }
 
