@@ -41,12 +41,11 @@ export const DEFAULT_SWATCH_COLORS: SwatchColor[] = [
 
 interface ConformColorSwatchPickerProps {
   /**
-   * A field whose value is an array of color keys. The value type param is loose
-   * because list-backed fields surface as string | string[] depending on the
-   * schema; only name/errors/validity are read here.
+   * A field whose value is a set of color keys. List-backed fields surface as
+   * `string | string[]` (a comma-joined string on the wire, an array after
+   * parsing); only name/errors/validity are read off the metadata.
    */
-  // biome-ignore lint/suspicious/noExplicitAny: form-schema type params vary per call site
-  field: FieldMetadata<any, any, string[]>
+  field: FieldMetadata<string | string[]>
   label?: string
   description?: string
   /** Conform list-data binding. Each item's `name` is a color key. */

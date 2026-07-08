@@ -9,11 +9,9 @@ import { Input } from "@/components/input"
 type InputProps = Omit<TextFieldProps, "type"> & { type?: "email" | "password" | "text" }
 
 export interface ConformFieldProps extends InputProps {
-  // A text field from any form schema. The value type param is loose because
-  // text fields can surface differently per form schema; only
-  // name/id/form/default/required/errors are used here.
-  // biome-ignore lint/suspicious/noExplicitAny: form-schema type params vary per call site
-  field: FieldMetadata<any, any, string[]>
+  // A text field bound to a string form value. Only
+  // name/id/form/default/required/errors are read off the metadata.
+  field: FieldMetadata<string>
   label?: string
   placeholder?: string
   description?: string

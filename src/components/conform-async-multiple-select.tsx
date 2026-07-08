@@ -11,11 +11,9 @@ import { FieldError, Label } from "@/components/field"
 
 interface ConformAsyncMultipleSelectProps<T extends AsyncMultipleSelectOption>
   extends Omit<AsyncMultipleSelectProps<T>, "name" | "defaultValue" | "isInvalid"> {
-  // A multi-value select field from any form schema. Only
-  // name/initialValue/errors are read off the metadata; the value type param is
-  // loose because schemas vary per call site.
-  // biome-ignore lint/suspicious/noExplicitAny: form-schema type params vary per call site
-  field: FieldMetadata<any, any, string[]>
+  // A multi-value select bound to a string array form value. Only
+  // name/initialValue/errors are read off the metadata.
+  field: FieldMetadata<string[]>
   label?: string
   /**
    * Initial selection as full option objects so tags render labels. Falls back

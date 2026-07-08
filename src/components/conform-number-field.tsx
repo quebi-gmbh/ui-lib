@@ -7,11 +7,10 @@ import { NumberField, NumberInput } from "@/components/number-field"
 
 interface ConformNumberFieldProps
   extends Omit<NumberFieldProps, "name" | "value" | "defaultValue" | "onChange"> {
-  // A numeric field from any form schema. The value type param is loose because
-  // number fields can surface as number or string depending on the schema; only
-  // name/default/required/errors are used here.
-  // biome-ignore lint/suspicious/noExplicitAny: form-schema type params vary per call site
-  field: FieldMetadata<any, any, string[]>
+  // A numeric field: the wire value is a string that Conform coerces to a number,
+  // so the metadata carries `number | string`. Only
+  // name/default/required/errors are read off the metadata.
+  field: FieldMetadata<number | string>
   label?: string
   description?: string
 }

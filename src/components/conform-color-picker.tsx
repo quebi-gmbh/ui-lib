@@ -14,10 +14,9 @@ import { Description, Field, FieldError, Label } from "@/components/field"
 import { Popover, PopoverBody, PopoverContent, PopoverTrigger } from "@/components/popover"
 
 interface ConformColorPickerProps {
-  // Loose value type param: the field carries a hex string but only
-  // name/initialValue/default/required/errors are read here.
-  // biome-ignore lint/suspicious/noExplicitAny: form-schema type params vary per call site
-  field: FieldMetadata<any, any, string[]>
+  // The field carries a hex string; only
+  // name/initialValue/default/required/errors are read off the metadata.
+  field: FieldMetadata<string>
   label?: string
   placeholder?: string
   description?: string
