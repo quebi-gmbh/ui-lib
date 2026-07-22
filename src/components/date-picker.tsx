@@ -130,9 +130,9 @@ export function DatePickerTrigger({ className, ...props }: GroupProps) {
     <Group
       data-slot="control"
       className={cn(
-        "group/dpt flex w-full items-stretch overflow-hidden rounded-quebi-sm border border-cyan-500/20 bg-white/[0.02]",
+        "group/dpt flex w-full items-stretch overflow-hidden rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
         "transition-[border-color,box-shadow] duration-200",
-        "hover:border-cyan-500/40",
+        "hover:border-quebi-line/40",
         "focus-within:border-quebi-brand focus-within:ring-2 focus-within:ring-quebi-brand/50",
         className,
       )}
@@ -144,9 +144,9 @@ export function DatePickerTrigger({ className, ...props }: GroupProps) {
       <Button
         data-slot="date-picker-trigger"
         className={cn(
-          "inline-flex cursor-pointer items-center border-cyan-500/20 border-l bg-white/[0.02] px-3 text-quebi-fg-muted",
+          "inline-flex cursor-pointer items-center border-quebi-line/20 border-l bg-quebi-surface/[0.02] px-3 text-quebi-fg-muted",
           "transition-[border-color,color] duration-200",
-          "group-hover/dpt:border-cyan-500/40 hover:text-white",
+          "group-hover/dpt:border-quebi-line/40 hover:text-quebi-fg",
           "group-focus-within/dpt:border-quebi-brand",
           "outline-none focus-visible:outline-none",
         )}

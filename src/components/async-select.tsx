@@ -243,7 +243,7 @@ export function AsyncSelect<T extends AsyncSelectOption>({
         }}
         data-invalid={isInvalid || undefined}
         className={cn(
-          "flex w-full items-center gap-1 rounded-quebi-sm border border-cyan-500/10 bg-white/[0.02] p-1.5 pe-2",
+          "flex w-full items-center gap-1 rounded-quebi-sm border border-quebi-line/10 bg-quebi-surface/[0.02] p-1.5 pe-2",
           "transition-colors duration-150 focus-within:border-quebi-brand",
           isInvalid && "border-red-500",
           isDisabled ? "cursor-not-allowed opacity-50" : "cursor-text",
@@ -275,7 +275,7 @@ export function AsyncSelect<T extends AsyncSelectOption>({
           onClick={openMenu}
           onKeyDown={handleKeyDown}
           className={cn(
-            "min-w-0 flex-1 bg-transparent px-1.5 py-0.5 text-sm text-white outline-none",
+            "min-w-0 flex-1 bg-transparent px-1.5 py-0.5 text-sm text-quebi-fg outline-none",
             "placeholder:text-quebi-fg-subtle placeholder:italic",
           )}
         />
@@ -292,7 +292,7 @@ export function AsyncSelect<T extends AsyncSelectOption>({
             }}
             className={cn(
               "flex size-5 shrink-0 items-center justify-center rounded-full text-quebi-fg-subtle outline-none transition-colors duration-150",
-              "hover:bg-cyan-500/10 hover:text-white focus-visible:ring-2 focus-visible:ring-quebi-brand/50",
+              "hover:bg-cyan-500/10 hover:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-brand/50",
             )}
           >
             <X className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
@@ -354,8 +354,8 @@ export function AsyncSelect<T extends AsyncSelectOption>({
                   onMouseEnter={() => setActiveKey(k)}
                   onClick={() => selectKey(k)}
                   className={cn(
-                    "flex cursor-pointer items-center gap-2 rounded-quebi-sm px-2.5 py-1.5 text-sm text-white outline-none transition-colors duration-150",
-                    isActive && "bg-white/[0.05]",
+                    "flex cursor-pointer items-center gap-2 rounded-quebi-sm px-2.5 py-1.5 text-sm text-quebi-fg outline-none transition-colors duration-150",
+                    isActive && "bg-quebi-surface/[0.05]",
                     isSel && "text-quebi-brand",
                   )}
                 >

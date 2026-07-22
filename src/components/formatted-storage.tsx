@@ -45,7 +45,7 @@ export function FormattedStorage({ value, className, ...props }: FormattedStorag
 
   return (
     <span
-      className={cn("font-sans tabular-nums text-white", className)}
+      className={cn("font-sans tabular-nums text-quebi-fg", className)}
       {...props}
     >
       {formatted}

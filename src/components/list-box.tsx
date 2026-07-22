@@ -29,7 +29,7 @@ const ListBox = <T extends object>({ className, ...props }: ListBoxProps<T>) => 
     {...props}
     data-slot="list-box"
     className={cn(
-      "quebi-scrollbar grid max-h-96 w-full min-w-56 scroll-py-1 grid-cols-[auto_1fr] flex-col gap-y-1 overflow-y-auto overscroll-contain rounded-quebi-md border border-cyan-500/10 bg-quebi-bg p-1 shadow-quebi-glow outline-hidden has-data-[slot=drag-icon]:grid-cols-[auto_auto_1fr] *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
+      "quebi-scrollbar grid max-h-96 w-full min-w-56 scroll-py-1 grid-cols-[auto_1fr] flex-col gap-y-1 overflow-y-auto overscroll-contain rounded-quebi-md border border-quebi-line/10 bg-quebi-bg p-1 shadow-quebi-glow outline-hidden has-data-[slot=drag-icon]:grid-cols-[auto_auto_1fr] *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
       className,
     )}
   />

@@ -2,7 +2,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip"
 import type { ComponentExample } from "./types"
 
 const TriggerButton = ({ children }: { children: React.ReactNode }) => (
-  <TooltipTrigger className="cursor-pointer rounded-quebi-sm border border-cyan-500/20 bg-transparent px-4 py-2 text-sm font-semibold text-white outline-none transition-colors duration-150 hover:border-quebi-brand hover:text-quebi-brand focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg">
+  <TooltipTrigger className="cursor-pointer rounded-quebi-sm border border-quebi-line/20 bg-transparent px-4 py-2 text-sm font-semibold text-quebi-fg outline-none transition-colors duration-150 hover:border-quebi-brand hover:text-quebi-brand focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg">
     {children}
   </TooltipTrigger>
 )

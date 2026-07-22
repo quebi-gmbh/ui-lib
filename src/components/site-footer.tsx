@@ -2,17 +2,17 @@ import { Link } from "react-router"
 
 export function Footer() {
   return (
-    <footer className="z-10 border-t border-cyan-500/10 py-8">
+    <footer className="z-10 border-t border-quebi-line/10 py-8">
       <nav className="flex flex-row flex-wrap justify-center gap-4 text-sm text-quebi-fg-subtle sm:gap-6">
-        <Link to="/components" className="hover:text-white">
+        <Link to="/components" className="hover:text-quebi-fg">
           Components
         </Link>
         <span aria-hidden>·</span>
-        <a href="https://quebi.de/en/imprint" className="hover:text-white">
+        <a href="https://quebi.de/en/imprint" className="hover:text-quebi-fg">
           Imprint
         </a>
         <span aria-hidden>·</span>
-        <a href="https://quebi.de/en/privacy" className="hover:text-white">
+        <a href="https://quebi.de/en/privacy" className="hover:text-quebi-fg">
           Privacy
         </a>
         <span aria-hidden>·</span>
@@ -20,7 +20,7 @@ export function Footer() {
           href="https://github.com/quebi-gmbh/ui-lib/blob/main/LICENSE"
           target="_blank"
           rel="noreferrer"
-          className="hover:text-white"
+          className="hover:text-quebi-fg"
         >
           MIT License
         </a>
@@ -29,7 +29,7 @@ export function Footer() {
           href="https://github.com/quebi-gmbh"
           target="_blank"
           rel="noreferrer"
-          className="hover:text-white"
+          className="hover:text-quebi-fg"
         >
           GitHub
         </a>
@@ -43,7 +43,7 @@ export function Footer() {
           href="https://pages.github.com/"
           target="_blank"
           rel="noreferrer"
-          className="hover:text-white"
+          className="hover:text-quebi-fg"
         >
           GitHub Pages
         </a>{" "}

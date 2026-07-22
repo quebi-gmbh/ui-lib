@@ -34,13 +34,13 @@ export const buttonStyles = tv({
   variants: {
     intent: {
       primary:
-        "bg-quebi-brand border-quebi-brand text-quebi-bg hover:bg-quebi-brand-hover hover:border-quebi-brand-hover hover:shadow-quebi-glow-strong",
+        "bg-quebi-brand border-quebi-brand text-quebi-on-brand hover:bg-quebi-brand-hover hover:border-quebi-brand-hover hover:shadow-quebi-glow-strong",
       secondary:
-        "bg-white border-white text-quebi-bg hover:bg-quebi-fg-muted hover:border-quebi-fg-muted",
+        "bg-quebi-inverse-bg border-quebi-inverse-bg text-quebi-inverse-fg hover:bg-quebi-fg-muted hover:border-quebi-fg-muted",
       outline:
-        "bg-transparent border-cyan-500/20 text-white hover:border-quebi-brand hover:text-quebi-brand",
+        "bg-transparent border-quebi-line/20 text-quebi-fg hover:border-quebi-brand hover:text-quebi-brand",
       ghost:
-        "bg-transparent border-transparent text-quebi-fg-muted hover:bg-white/[0.04] hover:text-white",
+        "bg-transparent border-transparent text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
       accent:
         "bg-purple-500 border-purple-500 text-white hover:bg-purple-400 hover:border-purple-400",
       danger:

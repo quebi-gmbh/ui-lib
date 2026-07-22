@@ -17,7 +17,7 @@ export function ColorThumb({ className, ...props }: ColorThumbProps) {
       {...props}
       className={cn(
         "top-[50%] left-[50%] size-6 rounded-full border-2 border-white",
-        "shadow-quebi-glow ring-1 ring-cyan-500/30",
+        "shadow-quebi-glow ring-1 ring-quebi-line/30",
         "transition-[width,height] duration-150",
         "focus-visible:size-8 focus-visible:ring-2 focus-visible:ring-quebi-brand/50",
         "disabled:opacity-50 disabled:forced-colors:border-[GrayText] disabled:forced-colors:bg-[GrayText]",

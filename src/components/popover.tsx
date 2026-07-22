@@ -24,7 +24,7 @@ import {
  * (header/body/footer/title/description) inside a react-aria Popover. Foundational
  * — menu / select / combo-box / multiple-select compose this overlay.
  *
- * Surface tokens: bg-quebi-bg, border-cyan-500/10, shadow-quebi-glow.
+ * Surface tokens: bg-quebi-bg, border-quebi-line/10, shadow-quebi-glow.
  */
 const Popover = (props: DialogTriggerProps) => {
   return <DialogTriggerPrimitive {...props} />
@@ -54,7 +54,7 @@ const PopoverContent = ({
       offset={offset}
       className={cn(
         "[--visual-viewport-vertical-padding:16px] sm:[--visual-viewport-vertical-padding:32px]",
-        "group/popover min-w-(--trigger-width) max-w-xs origin-(--trigger-anchor-point) rounded-quebi-md border border-cyan-500/10 bg-quebi-bg text-white shadow-quebi-glow outline-hidden transition-transform [--gutter:--spacing(4)] **:[[role=dialog]]:[--gutter:--spacing(4)]",
+        "group/popover min-w-(--trigger-width) max-w-xs origin-(--trigger-anchor-point) rounded-quebi-md border border-quebi-line/10 bg-quebi-bg text-quebi-fg shadow-quebi-glow outline-hidden transition-transform [--gutter:--spacing(4)] **:[[role=dialog]]:[--gutter:--spacing(4)]",
         "entering:fade-in exiting:fade-out entering:animate-in exiting:animate-out",
         "placement-left:entering:slide-in-from-right-1 placement-right:entering:slide-in-from-left-1 placement-top:entering:slide-in-from-bottom-1 placement-bottom:entering:slide-in-from-top-1",
         "placement-left:exiting:slide-out-to-right-1 placement-right:exiting:slide-out-to-left-1 placement-top:exiting:slide-out-to-bottom-1 placement-bottom:exiting:slide-out-to-top-1",
@@ -72,7 +72,7 @@ const PopoverContent = ({
                 width={12}
                 height={12}
                 viewBox="0 0 12 12"
-                className="block fill-quebi-bg stroke-cyan-500/10 group-placement-bottom:rotate-180 group-placement-left:-rotate-90 group-placement-right:rotate-90 forced-colors:fill-[Canvas] forced-colors:stroke-[ButtonBorder]"
+                className="block fill-quebi-bg stroke-quebi-line/10 group-placement-bottom:rotate-180 group-placement-left:-rotate-90 group-placement-right:rotate-90 forced-colors:fill-[Canvas] forced-colors:stroke-[ButtonBorder]"
               >
                 <path d="M0 0 L6 6 L12 0" />
               </svg>

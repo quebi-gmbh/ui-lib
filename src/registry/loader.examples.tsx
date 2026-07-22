@@ -34,7 +34,7 @@ export const loaderExamples: ComponentExample[] = [
     render: () => (
       <Row>
         <Loader className="size-6 text-quebi-brand" />
-        <Loader className="size-6 text-white" />
+        <Loader className="size-6 text-quebi-fg" />
         <Loader className="size-6 text-quebi-fg-muted" />
         <Loader variant="ring" className="size-6 text-purple-500" />
       </Row>

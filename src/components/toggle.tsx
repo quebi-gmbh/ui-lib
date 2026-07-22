@@ -32,14 +32,14 @@ export const toggleStyles = tv({
   variants: {
     intent: {
       outline: [
-        "bg-transparent border-cyan-500/20 text-quebi-fg-muted",
-        "hover:text-white hover:border-quebi-brand",
-        "selected:bg-quebi-brand selected:border-quebi-brand selected:text-quebi-bg selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover selected:hover:border-quebi-brand-hover selected:hover:text-quebi-bg",
+        "bg-transparent border-quebi-line/20 text-quebi-fg-muted",
+        "hover:text-quebi-fg hover:border-quebi-brand",
+        "selected:bg-quebi-brand selected:border-quebi-brand selected:text-quebi-on-brand selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover selected:hover:border-quebi-brand-hover selected:hover:text-quebi-on-brand",
       ],
       plain: [
         "bg-transparent border-transparent text-quebi-fg-muted",
-        "hover:bg-white/[0.04] hover:text-white",
-        "selected:bg-quebi-brand selected:border-quebi-brand selected:text-quebi-bg selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover selected:hover:text-quebi-bg",
+        "hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
+        "selected:bg-quebi-brand selected:border-quebi-brand selected:text-quebi-on-brand selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover selected:hover:text-quebi-on-brand",
       ],
     },
     size: {

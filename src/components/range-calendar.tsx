@@ -48,7 +48,7 @@ function RangeCalendar<T extends DateValue>({
                   <CalendarCell
                     date={date}
                     className={cn(
-                      "group/calendar-cell relative size-9 shrink-0 cursor-default text-sm text-white outline-hidden",
+                      "group/calendar-cell relative size-9 shrink-0 cursor-default text-sm text-quebi-fg outline-hidden",
                       // in-between (selected, not an endpoint) days get a faint brand wash
                       "selected:bg-quebi-brand/15",
                       // round the range ends
@@ -62,12 +62,12 @@ function RangeCalendar<T extends DateValue>({
                           "flex size-full items-center justify-center rounded-quebi-sm tabular-nums transition-colors",
                           isSelected && (isSelectionStart || isSelectionEnd)
                             ? // endpoints: solid brand teal on quebi background
-                              "bg-quebi-brand text-quebi-bg hover:bg-quebi-brand-hover"
+                              "bg-quebi-brand text-quebi-on-brand hover:bg-quebi-brand-hover"
                             : isSelected
                               ? // in-between days: faint brand wash, darker on hover
                                 "group-hover/calendar-cell:bg-quebi-brand/25"
                               : // unselected days: faint white wash on hover
-                                "group-hover/calendar-cell:bg-white/[0.04]",
+                                "group-hover/calendar-cell:bg-quebi-surface/[0.04]",
                           // today marker dot
                           date.compare(now) === 0 &&
                             !(isSelected && (isSelectionStart || isSelectionEnd)) &&

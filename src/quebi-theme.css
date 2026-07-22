@@ -5,15 +5,49 @@
  * shadow-quebi-glow, rounded-quebi-md, max-w-quebi-content, etc.).
  */
 
-@theme {
-  /* ---------------- Colors ---------------- */
-  --color-quebi-bg:           #030712;
-  --color-quebi-fg:           #ffffff;
-  --color-quebi-fg-muted:     #9ca3af;
-  --color-quebi-fg-subtle:    #6b7280;
-  --color-quebi-brand:        #2dd4a8;
-  --color-quebi-brand-hover:  #5eead4;
+/*
+ * ---------------- Color tokens (theme-aware) ----------------
+ * The `--color-quebi-*` tokens are declared `inline` so their utilities
+ * (bg-quebi-bg, text-quebi-fg, border-quebi-line, …) resolve to the runtime
+ * `--q-*` variables directly. Those runtime variables are flipped per theme by
+ * the `:root, .dark` / `.light` blocks below, so every quebi utility re-themes
+ * without touching markup. `<html>` always carries an explicit `dark` or
+ * `light` class (set by the no-flash script in root.tsx); `.dark` is also what
+ * chart.tsx's ChartStyle selector targets.
+ */
+@theme inline {
+  /* Surfaces & text */
+  --color-quebi-bg:           var(--q-bg);          /* page background */
+  --color-quebi-fg:           var(--q-fg);          /* primary foreground */
+  --color-quebi-fg-muted:     var(--q-fg-muted);    /* body copy */
+  --color-quebi-fg-subtle:    var(--q-fg-subtle);   /* captions / meta */
 
+  /* Brand */
+  --color-quebi-brand:        var(--q-brand);
+  --color-quebi-brand-hover:  var(--q-brand-hover);
+
+  /* Tint base for the low-alpha `white/[0.0x]` surfaces & borders. Flips the
+     tint direction (white on dark, ink on light); keep using with /opacity. */
+  --color-quebi-surface:      var(--q-surface);
+  /* Hairline color behind the cyan-500/N borders/rings/dividers. Keep /opacity;
+     light gets a visible ink hairline instead of near-invisible cyan. */
+  --color-quebi-line:         var(--q-line);
+
+  /* Text/glyph sitting ON a brand fill — stays dark in BOTH themes. */
+  --color-quebi-on-brand:     var(--q-on-brand);
+  /* The inverse ("white") button surface. */
+  --color-quebi-inverse-bg:   var(--q-inverse-bg);
+  --color-quebi-inverse-fg:   var(--q-inverse-fg);
+
+  /* Semantic state text (flips 400-level on dark → 600/700-level on light). */
+  --color-quebi-danger:       var(--q-danger);
+  --color-quebi-warn:         var(--q-warn);
+  --color-quebi-success:      var(--q-success);
+  --color-quebi-info:         var(--q-info);
+  --color-quebi-accent:       var(--q-accent);
+}
+
+@theme {
   /* Tailwind also keeps its full default palette — cyan-500, amber-500, red-500,
      purple-400 are still available as supporting hues, no need to redeclare. */
 
@@ -33,6 +67,50 @@
   /* ---------------- Container width ---------------- */
   /* `--container-*` tokens become `max-w-*` utilities in v4. */
   --container-quebi-content: 48rem;  /* matches max-w-3xl, just named */
+}
+
+/*
+ * ---------------- Theme value sets ----------------
+ * quebi is dark-first: dark is the default (`:root`), light overrides under
+ * `.light`. `.dark` is listed explicitly so an intentional `dark` class wins.
+ */
+:root,
+.dark {
+  --q-bg:          #030712;
+  --q-fg:          #ffffff;
+  --q-fg-muted:    #9ca3af;
+  --q-fg-subtle:   #6b7280;
+  --q-brand:       #2dd4a8;
+  --q-brand-hover: #5eead4;
+  --q-surface:     #ffffff;  /* white tint on dark */
+  --q-line:        #06b6d4;  /* cyan-500 hairline */
+  --q-on-brand:    #052e22;  /* dark ink on mint — both themes */
+  --q-inverse-bg:  #ffffff;
+  --q-inverse-fg:  #0b1120;
+  --q-danger:      #f87171;  /* red-400 */
+  --q-warn:        #fbbf24;  /* amber-400 */
+  --q-success:     #34d399;  /* emerald-400 */
+  --q-info:        #22d3ee;  /* cyan-300 */
+  --q-accent:      #c4b5fd;  /* purple-300 */
+}
+
+.light {
+  --q-bg:          #f4f6f6;
+  --q-fg:          #0b1120;
+  --q-fg-muted:    #4b5563;
+  --q-fg-subtle:   #8b95a5;
+  --q-brand:       #2dd4a8;
+  --q-brand-hover: #14b88f;
+  --q-surface:     #0b1120;  /* ink tint on light */
+  --q-line:        #0b1120;  /* ink hairline */
+  --q-on-brand:    #052e22;  /* unchanged — mint fills stay dark-first */
+  --q-inverse-bg:  #0b1120;
+  --q-inverse-fg:  #ffffff;
+  --q-danger:      #dc2626;  /* red-600 */
+  --q-warn:        #d97706;  /* amber-600 */
+  --q-success:     #059669;  /* emerald-600 */
+  --q-info:        #0891b2;  /* cyan-600 */
+  --q-accent:      #7c3aed;  /* purple-600 */
 }
 
 /* ---------------- Custom utilities (v4 @utility syntax) ---------------- */

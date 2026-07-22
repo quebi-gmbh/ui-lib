@@ -26,7 +26,7 @@ import {
  * Dialog surface inside a react-aria Modal/ModalOverlay. Use for filters,
  * detail editing, navigation drawers, and other off-canvas content.
  *
- * Surface tokens: bg-quebi-bg, border-cyan-500/10. Depth via glow, not shadow.
+ * Surface tokens: bg-quebi-bg, border-quebi-line/10. Depth via glow, not shadow.
  */
 const Sheet = DialogTriggerPrimitive
 
@@ -70,7 +70,7 @@ const SheetContent = ({
         data-float={isFloat}
         className={cn(
           // quebi DS — surface with bg-quebi-bg + cyan border, matching Dialog.
-          "fixed z-50 grid gap-4 border border-cyan-500/10 bg-quebi-bg text-white shadow-quebi-glow",
+          "fixed z-50 grid gap-4 border border-quebi-line/10 bg-quebi-bg text-quebi-fg shadow-quebi-glow",
           "transform-gpu transition ease-in-out will-change-transform [--visual-viewport-vertical-padding:16px]",
           "data-[float=true]:rounded-quebi-md",
           "entering:fade-in entering:animate-in entering:duration-500",

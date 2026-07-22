@@ -7,7 +7,7 @@ export const separatorExamples: ComponentExample[] = [
     description: "The default. A full-width hairline that splits stacked content.",
     render: () => (
       <div className="w-full max-w-sm">
-        <p className="text-sm text-white">Account</p>
+        <p className="text-sm text-quebi-fg">Account</p>
         <Separator className="my-3" />
         <p className="text-sm text-quebi-fg-muted">Manage your account settings and preferences.</p>
       </div>
@@ -30,13 +30,13 @@ export const separatorExamples: ComponentExample[] = [
     title: "In a list",
     description: "Hairlines between rows keep dense content legible.",
     render: () => (
-      <div className="w-full max-w-sm rounded-quebi-md border border-cyan-500/10 p-4">
+      <div className="w-full max-w-sm rounded-quebi-md border border-quebi-line/10 p-4">
         <div className="flex flex-col gap-3">
-          <span className="text-sm text-white">First item</span>
+          <span className="text-sm text-quebi-fg">First item</span>
           <Separator />
-          <span className="text-sm text-white">Second item</span>
+          <span className="text-sm text-quebi-fg">Second item</span>
           <Separator />
-          <span className="text-sm text-white">Third item</span>
+          <span className="text-sm text-quebi-fg">Third item</span>
         </div>
       </div>
     ),

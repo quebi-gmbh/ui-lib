@@ -48,21 +48,21 @@ interface NumberInputProps extends Omit<InputProps, "prefix"> {
 
 const addonStyles = cn(
   "inline-flex select-none items-center px-3 text-[13px] font-medium",
-  "pointer-events-none bg-white/[0.02] text-quebi-fg-muted",
-  "border border-cyan-500/20",
+  "pointer-events-none bg-quebi-surface/[0.02] text-quebi-fg-muted",
+  "border border-quebi-line/20",
   "transition-[border-color] duration-200",
-  "group-hover/addons:border-cyan-500/40 group-focus-within/addons:border-quebi-brand",
+  "group-hover/addons:border-quebi-line/40 group-focus-within/addons:border-quebi-brand",
 )
 
 const stepperStyles = cn(
   "inline-flex items-center justify-center px-2.5",
-  "bg-white/[0.02] text-quebi-fg-muted",
-  "border border-cyan-500/20",
+  "bg-quebi-surface/[0.02] text-quebi-fg-muted",
+  "border border-quebi-line/20",
   "transition-[color,border-color,background-color] duration-200",
   "outline-none cursor-pointer",
   "hover:border-quebi-brand hover:text-quebi-brand",
   "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-  "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-cyan-500/20 disabled:hover:text-quebi-fg-muted",
+  "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-quebi-line/20 disabled:hover:text-quebi-fg-muted",
 )
 
 /**
@@ -98,11 +98,11 @@ function NumberInput({
       ) : null}
       <InputPrimitive
         className={cn(
-          "relative block w-full min-w-0 appearance-none text-sm text-white tabular-nums",
+          "relative block w-full min-w-0 appearance-none text-sm text-quebi-fg tabular-nums",
           "placeholder:text-quebi-fg-subtle",
-          "border border-cyan-500/20 bg-white/[0.02] px-3 py-2.5",
+          "border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
           "transition-[border-color,box-shadow] duration-200",
-          "enabled:hover:border-cyan-500/40",
+          "enabled:hover:border-quebi-line/40",
           "outline-none focus:outline-none focus:border-quebi-brand",
           "invalid:border-red-500",
           "disabled:cursor-not-allowed disabled:opacity-50 in-disabled:opacity-50",

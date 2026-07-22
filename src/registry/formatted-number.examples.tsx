@@ -6,7 +6,7 @@ import {
 import type { ComponentExample } from "./types"
 
 const Row = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 text-white tabular-nums">
+  <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 text-quebi-fg tabular-nums">
     {children}
   </div>
 )

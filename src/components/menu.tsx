@@ -129,11 +129,11 @@ const MenuItem = ({ className, intent, children, ...props }: MenuItemProps) => {
                 // Open-submenu state — match the hovered / focused state from
                 // dropdownItemStyles so an expanded parent reads as active.
                 intent === "danger" &&
-                  "open:bg-red-500/10 open:text-red-400 open:[&_[data-slot='icon']:not([class*='text-'])]:text-red-400",
+                  "open:bg-red-500/10 open:text-quebi-danger open:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-danger",
                 intent === "warning" &&
-                  "open:bg-amber-500/10 open:text-amber-400 open:[&_[data-slot='icon']:not([class*='text-'])]:text-amber-400",
+                  "open:bg-amber-500/10 open:text-quebi-warn open:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-warn",
                 intent === undefined &&
-                  "open:bg-white/[0.04] open:text-white open:[&_[data-slot='icon']:not([class*='text-'])]:text-white",
+                  "open:bg-quebi-surface/[0.04] open:text-quebi-fg open:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
                 className,
               )
             : className,
@@ -166,8 +166,8 @@ export interface MenuHeaderProps extends React.ComponentProps<typeof Header> {
 const MenuHeader = ({ className, separator = false, ...props }: MenuHeaderProps) => (
   <Header
     className={cn(
-      "col-span-full px-2.5 py-2 font-medium text-base text-white sm:text-sm",
-      separator && "-mx-1 border-cyan-500/10 border-b sm:px-3 sm:pb-2.5",
+      "col-span-full px-2.5 py-2 font-medium text-base text-quebi-fg sm:text-sm",
+      separator && "-mx-1 border-quebi-line/10 border-b sm:px-3 sm:pb-2.5",
       className,
     )}
     {...props}

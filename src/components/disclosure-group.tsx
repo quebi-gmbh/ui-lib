@@ -40,10 +40,10 @@ export function Disclosure({ className, ...props }: DisclosureProps) {
       data-slot="disclosure"
       className={composeRenderProps(className, (className, { isExpanded, isFocusVisibleWithin }) =>
         cn(
-          "group/disclosure w-full overflow-hidden rounded-quebi-md border border-cyan-500/10 bg-quebi-bg transition-colors duration-200",
-          "data-[hovered]:border-cyan-500/20",
+          "group/disclosure w-full overflow-hidden rounded-quebi-md border border-quebi-line/10 bg-quebi-bg transition-colors duration-200",
+          "data-[hovered]:border-quebi-line/20",
           (isExpanded || isFocusVisibleWithin) &&
-            "border-cyan-500/20 bg-quebi-brand/5 shadow-quebi-glow",
+            "border-quebi-line/20 bg-quebi-brand/5 shadow-quebi-glow",
           className,
         ),
       )}
@@ -73,9 +73,9 @@ export function DisclosureTrigger({
         slot="trigger"
         className={composeRenderProps(className, (className) =>
           cn(
-            "flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-start font-medium text-sm text-white outline-hidden",
+            "flex w-full cursor-pointer items-center justify-between gap-3 px-4 py-3 text-start font-medium text-sm text-quebi-fg outline-hidden",
             "transition-colors duration-150",
-            "data-[hovered]:text-white",
+            "data-[hovered]:text-quebi-fg",
             "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand/50 data-[focus-visible]:ring-inset",
             "disabled:opacity-50 disabled:cursor-not-allowed",
             "[&_[data-slot=icon]]:size-4 [&_[data-slot=icon]]:shrink-0",
@@ -101,7 +101,7 @@ export function DisclosureIndicator({ className, ...props }: React.ComponentProp
       aria-hidden="true"
       className={cn(
         "pointer-events-none relative flex size-5 shrink-0 items-center justify-center text-quebi-fg-muted [--width:--spacing(2.5)]",
-        "group-data-[hovered]/disclosure:text-white",
+        "group-data-[hovered]/disclosure:text-quebi-fg",
         className,
       )}
       {...props}

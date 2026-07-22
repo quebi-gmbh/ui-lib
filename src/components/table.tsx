@@ -56,7 +56,7 @@ const useTableContext = () => use(TableContext)
 const Root = (props: TableProps) => {
   return (
     <TablePrimitive
-      className="w-full min-w-full caption-bottom border-collapse text-sm text-white outline-hidden"
+      className="w-full min-w-full caption-bottom border-collapse text-sm text-quebi-fg outline-hidden"
       {...props}
     />
   )
@@ -76,7 +76,7 @@ const Table = ({
       <div className="flow-root">
         <div
           className={cn(
-            "relative overflow-hidden whitespace-nowrap rounded-quebi-md border border-cyan-500/10 bg-quebi-bg [--gutter-y:--spacing(3)] has-data-[slot=table-resizable-container]:overflow-auto",
+            "relative overflow-hidden whitespace-nowrap rounded-quebi-md border border-quebi-line/10 bg-quebi-bg [--gutter-y:--spacing(3)] has-data-[slot=table-resizable-container]:overflow-auto",
             className,
           )}
         >
@@ -139,9 +139,9 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
       {...props}
       className={composeRenderProps(className, (className) =>
         cn(
-          "text-start bg-quebi-bg text-quebi-fg-muted text-xs font-semibold uppercase tracking-[0.08em] py-3 px-3.5 border-b border-cyan-500/10",
+          "text-start bg-quebi-bg text-quebi-fg-muted text-xs font-semibold uppercase tracking-[0.08em] py-3 px-3.5 border-b border-quebi-line/10",
           "relative allows-sorting:cursor-default dragging:cursor-grabbing outline-hidden",
-          grid && "border-l border-cyan-500/10 first:border-l-0",
+          grid && "border-l border-quebi-line/10 first:border-l-0",
           isResizable && "overflow-hidden truncate",
           className,
         ),
@@ -153,8 +153,8 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
           {values.allowsSorting && (
             <span
               className={cn(
-                "grid size-[1.15rem] flex-none shrink-0 place-content-center rounded-quebi-sm bg-white/[0.04] text-quebi-fg-muted *:data-[slot=icon]:size-3.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
-                values.isHovered ? "bg-white/[0.08]" : "",
+                "grid size-[1.15rem] flex-none shrink-0 place-content-center rounded-quebi-sm bg-quebi-surface/[0.04] text-quebi-fg-muted *:data-[slot=icon]:size-3.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
+                values.isHovered ? "bg-quebi-surface/[0.08]" : "",
               )}
             >
               <ChevronDown
@@ -188,14 +188,14 @@ const TableHeader = <T extends object>({
         <Column
           data-slot="table-column"
           isRowHeader
-          className="bg-quebi-bg border-b border-cyan-500/10 py-3 px-3.5 w-px"
+          className="bg-quebi-bg border-b border-quebi-line/10 py-3 px-3.5 w-px"
         />
       )}
       {selectionBehavior === "toggle" && (
         <Column
           data-slot="table-column"
           isRowHeader
-          className="bg-quebi-bg border-b border-cyan-500/10 py-3 px-3.5 w-px"
+          className="bg-quebi-bg border-b border-quebi-line/10 py-3 px-3.5 w-px"
         >
           {selectionMode === "multiple" && <Checkbox slot="selection" />}
         </Column>
@@ -239,15 +239,15 @@ const TableRow = <T extends object>({
           },
         ) =>
           cn(
-            "group relative cursor-default outline outline-transparent transition-colors duration-150 hover:bg-white/[0.02]",
+            "group relative cursor-default outline outline-transparent transition-colors duration-150 hover:bg-quebi-surface/[0.02]",
             isFocusVisible &&
               "bg-quebi-brand/10 outline-quebi-brand ring-2 ring-quebi-brand/30",
-            isDragging && "cursor-grabbing bg-quebi-brand/10 text-white outline-quebi-brand",
-            isSelected && "bg-quebi-brand/10 text-white",
-            striped && "even:bg-white/[0.02]",
+            isDragging && "cursor-grabbing bg-quebi-brand/10 text-quebi-fg outline-quebi-brand",
+            isSelected && "bg-quebi-brand/10 text-quebi-fg",
+            striped && "even:bg-quebi-surface/[0.02]",
             (props.href || props.onAction || selectionMode === "multiple") &&
               isFocusVisibleWithin &&
-              "bg-quebi-brand/5 selected:bg-quebi-brand/10 text-white",
+              "bg-quebi-brand/5 selected:bg-quebi-brand/10 text-quebi-fg",
             isDisabled && "opacity-50",
             className,
           ),
@@ -305,9 +305,9 @@ const TableCell = ({ className, ref, ...props }: TableCellProps) => {
       {...props}
       className={composeRenderProps(className, (className) =>
         cn(
-          "group align-middle outline-hidden py-3 px-3.5 group-has-data-focus-visible-within:text-white",
-          !striped && "border-b border-cyan-500/10 group-[:last-child]:border-b-0",
-          grid && "border-l border-cyan-500/10 first:border-l-0",
+          "group align-middle outline-hidden py-3 px-3.5 group-has-data-focus-visible-within:text-quebi-fg",
+          !striped && "border-b border-quebi-line/10 group-[:last-child]:border-b-0",
+          grid && "border-l border-quebi-line/10 first:border-l-0",
           allowResize && "overflow-hidden truncate",
           className,
         ),

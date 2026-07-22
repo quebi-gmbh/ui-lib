@@ -24,7 +24,7 @@ export function Label({ className, ...props }: LabelProps) {
       data-slot="label"
       {...props}
       className={cn(
-        "select-none font-semibold text-[13px] text-white",
+        "select-none font-semibold text-[13px] text-quebi-fg",
         "in-disabled:opacity-50 group-disabled:opacity-50",
         className,
       )}
@@ -99,7 +99,7 @@ export function Legend({ className, ...props }: React.ComponentProps<"legend">) 
     <legend
       data-slot="legend"
       {...props}
-      className={cn("font-semibold text-base/6 text-white data-disabled:opacity-50", className)}
+      className={cn("font-semibold text-base/6 text-quebi-fg data-disabled:opacity-50", className)}
     />
   )
 }

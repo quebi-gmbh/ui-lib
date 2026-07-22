@@ -12,7 +12,7 @@ export default function ComponentsLayout() {
         <button
           type="button"
           onClick={() => setMobileOpen((o) => !o)}
-          className="mb-4 inline-flex items-center gap-2 rounded-quebi-sm border border-cyan-500/20 px-3 py-2 text-sm text-quebi-fg-muted transition-colors duration-200 hover:border-quebi-brand hover:text-quebi-brand lg:hidden"
+          className="mb-4 inline-flex items-center gap-2 rounded-quebi-sm border border-quebi-line/20 px-3 py-2 text-sm text-quebi-fg-muted transition-colors duration-200 hover:border-quebi-brand hover:text-quebi-brand lg:hidden"
           aria-expanded={mobileOpen}
         >
           {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}

@@ -40,11 +40,11 @@ export function ColorField({ className, children, ...props }: ColorFieldProps) {
         <InputPrimitive
           data-slot="control"
           className={cn(
-            "relative block w-full appearance-none text-sm text-white tabular-nums uppercase",
+            "relative block w-full appearance-none text-sm text-quebi-fg tabular-nums uppercase",
             "placeholder:text-quebi-fg-subtle placeholder:normal-case",
-            "rounded-quebi-sm border border-cyan-500/20 bg-white/[0.02] px-3 py-2.5",
+            "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
             "transition-[border-color,box-shadow] duration-200",
-            "enabled:hover:border-cyan-500/40",
+            "enabled:hover:border-quebi-line/40",
             "outline-none focus:outline-none focus:border-quebi-brand focus:ring-2 focus:ring-quebi-brand/50",
             "invalid:border-red-500 focus:invalid:ring-red-500/50",
             "disabled:cursor-not-allowed disabled:opacity-50 in-disabled:opacity-50",

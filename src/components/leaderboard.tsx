@@ -39,7 +39,7 @@ export function LeaderboardTitle({ className, ...props }: React.ComponentProps<"
   return (
     <div
       data-slot="leaderboard-title"
-      className={cn("text-balance font-semibold text-base/6 text-white", className)}
+      className={cn("text-balance font-semibold text-base/6 text-quebi-fg", className)}
       {...props}
     />
   )
@@ -82,10 +82,10 @@ export function LeaderboardItem({
         onClick={onAction}
         minValue={minValue}
         className={cn(
-          "relative overflow-hidden rounded-quebi-sm px-2 py-1.5 text-sm/6 text-white outline-none",
+          "relative overflow-hidden rounded-quebi-sm px-2 py-1.5 text-sm/6 text-quebi-fg outline-none",
           "transition-colors duration-150",
           "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-          onAction ? "cursor-pointer hover:bg-white/[0.02]" : "cursor-default",
+          onAction ? "cursor-pointer hover:bg-quebi-surface/[0.02]" : "cursor-default",
           "[&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
           className,
         )}

@@ -123,7 +123,7 @@ const ChoiceBox = <T extends object>({
 const choiceBoxItemStyles = tv({
   base: [
     "group outline-hidden",
-    "rounded-quebi-md border border-cyan-500/20 bg-quebi-bg p-(--gutter) **:data-[slot=label]:font-medium",
+    "rounded-quebi-md border border-quebi-line/20 bg-quebi-bg p-(--gutter) **:data-[slot=label]:font-medium",
     "transition-colors duration-150",
     "**:data-[slot=avatar]:row-span-2 **:data-[slot=avatar]:mt-0.5 **:data-[slot=avatar]:shrink-0",
     "**:data-[slot=icon]:row-span-2 **:data-[slot=icon]:mt-0.5 **:data-[slot=icon]:shrink-0",
@@ -137,7 +137,7 @@ const choiceBoxItemStyles = tv({
       false: "cursor-default",
     },
     isHovered: {
-      true: "not-data-readonly:not-data-focus-visible:not-selected:border-cyan-500/40",
+      true: "not-data-readonly:not-data-focus-visible:not-selected:border-quebi-line/40",
     },
     isFocused: {
       true: "ring-2 ring-quebi-brand/50 ring-offset-2 ring-offset-quebi-bg invalid:ring-red-500/50",
@@ -239,7 +239,7 @@ const ChoiceBoxLabel = ({ className, ref, ...props }: ChoiceBoxLabelProps) => {
       data-slot="label"
       ref={ref}
       className={cn(
-        "select-none text-base/6 text-white group-disabled:opacity-50 sm:text-sm/6",
+        "select-none text-base/6 text-quebi-fg group-disabled:opacity-50 sm:text-sm/6",
         "col-start-1 row-start-1",
         "group-has-data-[slot=icon]:col-start-2",
         "group-has-data-[slot=avatar]:col-start-2",

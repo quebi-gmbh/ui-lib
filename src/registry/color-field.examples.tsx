@@ -51,7 +51,7 @@ export const colorFieldExamples: ComponentExample[] = [
             </ColorField>
             <div className="flex items-center gap-2 text-sm text-quebi-fg-muted">
               <span
-                className="size-5 rounded-quebi-sm border border-cyan-500/20"
+                className="size-5 rounded-quebi-sm border border-quebi-line/20"
                 style={{ background: value.toString("hex") }}
               />
               {value.toString("hex")}

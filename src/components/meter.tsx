@@ -55,7 +55,7 @@ export function MeterHeader({ className, ...props }: React.ComponentProps<"div">
   return (
     <div
       data-slot="meter-header"
-      className={cn("flex items-center justify-between text-sm text-white", className)}
+      className={cn("flex items-center justify-between text-sm text-quebi-fg", className)}
       {...props}
     />
   )
@@ -87,7 +87,7 @@ export function MeterTrack({ className, ...props }: React.ComponentProps<"div">)
     <div
       data-slot="meter-track"
       className={cn(
-        "relative h-1.5 w-full overflow-hidden rounded-full border border-cyan-500/10 bg-cyan-500/10",
+        "relative h-1.5 w-full overflow-hidden rounded-full border border-quebi-line/10 bg-cyan-500/10",
         className,
       )}
       {...props}

@@ -23,7 +23,7 @@ export function ComponentSidebar({ onNavigate }: { onNavigate?: () => void }) {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search components"
           aria-label="Search components"
-          className="w-full rounded-quebi-sm border border-cyan-500/20 bg-white/[0.02] py-2 pr-3 pl-9 text-sm text-white placeholder:text-quebi-fg-subtle transition-colors duration-200 focus:border-quebi-brand focus:outline-none"
+          className="w-full rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] py-2 pr-3 pl-9 text-sm text-quebi-fg placeholder:text-quebi-fg-subtle transition-colors duration-200 focus:border-quebi-brand focus:outline-none"
         />
       </div>
 
@@ -37,7 +37,7 @@ export function ComponentSidebar({ onNavigate }: { onNavigate?: () => void }) {
             "mt-4 flex items-center gap-2 rounded-quebi-sm px-3 py-1.5 text-sm transition-colors duration-150",
             isActive
               ? "bg-quebi-brand/10 font-medium text-quebi-brand"
-              : "text-quebi-fg-muted hover:bg-white/[0.04] hover:text-white",
+              : "text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
           )
         }
       >
@@ -69,7 +69,7 @@ export function ComponentSidebar({ onNavigate }: { onNavigate?: () => void }) {
                           "block rounded-quebi-sm px-3 py-1.5 text-sm transition-colors duration-150",
                           isActive
                             ? "bg-quebi-brand/10 font-medium text-quebi-brand"
-                            : "text-quebi-fg-muted hover:bg-white/[0.04] hover:text-white",
+                            : "text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
                         )
                       }
                     >
@@ -83,7 +83,7 @@ export function ComponentSidebar({ onNavigate }: { onNavigate?: () => void }) {
         )}
       </OverlayScrollbarsComponent>
 
-      <p className="border-cyan-500/10 border-t pt-4 text-xs text-quebi-fg-subtle">
+      <p className="border-quebi-line/10 border-t pt-4 text-xs text-quebi-fg-subtle">
         {total} component{total === 1 ? "" : "s"}
       </p>
     </div>

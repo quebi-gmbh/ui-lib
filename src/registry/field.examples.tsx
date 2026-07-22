@@ -3,7 +3,7 @@ import { Description, Field, FieldError, Fieldset, Label, Legend } from "@/compo
 import type { ComponentExample } from "./types"
 
 const inputClass =
-  "w-full rounded-quebi-sm border border-cyan-500/20 bg-quebi-bg px-3 py-2 text-sm text-white outline-none transition-colors placeholder:text-quebi-fg-subtle focus-visible:border-quebi-brand focus-visible:ring-2 focus-visible:ring-quebi-brand/50"
+  "w-full rounded-quebi-sm border border-quebi-line/20 bg-quebi-bg px-3 py-2 text-sm text-quebi-fg outline-none transition-colors placeholder:text-quebi-fg-subtle focus-visible:border-quebi-brand focus-visible:ring-2 focus-visible:ring-quebi-brand/50"
 
 export const fieldExamples: ComponentExample[] = [
   {

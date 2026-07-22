@@ -41,8 +41,8 @@ const TreeItem = <T extends object>({ className, ...props }: TreeItemProps<T>) =
     <TreeItemPrimitive
       className={cn(
         "group/tree-item relative flex shrink-0 select-none rounded-quebi-sm px-2 py-1.5",
-        "text-sm/6 text-white transition-colors duration-150 focus:outline-hidden",
-        "hover:bg-white/[0.02]",
+        "text-sm/6 text-quebi-fg transition-colors duration-150 focus:outline-hidden",
+        "hover:bg-quebi-surface/[0.02]",
         "selected:bg-quebi-brand/10",
         "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
         "**:data-[slot=icon]:me-1 **:data-[slot=icon]:size-5 **:data-[slot=icon]:shrink-0 sm:**:data-[slot=icon]:size-4",
@@ -103,8 +103,8 @@ const TreeIndicator = ({
       slot="chevron"
       isDisabled={values.isDisabled}
       className={cn(
-        "shrink-0 content-center text-quebi-fg-muted transition-colors duration-150 hover:text-white",
-        values.isExpanded && "text-white",
+        "shrink-0 content-center text-quebi-fg-muted transition-colors duration-150 hover:text-quebi-fg",
+        values.isExpanded && "text-quebi-fg",
       )}
     >
       <ChevronRight

@@ -160,7 +160,7 @@ export function TagField({
         className="group flex w-full flex-col gap-y-1.5"
       >
         {label != null && (
-          <Label className="select-none font-semibold text-[13px] text-white group-disabled:opacity-50">
+          <Label className="select-none font-semibold text-[13px] text-quebi-fg group-disabled:opacity-50">
             {label}
           </Label>
         )}
@@ -168,10 +168,10 @@ export function TagField({
           <Input
             placeholder={placeholder}
             className={cn(
-              "relative block w-full appearance-none text-sm text-white placeholder:text-quebi-fg-subtle",
-              "rounded-quebi-sm border border-cyan-500/20 bg-white/[0.02] px-3 py-2.5",
+              "relative block w-full appearance-none text-sm text-quebi-fg placeholder:text-quebi-fg-subtle",
+              "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
               "transition-[border-color,box-shadow] duration-200",
-              "enabled:hover:border-cyan-500/40",
+              "enabled:hover:border-quebi-line/40",
               "outline-none focus:outline-none focus:border-quebi-brand focus:ring-2 focus:ring-quebi-brand/50",
               isInvalid && "border-red-500 focus:ring-red-500/50",
               "disabled:cursor-not-allowed disabled:opacity-50",
@@ -206,9 +206,9 @@ export function TagField({
                   cn(
                     "group inline-flex items-center gap-1 whitespace-nowrap",
                     "rounded-full border px-2.5 py-1 text-xs font-semibold leading-none",
-                    "border-cyan-500/20 bg-white/[0.06] text-quebi-fg-muted",
+                    "border-quebi-line/20 bg-quebi-surface/[0.06] text-quebi-fg-muted",
                     "transition-colors duration-150",
-                    allowsRemoving && "hover:border-cyan-500/40 hover:text-white",
+                    allowsRemoving && "hover:border-quebi-line/40 hover:text-quebi-fg",
                     "data-[selected]:border-quebi-brand/40 data-[selected]:bg-quebi-brand/10 data-[selected]:text-quebi-brand",
                     "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand/50 data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
                     "data-[disabled]:opacity-50",
@@ -226,7 +226,7 @@ export function TagField({
                         className={cn(
                           "-mr-1 flex size-4 shrink-0 items-center justify-center rounded-full",
                           "text-quebi-fg-subtle transition-colors duration-150",
-                          "hover:bg-white/10 hover:text-white",
+                          "hover:bg-quebi-surface/10 hover:text-quebi-fg",
                           "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50",
                           "cursor-pointer",
                         )}

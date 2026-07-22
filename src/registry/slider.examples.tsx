@@ -16,7 +16,7 @@ export const sliderExamples: ComponentExample[] = [
     render: () => (
       <Slider defaultValue={40} className="w-72">
         <div className="flex items-center justify-between">
-          <Label className="text-sm text-white">Volume</Label>
+          <Label className="text-sm text-quebi-fg">Volume</Label>
           <SliderOutput />
         </div>
         <SliderTrack>
@@ -32,7 +32,7 @@ export const sliderExamples: ComponentExample[] = [
     render: () => (
       <Slider defaultValue={[25, 75]} className="w-72">
         <div className="flex items-center justify-between">
-          <Label className="text-sm text-white">Price</Label>
+          <Label className="text-sm text-quebi-fg">Price</Label>
           <SliderOutput>
             {({ state }) =>
               state.values.map((_, i) => state.getThumbValueLabel(i)).join(" – ")
@@ -53,7 +53,7 @@ export const sliderExamples: ComponentExample[] = [
     render: () => (
       <Slider defaultValue={60} isDisabled className="w-72">
         <div className="flex items-center justify-between">
-          <Label className="text-sm text-white">Brightness</Label>
+          <Label className="text-sm text-quebi-fg">Brightness</Label>
           <SliderOutput />
         </div>
         <SliderTrack>
@@ -83,7 +83,7 @@ export const sliderExamples: ComponentExample[] = [
         return (
           <Slider value={value} onChange={(v) => setValue(v as number)} className="w-72">
             <div className="flex items-center justify-between">
-              <Label className="text-sm text-white">Opacity</Label>
+              <Label className="text-sm text-quebi-fg">Opacity</Label>
               <SliderOutput />
             </div>
             <SliderTrack>

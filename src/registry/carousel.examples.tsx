@@ -8,7 +8,7 @@ import {
 import type { ComponentExample } from "./types"
 
 const Slide = ({ n }: { n: number }) => (
-  <div className="flex aspect-video items-center justify-center rounded-quebi-md border border-cyan-500/10 bg-quebi-bg text-4xl font-semibold text-quebi-brand">
+  <div className="flex aspect-video items-center justify-center rounded-quebi-md border border-quebi-line/10 bg-quebi-bg text-4xl font-semibold text-quebi-brand">
     {n}
   </div>
 )

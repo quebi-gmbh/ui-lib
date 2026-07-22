@@ -38,14 +38,14 @@ export function DateInput({ className, bare = false, ...props }: DateInputCompon
     <span data-slot="control" className={bare ? "relative block w-full" : "relative block"}>
       <DateInputPrimitive
         className={cn(
-          "relative block appearance-none text-sm text-white",
+          "relative block appearance-none text-sm text-quebi-fg",
           bare
             ? "w-full rounded-none border-0 bg-transparent px-3 py-2.5 outline-none"
             : [
                 // quebi input chrome — matches input.tsx.
-                "rounded-quebi-sm border border-cyan-500/20 bg-white/[0.02] px-3 py-2.5",
+                "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
                 "transition-[border-color,box-shadow] duration-200",
-                "enabled:hover:border-cyan-500/40",
+                "enabled:hover:border-quebi-line/40",
                 "outline-none focus-within:border-quebi-brand focus-within:outline-none focus-within:ring-2 focus-within:ring-quebi-brand/50",
                 "group-open:border-quebi-brand group-open:ring-2 group-open:ring-quebi-brand/50",
                 "invalid:border-red-500 focus-within:invalid:ring-red-500/50",
@@ -59,9 +59,9 @@ export function DateInput({ className, bare = false, ...props }: DateInputCompon
           <DateSegment
             segment={segment}
             className={cn(
-              "inline shrink-0 rounded px-1 py-0.5 text-sm text-white tracking-wider caret-transparent outline-0 type-literal:px-0",
+              "inline shrink-0 rounded px-1 py-0.5 text-sm text-quebi-fg tracking-wider caret-transparent outline-0 type-literal:px-0",
               "data-placeholder:text-quebi-fg-subtle data-[type=literal]:text-quebi-fg-muted",
-              "data-focused:bg-quebi-brand/20 data-focused:text-white",
+              "data-focused:bg-quebi-brand/20 data-focused:text-quebi-fg",
               "data-invalid:text-red-500 data-focused:data-invalid:bg-red-500/20 data-focused:data-invalid:text-red-500",
               "forced-colors:data-focused:bg-[Highlight] forced-colors:data-focused:text-[HighlightText]",
               "forced-color-adjust-none forced-colors:text-[ButtonText]",

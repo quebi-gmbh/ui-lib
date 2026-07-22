@@ -18,7 +18,7 @@ export function ColorArea({ className, ...props }: ColorAreaProps) {
       {...props}
       data-slot="color-area"
       className={cn(
-        "size-56 shrink-0 rounded-quebi-md border border-cyan-500/10",
+        "size-56 shrink-0 rounded-quebi-md border border-quebi-line/10",
         "disabled:opacity-50 forced-colors:bg-[GrayText]",
         className,
       )}

@@ -201,9 +201,9 @@ const Navbar = ({
         className={twMerge(
           "relative isolate hidden py-(--navbar-gutter) [--navbar-gutter:--spacing(2.5)] md:block",
           intent === "float" &&
-            "rounded-quebi-md bg-quebi-bg py-0 *:data-[navbar=content]:max-w-7xl *:data-[navbar=content]:rounded-quebi-md *:data-[navbar=content]:border *:data-[navbar=content]:border-cyan-500/10 *:data-[navbar=content]:bg-quebi-bg *:data-[navbar=content]:px-4 *:data-[navbar=content]:py-(--navbar-gutter) *:data-[navbar=content]:shadow-quebi-glow",
+            "rounded-quebi-md bg-quebi-bg py-0 *:data-[navbar=content]:max-w-7xl *:data-[navbar=content]:rounded-quebi-md *:data-[navbar=content]:border *:data-[navbar=content]:border-quebi-line/10 *:data-[navbar=content]:bg-quebi-bg *:data-[navbar=content]:px-4 *:data-[navbar=content]:py-(--navbar-gutter) *:data-[navbar=content]:shadow-quebi-glow",
           ["default", "inset"].includes(intent) && "px-4",
-          intent === "default" && "border-b border-cyan-500/10 bg-quebi-bg",
+          intent === "default" && "border-b border-quebi-line/10 bg-quebi-bg",
           className,
         )}
       >
@@ -248,15 +248,15 @@ const NavbarItem = ({ className, isCurrent, ...props }: NavbarItemProps) => {
       className={cn(
         [
           "href" in props ? "cursor-pointer" : "cursor-default",
-          "group/navbar-item pressed:bg-white/[0.06] pressed:text-white hover:bg-white/[0.04] hover:text-white",
-          "text-quebi-fg-muted aria-[current=page]:text-white aria-[current=page]:*:data-[slot=icon]:text-quebi-brand",
+          "group/navbar-item pressed:bg-quebi-surface/[0.06] pressed:text-quebi-fg hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
+          "text-quebi-fg-muted aria-[current=page]:text-quebi-fg aria-[current=page]:*:data-[slot=icon]:text-quebi-brand",
           "col-span-full grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] supports-[grid-template-columns:subgrid]:grid-cols-subgrid md:supports-[grid-template-columns:subgrid]:grid-cols-none",
           "relative min-w-0 items-center gap-x-3 rounded-quebi-sm p-2 text-start font-medium text-base/6 md:gap-x-(--navbar-gutter) md:px-(--navbar-gutter) md:py-[calc(var(--navbar-gutter)---spacing(0.5))] md:text-sm/5",
           "*:data-[slot=icon]:size-5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-quebi-fg-subtle md:*:data-[slot=icon]:size-4",
           "*:data-[slot=loader]:size-5 *:data-[slot=loader]:shrink-0 md:*:data-[slot=loader]:size-4",
           "*:not-nth-2:last:data-[slot=icon]:row-start-1 *:not-nth-2:last:data-[slot=icon]:ms-auto *:not-nth-2:last:data-[slot=icon]:size-5 md:*:not-nth-2:last:data-[slot=icon]:size-4",
           "*:data-[slot=avatar]:-m-0.5 *:data-[slot=avatar]:size-6 md:*:data-[slot=avatar]:size-5",
-          "pressed:*:data-[slot=icon]:text-white hover:*:data-[slot=icon]:text-white",
+          "pressed:*:data-[slot=icon]:text-quebi-fg hover:*:data-[slot=icon]:text-quebi-fg",
           "transition-colors duration-150",
           "outline-hidden focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
           "text-start disabled:cursor-default disabled:opacity-50",
@@ -312,9 +312,9 @@ const NavbarMobile = ({ className, ref, ...props }: React.ComponentProps<"div">)
         "group/navbar-mobile flex items-center gap-x-3 px-4 py-2.5 md:hidden",
         "group-has-data-navbar-sticky/navbar:sticky group-has-data-navbar-sticky/navbar:bg-quebi-bg",
         // top
-        "group-has-data-navbar-sticky/navbar:group-has-placement-top/navbar:top-0 group-has-data-navbar-sticky/navbar:group-has-placement-top/navbar:border-b group-has-data-navbar-sticky/navbar:group-has-placement-top/navbar:border-cyan-500/10",
+        "group-has-data-navbar-sticky/navbar:group-has-placement-top/navbar:top-0 group-has-data-navbar-sticky/navbar:group-has-placement-top/navbar:border-b group-has-data-navbar-sticky/navbar:group-has-placement-top/navbar:border-quebi-line/10",
         // bottom
-        "group-has-data-navbar-sticky/navbar:group-has-placement-bottom/navbar:bottom-0 group-has-data-navbar-sticky/navbar:group-has-placement-bottom/navbar:border-t group-has-data-navbar-sticky/navbar:group-has-placement-bottom/navbar:border-cyan-500/10",
+        "group-has-data-navbar-sticky/navbar:group-has-placement-bottom/navbar:bottom-0 group-has-data-navbar-sticky/navbar:group-has-placement-bottom/navbar:border-t group-has-data-navbar-sticky/navbar:group-has-placement-bottom/navbar:border-quebi-line/10",
         className,
       )}
       {...props}
@@ -330,7 +330,7 @@ const NavbarInset = ({ className, ref, children, ...props }: React.ComponentProp
       className={twMerge("flex flex-1 flex-col bg-quebi-bg pb-2 md:px-2", className)}
       {...props}
     >
-      <div className="grow bg-quebi-bg p-6 md:rounded-quebi-md md:p-16 md:shadow-quebi-glow md:ring-1 md:ring-cyan-500/10">
+      <div className="grow bg-quebi-bg p-6 md:rounded-quebi-md md:p-16 md:shadow-quebi-glow md:ring-1 md:ring-quebi-line/10">
         <div className="mx-auto max-w-7xl">{children}</div>
       </div>
     </div>

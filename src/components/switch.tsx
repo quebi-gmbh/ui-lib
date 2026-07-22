@@ -35,7 +35,7 @@ export function Switch({ children, className, ...props }: SwitchProps) {
               // 44x24 track, pill-shaped.
               "relative isolate inline-flex h-6 w-11 shrink-0 rounded-full border",
               "transition-colors duration-200",
-              "border-cyan-500/30 bg-cyan-500/10",
+              "border-quebi-line/30 bg-quebi-surface/10",
               values.isSelected && "border-quebi-brand bg-quebi-brand",
               values.isFocusVisible &&
                 "ring-2 ring-quebi-brand/50 ring-offset-2 ring-offset-quebi-bg",
@@ -45,7 +45,7 @@ export function Switch({ children, className, ...props }: SwitchProps) {
               aria-hidden="true"
               className={cn(
                 // 20x20 thumb, 2px inset from top-left, slides 20px right when on.
-                "pointer-events-none absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow-quebi-glow",
+                "pointer-events-none absolute top-0.5 left-0.5 size-5 rounded-full bg-quebi-inverse-bg shadow-quebi-glow",
                 "transition-transform duration-200",
                 values.isSelected && "translate-x-5",
               )}

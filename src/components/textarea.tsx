@@ -17,10 +17,10 @@ export function Textarea({ className, ...props }: TextAreaProps) {
         {...props}
         className={cn(
           "field-sizing-content block min-h-20 w-full appearance-none resize-y rounded-quebi-sm px-3 py-2",
-          "bg-quebi-bg text-sm text-white placeholder:text-quebi-fg-subtle",
-          "border border-cyan-500/20",
+          "bg-quebi-bg text-sm text-quebi-fg placeholder:text-quebi-fg-subtle",
+          "border border-quebi-line/20",
           "transition-colors duration-150",
-          "hover:border-cyan-500/40",
+          "hover:border-quebi-line/40",
           "focus:outline-none focus:border-quebi-brand focus:ring-2 focus:ring-quebi-brand/50 focus:ring-offset-2 focus:ring-offset-quebi-bg",
           "invalid:border-red-500 focus:invalid:border-red-500 focus:invalid:ring-red-500/50",
           "aria-invalid:border-red-500 focus:aria-invalid:ring-red-500/50",

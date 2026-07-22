@@ -20,11 +20,11 @@ const navTargetClasses = [
 ].join(" ")
 
 const navTargetInteractive = [
-  "cursor-pointer border-cyan-500/20 bg-transparent text-quebi-fg-muted",
-  "hover:border-quebi-brand hover:text-quebi-brand hover:bg-white/[0.04]",
+  "cursor-pointer border-quebi-line/20 bg-transparent text-quebi-fg-muted",
+  "hover:border-quebi-brand hover:text-quebi-brand hover:bg-quebi-surface/[0.04]",
 ].join(" ")
 
-const navTargetDisabled = "cursor-not-allowed border-cyan-500/10 bg-transparent text-quebi-fg-subtle"
+const navTargetDisabled = "cursor-not-allowed border-quebi-line/10 bg-transparent text-quebi-fg-subtle"
 
 const pageTargetClasses = [
   "inline-flex h-8 min-w-8 shrink-0 items-center justify-center px-2",
@@ -36,12 +36,12 @@ const pageTargetClasses = [
 
 const pageTargetInteractive = [
   "cursor-pointer text-quebi-fg-muted",
-  "hover:bg-white/[0.04] hover:text-white",
+  "hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
 ].join(" ")
 
 const pageTargetCurrent = [
-  "cursor-default bg-quebi-brand text-quebi-bg",
-  "aria-[current=page]:bg-quebi-brand aria-[current=page]:text-quebi-bg",
+  "cursor-default bg-quebi-brand text-quebi-on-brand",
+  "aria-[current=page]:bg-quebi-brand aria-[current=page]:text-quebi-on-brand",
 ].join(" ")
 
 const Pagination = ({ className, ref, ...props }: React.ComponentProps<"nav">) => (
@@ -238,7 +238,7 @@ const PaginationGap = ({
 const PaginationInfo = ({ className, ...props }: React.ComponentProps<"p">) => (
   <p
     className={cn(
-      "text-[13px] text-quebi-fg-muted *:[strong]:font-semibold *:[strong]:text-white",
+      "text-[13px] text-quebi-fg-muted *:[strong]:font-semibold *:[strong]:text-quebi-fg",
       className,
     )}
     {...props}

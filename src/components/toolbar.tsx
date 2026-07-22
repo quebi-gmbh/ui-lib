@@ -45,7 +45,7 @@ const Toolbar = ({ orientation = "horizontal", isCircle, className, ...props }: 
         {...props}
         className={composeRenderProps(className, (className, { orientation }) =>
           cn(
-            "group inline-flex gap-1.5 border border-cyan-500/10 bg-quebi-bg p-1.5",
+            "group inline-flex gap-1.5 border border-quebi-line/10 bg-quebi-bg p-1.5",
             "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
             isCircle ? "rounded-full" : "rounded-quebi-md",
             orientation === "horizontal"

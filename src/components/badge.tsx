@@ -20,15 +20,15 @@ export const badgeStyles = tv({
   ],
   variants: {
     intent: {
-      neutral: "bg-white/[0.06] border-white/10 text-quebi-fg-muted",
+      neutral: "bg-quebi-surface/[0.06] border-quebi-surface/10 text-quebi-fg-muted",
       brand: "bg-quebi-brand/10 border-quebi-brand/20 text-quebi-brand",
-      accent: "bg-purple-500/10 border-purple-500/20 text-purple-300",
-      success: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-      warning: "bg-amber-500/10 border-amber-500/20 text-amber-400",
-      danger: "bg-red-500/10 border-red-500/20 text-red-400",
-      info: "bg-cyan-500/10 border-cyan-500/20 text-cyan-300",
-      ai: "border-transparent bg-gradient-to-r from-quebi-brand to-purple-500 text-quebi-bg shadow-quebi-glow",
-      outline: "bg-transparent border-cyan-500/20 text-quebi-fg-muted",
+      accent: "bg-purple-500/10 border-purple-500/20 text-quebi-accent",
+      success: "bg-emerald-500/10 border-emerald-500/20 text-quebi-success",
+      warning: "bg-amber-500/10 border-amber-500/20 text-quebi-warn",
+      danger: "bg-red-500/10 border-red-500/20 text-quebi-danger",
+      info: "bg-cyan-500/10 border-quebi-line/20 text-quebi-info",
+      ai: "border-transparent bg-gradient-to-r from-quebi-brand to-purple-500 text-quebi-on-brand shadow-quebi-glow",
+      outline: "bg-transparent border-quebi-line/20 text-quebi-fg-muted",
     },
   },
   defaultVariants: {

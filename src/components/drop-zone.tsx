@@ -18,11 +18,11 @@ export function DropZone({ className, ...props }: DropZoneProps) {
       data-slot="control"
       className={composeRenderProps(className, (className, { isDropTarget }) =>
         cn(
-          "group/drop-zone relative z-10 flex max-h-56 items-center justify-center overflow-hidden rounded-quebi-md border border-dashed border-cyan-500/20 p-6 text-center text-sm text-quebi-fg-muted",
+          "group/drop-zone relative z-10 flex max-h-56 items-center justify-center overflow-hidden rounded-quebi-md border border-dashed border-quebi-line/20 p-6 text-center text-sm text-quebi-fg-muted",
           "transition-colors duration-150",
           "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand/50 data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
           isDropTarget &&
-            "border-solid border-quebi-brand bg-quebi-brand/10 text-white shadow-quebi-glow",
+            "border-solid border-quebi-brand bg-quebi-brand/10 text-quebi-fg shadow-quebi-glow",
           className,
         ),
       )}

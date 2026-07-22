@@ -9,7 +9,7 @@ import type { ComponentExample } from "./types"
 const testDate = new Date("2024-03-15T14:30:00.000Z")
 
 const Stack = ({ children }: { children: React.ReactNode }) => (
-  <div className="flex flex-col gap-2 text-white">{children}</div>
+  <div className="flex flex-col gap-2 text-quebi-fg">{children}</div>
 )
 
 const Label = ({ children }: { children: React.ReactNode }) => (

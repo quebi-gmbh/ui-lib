@@ -71,7 +71,7 @@ export function ColorSliderTrack({ className, ...props }: SliderTrackProps) {
   return (
     <SliderTrack
       className={cn(
-        "group col-span-2 rounded-quebi-sm border border-cyan-500/10",
+        "group col-span-2 rounded-quebi-sm border border-quebi-line/10",
         "orientation-horizontal:h-6 orientation-horizontal:w-full",
         "orientation-vertical:ms-[50%] orientation-vertical:h-56 orientation-vertical:w-6 orientation-vertical:-translate-x-[50%]",
         "disabled:opacity-50 forced-colors:bg-[GrayText]",

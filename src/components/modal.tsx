@@ -24,7 +24,7 @@ import {
  *
  * Presents the Dialog surface inside a dark, blurred overlay. Foundational:
  * date-picker and gallery compose this. Overlay: bg-black/60 + backdrop-blur.
- * Panel: bg-quebi-bg, border-cyan-500/10, rounded-quebi-md.
+ * Panel: bg-quebi-bg, border-quebi-line/10, rounded-quebi-md.
  */
 const Modal = (props: DialogTriggerProps) => {
   return <DialogTriggerPrimitive {...props} />
@@ -88,8 +88,8 @@ const ModalContent = ({
             ? "**:data-[slot=dialog-body]:min-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding)-var(--dialog-header-height)-var(--dialog-footer-height))] sm:[--visual-viewport-vertical-padding:16px]"
             : "sm:[--visual-viewport-vertical-padding:32px]",
           // quebi surface — bg-quebi-bg, cyan border, glow elevation.
-          "relative overflow-hidden bg-quebi-bg text-white",
-          "rounded-t-quebi-md border border-cyan-500/10 shadow-quebi-glow-strong sm:rounded-quebi-md",
+          "relative overflow-hidden bg-quebi-bg text-quebi-fg",
+          "rounded-t-quebi-md border border-quebi-line/10 shadow-quebi-glow-strong sm:rounded-quebi-md",
           sizes[size],
           "entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-300 entering:ease-out",
           "exiting:slide-out-to-bottom sm:exiting:zoom-out-95 sm:exiting:slide-out-to-bottom-0 exiting:animate-out exiting:ease-in",

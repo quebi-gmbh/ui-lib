@@ -27,7 +27,7 @@ export function CodeBlock({ html, code, className }: CodeBlockProps) {
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-quebi-md border border-cyan-500/10 bg-quebi-bg",
+        "group relative overflow-hidden rounded-quebi-md border border-quebi-line/10 bg-quebi-bg",
         className,
       )}
     >
@@ -35,7 +35,7 @@ export function CodeBlock({ html, code, className }: CodeBlockProps) {
         type="button"
         onClick={copy}
         aria-label={copied ? "Copied" : "Copy code"}
-        className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-quebi-sm border border-cyan-500/20 bg-quebi-bg/80 px-2.5 py-1.5 text-xs font-medium text-quebi-fg-muted backdrop-blur transition-colors duration-200 hover:border-quebi-brand hover:text-quebi-brand"
+        className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-quebi-sm border border-quebi-line/20 bg-quebi-bg/80 px-2.5 py-1.5 text-xs font-medium text-quebi-fg-muted backdrop-blur transition-colors duration-200 hover:border-quebi-brand hover:text-quebi-brand"
       >
         {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
         {copied ? "Copied" : "Copy"}
