@@ -177,6 +177,20 @@
   }
 }
 
+/* ---------------- Shiki code blocks (dual theme) ---------------- */
+/* Build-time Shiki output (generate-api.ts) emits token colors as CSS
+   variables via `defaultColor: false`. Pick the variable matching the active
+   theme class so the code block is legible in both. The pre background is
+   forced transparent by `[&_pre]:bg-transparent!` on the CodeBlock surface. */
+.shiki,
+.shiki span {
+  color: var(--shiki-dark);
+}
+.light .shiki,
+.light .shiki span {
+  color: var(--shiki-light);
+}
+
 /* ---------------- Scrollbars (OverlayScrollbars) ---------------- */
 /* Quebi-themed overlay scrollbars: thin, rounded, cyan-tinted thumb on a
    transparent track — matching the hairline borders used across the UI.

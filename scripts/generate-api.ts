@@ -89,17 +89,25 @@ async function main() {
   const allSlugs = new Set(metaRegistry.map((m) => m.slug))
 
   // Shiki highlighter — pre-renders source to HTML at build time so the SPA
-  // ships no highlighter. "vesper" is a dark theme; we override its background
-  // to sit on the quebi surface (transparent → the page bg shows through).
+  // ships no highlighter. Dual themes: "vesper" (dark) + "github-light" (light).
+  // With `defaultColor: false`, Shiki emits token colors as CSS variables
+  // (--shiki-dark / --shiki-light) instead of a fixed color, so the code block
+  // follows the app theme — the .shiki CSS in quebi-theme.css picks the right
+  // variable per `.dark`/`.light` class. Each theme's page-matching background
+  // is replaced with transparent so the quebi surface shows through.
   const highlighter = await createHighlighter({
-    themes: ["vesper"],
+    themes: ["vesper", "github-light"],
     langs: ["tsx", "markdown"],
   })
   const highlight = (code: string, lang: "tsx" | "markdown" = "tsx") =>
     highlighter.codeToHtml(code, {
       lang,
-      theme: "vesper",
-      colorReplacements: { "#101010": "transparent" },
+      themes: { dark: "vesper", light: "github-light" },
+      defaultColor: false,
+      colorReplacements: {
+        vesper: { "#101010": "transparent" },
+        "github-light": { "#ffffff": "transparent" },
+      },
     })
 
   // Fresh output dirs.
