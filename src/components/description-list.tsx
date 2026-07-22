@@ -28,7 +28,7 @@ export function DescriptionTerm({ className, ref, ...props }: React.ComponentPro
       ref={ref}
       data-slot="description-term"
       className={cn(
-        "col-start-1 border-t border-cyan-500/10 pt-3 text-quebi-fg-muted first:border-none sm:py-3",
+        "col-start-1 border-t border-quebi-line/10 pt-3 text-quebi-fg-muted first:border-none sm:py-3",
         className,
       )}
       {...props}
@@ -42,7 +42,7 @@ export function DescriptionDetails({ className, ref, ...props }: React.Component
       ref={ref}
       data-slot="description-details"
       className={cn(
-        "pt-1 pb-3 text-white sm:border-t sm:border-cyan-500/10 sm:nth-2:border-none sm:py-3",
+        "pt-1 pb-3 text-quebi-fg sm:border-t sm:border-quebi-line/10 sm:nth-2:border-none sm:py-3",
         className,
       )}
       {...props}

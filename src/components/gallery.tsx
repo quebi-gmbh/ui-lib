@@ -37,7 +37,7 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
       <div
         data-slot="gallery-empty"
         className={cn(
-          "flex aspect-[4/3] w-full items-center justify-center rounded-quebi-md border border-cyan-500/10 bg-quebi-bg text-quebi-fg-muted",
+          "flex aspect-[4/3] w-full items-center justify-center rounded-quebi-md border border-quebi-line/10 bg-quebi-bg text-quebi-fg-muted",
           className,
         )}
       >
@@ -65,7 +65,7 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
         type="button"
         aria-label="Enlarge image"
         onClick={() => setLightboxOpen(true)}
-        className="group relative flex aspect-[4/3] w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-quebi-md border border-cyan-500/10 bg-quebi-bg transition-shadow duration-200 hover:shadow-quebi-glow"
+        className="group relative flex aspect-[4/3] w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-quebi-md border border-quebi-line/10 bg-quebi-bg transition-shadow duration-200 hover:shadow-quebi-glow"
       >
         <img
           src={active.src}
@@ -96,7 +96,7 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
                   "size-14 shrink-0 overflow-hidden rounded-quebi-sm border bg-quebi-bg transition-colors duration-150",
                   index === activeIndex
                     ? "border-quebi-brand ring-1 ring-quebi-brand"
-                    : "border-cyan-500/10 hover:border-cyan-500/20",
+                    : "border-quebi-line/10 hover:border-quebi-line/20",
                 )}
               >
                 <img src={item.src} alt="" className="size-full object-contain" loading="lazy" />

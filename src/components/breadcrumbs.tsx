@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
  * Breadcrumbs — quebi design system
  *
  * Compact navigation trail. Intermediate crumbs render as brand-teal links
- * dimmed to text-quebi-fg-muted; the current crumb is text-white and
+ * dimmed to text-quebi-fg-muted; the current crumb is text-quebi-fg and
  * semibold. The separator glyph (chevron or slash) is subtle. Built on
  * react-aria-components for the accessibility baseline.
  */
@@ -62,8 +62,8 @@ const BreadcrumbsItem = ({
               "has-data-[slot=icon]:inline-flex has-data-[slot=icon]:items-center has-data-[slot=icon]:gap-x-2",
               "*:data-[slot=icon]:size-4",
               isCurrent
-                ? "cursor-default font-semibold text-white hover:text-white hover:no-underline"
-                : "font-normal text-quebi-fg-muted hover:text-white hover:no-underline *:data-[slot=icon]:text-quebi-fg-muted hover:*:data-[slot=icon]:text-white",
+                ? "cursor-default font-semibold text-quebi-fg hover:text-quebi-fg hover:no-underline"
+                : "font-normal text-quebi-fg-muted hover:text-quebi-fg hover:no-underline *:data-[slot=icon]:text-quebi-fg-muted hover:*:data-[slot=icon]:text-quebi-fg",
             )}
             href={href}
             {...props}

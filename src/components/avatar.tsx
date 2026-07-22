@@ -45,8 +45,8 @@ export function Avatar({
       {...props}
       className={cn(
         "inline-grid size-(--avatar-size) shrink-0 select-none align-middle",
-        "bg-white/[0.04] text-quebi-fg-muted",
-        "outline outline-1 -outline-offset-1 outline-cyan-500/20",
+        "bg-quebi-surface/[0.04] text-quebi-fg-muted",
+        "outline outline-1 -outline-offset-1 outline-quebi-line/20",
         "[--avatar-radius:25%] *:col-start-1 *:row-start-1 *:size-(--avatar-size)",
         size === "xs" && "[--avatar-size:--spacing(5)]",
         size === "sm" && "[--avatar-size:--spacing(6)]",

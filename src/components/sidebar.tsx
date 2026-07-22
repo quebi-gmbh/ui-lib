@@ -190,7 +190,7 @@ const SidebarProvider = ({
         }
         className={cn(
           "@container **:data-[slot=icon]:shrink-0",
-          "flex w-full text-white",
+          "flex w-full text-quebi-fg",
           "group/sidebar-root peer/sidebar-root has-data-[intent=inset]:bg-quebi-bg",
           className,
         )}
@@ -221,8 +221,8 @@ const SidebarMobile = ({ side = "left", className, children, ...props }: Sidebar
         data-intent="default"
         aria-label="Sidebar"
         className={cn(
-          "fixed inset-y-0 z-50 flex w-(--sidebar-width) flex-col bg-quebi-bg text-white [--sidebar-width:18rem]",
-          "border-cyan-500/10 transition will-change-transform",
+          "fixed inset-y-0 z-50 flex w-(--sidebar-width) flex-col bg-quebi-bg text-quebi-fg [--sidebar-width:18rem]",
+          "border-quebi-line/10 transition will-change-transform",
           side === "left" &&
             "left-0 border-r entering:slide-in-from-left exiting:slide-out-to-left",
           side === "right" &&
@@ -261,7 +261,7 @@ const Sidebar = ({
         data-collapsible="none"
         data-slot="sidebar"
         className={cn(
-          "flex h-full w-(--sidebar-width) flex-col bg-quebi-bg text-white",
+          "flex h-full w-(--sidebar-width) flex-col bg-quebi-bg text-quebi-fg",
           className,
         )}
         {...props}
@@ -289,7 +289,7 @@ const Sidebar = ({
       data-intent={intent}
       data-side={side}
       data-slot="sidebar"
-      className="group peer hidden text-white md:block"
+      className="group peer hidden text-quebi-fg md:block"
       {...props}
     >
       <div
@@ -321,7 +321,7 @@ const Sidebar = ({
             "group-data-[collapsible=dock]:w-[calc(var(--sidebar-width-dock)+--spacing(2)+2px)]",
           intent === "default" && [
             "group-data-[collapsible=dock]:w-(--sidebar-width-dock)",
-            "border-cyan-500/10 group-data-[side=left]:border-r group-data-[side=right]:border-l",
+            "border-quebi-line/10 group-data-[side=left]:border-r group-data-[side=right]:border-l",
           ],
           className,
         )}
@@ -331,8 +331,8 @@ const Sidebar = ({
           data-sidebar="default"
           data-slot="sidebar-inner"
           className={cn(
-            "flex h-full w-full flex-col text-white",
-            "group-data-[intent=float]:rounded-quebi-md group-data-[intent=float]:border group-data-[intent=float]:border-cyan-500/10 group-data-[intent=float]:bg-quebi-bg group-data-[intent=float]:shadow-quebi-glow",
+            "flex h-full w-full flex-col text-quebi-fg",
+            "group-data-[intent=float]:rounded-quebi-md group-data-[intent=float]:border group-data-[intent=float]:border-quebi-line/10 group-data-[intent=float]:bg-quebi-bg group-data-[intent=float]:shadow-quebi-glow",
           )}
         >
           {children}
@@ -349,7 +349,7 @@ const SidebarHeader = ({ className, ref, ...props }: React.ComponentProps<"div">
       ref={ref}
       data-slot="sidebar-header"
       className={cn(
-        "flex flex-col gap-2 p-2.5 [.border-b]:border-cyan-500/10",
+        "flex flex-col gap-2 p-2.5 [.border-b]:border-quebi-line/10",
         "in-data-[intent=inset]:p-4",
         state === "collapsed" ? "items-center p-2.5" : "p-4",
         className,
@@ -469,7 +469,7 @@ const SidebarItem = ({
         (className, { isPressed, isFocusVisible, isHovered, isDisabled }) =>
           cn([
             "href" in props ? "cursor-pointer" : "cursor-default",
-            "w-full min-w-0 items-center rounded-quebi-sm text-start font-medium text-base/6 text-white no-underline hover:no-underline",
+            "w-full min-w-0 items-center rounded-quebi-sm text-start font-medium text-base/6 text-quebi-fg no-underline hover:no-underline",
             "group/sidebar-item relative col-span-full overflow-hidden focus-visible:outline-hidden",
             "grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] **:last:data-[slot=icon]:ms-auto supports-[grid-template-columns:subgrid]:grid-cols-subgrid sm:text-sm/5",
             "p-2 has-[a]:p-0",
@@ -486,7 +486,7 @@ const SidebarItem = ({
             isFocusVisible &&
               "outline-hidden ring-2 ring-quebi-brand/50 ring-inset",
             (isPressed || isHovered) &&
-              "bg-white/[0.04] text-white [&_[data-slot='icon']:not([class*='text-'])]:text-white",
+              "bg-quebi-surface/[0.04] text-quebi-fg [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
             isDisabled && "opacity-50",
             className,
           ]),
@@ -501,7 +501,7 @@ const SidebarItem = ({
             (state !== "collapsed" ? (
               <span
                 data-slot="sidebar-badge"
-                className="absolute inset-ring-1 inset-ring-cyan-500/10 inset-y-1/2 end-1.5 h-5.5 w-auto -translate-y-1/2 rounded-full bg-white/5 px-2 text-[10px]/5.5 group-hover/sidebar-item:inset-ring-quebi-fg-muted/30 group-current:inset-ring-transparent"
+                className="absolute inset-ring-1 inset-ring-quebi-line/10 inset-y-1/2 end-1.5 h-5.5 w-auto -translate-y-1/2 rounded-full bg-quebi-surface/5 px-2 text-[10px]/5.5 group-hover/sidebar-item:inset-ring-quebi-fg-muted/30 group-current:inset-ring-transparent"
               >
                 {badge}
               </span>
@@ -560,7 +560,7 @@ const SidebarInset = ({ className, ref, ...props }: React.ComponentProps<"main">
       ref={ref}
       className={cn(
         "relative flex w-full flex-1 flex-col bg-quebi-bg lg:min-w-0",
-        "group-has-data-[intent=inset]/sidebar-root:border group-has-data-[intent=inset]/sidebar-root:border-cyan-500/10 group-has-data-[intent=inset]/sidebar-root:bg-quebi-bg",
+        "group-has-data-[intent=inset]/sidebar-root:border group-has-data-[intent=inset]/sidebar-root:border-quebi-line/10 group-has-data-[intent=inset]/sidebar-root:bg-quebi-bg",
         "md:group-has-data-[intent=inset]/sidebar-root:m-2",
         "md:group-has-data-[side=left]:group-has-data-[intent=inset]/sidebar-root:ms-0",
         "md:group-has-data-[side=right]:group-has-data-[intent=inset]/sidebar-root:me-0",
@@ -629,7 +629,7 @@ const SidebarDisclosureTrigger = ({
           className,
           (className, { isPressed, isFocusVisible, isHovered, isDisabled }) =>
             cn(
-              "flex w-full min-w-0 items-center rounded-quebi-sm text-start font-medium text-base/6 text-white",
+              "flex w-full min-w-0 items-center rounded-quebi-sm text-start font-medium text-base/6 text-quebi-fg",
               "group/sidebar-disclosure-trigger relative col-span-full overflow-hidden focus-visible:outline-hidden",
               "**:data-[slot=icon]:size-5 **:data-[slot=icon]:shrink-0 **:data-[slot=icon]:text-quebi-fg-muted sm:**:data-[slot=icon]:size-4",
               "**:last:data-[slot=icon]:size-5 sm:**:last:data-[slot=icon]:size-4",
@@ -639,7 +639,7 @@ const SidebarDisclosureTrigger = ({
 
               isFocusVisible && "outline-hidden ring-2 ring-quebi-brand/50 ring-inset",
               (isPressed || isHovered) &&
-                "bg-white/[0.04] text-white **:data-[slot=chevron]:text-white **:data-[slot=icon]:text-white **:last:data-[slot=icon]:text-white",
+                "bg-quebi-surface/[0.04] text-quebi-fg **:data-[slot=chevron]:text-quebi-fg **:data-[slot=icon]:text-quebi-fg **:last:data-[slot=icon]:text-quebi-fg",
               isDisabled && "opacity-50",
               className,
             ),
@@ -775,7 +775,7 @@ const SidebarRail = ({ className, ref, ...props }: React.ComponentProps<"button"
         "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 outline-hidden transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-0.5 hover:after:bg-transparent group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
         "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
-        "group-data-[collapsible=hidden]:translate-x-0 group-data-[collapsible=hidden]:hover:bg-white/[0.04] group-data-[collapsible=hidden]:after:left-full",
+        "group-data-[collapsible=hidden]:translate-x-0 group-data-[collapsible=hidden]:hover:bg-quebi-surface/[0.04] group-data-[collapsible=hidden]:after:left-full",
         "[[data-side=left][data-collapsible=hidden]_&]:-right-2 [[data-side=right][data-collapsible=hidden]_&]:-left-2",
         className,
       )}
@@ -815,7 +815,7 @@ const SidebarNav = ({ isSticky = false, className, ...props }: SidebarNavProps) 
     <nav
       data-slot="sidebar-nav"
       className={cn(
-        "isolate flex items-center justify-between gap-x-2 px-(--container-padding,--spacing(4)) py-2.5 text-white sm:justify-start sm:px-(--gutter,--spacing(4)) md:w-full",
+        "isolate flex items-center justify-between gap-x-2 px-(--container-padding,--spacing(4)) py-2.5 text-quebi-fg sm:justify-start sm:px-(--gutter,--spacing(4)) md:w-full",
         isSticky && "static top-0 z-40 group-has-data-[intent=default]/sidebar-root:sticky",
         className,
       )}
@@ -838,8 +838,8 @@ const SidebarMenuTrigger = ({
         !alwaysVisible &&
           "opacity-0 pressed:opacity-100 group-hover/sidebar-item:opacity-100 group-focus-visible/sidebar-item:opacity-100 group/sidebar-item:pressed:opacity-100",
         "absolute end-0 flex h-full w-[calc(var(--sidebar-width)-90%)] items-center justify-end pe-2.5 outline-hidden",
-        "**:data-[slot=icon]:shrink-0 [&_[data-slot='icon']:not([class*='size-'])]:size-5 sm:[&_[data-slot='icon']:not([class*='size-'])]:size-4 pressed:[&_[data-slot='icon']:not([class*='text-'])]:text-white",
-        "pressed:text-white text-quebi-fg-muted hover:text-white",
+        "**:data-[slot=icon]:shrink-0 [&_[data-slot='icon']:not([class*='size-'])]:size-5 sm:[&_[data-slot='icon']:not([class*='size-'])]:size-4 pressed:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
+        "pressed:text-quebi-fg text-quebi-fg-muted hover:text-quebi-fg",
         className,
       )}
       {...props}

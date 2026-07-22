@@ -20,7 +20,7 @@ const Surface = ({
   ...props
 }: { children: React.ReactNode } & React.ComponentProps<typeof ListBox>) => (
   <ListBox
-    className="grid w-64 grid-cols-[auto_1fr_1.5rem_0.5rem_auto] gap-y-0.5 rounded-quebi-md border border-cyan-500/10 bg-quebi-bg p-1.5 shadow-quebi-glow outline-none"
+    className="grid w-64 grid-cols-[auto_1fr_1.5rem_0.5rem_auto] gap-y-0.5 rounded-quebi-md border border-quebi-line/10 bg-quebi-bg p-1.5 shadow-quebi-glow outline-none"
     {...props}
   >
     {children}

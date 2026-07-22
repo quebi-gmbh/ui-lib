@@ -30,7 +30,7 @@ export const keyboardExamples: ComponentExample[] = [
     title: "Inside a menu item",
     description: "Lives in a group parent and inherits hover/focus state.",
     render: () => (
-      <div className="group flex w-64 cursor-pointer items-center justify-between rounded-quebi-sm border border-cyan-500/10 px-3 py-2 text-white transition-colors hover:bg-white/[0.04]">
+      <div className="group flex w-64 cursor-pointer items-center justify-between rounded-quebi-sm border border-quebi-line/10 px-3 py-2 text-quebi-fg transition-colors hover:bg-quebi-surface/[0.04]">
         <span>Open command palette</span>
         <Keyboard className="inline">
           <Kbd>⌘</Kbd>

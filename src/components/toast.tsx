@@ -144,11 +144,11 @@ const toastStyles = tv({
   ],
   variants: {
     intent: {
-      default: "border-cyan-500/10 bg-quebi-bg/90 text-quebi-fg-muted",
-      success: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
-      warning: "border-amber-500/20 bg-amber-500/10 text-amber-200",
-      danger: "border-red-500/20 bg-red-500/10 text-red-200",
-      info: "border-cyan-500/20 bg-cyan-500/10 text-cyan-200",
+      default: "border-quebi-line/10 bg-quebi-bg/90 text-quebi-fg-muted",
+      success: "border-emerald-500/20 bg-emerald-500/10 text-quebi-success",
+      warning: "border-amber-500/20 bg-amber-500/10 text-quebi-warn",
+      danger: "border-red-500/20 bg-red-500/10 text-quebi-danger",
+      info: "border-quebi-line/20 bg-cyan-500/10 text-quebi-info",
     },
   },
   defaultVariants: { intent: "default" },
@@ -176,7 +176,7 @@ function ToastItem({ toast, onDismiss }: { toast: ToastRecord; onDismiss: (id: s
     <div data-slot="toast" className={cn(toastStyles({ intent: toast.intent }))}>
       {Icon && <Icon className="mt-px size-5 shrink-0" />}
       <div className="min-w-0 flex-1">
-        <div className="font-semibold text-white">{toast.title}</div>
+        <div className="font-semibold text-quebi-fg">{toast.title}</div>
         {toast.description && (
           <div className="mt-1 text-quebi-fg-muted">{toast.description}</div>
         )}
@@ -187,7 +187,7 @@ function ToastItem({ toast, onDismiss }: { toast: ToastRecord; onDismiss: (id: s
         onClick={() => onDismiss(toast.id)}
         className={cn(
           "-mr-1 -mt-1 shrink-0 cursor-pointer rounded-quebi-sm p-1 text-current/70",
-          "transition-colors duration-150 hover:bg-white/10 hover:text-current",
+          "transition-colors duration-150 hover:bg-quebi-surface/10 hover:text-current",
           "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
         )}
       >

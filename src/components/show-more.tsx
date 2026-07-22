@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils"
  * lifts to the brand teal on hover and selection. No drop shadows.
  */
 const showMoreStyles = tv({
-  base: "text-sm leading-6 before:border-cyan-500/10 after:border-cyan-500/10",
+  base: "text-sm leading-6 before:border-quebi-line/10 after:border-quebi-line/10",
   variants: {
     orientation: {
       vertical: "mx-1 h-auto self-stretch",
@@ -42,13 +42,13 @@ const showMoreStyles = tv({
 const togglePillStyles = tv({
   base: [
     "inline-flex items-center justify-center gap-2",
-    "rounded-full border border-solid border-cyan-500/20 bg-transparent",
+    "rounded-full border border-solid border-quebi-line/20 bg-transparent",
     "px-3 py-2 text-sm font-sans font-semibold whitespace-nowrap select-none cursor-pointer",
-    "text-white",
+    "text-quebi-fg",
     "transition-all duration-200 ease-out hover:scale-[1.02] active:scale-100",
     "hover:border-quebi-brand hover:text-quebi-brand",
     "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-    "selected:border-quebi-brand selected:bg-quebi-brand selected:text-quebi-bg selected:hover:bg-quebi-brand-hover selected:hover:border-quebi-brand-hover selected:hover:text-quebi-bg selected:hover:shadow-quebi-glow-strong",
+    "selected:border-quebi-brand selected:bg-quebi-brand selected:text-quebi-on-brand selected:hover:bg-quebi-brand-hover selected:hover:border-quebi-brand-hover selected:hover:text-quebi-on-brand selected:hover:shadow-quebi-glow-strong",
     "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",
   ],
 })

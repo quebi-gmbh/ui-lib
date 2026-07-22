@@ -8,8 +8,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     // data-overlayscrollbars-initialize: hides the native scrollbar until
     // OverlayScrollbars initializes on the body, preventing a flash.
-    <html lang="en" className="bg-quebi-bg" data-overlayscrollbars-initialize>
+    <html
+      lang="en"
+      className="bg-quebi-bg dark"
+      data-overlayscrollbars-initialize
+      suppressHydrationWarning
+    >
       <head>
+        {/* No-flash theme init: runs before paint so the saved theme is applied
+            before first render. quebi is dark-first, so dark is the default. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var t=localStorage.getItem('quebi-theme');" +
+              "if(t!=='light'&&t!=='dark')t='dark';" +
+              "var e=document.documentElement;e.classList.remove('light','dark');" +
+              "e.classList.add(t);e.style.colorScheme=t;}catch(e){}})();",
+          }}
+        />
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-transparent-16x16.png" />
@@ -30,7 +46,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <div className="flex min-h-screen flex-col bg-quebi-bg text-white">
+    <div className="flex min-h-screen flex-col bg-quebi-bg text-quebi-fg">
       <Header />
       <main className="flex-1">
         <Outlet />

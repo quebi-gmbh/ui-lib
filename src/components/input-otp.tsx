@@ -56,8 +56,8 @@ export function InputOTPSlot({
       data-slot="input-otp-slot"
       data-active={isActive}
       className={cn(
-        "relative flex size-10 items-center justify-center text-sm text-white",
-        "border border-cyan-500/20 border-l-0 bg-white/[0.02] outline-none",
+        "relative flex size-10 items-center justify-center text-sm text-quebi-fg",
+        "border border-quebi-line/20 border-l-0 bg-quebi-surface/[0.02] outline-none",
         "transition-[border-color,box-shadow] duration-200",
         "first:rounded-s-quebi-sm first:border-l last:rounded-e-quebi-sm",
         "data-[active=true]:z-10 data-[active=true]:border-quebi-brand",

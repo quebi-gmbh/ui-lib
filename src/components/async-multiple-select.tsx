@@ -245,7 +245,7 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
         }}
         data-invalid={isInvalid || undefined}
         className={cn(
-          "flex w-full flex-wrap items-center gap-1.5 rounded-quebi-sm border border-cyan-500/10 bg-white/[0.02] p-1.5",
+          "flex w-full flex-wrap items-center gap-1.5 rounded-quebi-sm border border-quebi-line/10 bg-quebi-surface/[0.02] p-1.5",
           "transition-colors duration-150 focus-within:border-quebi-brand",
           isInvalid && "border-red-500",
           isDisabled ? "cursor-not-allowed opacity-50" : "cursor-text",
@@ -257,7 +257,7 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
             <span
               key={k}
               data-slot="chip"
-              className="inline-flex items-center gap-x-1 rounded-full border border-cyan-500/10 bg-white/[0.03] py-0.5 pe-1 ps-2.5 font-medium text-quebi-fg-muted text-xs"
+              className="inline-flex items-center gap-x-1 rounded-full border border-quebi-line/10 bg-quebi-surface/[0.03] py-0.5 pe-1 ps-2.5 font-medium text-quebi-fg-muted text-xs"
             >
               {item.name}
               {!isDisabled && (
@@ -274,7 +274,7 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
                   }}
                   className={cn(
                     "flex size-4 shrink-0 items-center justify-center rounded-full text-quebi-fg-subtle outline-none transition-colors duration-150",
-                    "hover:bg-cyan-500/10 hover:text-white focus-visible:ring-2 focus-visible:ring-quebi-brand/50",
+                    "hover:bg-cyan-500/10 hover:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-brand/50",
                   )}
                 >
                   <X className="size-3" strokeWidth={2.5} aria-hidden="true" />
@@ -307,7 +307,7 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
           onClick={openMenu}
           onKeyDown={handleKeyDown}
           className={cn(
-            "min-w-24 flex-1 bg-transparent px-1.5 py-0.5 text-sm text-white outline-none",
+            "min-w-24 flex-1 bg-transparent px-1.5 py-0.5 text-sm text-quebi-fg outline-none",
             "placeholder:text-quebi-fg-subtle placeholder:italic",
           )}
         />
@@ -360,8 +360,8 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
                   onMouseEnter={() => setActiveKey(k)}
                   onClick={() => toggle(k)}
                   className={cn(
-                    "flex cursor-pointer items-center gap-2 rounded-quebi-sm px-2.5 py-1.5 text-sm text-white outline-none transition-colors duration-150",
-                    isActive && "bg-white/[0.05]",
+                    "flex cursor-pointer items-center gap-2 rounded-quebi-sm px-2.5 py-1.5 text-sm text-quebi-fg outline-none transition-colors duration-150",
+                    isActive && "bg-quebi-surface/[0.05]",
                     isSel && "text-quebi-brand",
                   )}
                 >

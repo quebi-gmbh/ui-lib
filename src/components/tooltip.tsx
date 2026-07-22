@@ -25,8 +25,8 @@ import { tv, type VariantProps } from "tailwind-variants"
 const tooltipStyles = tv({
   base: [
     "group max-w-sm origin-(--trigger-anchor-point) will-change-transform",
-    "rounded-quebi-sm border border-cyan-500/20 bg-quebi-bg px-2.5 py-1.5",
-    "text-sm/6 text-white shadow-quebi-glow",
+    "rounded-quebi-sm border border-quebi-line/20 bg-quebi-bg px-2.5 py-1.5",
+    "text-sm/6 text-quebi-fg shadow-quebi-glow",
     "*:[strong]:font-semibold **:[.text-muted]:text-quebi-fg-muted",
   ],
   variants: {
@@ -76,7 +76,7 @@ const TooltipContent = ({ offset = 10, arrow = true, children, ...props }: Toolt
             viewBox="0 0 12 12"
             className={twJoin(
               "block group-placement-bottom:rotate-180 group-placement-left:-rotate-90 group-placement-right:rotate-90 forced-colors:fill-[Canvas] forced-colors:stroke-[ButtonBorder]",
-              "fill-quebi-bg stroke-cyan-500/20",
+              "fill-quebi-bg stroke-quebi-line/20",
             )}
           >
             <path d="M0 0 L6 6 L12 0" />

@@ -23,7 +23,7 @@ export const cardExamples: ComponentExample[] = [
           Billed monthly. Cancel anytime — no long-term contract required.
         </CardContent>
         <CardFooter>
-          <span className="font-sans font-bold text-2xl text-white tabular-nums">
+          <span className="font-sans font-bold text-2xl text-quebi-fg tabular-nums">
             €9<span className="text-base font-medium text-quebi-fg-muted">/mo</span>
           </span>
         </CardFooter>
@@ -43,7 +43,7 @@ export const cardExamples: ComponentExample[] = [
           The complete quebi platform with no usage caps.
         </CardContent>
         <CardFooter>
-          <span className="font-sans font-bold text-2xl text-white tabular-nums">
+          <span className="font-sans font-bold text-2xl text-quebi-fg tabular-nums">
             €49<span className="text-base font-medium text-quebi-fg-muted">/mo</span>
           </span>
         </CardFooter>
@@ -71,7 +71,7 @@ export const cardExamples: ComponentExample[] = [
           <CardAction>
             <button
               type="button"
-              className="rounded-quebi-sm border border-cyan-500/20 px-3 py-1.5 text-sm text-white transition-colors hover:border-quebi-brand hover:text-quebi-brand"
+              className="rounded-quebi-sm border border-quebi-line/20 px-3 py-1.5 text-sm text-quebi-fg transition-colors hover:border-quebi-brand hover:text-quebi-brand"
             >
               Invite
             </button>

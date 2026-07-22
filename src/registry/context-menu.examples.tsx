@@ -13,7 +13,7 @@ import {
 import type { ComponentExample } from "./types"
 
 const ContextMenuTriggerArea = ({ children }: { children: React.ReactNode }) => (
-  <ContextMenuTrigger className="flex h-28 w-full items-center justify-center rounded-quebi-md border border-cyan-500/20 border-dashed text-quebi-fg-muted text-sm select-none">
+  <ContextMenuTrigger className="flex h-28 w-full items-center justify-center rounded-quebi-md border border-quebi-line/20 border-dashed text-quebi-fg-muted text-sm select-none">
     {children}
   </ContextMenuTrigger>
 )

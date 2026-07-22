@@ -57,7 +57,7 @@ export function ToggleGroup({
         orientation={orientation}
         className={cn(
           "inline-flex p-0.5",
-          "border border-solid border-cyan-500/10 bg-quebi-bg/40",
+          "border border-solid border-quebi-line/10 bg-quebi-bg/40",
           orientation === "horizontal" ? "flex-row" : "flex-col",
           selectionMode === "single" ? "gap-0.5" : "gap-0",
           isCircle ? "rounded-full" : "rounded-quebi-md",
@@ -76,8 +76,8 @@ export const toggleGroupItemStyles = tv({
     "border border-solid border-transparent text-quebi-fg-muted",
     "transition-all duration-200 ease-out",
     "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg focus-visible:z-10",
-    "hover:not-selected:bg-white/[0.04] hover:not-selected:text-white",
-    "selected:bg-quebi-brand selected:border-quebi-brand selected:text-quebi-bg selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover selected:hover:border-quebi-brand-hover",
+    "hover:not-selected:bg-quebi-surface/[0.04] hover:not-selected:text-quebi-fg",
+    "selected:bg-quebi-brand selected:border-quebi-brand selected:text-quebi-on-brand selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover selected:hover:border-quebi-brand-hover",
     "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent",
     "*:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center",
   ],

@@ -51,11 +51,11 @@ export function Tag({ children, className, ...props }: TagProps) {
       className={composeRenderProps(className, (className, { allowsRemoving, isDisabled }) =>
         cn(
           "inline-flex cursor-default items-center gap-x-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium",
-          "border-cyan-500/10 bg-transparent text-quebi-fg-muted",
+          "border-quebi-line/10 bg-transparent text-quebi-fg-muted",
           "transition-colors duration-150",
           "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-          "hover:border-cyan-500/20",
-          "data-[selected]:border-quebi-brand data-[selected]:bg-quebi-brand data-[selected]:text-quebi-bg",
+          "hover:border-quebi-line/20",
+          "data-[selected]:border-quebi-brand data-[selected]:bg-quebi-brand data-[selected]:text-quebi-on-brand",
           "data-[href]:cursor-pointer",
           allowsRemoving && "pr-1",
           isDisabled && "cursor-not-allowed opacity-50",
@@ -73,9 +73,9 @@ export function Tag({ children, className, ...props }: TagProps) {
               className={cn(
                 "-mr-0.5 flex size-4 shrink-0 items-center justify-center rounded-full",
                 "text-quebi-fg-subtle outline-none transition-colors duration-150",
-                "hover:bg-cyan-500/10 hover:text-white",
+                "hover:bg-cyan-500/10 hover:text-quebi-fg",
                 "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand/50",
-                "group-data-[selected]:text-quebi-bg/70 group-data-[selected]:hover:bg-quebi-bg/20 group-data-[selected]:hover:text-quebi-bg",
+                "group-data-[selected]:text-quebi-on-brand/70 group-data-[selected]:hover:bg-quebi-bg/20 group-data-[selected]:hover:text-quebi-on-brand",
               )}
             >
               <X className="size-3" strokeWidth={2.5} aria-hidden="true" />

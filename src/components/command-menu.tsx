@@ -126,7 +126,7 @@ const CommandMenu = ({
         >
           <Modal
             className={cn(
-              "row-start-2 bg-quebi-bg text-start text-white shadow-quebi-glow-strong outline-none ring-1 ring-cyan-500/10 md:row-start-1",
+              "row-start-2 bg-quebi-bg text-start text-quebi-fg shadow-quebi-glow-strong outline-none ring-1 ring-quebi-line/10 md:row-start-1",
               "max-h-[calc(var(--visual-viewport-height)*0.8)] w-full sm:fixed sm:top-[10%] sm:left-1/2 sm:-translate-x-1/2",
               "rounded-t-quebi-md md:rounded-quebi-md",
               sizes[size],
@@ -174,12 +174,12 @@ const CommandMenuSearch = ({ className, placeholder, ...props }: CommandMenuSear
       )}
       <Input
         placeholder={placeholder ?? "Search..."}
-        className="w-full min-w-0 bg-transparent px-2.5 py-2 text-base text-white placeholder-quebi-fg-subtle outline-hidden focus:outline-hidden sm:px-2 sm:py-1.5 sm:text-sm [&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden"
+        className="w-full min-w-0 bg-transparent px-2.5 py-2 text-base text-quebi-fg placeholder-quebi-fg-subtle outline-hidden focus:outline-hidden sm:px-2 sm:py-1.5 sm:text-sm [&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden"
       />
       {escapeButton && (
         <Button
           onPress={() => state?.close()}
-          className="hidden cursor-default rounded-quebi-sm border border-cyan-500/20 text-quebi-fg-muted hover:bg-white/[0.04] hover:text-white lg:inline lg:px-1.5 lg:py-0.5 lg:text-xs"
+          className="hidden cursor-default rounded-quebi-sm border border-quebi-line/20 text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg lg:inline lg:px-1.5 lg:py-0.5 lg:text-xs"
         >
           Esc
         </Button>
@@ -193,7 +193,7 @@ const CommandMenuList = <T extends object>({ className, ...props }: MenuProps<T>
     <CollectionRendererContext.Provider value={renderer}>
       <MenuPrimitive
         className={cn(
-          "quebi-scrollbar grid max-h-full flex-1 grid-cols-[auto_1fr] content-start overflow-y-auto border-cyan-500/10 border-t p-2 sm:max-h-110 *:[[role=group]]:mb-6 *:[[role=group]]:last:mb-0",
+          "quebi-scrollbar grid max-h-full flex-1 grid-cols-[auto_1fr] content-start overflow-y-auto border-quebi-line/10 border-t p-2 sm:max-h-110 *:[[role=group]]:mb-6 *:[[role=group]]:last:mb-0",
           className,
         )}
         {...props}
@@ -268,8 +268,8 @@ const CommandMenuFooter = ({ className, ...props }: React.ComponentProps<"div">)
   return (
     <div
       className={cn(
-        "col-span-full flex-none border-cyan-500/10 border-t px-2 py-1.5 text-quebi-fg-muted text-sm",
-        "*:[kbd]:inset-ring *:[kbd]:inset-ring-white/10 *:[kbd]:mx-1 *:[kbd]:inline-grid *:[kbd]:h-4 *:[kbd]:min-w-4 *:[kbd]:place-content-center *:[kbd]:rounded-quebi-sm *:[kbd]:bg-white/[0.04]",
+        "col-span-full flex-none border-quebi-line/10 border-t px-2 py-1.5 text-quebi-fg-muted text-sm",
+        "*:[kbd]:inset-ring *:[kbd]:inset-ring-quebi-surface/10 *:[kbd]:mx-1 *:[kbd]:inline-grid *:[kbd]:h-4 *:[kbd]:min-w-4 *:[kbd]:place-content-center *:[kbd]:rounded-quebi-sm *:[kbd]:bg-quebi-surface/[0.04]",
         className,
       )}
       {...props}
@@ -284,7 +284,7 @@ const CommandMenuShortcut = ({
 }: React.ComponentProps<typeof DropdownKeyboard>) => (
   <DropdownKeyboard
     className={cn(
-      "gap-0.5 font-sans text-[10.5px] uppercase *:inset-ring *:inset-ring-white/20 *:grid *:size-5.5 *:place-content-center *:rounded-quebi-sm *:bg-quebi-bg",
+      "gap-0.5 font-sans text-[10.5px] uppercase *:inset-ring *:inset-ring-quebi-surface/20 *:grid *:size-5.5 *:place-content-center *:rounded-quebi-sm *:bg-quebi-bg",
       className,
     )}
     {...props}

@@ -73,11 +73,11 @@ const noteStyles = tv({
   ],
   variants: {
     intent: {
-      default: "border-cyan-500/10 bg-white/[0.03] text-quebi-fg-muted",
-      info: "border-cyan-500/20 bg-cyan-500/10 text-cyan-200",
-      success: "border-emerald-500/20 bg-emerald-500/10 text-emerald-200",
-      warning: "border-amber-500/20 bg-amber-500/10 text-amber-200",
-      danger: "border-red-500/20 bg-red-500/10 text-red-200",
+      default: "border-quebi-line/10 bg-quebi-surface/[0.03] text-quebi-fg-muted",
+      info: "border-quebi-line/20 bg-cyan-500/10 text-quebi-info",
+      success: "border-emerald-500/20 bg-emerald-500/10 text-quebi-success",
+      warning: "border-amber-500/20 bg-amber-500/10 text-quebi-warn",
+      danger: "border-red-500/20 bg-red-500/10 text-quebi-danger",
     },
   },
   defaultVariants: { intent: "default" },
@@ -105,7 +105,7 @@ export function Note({
     <div data-slot="note" className={cn(noteStyles({ intent }), className)} {...props}>
       {Icon && indicator && <Icon aria-hidden="true" className="mt-px size-5 shrink-0" />}
       <div className="min-w-0 flex-1">
-        {title && <div className="font-semibold text-white">{title}</div>}
+        {title && <div className="font-semibold text-quebi-fg">{title}</div>}
         <div className={title ? "mt-1" : undefined}>{children}</div>
       </div>
     </div>

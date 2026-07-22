@@ -25,10 +25,10 @@ export function Input({ className, ref, ...props }: InputProps) {
       <InputPrimitive
         ref={ref}
         className={cn(
-          "relative block w-full appearance-none text-sm text-white placeholder:text-quebi-fg-subtle",
-          "rounded-quebi-sm border border-cyan-500/20 bg-white/[0.02] px-3 py-2.5",
+          "relative block w-full appearance-none text-sm text-quebi-fg placeholder:text-quebi-fg-subtle",
+          "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
           "transition-[border-color,box-shadow] duration-200",
-          "enabled:hover:border-cyan-500/40",
+          "enabled:hover:border-quebi-line/40",
           "outline-none focus:outline-none focus:border-quebi-brand focus:ring-2 focus:ring-quebi-brand/50",
           "invalid:border-red-500 focus:invalid:ring-red-500/50",
           "[&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden",

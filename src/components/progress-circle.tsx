@@ -35,7 +35,7 @@ function ProgressCircle({ className, ref, ...props }: ProgressCircleProps) {
             cy={c}
             r={r}
             strokeWidth={3}
-            className="stroke-cyan-500/10"
+            className="stroke-quebi-line/10"
           />
           {!isIndeterminate ? (
             <circle

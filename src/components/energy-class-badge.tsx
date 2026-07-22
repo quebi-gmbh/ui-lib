@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils"
  * The letter is always rendered as text, so colour is never the sole signal
  * (WCAG 1.4.1); pass a localised `aria-label` for a fuller screen-reader
  * description ("Energy efficiency class A"). Per-band text colour is fixed
- * (`text-white` / `text-black`) so each chip keeps ≥ 3:1 contrast against its
+ * (`text-quebi-fg` / `text-black`) so each chip keeps ≥ 3:1 contrast against its
  * fill in any theme.
  *
  * Unknown / legacy values (e.g. "A+", "A+++") fall back to a neutral quebi chip
@@ -29,14 +29,14 @@ export const energyClassBadgeStyles = tv({
     // dark ends (A, G), black on the bright middle bands keeps every chip ≥ 3:1
     // against its fill (large/graphical-object budget).
     band: {
-      A: "bg-[#00843d] text-white",
+      A: "bg-[#00843d] text-quebi-fg",
       B: "bg-[#4caf30] text-black",
       C: "bg-[#bccf00] text-black",
       D: "bg-[#fff100] text-black",
       E: "bg-[#fabe00] text-black",
       F: "bg-[#ee7d00] text-black",
-      G: "bg-[#e30613] text-white",
-      unknown: "bg-white/[0.06] text-quebi-fg-muted border border-cyan-500/10",
+      G: "bg-[#e30613] text-quebi-fg",
+      unknown: "bg-quebi-surface/[0.06] text-quebi-fg-muted border border-quebi-line/10",
     },
     size: {
       sm: "min-w-[20px] px-1.5 py-0.5 text-[12px]",

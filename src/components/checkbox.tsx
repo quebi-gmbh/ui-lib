@@ -43,7 +43,7 @@ export function Checkbox({ className, children, ...props }: CheckboxProps) {
             className={cn(
               "relative flex size-[18px] shrink-0 items-center justify-center rounded-quebi-sm border bg-transparent",
               "transition-colors duration-150",
-              "border-cyan-500/30",
+              "border-quebi-line/30",
               "group-data-[selected]:border-quebi-brand group-data-[selected]:bg-quebi-brand",
               "group-data-[indeterminate]:border-quebi-brand group-data-[indeterminate]:bg-quebi-brand",
               "group-data-[focus-visible]:ring-2 group-data-[focus-visible]:ring-quebi-brand/50 group-data-[focus-visible]:ring-offset-2 group-data-[focus-visible]:ring-offset-quebi-bg",
@@ -52,7 +52,7 @@ export function Checkbox({ className, children, ...props }: CheckboxProps) {
             )}
           >
             {isIndeterminate ? (
-              <Minus className="size-3 text-quebi-bg" strokeWidth={3} aria-hidden="true" />
+              <Minus className="size-3 text-quebi-on-brand" strokeWidth={3} aria-hidden="true" />
             ) : isSelected ? (
               <span
                 aria-hidden="true"
@@ -61,7 +61,7 @@ export function Checkbox({ className, children, ...props }: CheckboxProps) {
             ) : null}
           </span>
           {children != null && (
-            <span data-slot="label" className="text-sm text-white select-none">
+            <span data-slot="label" className="text-sm text-quebi-fg select-none">
               {children}
             </span>
           )}

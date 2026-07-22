@@ -29,7 +29,7 @@ export function TextLink({ className, ...props }: React.ComponentPropsWithoutRef
 }
 
 export function Strong({ className, ...props }: React.ComponentPropsWithoutRef<"strong">) {
-  return <strong {...props} className={cn("font-medium text-white", className)} />
+  return <strong {...props} className={cn("font-medium text-quebi-fg", className)} />
 }
 
 export function Code({ className, ...props }: React.ComponentPropsWithoutRef<"code">) {
@@ -37,7 +37,7 @@ export function Code({ className, ...props }: React.ComponentPropsWithoutRef<"co
     <code
       {...props}
       className={cn(
-        "rounded-quebi-sm border border-cyan-500/10 bg-quebi-bg px-1 py-0.5 font-mono text-sm font-medium text-white sm:text-[0.8125rem]",
+        "rounded-quebi-sm border border-quebi-line/10 bg-quebi-bg px-1 py-0.5 font-mono text-sm font-medium text-quebi-fg sm:text-[0.8125rem]",
         className,
       )}
     />

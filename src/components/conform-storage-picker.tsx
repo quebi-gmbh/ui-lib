@@ -130,8 +130,8 @@ export function ConformStoragePicker({
                 "rounded-quebi-sm px-3 py-1.5 font-medium text-sm transition-all duration-150",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
                 isSelected
-                  ? "bg-quebi-brand text-quebi-bg shadow-quebi-glow hover:bg-quebi-brand-hover"
-                  : "border border-cyan-500/20 bg-transparent text-quebi-fg-muted hover:-translate-y-0.5 hover:text-white",
+                  ? "bg-quebi-brand text-quebi-on-brand shadow-quebi-glow hover:bg-quebi-brand-hover"
+                  : "border border-quebi-line/20 bg-transparent text-quebi-fg-muted hover:-translate-y-0.5 hover:text-quebi-fg",
               )}
             >
               {formatStorageDisplay(storageGb)}

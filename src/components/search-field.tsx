@@ -43,9 +43,9 @@ export function SearchInput(props: PrimitiveInputProps) {
       <Button
         className={cn(
           "grid place-content-center px-3 text-quebi-fg-subtle outline-none",
-          "transition-colors duration-150 hover:text-white pressed:text-white",
+          "transition-colors duration-150 hover:text-quebi-fg pressed:text-quebi-fg",
           "group-empty/search-field:invisible",
-          "focus-visible:text-white",
+          "focus-visible:text-quebi-fg",
         )}
       >
         <X className="size-4" />

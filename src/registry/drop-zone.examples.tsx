@@ -29,7 +29,7 @@ export const dropZoneExamples: ComponentExample[] = [
           >
             <span>{fileName ? `Selected: ${fileName}` : "Drag a file here, or"}</span>
             <FileTrigger onSelect={(files) => setFileName(files?.[0]?.name ?? null)}>
-              <Button className="rounded-quebi-sm border border-cyan-500/20 px-3 py-1.5 text-sm text-quebi-brand transition-colors duration-150 hover:bg-quebi-brand/10 data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand/50 data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg">
+              <Button className="rounded-quebi-sm border border-quebi-line/20 px-3 py-1.5 text-sm text-quebi-brand transition-colors duration-150 hover:bg-quebi-brand/10 data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand/50 data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg">
                 Browse
               </Button>
             </FileTrigger>

@@ -16,7 +16,7 @@ export function ColorSwatch({ className, ...props }: ColorSwatchProps) {
     <ColorSwatchPrimitive
       data-slot="color-swatch"
       className={cn(
-        "inset-ring-1 inset-ring-cyan-500/20 size-[calc(var(--color-swatch-size)+--spacing(1))] shrink-0 rounded-quebi-md [--color-swatch-size:--spacing(9)] sm:size-(--color-swatch-size)",
+        "inset-ring-1 inset-ring-quebi-line/20 size-[calc(var(--color-swatch-size)+--spacing(1))] shrink-0 rounded-quebi-md [--color-swatch-size:--spacing(9)] sm:size-(--color-swatch-size)",
         className,
       )}
       {...props}

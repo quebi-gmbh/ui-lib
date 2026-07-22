@@ -259,9 +259,9 @@ const Chart = ({
         ref={ref}
         className={cn(
           "z-20 flex w-full justify-center text-xs text-quebi-fg-muted",
-          "[&_.recharts-cartesian-axis-tick_text]:fill-quebi-fg-muted [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-cyan-500/10 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-cyan-500/20 [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-cyan-500/10 [&_.recharts-radial-bar-background-sector]:fill-white/5 [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-white/5 [&_.recharts-reference-line_[stroke='#ccc']]:stroke-cyan-500/20 [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-hidden [&_.recharts-surface]:outline-hidden",
+          "[&_.recharts-cartesian-axis-tick_text]:fill-quebi-fg-muted [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-quebi-line/10 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-quebi-line/20 [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-quebi-line/10 [&_.recharts-radial-bar-background-sector]:fill-quebi-surface/5 [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-quebi-surface/5 [&_.recharts-reference-line_[stroke='#ccc']]:stroke-quebi-line/20 [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-hidden [&_.recharts-surface]:outline-hidden",
           "[&_.recharts-dot[fill='#fff']]:fill-(--line-color)",
-          "[&_.recharts-active-dot>.recharts-dot]:stroke-white/10",
+          "[&_.recharts-active-dot>.recharts-dot]:stroke-quebi-surface/10",
           "[&_.recharts-surface_g]:focus:outline-hidden",
           className,
         )}
@@ -314,17 +314,21 @@ type ChartTooltipProps<TValue extends ValueType, TName extends NameType> = Recha
 
 const tooltipWrapperStyle = { outline: "none" } as const
 
+// Theme-aware cursor tint: quebi-surface flips (white on dark, ink on light),
+// so the hover cursor stays a faint neutral wash in both themes.
+const cursorTint = "color-mix(in oklab, var(--color-quebi-surface) 6%, transparent)"
+
 const cursorStyleRadial = {
-  stroke: "rgba(255,255,255,0.06)",
+  stroke: cursorTint,
   strokeWidth: 0.1,
-  fill: "rgba(255,255,255,0.06)",
+  fill: cursorTint,
   fillOpacity: 0.5,
 } as const
 
 const cursorStyleDefault = {
-  stroke: "rgba(255,255,255,0.06)",
+  stroke: cursorTint,
   strokeWidth: 1,
-  fill: "rgba(255,255,255,0.06)",
+  fill: cursorTint,
   fillOpacity: 0.5,
 } as const
 
@@ -428,7 +432,7 @@ const CartesianGrid = ({ className, ...props }: CartesianGridPrimitiveProps) => 
   const { layout } = useChart()
   return (
     <CartesianGridPrimitive
-      className={cn("stroke-1 stroke-cyan-500/10", className)}
+      className={cn("stroke-1 stroke-quebi-line/10", className)}
       horizontal={layout !== "vertical"}
       vertical={layout === "vertical"}
       {...props}
@@ -501,7 +505,7 @@ const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
     <div
       ref={ref}
       className={cn(
-        "grid min-w-48 items-start rounded-quebi-md border border-cyan-500/10 bg-quebi-bg/70 p-3 py-2 text-xs text-white backdrop-blur-lg",
+        "grid min-w-48 items-start rounded-quebi-md border border-quebi-line/10 bg-quebi-bg/70 p-3 py-2 text-xs text-quebi-fg backdrop-blur-lg",
         className,
       )}
     >
@@ -566,7 +570,7 @@ const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
                     </div>
 
                     {item.value && (
-                      <span className="font-mono font-medium text-white tabular-nums">
+                      <span className="font-mono font-medium text-quebi-fg tabular-nums">
                         {item.value.toString()}
                       </span>
                     )}
@@ -630,8 +634,8 @@ const ChartLegendContent = ({
             id={key}
             className={cn(
               "flex items-center gap-2 rounded-quebi-sm px-2 py-1 text-quebi-fg-muted *:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:size-2.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-quebi-fg-muted",
-              "selected:bg-white/[0.06] selected:text-white",
-              "hover:bg-white/[0.06] hover:text-white",
+              "selected:bg-quebi-surface/[0.06] selected:text-quebi-fg",
+              "hover:bg-quebi-surface/[0.06] hover:text-quebi-fg",
               "cursor-pointer transition-colors duration-150",
             )}
             aria-label={"Legend Item"}

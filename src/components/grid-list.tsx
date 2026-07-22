@@ -71,13 +71,13 @@ const GridListItem = ({ className, children, ...props }: GridListItemProps) => {
         (className, { isHovered, isFocusVisible, isSelected, isDisabled }) =>
           cn(
             "group relative min-w-0 outline-hidden",
-            "rounded-quebi-sm border border-cyan-500/10 px-3 py-2.5",
+            "rounded-quebi-sm border border-quebi-line/10 px-3 py-2.5",
             "flex min-w-0 cursor-default items-center gap-2 sm:gap-2.5",
-            "text-white transition-colors duration-150",
+            "text-quebi-fg transition-colors duration-150",
             "data-[dragging]:cursor-grab data-[dragging]:opacity-70",
             "**:data-[slot=icon]:size-5 **:data-[slot=icon]:shrink-0 **:data-[slot=icon]:text-quebi-fg-muted sm:**:data-[slot=icon]:size-4",
             (isSelected || isHovered || isFocusVisible) &&
-              "border-cyan-500/20 bg-quebi-brand/10",
+              "border-quebi-line/20 bg-quebi-brand/10",
             isFocusVisible &&
               "ring-2 ring-quebi-brand/50 ring-offset-2 ring-offset-quebi-bg",
             isDisabled && "opacity-50",
@@ -159,7 +159,7 @@ interface GridListTextProps extends TextProps {
 }
 
 const GridListLabel = ({ className, ref, ...props }: GridListTextProps) => (
-  <Text ref={ref} className={cn("font-medium text-white", className)} {...props} />
+  <Text ref={ref} className={cn("font-medium text-quebi-fg", className)} {...props} />
 )
 
 const GridListDescription = ({ className, ref, ...props }: GridListTextProps) => (

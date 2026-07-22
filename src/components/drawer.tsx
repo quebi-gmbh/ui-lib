@@ -29,7 +29,7 @@ import { Button, type ButtonProps } from "@/components/button"
  * Modal/ModalOverlay for accessibility and `motion` for the slide + drag-to-
  * dismiss gesture. Composes the same overlay surface tokens as Dialog.
  *
- * Surface tokens: bg-quebi-bg, border-cyan-500/10. Depth via quebi glow.
+ * Surface tokens: bg-quebi-bg, border-quebi-line/10. Depth via quebi glow.
  */
 
 const DrawerRoot = motion.create(ModalPrimitive)
@@ -76,7 +76,7 @@ const DrawerContent = ({
           {({ state }) => (
             <DrawerRoot
               className={cn(
-                "fixed max-h-full touch-none overflow-hidden border border-cyan-500/10 bg-quebi-bg align-middle text-white shadow-quebi-glow will-change-transform",
+                "fixed max-h-full touch-none overflow-hidden border border-quebi-line/10 bg-quebi-bg align-middle text-quebi-fg shadow-quebi-glow will-change-transform",
                 side === "top" &&
                   (isFloat
                     ? "inset-x-2 top-2 rounded-quebi-md"
@@ -154,11 +154,11 @@ const DrawerContent = ({
                 )}
               >
                 {notch && side === "bottom" && (
-                  <div className="notch sticky top-0 mx-auto mt-2.5 h-1.5 w-10 shrink-0 touch-pan-y rounded-full bg-white/20" />
+                  <div className="notch sticky top-0 mx-auto mt-2.5 h-1.5 w-10 shrink-0 touch-pan-y rounded-full bg-quebi-surface/20" />
                 )}
                 {children as React.ReactNode}
                 {notch && side === "top" && (
-                  <div className="notch sticky bottom-0 mx-auto mb-2.5 h-1.5 w-10 shrink-0 touch-pan-y rounded-full bg-white/20" />
+                  <div className="notch sticky bottom-0 mx-auto mb-2.5 h-1.5 w-10 shrink-0 touch-pan-y rounded-full bg-quebi-surface/20" />
                 )}
               </Dialog>
             </DrawerRoot>
@@ -182,7 +182,7 @@ const DrawerHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 const DrawerTitle = ({ className, ...props }: HeadingProps) => (
   <Heading
     slot="title"
-    className={cn("font-semibold text-white text-lg/8", className)}
+    className={cn("font-semibold text-quebi-fg text-lg/8", className)}
     {...props}
   />
 )

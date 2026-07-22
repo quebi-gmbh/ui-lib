@@ -22,7 +22,7 @@ export const navbarExamples: ComponentExample[] = [
       <NavbarProvider>
         <Navbar>
           <NavbarStart>
-            <span className="font-semibold text-white">quebi</span>
+            <span className="font-semibold text-quebi-fg">quebi</span>
           </NavbarStart>
           <NavbarGap />
           <NavbarSection>
@@ -49,11 +49,11 @@ export const navbarExamples: ComponentExample[] = [
       <NavbarProvider>
         <NavbarMobile>
           <NavbarTrigger />
-          <span className="font-semibold text-white">quebi</span>
+          <span className="font-semibold text-quebi-fg">quebi</span>
         </NavbarMobile>
         <Navbar>
           <NavbarStart>
-            <span className="font-semibold text-white">quebi</span>
+            <span className="font-semibold text-quebi-fg">quebi</span>
           </NavbarStart>
           <NavbarGap />
           <NavbarSection>
@@ -72,7 +72,7 @@ export const navbarExamples: ComponentExample[] = [
       <NavbarProvider>
         <Navbar isSticky placement="top">
           <NavbarStart>
-            <span className="font-semibold text-white">quebi</span>
+            <span className="font-semibold text-quebi-fg">quebi</span>
           </NavbarStart>
           <NavbarGap />
           <NavbarSection>
@@ -95,7 +95,7 @@ export const navbarExamples: ComponentExample[] = [
       <NavbarProvider>
         <Navbar intent="float">
           <NavbarStart>
-            <span className="font-semibold text-white">quebi</span>
+            <span className="font-semibold text-quebi-fg">quebi</span>
           </NavbarStart>
           <NavbarGap />
           <NavbarSection>

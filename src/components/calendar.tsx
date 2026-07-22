@@ -51,9 +51,9 @@ const Calendar = <T extends DateValue>({ className, ...props }: CalendarProps<T>
               date={date}
               className={composeRenderProps(className, (className, { isSelected, isDisabled }) =>
                 cn(
-                  "relative flex h-9 w-9 cursor-default items-center justify-center rounded-quebi-sm text-sm text-white tabular-nums outline-hidden transition-colors hover:bg-white/[0.04]",
+                  "relative flex h-9 w-9 cursor-default items-center justify-center rounded-quebi-sm text-sm text-quebi-fg tabular-nums outline-hidden transition-colors hover:bg-quebi-surface/[0.04]",
                   isSelected &&
-                    "bg-quebi-brand text-quebi-bg hover:bg-quebi-brand-hover",
+                    "bg-quebi-brand text-quebi-on-brand hover:bg-quebi-brand-hover",
                   isDisabled && "text-quebi-fg-subtle",
                   date.compare(now) === 0 &&
                     !isSelected &&

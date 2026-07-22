@@ -12,7 +12,7 @@ export const colorThumbExamples: ComponentExample[] = [
         defaultValue="hsb(220, 100%, 100%)"
         xChannel="saturation"
         yChannel="brightness"
-        className="relative size-40 rounded-quebi-md border border-cyan-500/20"
+        className="relative size-40 rounded-quebi-md border border-quebi-line/20"
       >
         <ColorThumb />
       </ColorArea>
@@ -27,7 +27,7 @@ export const colorThumbExamples: ComponentExample[] = [
         defaultValue="hsb(120, 80%, 90%)"
         xChannel="saturation"
         yChannel="brightness"
-        className="relative size-40 rounded-quebi-md border border-cyan-500/20 bg-quebi-bg"
+        className="relative size-40 rounded-quebi-md border border-quebi-line/20 bg-quebi-bg"
       >
         <ColorThumb />
       </ColorArea>

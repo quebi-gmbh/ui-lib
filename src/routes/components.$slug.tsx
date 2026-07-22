@@ -43,7 +43,7 @@ export default function ComponentDetail() {
           <li>
             <Link
               to="/components"
-              className="text-quebi-fg-muted transition-colors duration-200 hover:text-white"
+              className="text-quebi-fg-muted transition-colors duration-200 hover:text-quebi-fg"
             >
               Components
             </Link>
@@ -51,7 +51,7 @@ export default function ComponentDetail() {
           <li aria-hidden className="flex items-center">
             <ChevronRight className="h-4 w-4" />
           </li>
-          <li className="font-medium text-white" aria-current="page">
+          <li className="font-medium text-quebi-fg" aria-current="page">
             {component.name}
           </li>
         </ol>
@@ -59,7 +59,7 @@ export default function ComponentDetail() {
 
       <div className="mt-6">
         <span className="quebi-eyebrow">{component.category}</span>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
           {component.name}
         </h1>
         <p className="mt-3 max-w-quebi-content text-base leading-relaxed text-quebi-fg-muted">
@@ -69,7 +69,7 @@ export default function ComponentDetail() {
           {component.tags.map((tag) => (
             <span
               key={tag}
-              className="rounded-full border border-cyan-500/10 px-3 py-1 text-xs text-quebi-fg-subtle"
+              className="rounded-full border border-quebi-line/10 px-3 py-1 text-xs text-quebi-fg-subtle"
             >
               {tag}
             </span>
@@ -80,13 +80,13 @@ export default function ComponentDetail() {
       <div className="mt-12 space-y-10">
         {component.examples.map((example) => (
           <div key={example.title}>
-            <h2 className="text-lg font-semibold text-white">{example.title}</h2>
+            <h2 className="text-lg font-semibold text-quebi-fg">{example.title}</h2>
             {example.description && (
               <p className="mt-1 text-sm leading-relaxed text-quebi-fg-muted">
                 {example.description}
               </p>
             )}
-            <div className="mt-4 flex min-h-[120px] items-center justify-center rounded-quebi-md border border-cyan-500/10 bg-white/[0.02] p-8">
+            <div className="mt-4 flex min-h-[120px] items-center justify-center rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02] p-8">
               {example.render()}
             </div>
           </div>
@@ -94,7 +94,7 @@ export default function ComponentDetail() {
       </div>
 
       <div className="mt-16">
-        <h2 className="text-lg font-semibold text-white">Source</h2>
+        <h2 className="text-lg font-semibold text-quebi-fg">Source</h2>
         <p className="mt-1 text-sm leading-relaxed text-quebi-fg-muted">
           Copy this into your project. Resolve its dependencies from the{" "}
           <code className="text-quebi-fg-subtle">registryDependencies</code> in the component's API
@@ -104,7 +104,7 @@ export default function ComponentDetail() {
           {sourceData ? (
             <CodeBlock html={sourceData.highlighted} code={sourceData.source} />
           ) : (
-            <div className="h-40 animate-pulse rounded-quebi-md border border-cyan-500/10 bg-white/[0.02]" />
+            <div className="h-40 animate-pulse rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02]" />
           )}
         </div>
       </div>

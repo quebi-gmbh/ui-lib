@@ -1,10 +1,11 @@
 import { Link, NavLink } from "react-router"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-cyan-500/10 bg-quebi-bg/80 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-quebi-line/10 bg-quebi-bg/80 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
-        <Link to="/" className="flex items-center gap-2 text-white" aria-label="quebi ui-lib home">
+        <Link to="/" className="flex items-center gap-2 text-quebi-fg" aria-label="quebi ui-lib home">
           <img src="/quebi-logo.svg" alt="quebi" className="h-5 w-auto" />
           <span className="text-sm font-medium text-quebi-fg-muted">ui-lib</span>
         </Link>
@@ -14,7 +15,7 @@ export function Header() {
             to="/components"
             className={({ isActive }) =>
               `transition-colors duration-200 ${
-                isActive ? "text-quebi-brand" : "text-quebi-fg-muted hover:text-white"
+                isActive ? "text-quebi-brand" : "text-quebi-fg-muted hover:text-quebi-fg"
               }`
             }
           >
@@ -24,10 +25,11 @@ export function Header() {
             href="https://github.com/quebi-gmbh"
             target="_blank"
             rel="noreferrer"
-            className="text-quebi-fg-muted transition-colors duration-200 hover:text-white"
+            className="text-quebi-fg-muted transition-colors duration-200 hover:text-quebi-fg"
           >
             GitHub
           </a>
+          <ThemeToggle />
         </nav>
       </div>
     </header>

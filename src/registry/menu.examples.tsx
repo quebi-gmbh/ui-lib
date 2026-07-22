@@ -120,7 +120,7 @@ export const menuExamples: ComponentExample[] = [
       "Use `MenuTrigger` for an unstyled inline trigger, and `MenuSubMenu` to nest a submenu.",
     render: () => (
       <Menu>
-        <MenuTrigger className="rounded-quebi-sm border border-cyan-500/20 px-3 py-1.5 text-sm text-white">
+        <MenuTrigger className="rounded-quebi-sm border border-quebi-line/20 px-3 py-1.5 text-sm text-quebi-fg">
           More
         </MenuTrigger>
         <MenuContent placement="bottom start" className="min-w-48">

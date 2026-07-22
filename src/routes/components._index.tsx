@@ -18,7 +18,7 @@ export default function Components() {
   return (
     <div>
       <span className="quebi-eyebrow">Catalog</span>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
         Components
       </h1>
       <p className="mt-4 max-w-quebi-content text-base leading-relaxed text-quebi-fg-muted">
@@ -35,9 +35,9 @@ export default function Components() {
                 <Link
                   key={c.slug}
                   to={`/components/${c.slug}`}
-                  className="group relative rounded-quebi-md border border-cyan-500/10 bg-white/[0.02] p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-quebi-brand/30 hover:shadow-quebi-glow"
+                  className="group relative rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02] p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-quebi-brand/30 hover:shadow-quebi-glow"
                 >
-                  <h3 className="text-xl font-semibold text-white">{c.name}</h3>
+                  <h3 className="text-xl font-semibold text-quebi-fg">{c.name}</h3>
                   <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-quebi-fg-muted">
                     {c.description}
                   </p>

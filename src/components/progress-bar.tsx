@@ -41,7 +41,7 @@ export function ProgressBarHeader({ className, ...props }: React.ComponentProps<
   return (
     <div
       data-slot="progress-bar-header"
-      className={cn("flex items-center justify-between text-sm text-white", className)}
+      className={cn("flex items-center justify-between text-sm text-quebi-fg", className)}
       {...props}
     />
   )
@@ -81,7 +81,7 @@ export function ProgressBarTrack({ className, ref, ...props }: React.ComponentPr
         ref={ref}
         data-slot="progress-container"
         className={cn(
-          "relative h-1.5 w-full min-w-52 overflow-hidden rounded-full border border-cyan-500/10 bg-cyan-500/10 will-change-transform",
+          "relative h-1.5 w-full min-w-52 overflow-hidden rounded-full border border-quebi-line/10 bg-cyan-500/10 will-change-transform",
           className,
         )}
         {...props}

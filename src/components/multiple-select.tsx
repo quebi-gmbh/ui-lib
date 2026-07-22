@@ -88,7 +88,7 @@ function MultipleSelect<T extends OptionBase>({
             data-slot="control"
             ref={triggerRef}
             className={cn(
-              "flex w-full items-center gap-2 rounded-quebi-sm border border-cyan-500/10 bg-white/[0.02] p-1.5",
+              "flex w-full items-center gap-2 rounded-quebi-sm border border-quebi-line/10 bg-quebi-surface/[0.02] p-1.5",
               "transition-colors duration-150 focus-within:border-quebi-brand",
             )}
           >
@@ -127,7 +127,7 @@ function MultipleSelect<T extends OptionBase>({
           </div>
           <PopoverContent triggerRef={triggerRef} placement="bottom" className="flex w-full flex-col p-0">
             <Autocomplete filter={contains}>
-              <SearchField autoFocus aria-label="Search items" className="border-b border-cyan-500/10">
+              <SearchField autoFocus aria-label="Search items" className="border-b border-quebi-line/10">
                 <SearchInput className="border-none bg-transparent outline-hidden focus:ring-0" />
               </SearchField>
               <ListBox

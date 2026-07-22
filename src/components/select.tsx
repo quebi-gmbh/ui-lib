@@ -90,10 +90,10 @@ const SelectTrigger = ({ children, className, ...props }: SelectTriggerProps) =>
       <Button
         className={cn(
           // quebi input style — translucent field, cyan hairline, brand-teal focus.
-          "group/select-trigger flex w-full min-w-0 cursor-default items-center gap-x-2 text-start text-sm text-white",
-          "rounded-quebi-sm border border-cyan-500/20 bg-white/[0.02] px-3 py-2.5",
+          "group/select-trigger flex w-full min-w-0 cursor-default items-center gap-x-2 text-start text-sm text-quebi-fg",
+          "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
           "transition-[border-color,box-shadow] duration-200",
-          "enabled:hover:border-cyan-500/40",
+          "enabled:hover:border-quebi-line/40",
           // focus / open → brand-teal border + ring.
           "outline-none focus:outline-none focus:border-quebi-brand focus:ring-2 focus:ring-quebi-brand/50",
           "group-open/select:border-quebi-brand group-open/select:ring-2 group-open/select:ring-quebi-brand/50",

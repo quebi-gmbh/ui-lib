@@ -2,7 +2,7 @@ import { Container } from "@/components/container"
 import type { ComponentExample } from "./types"
 
 const Fill = ({ label }: { label: string }) => (
-  <div className="rounded-quebi-sm border border-cyan-500/10 bg-white/[0.03] px-4 py-6 text-center text-sm text-quebi-fg-muted">
+  <div className="rounded-quebi-sm border border-quebi-line/10 bg-quebi-surface/[0.03] px-4 py-6 text-center text-sm text-quebi-fg-muted">
     {label}
   </div>
 )

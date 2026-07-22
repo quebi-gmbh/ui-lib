@@ -29,7 +29,7 @@ export const progressCircleExamples: ComponentExample[] = [
     title: "Inline",
     description: "Inherits the surrounding font size next to text.",
     render: () => (
-      <span className="inline-flex items-center gap-2 text-sm text-white">
+      <span className="inline-flex items-center gap-2 text-sm text-quebi-fg">
         <ProgressCircle aria-label="Saving" isIndeterminate className="size-[1em]" />
         Saving changes…
       </span>

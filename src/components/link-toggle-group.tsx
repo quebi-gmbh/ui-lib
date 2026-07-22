@@ -38,7 +38,7 @@ export function LinkToggleGroup<T extends string = string>({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex items-center gap-1 rounded-quebi-md border border-cyan-500/10 bg-white/[0.02] p-[3px]",
+        "inline-flex items-center gap-1 rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02] p-[3px]",
         className,
       )}
     >
@@ -56,7 +56,7 @@ export function LinkToggleGroup<T extends string = string>({
               "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
               isActive
                 ? "bg-quebi-brand/15 text-quebi-brand shadow-quebi-glow"
-                : "text-quebi-fg-muted hover:text-white",
+                : "text-quebi-fg-muted hover:text-quebi-fg",
             )}
           >
             {opt.label}

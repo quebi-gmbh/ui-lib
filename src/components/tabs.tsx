@@ -57,9 +57,9 @@ export function TabList<T extends object>({ className, ref, ...props }: TabListP
       className={composeRenderProps(className, (className, { orientation }) =>
         cn(
           "relative flex forced-color-adjust-none",
-          orientation === "horizontal" && "flex-row gap-6 border-b border-cyan-500/10",
+          orientation === "horizontal" && "flex-row gap-6 border-b border-quebi-line/10",
           orientation === "vertical" &&
-            "min-w-56 shrink-0 flex-col items-start gap-y-2 border-l border-cyan-500/10",
+            "min-w-56 shrink-0 flex-col items-start gap-y-2 border-l border-quebi-line/10",
           className,
         ),
       )}
@@ -81,7 +81,7 @@ export function Tab({ className, ref, ...props }: TabProps) {
         cn(
           "group/tab relative flex items-center whitespace-nowrap py-2.5 text-sm font-semibold outline-hidden transition-colors duration-150 [-webkit-tap-highlight-color:transparent]",
           // Quiet until selected: muted text, brand teal when active.
-          "text-quebi-fg-muted selected:text-quebi-brand hover:text-white selected:hover:text-quebi-brand",
+          "text-quebi-fg-muted selected:text-quebi-brand hover:text-quebi-fg selected:hover:text-quebi-brand",
           "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg rounded-quebi-sm",
           // Icons inside tabs.
           "*:data-[slot=icon]:-ms-0.5 *:data-[slot=icon]:me-2 *:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center",
@@ -113,7 +113,7 @@ export function TabPanel({ className, ref, ...props }: TabPanelProps) {
       ref={ref}
       data-slot="tab-panel"
       className={composeRenderProps(className, (className) =>
-        cn("flex-1 text-sm/6 text-white focus-visible:outline-hidden", className),
+        cn("flex-1 text-sm/6 text-quebi-fg focus-visible:outline-hidden", className),
       )}
       {...props}
     />

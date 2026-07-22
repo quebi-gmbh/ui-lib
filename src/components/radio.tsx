@@ -59,7 +59,7 @@ export function Radio({ className, children, ...props }: RadioProps) {
               className={cn(
                 "relative flex size-[18px] shrink-0 items-center justify-center rounded-full border bg-transparent",
                 "transition-colors duration-150",
-                "border-cyan-500/30",
+                "border-quebi-line/30",
                 "before:content-[''] before:size-2 before:rounded-full",
                 isSelected && "border-quebi-brand bg-quebi-brand before:bg-quebi-bg",
                 isFocusVisible &&

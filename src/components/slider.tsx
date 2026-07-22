@@ -51,7 +51,7 @@ export function SliderOutput({ className, ...props }: SliderOutputProps) {
   return (
     <SliderOutputPrimitive
       data-slot="label"
-      className={cn("font-medium text-sm text-white tabular-nums", className)}
+      className={cn("font-medium text-sm text-quebi-fg tabular-nums", className)}
       {...props}
     />
   )
@@ -62,7 +62,7 @@ export function SliderThumb({ className, ...props }: SliderThumbProps) {
     <SliderThumbPrimitive
       data-slot="indicator"
       className={cn(
-        "top-1/2 left-1/2 size-5 rounded-full border border-cyan-500/20 bg-quebi-brand outline-hidden",
+        "top-1/2 left-1/2 size-5 rounded-full border border-quebi-line/20 bg-quebi-brand outline-hidden",
         "shadow-quebi-glow transition-[width,height] duration-150",
         "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand/50 data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
         "data-[dragging]:scale-110 data-[disabled]:opacity-60",

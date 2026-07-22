@@ -28,10 +28,10 @@ const Card = ({ className, variant = "default", interactive = false, ...props }:
       className={cn(
         // flex-col + h-full so a child with `mt-auto` (e.g. the action button)
         // pins to the bottom and buttons align across a row of cards.
-        "flex flex-col h-full rounded-quebi-md p-5 text-white",
+        "flex flex-col h-full rounded-quebi-md p-5 text-quebi-fg",
         variant === "feature"
           ? "border border-quebi-brand/30 bg-quebi-brand/[0.06] shadow-quebi-glow"
-          : "border border-cyan-500/10 bg-white/[0.02]",
+          : "border border-quebi-line/10 bg-quebi-surface/[0.02]",
         interactive &&
           "transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-quebi-brand/30 hover:shadow-quebi-glow",
         className,
@@ -66,7 +66,7 @@ const CardTitle = ({ className, ...props }: React.ComponentProps<"div">) => {
     <div
       data-slot="card-title"
       className={cn(
-        "font-sans font-semibold text-lg text-white tracking-[-0.01em] text-balance",
+        "font-sans font-semibold text-lg text-quebi-fg tracking-[-0.01em] text-balance",
         className,
       )}
       {...props}

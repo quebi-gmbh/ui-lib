@@ -65,7 +65,7 @@ export const popoverExamples: ComponentExample[] = [
         <PopoverTrigger intent="ghost">Help</PopoverTrigger>
         <PopoverContent className="max-w-sm">
           <div className="p-4">
-            <p className="font-semibold text-sm text-white">Need a hand?</p>
+            <p className="font-semibold text-sm text-quebi-fg">Need a hand?</p>
             <p className="mt-1 text-sm text-quebi-fg-muted">
               Reach out to support any time and we will get back to you within a day.
             </p>

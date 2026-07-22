@@ -64,7 +64,7 @@ const dropdownItemStyles = tv({
     "not-has-[[slot=description]]:items-center",
     "group relative cursor-default select-none rounded-quebi-sm outline-0",
     // text — quebi body (14/20), white.
-    "text-[14px] leading-[20px] text-white forced-colors:text-[CanvasText]",
+    "text-[14px] leading-[20px] text-quebi-fg forced-colors:text-[CanvasText]",
     // avatar
     "*:data-[slot=avatar]:*:me-(--me-icon) *:data-[slot=avatar]:me-(--me-icon) has-[[slot=description]]:*:data-[slot=avatar]:row-span-2 *:data-[slot=avatar]:[--avatar-size:--spacing(5)] sm:*:data-[slot=avatar]:[--avatar-size:--spacing(4)]",
     // icon
@@ -83,16 +83,16 @@ const dropdownItemStyles = tv({
   variants: {
     intent: {
       danger: [
-        "text-red-400 focus:text-red-400 [&_[data-slot='icon']:not([class*='text-'])]:text-red-400/70",
-        "*:[[slot=description]]:text-red-400/80 focus:*:[[slot=description]]:text-red-400 focus:*:[[slot=label]]:text-red-400",
-        "focus:bg-red-500/10 focus:text-red-400 forced-colors:focus:text-[Mark] focus:[&_[data-slot='icon']:not([class*='text-'])]:text-red-400",
-        "*:data-[slot=keyboard]:text-red-400/70 focus:*:data-[slot=keyboard]:text-red-400",
+        "text-quebi-danger focus:text-quebi-danger [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-danger/70",
+        "*:[[slot=description]]:text-quebi-danger/80 focus:*:[[slot=description]]:text-quebi-danger focus:*:[[slot=label]]:text-quebi-danger",
+        "focus:bg-red-500/10 focus:text-quebi-danger forced-colors:focus:text-[Mark] focus:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-danger",
+        "*:data-[slot=keyboard]:text-quebi-danger/70 focus:*:data-[slot=keyboard]:text-quebi-danger",
       ],
       warning: [
-        "text-amber-400 focus:text-amber-400 [&_[data-slot='icon']:not([class*='text-'])]:text-amber-400/70",
-        "*:[[slot=description]]:text-amber-400/80 focus:*:[[slot=description]]:text-amber-400 focus:*:[[slot=label]]:text-amber-400",
-        "focus:bg-amber-500/10 focus:text-amber-400 focus:[&_[data-slot='icon']:not([class*='text-'])]:text-amber-400",
-        "*:data-[slot=keyboard]:text-amber-400/70 focus:*:data-[slot=keyboard]:text-amber-400",
+        "text-quebi-warn focus:text-quebi-warn [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-warn/70",
+        "*:[[slot=description]]:text-quebi-warn/80 focus:*:[[slot=description]]:text-quebi-warn focus:*:[[slot=label]]:text-quebi-warn",
+        "focus:bg-amber-500/10 focus:text-quebi-warn focus:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-warn",
+        "*:data-[slot=keyboard]:text-quebi-warn/70 focus:*:data-[slot=keyboard]:text-quebi-warn",
       ],
     },
     isDisabled: {
@@ -105,16 +105,16 @@ const dropdownItemStyles = tv({
     isFocused: {
       // Keyboard-focused → subtle white wash so nav reads cleanly on the dark surface.
       true: [
-        "*:data-[slot=keyboard]:text-white [&_[data-slot='icon']:not([class*='text-'])]:text-white",
-        "bg-white/[0.04] text-white forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]",
-        "*:[[slot=description]]:text-white *:[[slot=label]]:text-white",
+        "*:data-[slot=keyboard]:text-quebi-fg [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
+        "bg-quebi-surface/[0.04] text-quebi-fg forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]",
+        "*:[[slot=description]]:text-quebi-fg *:[[slot=label]]:text-quebi-fg",
       ],
     },
     isHovered: {
       true: [
-        "*:data-[slot=keyboard]:text-white [&_[data-slot='icon']:not([class*='text-'])]:text-white",
-        "bg-white/[0.04] text-white forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]",
-        "*:[[slot=description]]:text-white *:[[slot=label]]:text-white",
+        "*:data-[slot=keyboard]:text-quebi-fg [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
+        "bg-quebi-surface/[0.04] text-quebi-fg forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]",
+        "*:[[slot=description]]:text-quebi-fg *:[[slot=label]]:text-quebi-fg",
       ],
     },
   },
@@ -181,7 +181,7 @@ const DropdownKeyboard = ({ className, ...props }: React.ComponentProps<typeof K
   return (
     <Keyboard
       className={cn(
-        "absolute end-2 ps-2 group-hover:text-white group-focus:text-white",
+        "absolute end-2 ps-2 group-hover:text-quebi-fg group-focus:text-quebi-fg",
         className,
       )}
       {...props}

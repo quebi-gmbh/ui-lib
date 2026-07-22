@@ -82,7 +82,7 @@ const SettingsIcon = () => (
 )
 
 const Shell = ({ children }: { children: React.ReactNode }) => (
-  <div className="h-[28rem] w-full overflow-hidden rounded-quebi-md border border-cyan-500/10">
+  <div className="h-[28rem] w-full overflow-hidden rounded-quebi-md border border-quebi-line/10">
     {children}
   </div>
 )
@@ -96,7 +96,7 @@ export const sidebarExamples: ComponentExample[] = [
         <SidebarProvider>
           <Sidebar>
             <SidebarHeader>
-              <span className="px-2 font-semibold text-white">quebi</span>
+              <span className="px-2 font-semibold text-quebi-fg">quebi</span>
             </SidebarHeader>
             <SidebarContent>
               <SidebarSection label="Overview">
@@ -144,7 +144,7 @@ export const sidebarExamples: ComponentExample[] = [
         <SidebarProvider defaultOpen={false}>
           <Sidebar collapsible="dock">
             <SidebarHeader>
-              <span className="font-semibold text-white">q</span>
+              <span className="font-semibold text-quebi-fg">q</span>
             </SidebarHeader>
             <SidebarContent>
               <SidebarSection label="Overview">
@@ -182,7 +182,7 @@ export const sidebarExamples: ComponentExample[] = [
         <SidebarProvider>
           <Sidebar>
             <SidebarHeader>
-              <span className="px-2 font-semibold text-white">quebi</span>
+              <span className="px-2 font-semibold text-quebi-fg">quebi</span>
             </SidebarHeader>
             <SidebarContent>
               <SidebarSection>
@@ -238,7 +238,7 @@ export const sidebarExamples: ComponentExample[] = [
         <SidebarProvider>
           <Sidebar intent="float">
             <SidebarHeader>
-              <span className="px-2 font-semibold text-white">quebi</span>
+              <span className="px-2 font-semibold text-quebi-fg">quebi</span>
             </SidebarHeader>
             <SidebarContent>
               <SidebarSection label="Overview">

@@ -29,7 +29,7 @@ function Hero() {
 
       <div className="relative z-10 mx-auto flex min-h-[80vh] max-w-quebi-content flex-col items-center justify-center px-6 py-32 text-center">
         <span className="quebi-eyebrow mb-4">React component library</span>
-        <h1 className="text-5xl font-bold tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl">
+        <h1 className="text-5xl font-bold tracking-tight text-quebi-fg sm:text-6xl md:text-7xl lg:text-8xl">
           ui-lib
         </h1>
         <p className="mt-6 max-w-xl text-lg text-quebi-fg-muted">
@@ -39,7 +39,7 @@ function Hero() {
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
           <Link
             to="/components"
-            className="inline-flex items-center gap-2 rounded-quebi-sm bg-quebi-brand px-6 py-3 font-semibold text-quebi-bg transition-all duration-200 hover:scale-[1.02] hover:bg-quebi-brand-hover hover:shadow-quebi-glow-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50"
+            className="inline-flex items-center gap-2 rounded-quebi-sm bg-quebi-brand px-6 py-3 font-semibold text-quebi-on-brand transition-all duration-200 hover:scale-[1.02] hover:bg-quebi-brand-hover hover:shadow-quebi-glow-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50"
           >
             Browse components
             <ArrowRight className="h-4 w-4" />
@@ -48,7 +48,7 @@ function Hero() {
             href="https://github.com/quebi-gmbh"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-quebi-sm border border-cyan-500/20 px-6 py-3 text-white transition-colors duration-200 hover:border-quebi-brand hover:text-quebi-brand"
+            className="inline-flex items-center gap-2 rounded-quebi-sm border border-quebi-line/20 px-6 py-3 text-quebi-fg transition-colors duration-200 hover:border-quebi-brand hover:text-quebi-brand"
           >
             GitHub
           </a>
@@ -84,7 +84,7 @@ function Features() {
     <section className="mx-auto w-full max-w-5xl px-6 py-24">
       <div className="mx-auto max-w-quebi-content text-center">
         <span className="quebi-eyebrow">What you get</span>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
           Components that solve real problems
         </h2>
       </div>
@@ -92,13 +92,13 @@ function Features() {
         {features.map(({ icon: Icon, eyebrow, title, body }) => (
           <article
             key={title}
-            className="group relative rounded-quebi-md border border-cyan-500/10 bg-white/[0.02] p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-quebi-brand/30 hover:shadow-quebi-glow"
+            className="group relative rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02] p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-quebi-brand/30 hover:shadow-quebi-glow"
           >
             <Icon className="h-6 w-6 text-quebi-brand" strokeWidth={1.75} />
             <span className="mt-4 block text-xs font-medium uppercase tracking-wider text-quebi-brand">
               {eyebrow}
             </span>
-            <h3 className="mt-2 text-xl font-semibold text-white">{title}</h3>
+            <h3 className="mt-2 text-xl font-semibold text-quebi-fg">{title}</h3>
             <p className="mt-3 text-sm leading-relaxed text-quebi-fg-muted">{body}</p>
           </article>
         ))}
@@ -118,7 +118,7 @@ function ForAgents() {
     <section className="mx-auto w-full max-w-5xl px-6 py-24">
       <div className="mx-auto max-w-quebi-content text-center">
         <span className="quebi-eyebrow">For AI agents</span>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
           Built to be pulled by agents
         </h2>
         <p className="mt-4 text-base leading-relaxed text-quebi-fg-muted">
@@ -131,14 +131,14 @@ function ForAgents() {
         <p className="mb-2 text-xs font-medium uppercase tracking-wider text-quebi-brand">
           Add a component with the shadcn CLI
         </p>
-        <pre className="overflow-x-auto rounded-quebi-md border border-cyan-500/10 bg-quebi-bg p-4 text-sm text-white">
+        <pre className="overflow-x-auto rounded-quebi-md border border-quebi-line/10 bg-quebi-bg p-4 text-sm text-quebi-fg">
           <code>npx shadcn@latest add https://ui-lib.quebi.de/r/button.json</code>
         </pre>
 
         <p className="mt-8 mb-3 text-xs font-medium uppercase tracking-wider text-quebi-brand">
           Or fetch the API directly
         </p>
-        <ul className="divide-y divide-cyan-500/10 overflow-hidden rounded-quebi-md border border-cyan-500/10">
+        <ul className="divide-y divide-quebi-line/10 overflow-hidden rounded-quebi-md border border-quebi-line/10">
           {endpoints.map((e) => (
             <li key={e.url} className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:gap-4">
               <a
@@ -168,7 +168,7 @@ function ClaudeSkill() {
     <section className="mx-auto w-full max-w-5xl px-6 py-24">
       <div className="mx-auto max-w-quebi-content text-center">
         <span className="quebi-eyebrow">Claude skill</span>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
           Teach Claude to use ui-lib
         </h2>
         <p className="mt-4 text-base leading-relaxed text-quebi-fg-muted">
@@ -181,13 +181,13 @@ function ClaudeSkill() {
         <p className="mb-2 text-xs font-medium uppercase tracking-wider text-quebi-brand">Set it up</p>
         <ol className="mb-8 space-y-2 text-sm leading-relaxed text-quebi-fg-muted">
           <li>
-            <span className="text-white">1.</span> Save the skill below to{" "}
+            <span className="text-quebi-fg">1.</span> Save the skill below to{" "}
             <code className="text-quebi-fg-subtle">.claude/skills/quebi-ui-lib/SKILL.md</code> in
             your project (or <code className="text-quebi-fg-subtle">~/.claude/skills/</code> to make
             it available everywhere).
           </li>
           <li>
-            <span className="text-white">2.</span> Or download it directly:{" "}
+            <span className="text-quebi-fg">2.</span> Or download it directly:{" "}
             <a
               href="/skills/quebi-ui-lib/SKILL.md"
               className="text-quebi-brand hover:text-quebi-brand-hover"
@@ -198,7 +198,7 @@ function ClaudeSkill() {
             .
           </li>
           <li>
-            <span className="text-white">3.</span> Start a Claude Code session in your project — the
+            <span className="text-quebi-fg">3.</span> Start a Claude Code session in your project — the
             skill activates when you ask for a React component.
           </li>
         </ol>
