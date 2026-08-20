@@ -33,6 +33,7 @@ import { conformColorPickerMeta } from "./conform-color-picker.meta"
 import { conformColorSwatchPickerMeta } from "./conform-color-swatch-picker.meta"
 import { conformDateFieldMeta } from "./conform-date-field.meta"
 import { conformDatePickerMeta } from "./conform-date-picker.meta"
+import { conformDayScheduleMeta } from "./conform-day-schedule.meta"
 import { conformFieldMeta } from "./conform-field.meta"
 import { conformMultipleSelectMeta } from "./conform-multiple-select.meta"
 import { conformNumberFieldMeta } from "./conform-number-field.meta"
@@ -43,6 +44,7 @@ import { contextMenuMeta } from "./context-menu.meta"
 import { dateFieldMeta } from "./date-field.meta"
 import { datePickerMeta } from "./date-picker.meta"
 import { dateRangePickerMeta } from "./date-range-picker.meta"
+import { dayScheduleMeta } from "./day-schedule.meta"
 import { descriptionListMeta } from "./description-list.meta"
 import { dialogMeta } from "./dialog.meta"
 import { disclosureGroupMeta } from "./disclosure-group.meta"
@@ -145,6 +147,7 @@ export const metaRegistry: ComponentMeta[] = [
   conformColorSwatchPickerMeta,
   conformDateFieldMeta,
   conformDatePickerMeta,
+  conformDayScheduleMeta,
   conformFieldMeta,
   conformMultipleSelectMeta,
   conformNumberFieldMeta,
@@ -155,6 +158,7 @@ export const metaRegistry: ComponentMeta[] = [
   dateFieldMeta,
   datePickerMeta,
   dateRangePickerMeta,
+  dayScheduleMeta,
   descriptionListMeta,
   dialogMeta,
   disclosureGroupMeta,
