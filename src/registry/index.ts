@@ -34,6 +34,7 @@ import { conformColorPickerExamples } from "./conform-color-picker.examples"
 import { conformColorSwatchPickerExamples } from "./conform-color-swatch-picker.examples"
 import { conformDateFieldExamples } from "./conform-date-field.examples"
 import { conformDatePickerExamples } from "./conform-date-picker.examples"
+import { conformDayScheduleExamples } from "./conform-day-schedule.examples"
 import { conformFieldExamples } from "./conform-field.examples"
 import { conformMultipleSelectExamples } from "./conform-multiple-select.examples"
 import { conformNumberFieldExamples } from "./conform-number-field.examples"
@@ -44,6 +45,7 @@ import { contextMenuExamples } from "./context-menu.examples"
 import { dateFieldExamples } from "./date-field.examples"
 import { datePickerExamples } from "./date-picker.examples"
 import { dateRangePickerExamples } from "./date-range-picker.examples"
+import { dayScheduleExamples } from "./day-schedule.examples"
 import { descriptionListExamples } from "./description-list.examples"
 import { dialogExamples } from "./dialog.examples"
 import { disclosureGroupExamples } from "./disclosure-group.examples"
@@ -146,6 +148,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "conform-color-swatch-picker": conformColorSwatchPickerExamples,
   "conform-date-field": conformDateFieldExamples,
   "conform-date-picker": conformDatePickerExamples,
+  "conform-day-schedule": conformDayScheduleExamples,
   "conform-field": conformFieldExamples,
   "conform-multiple-select": conformMultipleSelectExamples,
   "conform-number-field": conformNumberFieldExamples,
@@ -156,6 +159,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "date-field": dateFieldExamples,
   "date-picker": datePickerExamples,
   "date-range-picker": dateRangePickerExamples,
+  "day-schedule": dayScheduleExamples,
   "description-list": descriptionListExamples,
   "dialog": dialogExamples,
   "disclosure-group": disclosureGroupExamples,
