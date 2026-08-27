@@ -6,6 +6,7 @@ import type { RuleMeta } from "./types"
 export const noRawInteractiveElementsRule: RuleMeta = {
   id: "no-raw-interactive-elements",
   title: "Never render interactive or semantic HTML elements directly",
+  navTitle: "Interactive elements",
   summary:
     "button, input, select, textarea, a, form, label, dialog and table are the library's. Import the component instead — this holds whether or not you style the element.",
   severity: "error",

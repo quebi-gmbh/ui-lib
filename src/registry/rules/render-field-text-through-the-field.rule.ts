@@ -6,6 +6,7 @@ import type { RuleMeta } from "./types"
 export const renderFieldTextThroughTheFieldRule: RuleMeta = {
   id: "render-field-text-through-the-field",
   title: "Label, description and error come from the field — not from markup beside it",
+  navTitle: "Labels and errors",
   summary:
     "Use the field's own slots: the label/description props on a conform-* variant, Label and Description inside a react-aria field, and for errors either FieldError (inside a field context) or an element carrying id={field.errorId}. A red paragraph next to a control is not attached to it.",
   severity: "error",
