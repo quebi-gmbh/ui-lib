@@ -78,22 +78,58 @@ export interface RuleExample {
 
 /** A carve-out. Every exception needs a reason — an unjustified one is a bug. */
 export interface RuleException {
-  /** Path or glob the carve-out covers. */
+  /** Path or glob the carve-out covers, in prose. */
   scope: string
   reason: string
+  /**
+   * Machine-readable globs for the same carve-out, when it is expressible as
+   * paths. These become `ignores` entries in the generated lint config, which is
+   * what stops the generated config from flagging a documented exception. An
+   * exception that is a judgement call (not a path) leaves this empty and is
+   * handled with an inline disable comment instead.
+   */
+  paths?: string[]
 }
 
 export interface RuleEnforcement {
   kind: RuleEnforcementKind
   /**
-   * ESLint/oxlint (esquery) selector for a `no-restricted-syntax`-style check.
-   * Nothing consumes it yet — this repo has no lint infrastructure. It is
-   * recorded now so the lint config can later be *generated* from these records
-   * and the documented rule cannot drift from the enforced one.
+   * ESLint (esquery) selector for a `no-restricted-syntax` check. The generated
+   * lint config is built from this, so the documented rule and the enforced rule
+   * come from one record and cannot drift.
    */
   selector?: string
+  /**
+   * The message the linter prints. It must say what to use instead — a rule that
+   * only names what is forbidden makes the reader go looking for the answer.
+   * Required when `kind` is "lint"; the build enforces that.
+   */
+  message?: string
+  /**
+   * A ripgrep pattern that finds candidates for this rule with no lint setup at
+   * all. Coarser than the selector (it cannot see the AST), so it is a review
+   * aid, not a gate — but it is the only check available to an agent working in
+   * a repo with no linter, which is most of them.
+   */
+  grep?: string
   /** What is true today about enforcement. */
   note?: string
+}
+
+/**
+ * A runnable check for a rule, derived from its record by
+ * `scripts/generate-api.ts` — never hand-written, so a rule and the config that
+ * enforces it cannot disagree.
+ */
+export interface RuleCheck {
+  /** Tool the snippet is for, e.g. "eslint", "ripgrep". */
+  tool: string
+  title: string
+  /** What this check does and does not catch. */
+  description: string
+  /** Shiki language id for the snippet. */
+  language: "js" | "bash" | "tsx"
+  code: string
 }
 
 /** Human-curated metadata for a single rule. */

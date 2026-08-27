@@ -116,6 +116,7 @@ export const noAppearanceClassesOnLayoutElementsRule: RuleMeta = {
   exceptions: [
     {
       scope: "src/components/*.tsx (the library's own source)",
+      paths: ["src/components/**", "components/ui/**"],
       reason:
         "Components are made of appearance-styled divs — that is what a component is. The rule is about app code reimplementing a surface the library already ships.",
     },
@@ -127,9 +128,21 @@ export const noAppearanceClassesOnLayoutElementsRule: RuleMeta = {
   ],
   enforcement: {
     kind: "lint",
+    // Any string literal, not just className attributes — a hand-built surface is
+    // as likely to sit in a cn() call as in an attribute.
+    // The high-confidence subset of the policy above: a class list carrying both
+    // a radius and a border is the surface signature — that is a Card, a Panel,
+    // or a Badge being rebuilt. Linting the full policy (any bg-*, shadow-*, or
+    // text sizing) fires on legitimate page chrome like a <header> with
+    // bg-quebi-bg, which is how a rule gets switched off wholesale. Verified
+    // against this repo: the tightened selector reports the two hand-built Card
+    // surfaces and leaves the page chrome alone.
     selector:
-      'JSXAttribute[name.name="className"][value.value=/(^|[\\s:])(bg-|border-|rounded-|shadow-|ring-|divide-|font-(thin|light|normal|medium|semibold|bold|extrabold|black)|text-(xs|sm|base|lg|[2-9]?xl)\\b)/]',
-    note: "Only catches static string classNames, which is the common case; template literals and cn() calls need the rule to look at the concatenated parts. Nothing consumes the selector yet — this repo has no lint infrastructure.",
+      'Literal[value=/(rounded-.*\\bborder\\b|\\bborder\\b.*rounded-)/]',
+    message:
+      "Appearance classes (bg-*, border-*, rounded-*, shadow-*, ring-*, text sizing/colour, font weight) on a layout element mean a ui-lib component is being reinvented — import Card/Badge/Note/Panel instead. Layout and spacing classes are fine. See https://ui-lib.quebi.de/rules/no-appearance-classes-on-layout-elements",
+    grep: 'className="[^"]*(rounded-[^"]*\\bborder\\b|\\bborder\\b[^"]*rounded-)',
+    note: "The selector is deliberately narrower than the policy: it looks for the radius+border surface signature rather than every appearance class, because the broad version fires on legitimate page chrome and a rule that cries wolf gets disabled. The rest of the policy — bg-*, shadow-*, text sizing and colour — is review-only. Both checks also only see static strings, so a className built with cn() or a template literal slips past either way.",
   },
   tags: ["elements", "layout", "tailwind", "tier-2"],
 }

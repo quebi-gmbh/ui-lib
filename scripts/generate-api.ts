@@ -23,6 +23,7 @@ import { fileURLToPath } from "node:url"
 import { createHighlighter } from "shiki"
 import { metaRegistry } from "../src/registry/meta"
 import { getRuleGroup, ruleGroups, rulesRegistry } from "../src/registry/rules"
+import type { RuleCheck, RuleMeta } from "../src/registry/rules"
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const COMPONENTS_DIR = join(ROOT, "src/components")
@@ -87,6 +88,270 @@ function classifyDeps(specs: string[], allSlugs: Set<string>) {
   }
 }
 
+/**
+ * Minimal glob -> RegExp for the `paths` on a rule exception (`**` and `*` only).
+ * Used to work out which documented exceptions overlap when the generated lint
+ * config is assembled — see buildEslintConfig.
+ */
+function globToRegExp(glob: string): RegExp {
+  const source = glob
+    .split("**")
+    .map((part) => part.replace(/[.+^${}()|[\]\\?]/g, "\\$&").replace(/\*/g, "[^/]*"))
+    .join(".*")
+  return new RegExp(`^${source}$`)
+}
+
+/** First sentence of a justification, for a one-line comment in generated config. */
+function firstSentence(text: string) {
+  const match = text.match(/^.*?[.;](?=\s|$)/)
+  return (match ? match[0] : text).trim()
+}
+
+/**
+ * The JSX/TSX subset of a rule's `appliesTo`. The selectors are JSX selectors,
+ * so a `.css` glob would hand ESLint files its parser has no business reading —
+ * CSS-side coverage is a separate check (see each rule's enforcement note).
+ */
+function jsxGlobs(globs: string[]): string[] {
+  const stripped = globs
+    .map((glob) =>
+      glob.replace(/\{([^}]*)\}/, (_, inner: string) => {
+        const kept = inner.split(",").filter((ext) => ext === "tsx" || ext === "jsx")
+        return kept.length ? `{${kept.join(",")}}` : inner
+      }),
+    )
+    .filter((glob) => /tsx|jsx/.test(glob))
+  return [...new Set(stripped)]
+}
+
+/** An array of strings as readable JS source: ["a", "b"]. */
+function jsArray(values: string[]) {
+  return `[${values.map((v) => JSON.stringify(v)).join(", ")}]`
+}
+
+/** Path globs a rule's exceptions carve out (the ones expressible as paths). */
+function exceptionPaths(rule: RuleMeta): string[] {
+  return [...new Set(rule.exceptions.flatMap((e) => e.paths ?? []))]
+}
+
+/** One `no-restricted-syntax` entry, rendered as readable JS. */
+function restrictedSyntaxEntry(rule: RuleMeta, indent: string) {
+  return [
+    `${indent}{`,
+    `${indent}  // ${rule.id} (${rule.tier ? `tier ${rule.tier}, ` : ""}declared ${rule.severity})`,
+    `${indent}  selector:`,
+    `${indent}    ${JSON.stringify(rule.enforcement.selector)},`,
+    `${indent}  message:`,
+    `${indent}    ${JSON.stringify(rule.enforcement.message)},`,
+    `${indent}},`,
+  ].join("\n")
+}
+
+/**
+ * The whole lint config, generated from the rule records.
+ *
+ * Two wrinkles, both inherent to `no-restricted-syntax` rather than to the
+ * records, and both surfaced in the file's own comments rather than papered over:
+ *
+ *  - it is a single rule key, so it carries ONE severity for all of its entries;
+ *    a rule declared `warn` is reported at `error` here.
+ *  - it is a single rule key, so a documented exception cannot switch off one
+ *    entry. Instead each distinct set of exception paths gets its own config
+ *    object that re-declares the rule with only the entries that still apply
+ *    there — accumulating the exceptions of any broader path group, so a narrow
+ *    carve-out does not silently re-enable what a broader one turned off.
+ */
+function buildEslintConfig(lintRules: RuleMeta[]): string {
+  const files = jsxGlobs(lintRules.flatMap((r) => r.appliesTo)).sort()
+  const warned = lintRules.filter((r) => r.severity !== "error").map((r) => r.id)
+
+  // Distinct exception path-sets, each with the rules it relaxes.
+  const groups: { paths: string[]; reasons: string[]; disabled: Set<string> }[] = []
+  for (const rule of lintRules) {
+    for (const exception of rule.exceptions) {
+      if (!exception.paths?.length) continue
+      const key = exception.paths.join("|")
+      let group = groups.find((g) => g.paths.join("|") === key)
+      if (!group) {
+        group = { paths: exception.paths, reasons: [], disabled: new Set() }
+        groups.push(group)
+      }
+      group.disabled.add(rule.id)
+      group.reasons.push(`${rule.id} — ${firstSentence(exception.reason)}`)
+    }
+  }
+
+  // A group also inherits every exception of a group whose globs cover its own
+  // paths (e.g. src/components/** covers src/components/energy-class-badge.tsx).
+  const covers = (a: (typeof groups)[number], b: (typeof groups)[number]) =>
+    a !== b && a.paths.some((p) => b.paths.some((q) => globToRegExp(p).test(q)))
+  for (const group of groups) {
+    for (const other of groups) {
+      if (covers(other, group)) for (const id of other.disabled) group.disabled.add(id)
+    }
+  }
+  // Broad blocks first: later config objects win in flat config, so the narrow
+  // ones must come last.
+  const breadth = new Map(groups.map((g) => [g, groups.filter((o) => covers(g, o)).length]))
+  groups.sort((a, b) => (breadth.get(b) ?? 0) - (breadth.get(a) ?? 0))
+
+  const block = (rules: RuleMeta[], scope: string[]) => {
+    const body =
+      rules.length === 0
+        ? ['      "no-restricted-syntax": "off",']
+        : [
+            '      "no-restricted-syntax": [',
+            '        "error",',
+            ...rules.map((r) => restrictedSyntaxEntry(r, "        ")),
+            "      ],",
+          ]
+    return [
+      "  {",
+      `    files: ${jsArray(scope)},`,
+      "    rules: {",
+      ...body,
+      "    },",
+      "  },",
+    ].join("\n")
+  }
+
+  return [
+    `// AUTO-GENERATED from ${BASE_URL}/api/rules.json — do not edit by hand.`,
+    "//",
+    "// Every selector, message, and ignore below comes from a rule record in quebi",
+    `// ui-lib, so this file and ${BASE_URL}/rules cannot drift apart. Regenerate with:`,
+    `//   curl -O ${BASE_URL}/api/rules/eslint.config.js`,
+    "//",
+    "// Merge these objects into your own flat config, or spread the default export",
+    "// into it. The selectors match JSX nodes, so the files they cover need a",
+    "// parser that produces them — if your config does not set one already, put",
+    "// this in front (npm i -D @typescript-eslint/parser):",
+    "//",
+    '//   import parser from "@typescript-eslint/parser"',
+    "//   { files: [\"**/*.{tsx,jsx}\"], languageOptions: { parser, parserOptions: { ecmaFeatures: { jsx: true } } } },",
+    ...(warned.length
+      ? [
+          "//",
+          "// Caveat: `no-restricted-syntax` is one rule key, so it carries a single",
+          `// severity for every entry. ${warned.join(", ")} ${warned.length === 1 ? "is" : "are"} declared \`warn\` in the`,
+          "// records and reported at `error` here; move that entry into its own config",
+          "// object if you want it softer.",
+        ]
+      : []),
+    "",
+    "export default [",
+    block(lintRules, files),
+    ...groups.map((group) => {
+      const remaining = lintRules.filter((r) => !group.disabled.has(r.id))
+      return [
+        "",
+        "  // Documented exceptions:",
+        ...group.reasons.map((r) => `  //   ${r}`),
+        block(remaining, group.paths),
+      ].join("\n")
+    }),
+    "]",
+    "",
+  ].join("\n")
+}
+
+/** The runnable checks shown on a rule's page, all derived from its record. */
+function buildRuleChecks(rule: RuleMeta): RuleCheck[] {
+  const checks: RuleCheck[] = []
+  const ignores = exceptionPaths(rule)
+  const severity = rule.severity === "error" ? "error" : "warn"
+
+  if (rule.enforcement.selector && rule.enforcement.message) {
+    checks.push({
+      tool: "eslint",
+      title: "ESLint — no-restricted-syntax",
+      description:
+        "This rule on its own, at its own severity, with its documented exceptions as `ignores`. Needs a parser that emits JSX nodes (typescript-eslint).",
+      language: "js",
+      code: [
+        "// eslint.config.js",
+        "export default [",
+        "  {",
+        `    files: ${jsArray(jsxGlobs(rule.appliesTo))},`,
+        ...(ignores.length ? [`    ignores: ${jsArray(ignores)},`] : []),
+        "    rules: {",
+        '      "no-restricted-syntax": [',
+        `        ${JSON.stringify(severity)},`,
+        restrictedSyntaxEntry(rule, "        "),
+        "      ],",
+        "    },",
+        "  },",
+        "]",
+        "",
+      ].join("\n"),
+    })
+  }
+
+  if (rule.replacements?.length) {
+    checks.push({
+      tool: "eslint",
+      title: "ESLint — react/forbid-elements",
+      description:
+        "Sharper than the selector for this rule: one message per element, naming that element's own replacement instead of one message for all nine. Requires eslint-plugin-react.",
+      language: "js",
+      code: [
+        "// Requires eslint-plugin-react registered in your flat config.",
+        '"react/forbid-elements": [',
+        `  ${JSON.stringify(severity)},`,
+        "  {",
+        "    forbid: [",
+        ...rule.replacements.map((replacement) => {
+          const use = replacement.use
+            .map((t) => `<${t.name}> from ${t.from}${t.when ? ` (${t.when})` : ""}`)
+            .join(", or ")
+          return `      { element: ${JSON.stringify(replacement.element)}, message: ${JSON.stringify(`Use ${use}.`)} },`
+        }),
+        "    ],",
+        "  },",
+        "],",
+        "",
+      ].join("\n"),
+    })
+  }
+
+  if (rule.enforcement.grep) {
+    checks.push({
+      tool: "ripgrep",
+      title: "ripgrep — no setup at all",
+      description:
+        "Finds candidates for review in any repo, linter or not. Coarser than the selector: it reads lines, not syntax, so expect false positives and treat a clean run as weaker evidence than a clean lint run.",
+      language: "bash",
+      code: [
+        `# ${rule.id} — candidates for review`,
+        "rg -n -g '*.{tsx,jsx}' \\",
+        ...ignores.map((path) => `  -g '!${path}' \\`),
+        `  ${JSON.stringify(rule.enforcement.grep)}`,
+        "",
+      ].join("\n"),
+    })
+  }
+
+  const judgementCalls = rule.exceptions.filter((e) => !e.paths?.length)
+  if (judgementCalls.length > 0 && rule.enforcement.selector) {
+    checks.push({
+      tool: "eslint",
+      title: "Claiming an exception that is not a path",
+      description: `${judgementCalls.length === 1 ? "One exception on this rule is" : `${judgementCalls.length} exceptions on this rule are`} a judgement call, so ${judgementCalls.length === 1 ? "it" : "they"} cannot be an \`ignores\` glob. Justify it where it happens — the note after \`--\` is what makes the carve-out reviewable instead of invisible.`,
+      language: "tsx",
+      code: judgementCalls
+        .map((exception) =>
+          [
+            "{/* eslint-disable-next-line no-restricted-syntax --",
+            `    ${exception.scope}: ${firstSentence(exception.reason)} */}`,
+          ].join("\n"),
+        )
+        .join("\n\n"),
+    })
+  }
+
+  return checks
+}
+
 async function main() {
   const allSlugs = new Set(metaRegistry.map((m) => m.slug))
 
@@ -99,9 +364,9 @@ async function main() {
   // is replaced with transparent so the quebi surface shows through.
   const highlighter = await createHighlighter({
     themes: ["vesper", "github-light"],
-    langs: ["tsx", "markdown"],
+    langs: ["tsx", "markdown", "js", "bash"],
   })
-  const highlight = (code: string, lang: "tsx" | "markdown" = "tsx") =>
+  const highlight = (code: string, lang: "tsx" | "markdown" | "js" | "bash" = "tsx") =>
     highlighter.codeToHtml(code, {
       lang,
       themes: { dark: "vesper", light: "github-light" },
@@ -274,6 +539,7 @@ async function main() {
   const groupIds = new Set(ruleGroups.map((g) => g.id))
   const seenRuleIds = new Set<string>()
   const ruleHighlights: { id: string; examples: { wrong: string; right: string }[] }[] = []
+  const ruleCheckEntries: { id: string; checks: (RuleCheck & { highlighted: string })[] }[] = []
   const rulesCatalog: unknown[] = []
 
   for (const rule of rulesRegistry) {
@@ -303,20 +569,74 @@ async function main() {
     if (rule.examples.length === 0) {
       throw new Error(`Rule "${rule.id}" has no wrong/right example`)
     }
+    if (rule.enforcement.kind === "lint") {
+      // A lint rule that cannot be generated into a check is just prose with a
+      // severity on it, and a message that does not name the replacement makes
+      // the reader go hunting — both are the failure this whole route exists to
+      // prevent, so they fail the build.
+      if (!rule.enforcement.selector) {
+        throw new Error(`Rule "${rule.id}" is enforced by lint but has no selector`)
+      }
+      if (!rule.enforcement.message) {
+        throw new Error(
+          `Rule "${rule.id}" is enforced by lint but has no message — it must say what to use instead`,
+        )
+      }
+    }
 
     ruleHighlights.push({
       id: rule.id,
       examples: rule.examples.map((e) => ({ wrong: highlight(e.wrong), right: highlight(e.right) })),
     })
 
+    // Runnable checks, derived from the record — never hand-written, so the rule
+    // a human reads and the config a machine runs come from the same source.
+    const checks = buildRuleChecks(rule)
+    ruleCheckEntries.push({
+      id: rule.id,
+      checks: checks.map((c) => ({ ...c, highlighted: highlight(c.code, c.language) })),
+    })
+
     const ruleJson = {
       ...rule,
       group: getRuleGroup(rule.category),
+      checks,
       page: `${BASE_URL}/rules/${rule.id}`,
     }
     await writeFile(join(RULES_OUT, `${rule.id}.json`), JSON.stringify(ruleJson, null, 2))
     rulesCatalog.push(ruleJson)
   }
+
+  // The whole lint config, generated from the same records. This repo has no
+  // lint setup of its own to wire it into; it is published as an artifact a
+  // consuming app can drop in, which is the point of keeping `selector` and
+  // `message` on the record in the first place.
+  const lintRules = rulesRegistry.filter((r) => r.enforcement.kind === "lint")
+  const eslintConfig = buildEslintConfig(lintRules)
+  await writeFile(join(RULES_OUT, "eslint.config.js"), eslintConfig)
+
+  // How to run the config above — the same steps this config was verified with.
+  const eslintSetup = [
+    "# 1. A parser that emits JSX nodes (skip if your config already has one)",
+    "npm i -D eslint @typescript-eslint/parser",
+    "",
+    "# 2. The generated config — every ui-lib rule, with its documented exceptions",
+    `curl -O ${BASE_URL}/api/rules/eslint.config.js`,
+    "",
+    "# 3. Point your own flat config at it",
+    "cat > eslint.config.js <<'EOF'",
+    'import parser from "@typescript-eslint/parser"',
+    'import uiLibRules from "./ui-lib.eslint.config.js"',
+    "",
+    "export default [",
+    '  { files: ["**/*.{tsx,jsx}"], languageOptions: { parser, parserOptions: { ecmaFeatures: { jsx: true } } } },',
+    "  ...uiLibRules,",
+    "]",
+    "EOF",
+    "",
+    "npx eslint src",
+    "",
+  ].join("\n")
 
   // rules.json — every rule in one fetch, mirroring api/index.json.
   await writeFile(
@@ -330,6 +650,11 @@ async function main() {
         count: rulesCatalog.length,
         groups: ruleGroups,
         rules: rulesCatalog,
+        enforcement: {
+          description:
+            "Every rule carries runnable checks in its `checks` array, generated from the same record. The link below is all of them merged into one ESLint flat config.",
+          eslintConfig: `${BASE_URL}/api/rules/eslint.config.js`,
+        },
       },
       null,
       2,
@@ -340,14 +665,31 @@ async function main() {
   // /rules pages prerender highlighted code without shipping a highlighter.
   const ruleHighlightModule = [
     "// AUTO-GENERATED by scripts/generate-api.ts. Do not edit.",
+    'import type { RuleCheck } from "./types"',
+    "",
     "export interface RuleExampleHighlight {",
     "  wrong: string",
     "  right: string",
     "}",
     "",
+    "/** A generated check plus its build-time Shiki HTML. */",
+    "export type RuleCheckWithHighlight = RuleCheck & { highlighted: string }",
+    "",
     "export const ruleExampleHighlights: Record<string, RuleExampleHighlight[]> = {",
     ...ruleHighlights.map((r) => `  ${JSON.stringify(r.id)}: ${JSON.stringify(r.examples)},`),
     "}",
+    "",
+    "export const ruleChecks: Record<string, RuleCheckWithHighlight[]> = {",
+    ...ruleCheckEntries.map((r) => `  ${JSON.stringify(r.id)}: ${JSON.stringify(r.checks)},`),
+    "}",
+    "",
+    "/** Every rule merged into one ESLint flat config, for the /rules index. */",
+    `export const eslintConfigSource = ${JSON.stringify(eslintConfig)}`,
+    `export const eslintConfigHighlighted = ${JSON.stringify(highlight(eslintConfig, "js"))}`,
+    "",
+    "/** The steps that make the config above runnable in a project. */",
+    `export const eslintSetupSource = ${JSON.stringify(eslintSetup)}`,
+    `export const eslintSetupHighlighted = ${JSON.stringify(highlight(eslintSetup, "bash"))}`,
     "",
   ].join("\n")
   await writeFile(join(SRC_DIR, "registry/rules/highlighted.generated.ts"), ruleHighlightModule)
@@ -372,7 +714,15 @@ async function main() {
         "",
       ]
     }),
-    `Each rule carries its rationale, a real wrong/right pair from this repo's own source, its documented exceptions, and the AST selector it will be linted with: \`GET ${BASE_URL}/api/rules.json\`.`,
+    `Each rule carries its rationale, a real wrong/right pair from this repo's own source, its documented exceptions, and a \`checks\` array of runnable snippets: \`GET ${BASE_URL}/api/rules.json\`.`,
+    "",
+    "To check a codebase against these rules rather than reason about them:",
+    "",
+    "```sh",
+    `curl -O ${BASE_URL}/api/rules/eslint.config.js   # every rule, exceptions included`,
+    "```",
+    "",
+    "It needs a JSX-capable parser (`@typescript-eslint/parser`); the file's header comment shows the two lines to prepend. With no linter available at all, each rule's `checks` array also carries a ripgrep command that needs nothing installed.",
     "",
   ]
 
@@ -449,7 +799,8 @@ async function main() {
     `- [${BASE_URL}/api/registry.json](${BASE_URL}/api/registry.json) — shadcn-compatible registry index.`,
     `- ${BASE_URL}/r/<name>.json — shadcn registry item (source + resolved dependency URLs).`,
     `- [${BASE_URL}/api/rules.json](${BASE_URL}/api/rules.json) — usage rules: when a raw HTML element is allowed, and what to import when it is not. Read this before writing JSX against the library.`,
-    `- ${BASE_URL}/api/rules/<id>.json — one rule: rationale, wrong/right pair, exceptions, enforcement selector.`,
+    `- ${BASE_URL}/api/rules/<id>.json — one rule: rationale, wrong/right pair, exceptions, and a \`checks\` array of runnable ESLint/ripgrep snippets generated from it.`,
+    `- ${BASE_URL}/api/rules/eslint.config.js — every rule as one ESLint flat config, with the documented exceptions already applied as \`ignores\`.`,
     "",
     "## How an agent uses this",
     "",
@@ -563,9 +914,19 @@ Always start from **${BASE_URL}/llms.txt**, which documents the workflow and lis
 ## Rules — how to write JSX against this library
 
 ${rulesSkillSection}
-Full records (rationale, real wrong/right pairs from the library's own source, documented
-exceptions, and the AST selector each rule will be linted with) at **${BASE_URL}/api/rules.json**,
-or human-readable at **${BASE_URL}/rules**.
+Full records (rationale, real wrong/right pairs from the library's own source, and documented
+exceptions) at **${BASE_URL}/api/rules.json**, or human-readable at **${BASE_URL}/rules**.
+
+To *check* code rather than just follow the rules, every record carries a \`checks\` array of runnable
+snippets generated from it, and all of them are published merged as one ESLint flat config:
+
+\`\`\`sh
+curl -O ${BASE_URL}/api/rules/eslint.config.js
+\`\`\`
+
+Needs a JSX-capable parser (\`@typescript-eslint/parser\`) — the file's header shows the two lines to
+prepend. In a repo with no linter, use the \`ripgrep\` entry in each rule's \`checks\` array instead; it
+needs nothing installed.
 
 ## Don't
 
@@ -590,7 +951,7 @@ or human-readable at **${BASE_URL}/rules**.
   await writeFile(join(SRC_DIR, "registry/skill.generated.ts"), skillModule)
 
   console.log(
-    `Generated API for ${catalog.length} component(s) and ${rulesCatalog.length} rule(s): api/index.json, api/components/*, api/rules.json, api/rules/*, r/*, registry.json, llms.txt, sitemap.xml, robots.txt`,
+    `Generated API for ${catalog.length} component(s) and ${rulesCatalog.length} rule(s): api/index.json, api/components/*, api/rules.json, api/rules/* (+ eslint.config.js), r/*, registry.json, llms.txt, sitemap.xml, robots.txt`,
   )
 }
 
