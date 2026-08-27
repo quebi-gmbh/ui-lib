@@ -79,6 +79,12 @@ export const noHardcodedDesignValuesRule: RuleMeta = {
   ],
   exceptions: [
     {
+      scope: "The ui-lib component source itself, wherever you pasted it (components/ui/**)",
+      paths: ["components/ui/**", "src/components/**"],
+      reason:
+        "The components resolve palette scales deliberately — a danger state on red-500, a Badge intent on emerald-500 — and they are not yours to re-token. Lint the code you write; the vendored source is the library's problem, and it is where a value like this has already been argued about.",
+    },
+    {
       scope: "energy-class-badge.tsx — the seven A-G band colours",
       paths: ["src/components/energy-class-badge.tsx", "components/ui/energy-class-badge.tsx"],
       reason:

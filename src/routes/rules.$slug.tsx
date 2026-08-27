@@ -28,6 +28,15 @@ export function meta({ loaderData: d }: Route.MetaArgs) {
   return seo({ title: d.title, description: d.summary, path: `/rules/${d.id}` })
 }
 
+/**
+ * Replacements name a JSX element ("button", "Checkbox") or a situation
+ * ("Everything else (Slider, TagField, …)"). Only the former reads right in
+ * angle brackets.
+ */
+function replacementLabel(element: string) {
+  return /^[A-Za-z][A-Za-z0-9.]*$/.test(element) ? `<${element}>` : element
+}
+
 export default function RuleDetail() {
   const { slug } = useParams()
   const rule = getRule(slug)
@@ -98,7 +107,7 @@ export default function RuleDetail() {
             {rule.replacements.map((replacement) => (
               <div key={replacement.element} className="contents">
                 <DescriptionTerm>
-                  <Code>{`<${replacement.element}>`}</Code>
+                  <Code>{replacementLabel(replacement.element)}</Code>
                 </DescriptionTerm>
                 <DescriptionDetails>
                   <ul className="space-y-2">

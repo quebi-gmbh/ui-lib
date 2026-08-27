@@ -154,6 +154,11 @@ export const noRawInteractiveElementsRule: RuleMeta = {
       reason:
         "The library is where the intrinsic gets wrapped. Exactly one layer is allowed to render <button>/<input>/<a>, and it is the component that adds the behaviour. This rule governs app code that consumes ui-lib, not the primitives themselves.",
     },
+    {
+      scope: "A <form> that submits on the client only, with no route action behind it",
+      reason:
+        "React Router's Form posts to a route action; where there is none — a filter panel, a wizard step, a Conform form handled entirely in the browser — a raw <form> bound with getFormProps(form) is the right element, and the closest thing to a replacement would be worse. This covers the form element only: everything inside it stays on this list.",
+    },
   ],
   enforcement: {
     kind: "lint",
