@@ -280,6 +280,7 @@ async function main() {
   // build instead of quietly becoming a lie.
   // ---------------------------------------------------------------------------
   const KEBAB = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+  const RESERVED_RULE_SEGMENTS = new Set(["enforcement"])
   const groupIds = new Set(ruleGroups.map((g) => g.id))
   const seenRuleIds = new Set<string>()
   const ruleHighlights: { id: string; examples: { wrong: string; right: string }[] }[] = []
@@ -291,6 +292,15 @@ async function main() {
       throw new Error(`Rule id "${rule.id}" must be kebab-case (it is also the /rules/<id> slug)`)
     }
     if (seenRuleIds.has(rule.id)) throw new Error(`Duplicate rule id "${rule.id}"`)
+    // /rules/<id> shares its segment with the static pages under /rules. React
+    // Router ranks a static route above a dynamic one, so a rule with a
+    // colliding id would resolve to that page instead of to itself — a 200 with
+    // the wrong content, which no test of the rules would catch.
+    if (RESERVED_RULE_SEGMENTS.has(rule.id)) {
+      throw new Error(
+        `Rule id "${rule.id}" collides with the /rules/${rule.id} page and would be unreachable`,
+      )
+    }
     seenRuleIds.add(rule.id)
 
     if (!groupIds.has(rule.category)) {
@@ -447,6 +457,8 @@ async function main() {
     }),
     `Each rule carries its rationale, a real wrong/right pair from this repo's own source, its documented exceptions, and a \`checks\` array of runnable snippets: \`GET ${BASE_URL}/api/rules.json\`.`,
     "",
+    `The same setup, written for humans: [${BASE_URL}/rules/enforcement](${BASE_URL}/rules/enforcement).`,
+    "",
     "To check a codebase against these rules rather than reason about them:",
     "",
     "```sh",
@@ -570,6 +582,7 @@ async function main() {
     "/components",
     ...metaRegistry.map((m) => `/components/${m.slug}`),
     "/rules",
+    "/rules/enforcement",
     ...rulesRegistry.map((r) => `/rules/${r.id}`),
   ]
   const sitemap = [

@@ -1,4 +1,4 @@
-import { Link, NavLink } from "react-router"
+import { NavLink } from "react-router"
 import { ListChecks, Wrench } from "lucide-react"
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react"
 import { cn } from "@/lib/utils"
@@ -53,15 +53,10 @@ export function RuleSidebar({ onNavigate }: { onNavigate?: () => void }) {
 
         <div>
           <h3 className="quebi-eyebrow mb-2 px-3">Enforcing them</h3>
-          {/* A jump to a section of the index, not a route of its own — so it is
-              a Link, not a NavLink. NavLink matches on pathname and ignores the
-              hash, which would light this up on every /rules/* page (matching
-              "/rules" as a prefix), and light it up alongside "All rules" on the
-              index itself even with `end`. Nothing here is ever "current". */}
-          <Link to="/rules#enforcement" onClick={onNavigate} className={cn("flex items-center gap-2", BASE, RESTING)}>
+          <NavLink to="/rules/enforcement" onClick={onNavigate} className={rootClasses}>
             <Wrench className="h-4 w-4" />
             Biome config
-          </Link>
+          </NavLink>
         </div>
       </OverlayScrollbarsComponent>
 

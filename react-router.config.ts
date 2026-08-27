@@ -15,6 +15,7 @@ export default {
       "/components",
       ...metaRegistry.map((c) => `/components/${c.slug}`),
       "/rules",
+      "/rules/enforcement",
       ...rulesRegistry.map((r) => `/rules/${r.id}`),
     ]
   },
