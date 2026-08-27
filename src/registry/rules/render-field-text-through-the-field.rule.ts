@@ -91,11 +91,17 @@ export const renderFieldTextThroughTheFieldRule: RuleMeta = {
   enforcement: {
     kind: "lint",
     // A p/span/div that renders field errors and carries no id for the control's
-    // aria-describedby to resolve to. Anchoring on openingElement rather than
-    // :has() keeps it off the wrapping elements, which would otherwise report
-    // the same mistake two or three times.
+    // aria-describedby to resolve to.
+    //
+    // Three parts, each earning its place (tests/forms.test.ts covers all of them):
+    //  - anchoring on openingElement, and requiring the errors reference to be a
+    //    *direct* child expression, keeps the report on the message element
+    //    instead of repeating it on every wrapper around it;
+    //  - :not on an id attribute is what makes the correct version pass;
+    //  - :not on `.errors.length` keeps it off "{errors.length} problems found",
+    //    which is a count, not a message.
     selector:
-      'JSXElement[openingElement.name.name=/^(p|span|div)$/]:not(:has(JSXAttribute[name.name="id"])):has(MemberExpression[property.name="errors"])',
+      'JSXElement[openingElement.name.name=/^(p|span|div)$/]:not(:has(JSXAttribute[name.name="id"])):not(:has(MemberExpression[object.property.name="errors"][property.name="length"])):has(> JSXExpressionContainer:has(MemberExpression[property.name="errors"]))',
     message:
       "This renders field errors in an element the control cannot reference. Inside a react-aria field use <FieldError> from @/components/field; outside one, put id={field.errorId} on this element so the aria-describedby that getInputProps already emits resolves to it. See https://ui-lib.quebi.de/rules/render-field-text-through-the-field",
     grep: "<(p|span|div)[^>]*>\\\\s*\\\\{[a-zA-Z]+\\\\.errors",
