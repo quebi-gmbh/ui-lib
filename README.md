@@ -39,7 +39,8 @@ full workflow. In short:
 | `/api/registry.json` | shadcn registry index |
 | `/r/<name>.json` | shadcn registry item |
 | `/api/rules.json` | Usage rules: when a raw HTML element is allowed and what to import instead |
-| `/api/rules/<id>.json` | One rule: rationale, wrong/right pair, exceptions, enforcement selector |
+| `/api/rules/<id>.json` | One rule: rationale, wrong/right pair, exceptions, runnable checks |
+| `/api/rules/eslint.config.js` | Every rule as one ESLint flat config, exceptions applied |
 
 A typical agent flow:
 
@@ -64,6 +65,13 @@ Rules are registry records (`src/registry/rules/*.rule.ts`), not prose: the page
 endpoints, `llms.txt` and the Claude skill all render from the same data, each rule names its
 replacement component and its documented exceptions, and the build fails if a rule points at a
 component that no longer exists.
+
+The checks are generated from those same records rather than written alongside them — a per-rule
+ESLint snippet, a `react/forbid-elements` variant with one message per element, and a ripgrep
+command for repos with no linter — and all of them merged into one downloadable config at
+[`/api/rules/eslint.config.js`](https://ui-lib.quebi.de/api/rules/eslint.config.js), with each
+documented exception applied as an `ignores` glob. ui-lib itself has no lint setup, so nothing is
+enforced on the library's own source yet; the config is for the apps that consume it.
 
 ## Development
 

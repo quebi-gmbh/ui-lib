@@ -12,7 +12,7 @@ import { Note } from "@/components/note"
 import { Code } from "@/components/text"
 import { seo } from "@/lib/seo"
 import { getRule, getRuleGroup, severityIntent } from "@/registry/rules"
-import { ruleExampleHighlights } from "@/registry/rules/highlighted.generated"
+import { ruleChecks, ruleExampleHighlights } from "@/registry/rules/highlighted.generated"
 import type { Route } from "./+types/rules.$slug"
 
 export function loader({ params }: Route.LoaderArgs) {
@@ -33,6 +33,7 @@ export default function RuleDetail() {
   const rule = getRule(slug)
   const group = rule ? getRuleGroup(rule.category) : undefined
   const highlights = rule ? (ruleExampleHighlights[rule.id] ?? []) : []
+  const checks = rule ? (ruleChecks[rule.id] ?? []) : []
 
   if (!rule) return null
 
@@ -204,6 +205,44 @@ export default function RuleDetail() {
         </div>
       </section>
 
+      {checks.length > 0 ? (
+        <section className="mt-12">
+          <h2 className="text-lg font-semibold text-quebi-fg">How to check this</h2>
+          <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
+            Generated from this rule's record, not written alongside it — the selector, the message,
+            and the <Code>ignores</Code> globs are the same data the page above renders, so a check
+            that passes here cannot be enforcing a different rule than the one documented.{" "}
+            {rule.enforcement.note}
+          </p>
+          <div className="mt-6 space-y-8">
+            {checks.map((check) => (
+              <article key={check.title}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-base font-semibold text-quebi-fg">{check.title}</h3>
+                  <Badge intent="outline">{check.tool}</Badge>
+                </div>
+                <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
+                  {check.description}
+                </p>
+                <div className="mt-3">
+                  <CodeBlock html={check.highlighted} code={check.code} />
+                </div>
+              </article>
+            ))}
+          </div>
+          <p className="mt-6 text-sm leading-relaxed text-quebi-fg-muted">
+            Every rule merged into one config, with the documented exceptions already applied:{" "}
+            <Link
+              to="/rules"
+              className="font-medium text-quebi-brand transition-colors duration-200 hover:text-quebi-brand-hover"
+            >
+              see the full ESLint config
+            </Link>
+            .
+          </p>
+        </section>
+      ) : null}
+
       <section className="mt-12">
         <h2 className="text-lg font-semibold text-quebi-fg">Exceptions</h2>
         <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
@@ -234,23 +273,7 @@ export default function RuleDetail() {
           </DescriptionDetails>
 
           <DescriptionTerm>Enforced by</DescriptionTerm>
-          <DescriptionDetails>
-            {rule.enforcement.kind}
-            {rule.enforcement.note ? (
-              <span className="mt-1 block text-quebi-fg-muted">{rule.enforcement.note}</span>
-            ) : null}
-          </DescriptionDetails>
-
-          {rule.enforcement.selector ? (
-            <>
-              <DescriptionTerm>Selector</DescriptionTerm>
-              <DescriptionDetails>
-                <Code className="block break-all whitespace-pre-wrap">
-                  {rule.enforcement.selector}
-                </Code>
-              </DescriptionDetails>
-            </>
-          ) : null}
+          <DescriptionDetails>{rule.enforcement.kind}</DescriptionDetails>
         </DescriptionList>
       </section>
     </div>

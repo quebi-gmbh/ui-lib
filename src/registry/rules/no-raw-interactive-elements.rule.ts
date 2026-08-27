@@ -150,6 +150,7 @@ export const noRawInteractiveElementsRule: RuleMeta = {
   exceptions: [
     {
       scope: "src/components/*.tsx (the library's own source)",
+      paths: ["src/components/**", "components/ui/**"],
       reason:
         "The library is where the intrinsic gets wrapped. Exactly one layer is allowed to render <button>/<input>/<a>, and it is the component that adds the behaviour. This rule governs app code that consumes ui-lib, not the primitives themselves.",
     },
@@ -158,7 +159,10 @@ export const noRawInteractiveElementsRule: RuleMeta = {
     kind: "lint",
     selector:
       'JSXOpeningElement[name.type="JSXIdentifier"][name.name=/^(a|button|dialog|form|input|label|select|table|textarea)$/]',
-    note: "No lint infrastructure exists in this repo yet. The selector is recorded so the config can later be generated from this record rather than hand-written alongside it.",
+    message:
+      "Raw interactive/semantic elements are the library's. Import the ui-lib component instead: button -> Button/LinkButton/Toggle, a -> Link/LinkButton, input -> TextField/Input/SearchField/NumberField/Checkbox/RadioGroup/Switch, select -> Select/ComboBox/MultipleSelect, textarea -> Textarea, form -> react-router Form, label -> Label from @/components/field, dialog -> Modal/Drawer/Sheet, table -> Table/AsyncTable. See https://ui-lib.quebi.de/rules/no-raw-interactive-elements",
+    grep: "<(a|button|dialog|form|input|label|select|table|textarea)($|[\\s/>])",
+    note: "This repo ships no lint config of its own (there is no ESLint/oxlint/biome setup here), but the checks below are generated from this record, so dropping them into a consuming app enforces exactly what this page documents.",
   },
   tags: ["elements", "accessibility", "react-aria", "tier-1"],
 }
