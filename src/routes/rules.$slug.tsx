@@ -247,7 +247,7 @@ export default function RuleDetail() {
           <p className="mt-6 text-sm leading-relaxed text-quebi-fg-muted">
             Enforcing more than this one rule?{" "}
             <Link
-              to="/rules#enforcement"
+              to="/rules/enforcement"
               className="font-medium text-quebi-brand transition-colors duration-200 hover:text-quebi-brand-hover"
             >
               Take the whole config
