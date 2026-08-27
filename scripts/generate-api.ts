@@ -266,7 +266,7 @@ function buildRuleChecks(rule: RuleMeta): RuleCheck[] {
       tool: "eslint",
       title: "ESLint — no-restricted-syntax",
       description:
-        "This rule on its own, at its own severity, with its documented exceptions as `ignores`. Needs a parser that emits JSX nodes (typescript-eslint).",
+        "This rule on its own, at the severity it is declared with, and its documented exceptions already ignored. Needs a parser that emits JSX nodes (typescript-eslint).",
       language: "js",
       code: [
         "// eslint.config.js",
@@ -292,7 +292,7 @@ function buildRuleChecks(rule: RuleMeta): RuleCheck[] {
       tool: "eslint",
       title: "ESLint — react/forbid-elements",
       description:
-        "Sharper than the selector for this rule: one message per element, naming that element's own replacement instead of one message for all nine. Requires eslint-plugin-react.",
+        "Reports each element with its own replacement named, rather than one message covering every banned element — worth the extra dependency if your team lives in the editor. Requires eslint-plugin-react.",
       language: "js",
       code: [
         "// Requires eslint-plugin-react registered in your flat config.",

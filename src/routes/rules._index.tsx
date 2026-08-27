@@ -32,10 +32,10 @@ export default function Rules() {
       <span className="quebi-eyebrow">Guidelines</span>
       <h1 className="mt-3 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">Rules</h1>
       <p className="mt-4 max-w-quebi-content text-base leading-relaxed text-quebi-fg-muted">
-        {rulesRegistry.length} rule{rulesRegistry.length === 1 ? "" : "s"} for writing code against
-        ui-lib. Each one names what to import instead of what it forbids, cites a real wrong/right
-        pair, and carries its own exceptions. They are records, not prose — the same data is served
-        at <Code>/api/rules.json</Code> for agents.
+        {rulesRegistry.length} rule{rulesRegistry.length === 1 ? "" : "s"} for building an app with
+        ui-lib components. Each one names what to import instead of what it forbids, shows a real
+        wrong/right pair, and ships a check you can run in your own project. Agents can read the
+        same rules as JSON from <Code>/api/rules.json</Code>.
       </p>
 
       <div className="mt-12 space-y-16">
@@ -78,16 +78,17 @@ export default function Rules() {
           Run the rules, don't just read them
         </h3>
         <p className="mt-3 max-w-quebi-content text-base leading-relaxed text-quebi-fg-muted">
-          The config below is generated from the same records this page renders — every selector,
-          message and exception comes from a rule, so the check you run and the rule you read cannot
-          drift apart. Each rule's page carries its own snippet, plus a{" "}
-          <Code>ripgrep</Code> one-liner for repos with no linter at all.
+          Every rule on this page as one ESLint config, exceptions included. It is rebuilt from these
+          rules whenever they change, so re-download it rather than maintaining a copy by hand — that
+          way a rule we sharpen reaches your CI. Enforcing one rule at a time? Each rule's page
+          carries its own snippet, plus a <Code>ripgrep</Code> one-liner for projects with no linter
+          at all.
         </p>
 
         <Note intent="info" className="mt-6">
-          ui-lib itself ships no lint setup — there is no ESLint, oxlint or biome config in this
-          repo, so nothing here is enforced on the library's own source yet. The config is published
-          as an artifact for the apps that consume ui-lib.
+          Nothing to install from us: these are ESLint's own rules plus a JSX parser your setup very
+          likely already has. You own the config once it lands in your project — soften a rule to{" "}
+          <Code>warn</Code>, scope it to part of the tree, or drop an entry you disagree with.
         </Note>
 
         <div className="mt-8">

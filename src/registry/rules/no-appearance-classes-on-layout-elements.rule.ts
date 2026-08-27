@@ -115,7 +115,7 @@ export const noAppearanceClassesOnLayoutElementsRule: RuleMeta = {
   ],
   exceptions: [
     {
-      scope: "src/components/*.tsx (the library's own source)",
+      scope: "The ui-lib component source itself, wherever you pasted it (components/ui/**)",
       paths: ["src/components/**", "components/ui/**"],
       reason:
         "Components are made of appearance-styled divs — that is what a component is. The rule is about app code reimplementing a surface the library already ships.",
@@ -142,7 +142,7 @@ export const noAppearanceClassesOnLayoutElementsRule: RuleMeta = {
     message:
       "Appearance classes (bg-*, border-*, rounded-*, shadow-*, ring-*, text sizing/colour, font weight) on a layout element mean a ui-lib component is being reinvented — import Card/Badge/Note/Panel instead. Layout and spacing classes are fine. See https://ui-lib.quebi.de/rules/no-appearance-classes-on-layout-elements",
     grep: 'className="[^"]*(rounded-[^"]*\\bborder\\b|\\bborder\\b[^"]*rounded-)',
-    note: "The selector is deliberately narrower than the policy: it looks for the radius+border surface signature rather than every appearance class, because the broad version fires on legitimate page chrome and a rule that cries wolf gets disabled. The rest of the policy — bg-*, shadow-*, text sizing and colour — is review-only. Both checks also only see static strings, so a className built with cn() or a template literal slips past either way.",
+    note: "The check is narrower than the rule: it looks for a class list carrying both a radius and a border, the signature of a rebuilt surface. Flagging every appearance class would also flag a page header with bg-quebi-bg, and a check that cries wolf gets switched off. So expect it to catch the Cards and miss the subtler cases — the rest of this rule stays a review question. Both checks read static strings only; a className assembled with cn() or a template literal slips past either way.",
   },
   tags: ["elements", "layout", "tailwind", "tier-2"],
 }
