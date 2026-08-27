@@ -1,52 +1,45 @@
 /**
- * Turning rule records into runnable checks.
+ * Turning rule records into runnable Biome checks.
  *
- * This module is the only place that knows how a rule becomes an ESLint entry,
- * a ripgrep command, or a config block. `scripts/generate-api.ts` renders its
- * output into `public/api/rules/**`; the test suite imports the same functions
- * and runs the config objects through ESLint, so what is tested is what ships.
+ * This module is the only place that knows how a rule becomes a Biome rule, a
+ * GritQL plugin, or a ripgrep command. `scripts/generate-api.ts` writes its
+ * output into `public/api/rules/**`; the test suite feeds the same output to the
+ * Biome CLI, so what is tested is what ships.
  *
- * Nothing here is hand-written per rule — a check that cannot be derived from a
- * record is a check that can drift away from the rule it claims to enforce.
+ * Biome carries a rule one of two ways, and the difference decides how the
+ * rule's documented exceptions are applied:
+ *
+ *  - a **built-in rule** (`correctness/noRestrictedElements`) is configured in
+ *    `biome.jsonc`, so its exceptions are `overrides` entries — Biome's own
+ *    path-scoping mechanism;
+ *  - a **GritQL plugin** is loaded globally (`overrides` cannot scope plugins,
+ *    which is verified in the test suite), so its exceptions are compiled into
+ *    the pattern as `$filename` guards.
+ *
+ * Both come from the same `exceptions[].paths`. Nothing here is hand-written per
+ * rule: a check that cannot be derived from a record is a check that can drift
+ * away from the rule it claims to enforce.
  */
 import type { RuleCheck, RuleMeta } from "./types"
 
 const DEFAULT_BASE_URL = "https://ui-lib.quebi.de"
 
-/**
- * Minimal glob -> RegExp for the `paths` on a rule exception (`**` and `*` only).
- * Used to work out which documented exceptions overlap when the config is
- * assembled — see buildEslintBlocks.
- */
-export function globToRegExp(glob: string): RegExp {
-  const source = glob
-    .split("**")
-    .map((part) => part.replace(/[.+^${}()|[\]\\?]/g, "\\$&").replace(/\*/g, "[^/]*"))
-    .join(".*")
-  return new RegExp(`^${source}$`)
+/** Biome severities. A rule's declared severity is used verbatim — no clamping. */
+function severityOf(rule: RuleMeta): "error" | "warn" {
+  return rule.severity === "error" ? "error" : "warn"
 }
 
-/** First sentence of a justification, for a one-line comment in generated config. */
-export function firstSentence(text: string) {
-  const match = text.match(/^.*?[.;](?=\s|$)/)
-  return (match ? match[0] : text).trim()
+/** Rules Biome checks, in registry order. */
+export function lintRules(rules: RuleMeta[]): RuleMeta[] {
+  return rules.filter((r) => r.enforcement.kind === "lint" && r.enforcement.biome)
 }
 
-/**
- * The JSX/TSX subset of a rule's `appliesTo`. The selectors are JSX selectors,
- * so a `.css` glob would hand ESLint files its parser has no business reading —
- * CSS-side coverage is a separate check (see each rule's enforcement note).
- */
-export function jsxGlobs(globs: string[]): string[] {
-  const stripped = globs
-    .map((glob) =>
-      glob.replace(/\{([^}]*)\}/, (_, inner: string) => {
-        const kept = inner.split(",").filter((ext) => ext === "tsx" || ext === "jsx")
-        return kept.length ? `{${kept.join(",")}}` : inner
-      }),
-    )
-    .filter((glob) => /tsx|jsx/.test(glob))
-  return [...new Set(stripped)]
+export function builtInRules(rules: RuleMeta[]): RuleMeta[] {
+  return lintRules(rules).filter((r) => r.enforcement.biome?.via === "rule")
+}
+
+export function pluginRules(rules: RuleMeta[]): RuleMeta[] {
+  return lintRules(rules).filter((r) => r.enforcement.biome?.via === "plugin")
 }
 
 /** Path globs a rule's exceptions carve out (the ones expressible as paths). */
@@ -54,281 +47,293 @@ export function exceptionPaths(rule: RuleMeta): string[] {
   return [...new Set(rule.exceptions.flatMap((e) => e.paths ?? []))]
 }
 
-/** Rules whose enforcement is a lint selector, in registry order. */
-export function lintRules(rules: RuleMeta[]): RuleMeta[] {
-  return rules.filter((r) => r.enforcement.kind === "lint" && r.enforcement.selector)
-}
-
-/** One `no-restricted-syntax` entry as ESLint consumes it. */
-export interface RestrictedSyntaxEntry {
-  selector: string
-  message: string
-}
-
-/** A flat-config object, plus the commentary the rendered file carries above it. */
-export interface EslintBlock {
-  files: string[]
-  entries: RestrictedSyntaxEntry[]
-  /** Rule ids each entry came from, aligned with `entries`. */
-  ruleIds: string[]
-  /** "Documented exceptions: <rule> — <reason>" lines; empty for the base block. */
-  comments: string[]
+/** First sentence of a justification, for a one-line comment. */
+export function firstSentence(text: string) {
+  const match = text.match(/^.*?[.;](?=\s|$)/)
+  return (match ? match[0] : text).trim()
 }
 
 /**
- * The config as data.
- *
- * Two wrinkles, both inherent to `no-restricted-syntax` rather than to the
- * records, and both surfaced in the rendered file's comments rather than papered
- * over:
- *
- *  - it is a single rule key, so it carries ONE severity for all of its entries;
- *    a rule declared `warn` is reported at `error`.
- *  - it is a single rule key, so a documented exception cannot switch off one
- *    entry. Instead each distinct set of exception paths gets its own config
- *    object that re-declares the rule with only the entries that still apply
- *    there — accumulating the exceptions of any broader path group, so a narrow
- *    carve-out does not silently re-enable what a broader one turned off.
+ * A path glob as a regex fragment for a GritQL `$filename` guard. `$filename`
+ * is the file's path, so the pattern is deliberately unanchored at the front:
+ * `components/ui/**` has to match whatever prefix the project puts in front of it.
  */
-export function buildEslintBlocks(rules: RuleMeta[]): EslintBlock[] {
-  const applicable = lintRules(rules)
-  const entryFor = (rule: RuleMeta): RestrictedSyntaxEntry => ({
-    selector: rule.enforcement.selector as string,
-    message: rule.enforcement.message as string,
-  })
-  const block = (scope: string[], forRules: RuleMeta[], comments: string[] = []): EslintBlock => ({
-    files: scope,
-    entries: forRules.map(entryFor),
-    ruleIds: forRules.map((r) => r.id),
-    comments,
-  })
-
-  // Distinct exception path-sets, each with the rules it relaxes.
-  const groups: { paths: string[]; reasons: string[]; disabled: Set<string> }[] = []
-  for (const rule of applicable) {
-    for (const exception of rule.exceptions) {
-      if (!exception.paths?.length) continue
-      // Sort the key: two rules listing the same globs in a different order are
-      // the same carve-out, and emitting them as two blocks means the later one
-      // silently re-enables what the earlier one relaxed.
-      const paths = [...exception.paths].sort()
-      const key = paths.join("|")
-      let group = groups.find((g) => g.paths.join("|") === key)
-      if (!group) {
-        group = { paths, reasons: [], disabled: new Set() }
-        groups.push(group)
-      }
-      group.disabled.add(rule.id)
-      group.reasons.push(`${rule.id} — ${firstSentence(exception.reason)}`)
+export function globToFilenameRegex(glob: string): string {
+  let out = ""
+  let i = 0
+  while (i < glob.length) {
+    if (glob.startsWith("**/", i)) {
+      // Any number of directories, including none, so a file at the project
+      // root is covered by the same glob as one nested five deep.
+      out += "(?:.*/)?"
+      i += 3
+    } else if (glob.startsWith("**", i)) {
+      out += ".*"
+      i += 2
+    } else if (glob[i] === "*") {
+      out += "[^/]*"
+      i += 1
+    } else if (glob[i] === "{") {
+      const close = glob.indexOf("}", i)
+      if (close === -1) throw new Error(`Unclosed brace in exception glob "${glob}"`)
+      out += `(?:${glob.slice(i + 1, close).split(",").join("|")})`
+      i = close + 1
+    } else {
+      out += glob[i].replace(/[.+^$()|[\]\\]/, "\\$&")
+      i += 1
     }
   }
+  // A glob ending in ** already covers the tail; anything else names a file, so
+  // anchoring stops `components/ui/**` being satisfied by a lookalike path.
+  const anchored = glob.endsWith("**") ? out : `${out}$`
+  return glob.startsWith("**") ? anchored : `.*${anchored}`
+}
 
-  // A group also inherits every exception of a group whose globs cover its own
-  // paths (e.g. src/components/** covers src/components/energy-class-badge.tsx).
-  const covers = (a: (typeof groups)[number], b: (typeof groups)[number]) =>
-    a !== b && a.paths.some((p) => b.paths.some((q) => globToRegExp(p).test(q)))
-  for (const group of groups) {
-    for (const other of groups) {
-      if (covers(other, group)) for (const id of other.disabled) group.disabled.add(id)
+/**
+ * GritQL delimits a regex with `r"..."`, so a bare `"` inside one ends it early
+ * and the rest of the pattern becomes syntax garbage — which Biome reports only
+ * as "Failed to compile the Grit plugin", with no location. Catching it here
+ * turns a silent broken artifact into a build failure that names the rule.
+ */
+function assertRegexLiteralsClose(rule: RuleMeta, pattern: string): void {
+  for (let i = pattern.indexOf('r"'); i !== -1; i = pattern.indexOf('r"', i + 1)) {
+    let j = i + 2
+    while (j < pattern.length && !(pattern[j] === '"' && pattern[j - 1] !== "\\")) j++
+    // End of the pattern is legitimate: the last clause often *is* the regex.
+    const next = pattern[j + 1] ?? ""
+    if (next !== "" && !/[\s,)}]/.test(next)) {
+      throw new Error(
+        `Rule "${rule.id}": the GritQL regex starting at "${pattern.slice(i, i + 24)}..." closes at an unescaped quote and is followed by ${JSON.stringify(next)}. Escape the quote as \\" or drop it — GritQL ends a regex at the first bare ".`,
+      )
     }
   }
-  // Broad blocks first: later config objects win in flat config, so the narrow
-  // ones must come last.
-  const breadth = new Map(groups.map((g) => [g, groups.filter((o) => covers(g, o)).length]))
-  groups.sort((a, b) => (breadth.get(b) ?? 0) - (breadth.get(a) ?? 0))
+}
 
-  return [
-    block(jsxGlobs(applicable.flatMap((r) => r.appliesTo)).sort(), applicable),
-    ...groups.map((group) =>
-      block(
-        group.paths,
-        applicable.filter((r) => !group.disabled.has(r.id)),
-        group.reasons,
-      ),
+/** The plugin file for one rule: the pattern, its exception guards, its diagnostic. */
+export function renderGritPlugin(rule: RuleMeta, baseUrl = DEFAULT_BASE_URL): string {
+  const enforcement = rule.enforcement.biome
+  if (enforcement?.via !== "plugin") {
+    throw new Error(`Rule "${rule.id}" is not carried by a GritQL plugin`)
+  }
+  assertRegexLiteralsClose(rule, enforcement.pattern)
+  // The pattern ends with its last `where` clause; guards and the diagnostic are
+  // further clauses, so everything is joined with a comma rather than glued on.
+  const clauses = [
+    enforcement.pattern,
+    ...exceptionPaths(rule).map(
+      (glob) =>
+        `  // documented exception: ${glob}\n  not $filename <: r"${globToFilenameRegex(glob)}"`,
     ),
+    [
+      "  register_diagnostic(",
+      `    span = $${patternBinding(enforcement.pattern)},`,
+      `    message = ${JSON.stringify(rule.enforcement.message ?? rule.summary)},`,
+      `    severity = ${JSON.stringify(severityOf(rule))}`,
+      "  )",
+    ].join("\n"),
   ]
-}
 
-/** The blocks as an ESLint flat config array, ready to hand to the Linter. */
-export function buildEslintConfig(rules: RuleMeta[]) {
-  return buildEslintBlocks(rules).map((b) => ({
-    files: b.files,
-    rules: {
-      "no-restricted-syntax":
-        b.entries.length === 0
-          ? ("off" as const)
-          : (["error", ...b.entries] as ["error", ...RestrictedSyntaxEntry[]]),
-    },
-  }))
-}
-
-/** An array of strings as readable JS source: ["a", "b"]. */
-function jsArray(values: string[]) {
-  return `[${values.map((v) => JSON.stringify(v)).join(", ")}]`
-}
-
-/** One entry, rendered as readable JS with the rule it came from named above it. */
-function renderEntry(rule: RuleMeta, indent: string) {
   return [
-    `${indent}{`,
-    `${indent}  // ${rule.id} (${rule.tier ? `tier ${rule.tier}, ` : ""}declared ${rule.severity})`,
-    `${indent}  selector:`,
-    `${indent}    ${JSON.stringify(rule.enforcement.selector)},`,
-    `${indent}  message:`,
-    `${indent}    ${JSON.stringify(rule.enforcement.message)},`,
-    `${indent}},`,
+    `// ${rule.title}`,
+    `// AUTO-GENERATED from ${baseUrl}/api/rules/${rule.id}.json — do not edit by hand.`,
+    "//",
+    `// ${baseUrl}/rules/${rule.id}`,
+    "",
+    "language js;",
+    "",
+    `${clauses.join(",\n")}\n}`,
+    "",
   ].join("\n")
 }
 
-/** The publishable `eslint.config.js`, rendered from the same blocks. */
-export function renderEslintConfig(rules: RuleMeta[], baseUrl = DEFAULT_BASE_URL): string {
-  const applicable = lintRules(rules)
-  const byId = new Map(applicable.map((r) => [r.id, r]))
-  const warned = applicable.filter((r) => r.severity !== "error").map((r) => r.id)
-  const blocks = buildEslintBlocks(rules)
-
-  const renderBlock = (block: EslintBlock) => {
-    const body =
-      block.entries.length === 0
-        ? ['      "no-restricted-syntax": "off",']
-        : [
-            '      "no-restricted-syntax": [',
-            '        "error",',
-            ...block.ruleIds.map((id) => renderEntry(byId.get(id) as RuleMeta, "        ")),
-            "      ],",
-          ]
-    return [
-      ...(block.comments.length
-        ? ["  // Documented exceptions:", ...block.comments.map((r) => `  //   ${r}`)]
-        : []),
-      "  {",
-      `    files: ${jsArray(block.files)},`,
-      "    rules: {",
-      ...body,
-      "    },",
-      "  },",
-    ].join("\n")
+/**
+ * The variable a pattern binds with `as`, which is what the diagnostic spans.
+ * Every plugin pattern ends its head with `as $name`, so this is a parse, not a
+ * guess — and an unbound pattern fails the build rather than reporting on the
+ * wrong node.
+ */
+function patternBinding(pattern: string): string {
+  const match = pattern.match(/\bas\s+\$([A-Za-z_][A-Za-z0-9_]*)\s*where\b/)
+  if (!match) {
+    throw new Error(
+      "A GritQL pattern must bind its subject with `as $name where {` so the diagnostic can span it",
+    )
   }
+  return match[1]
+}
+
+/** The `elements` option for noRestrictedElements, derived from `replacements`. */
+export function restrictedElements(rule: RuleMeta): Record<string, string> {
+  const elements: Record<string, string> = {}
+  for (const replacement of rule.replacements ?? []) {
+    // Only intrinsics: JSX says which is which, and a rule telling people to ban
+    // <Checkbox> outright would be nonsense.
+    if (!/^[a-z][a-z0-9-]*$/.test(replacement.element)) continue
+    const use = replacement.use
+      .map((t) => `<${t.name}> from ${t.from}${t.when ? ` (${t.when})` : ""}`)
+      .join(", or ")
+    elements[replacement.element] = `Use ${use}.`
+  }
+  return elements
+}
+
+interface BiomeRuleConfig {
+  level: "error" | "warn"
+  options?: { elements: Record<string, string> }
+}
+
+/** The generated config as data: what goes in `biome.jsonc`. */
+export interface BiomeConfig {
+  plugins: string[]
+  linter: { rules: Record<string, Record<string, BiomeRuleConfig | "off">> }
+  overrides: { includes: string[]; linter: { rules: Record<string, Record<string, "off">> } }[]
+}
+
+const PLUGIN_DIR = "./ui-lib-rules"
+
+export function buildBiomeConfig(rules: RuleMeta[], pluginDir = PLUGIN_DIR): BiomeConfig {
+  const linterRules: BiomeConfig["linter"]["rules"] = {}
+  for (const rule of builtInRules(rules)) {
+    const biome = rule.enforcement.biome
+    if (biome?.via !== "rule") continue
+    const [group, name] = biome.rule.split("/")
+    const elements = restrictedElements(rule)
+    linterRules[group] ??= {}
+    linterRules[group][name] = {
+      level: severityOf(rule),
+      ...(Object.keys(elements).length ? { options: { elements } } : {}),
+    }
+  }
+
+  // One override per distinct path set, switching off the built-in rules that
+  // except it. Plugin rules carry their own exceptions inside the pattern.
+  const overrides: BiomeConfig["overrides"] = []
+  for (const rule of builtInRules(rules)) {
+    const biome = rule.enforcement.biome
+    if (biome?.via !== "rule") continue
+    const paths = exceptionPaths(rule)
+    if (!paths.length) continue
+    const [group, name] = biome.rule.split("/")
+    const key = [...paths].sort().join("|")
+    let override = overrides.find((o) => [...o.includes].sort().join("|") === key)
+    if (!override) {
+      override = { includes: [...paths].sort(), linter: { rules: {} } }
+      overrides.push(override)
+    }
+    override.linter.rules[group] ??= {}
+    override.linter.rules[group][name] = "off"
+  }
+
+  return {
+    plugins: pluginRules(rules).map((r) => `${pluginDir}/${r.id}.grit`),
+    linter: { rules: linterRules },
+    overrides,
+  }
+}
+
+/** `biome.jsonc` — JSONC so each carve-out can say why it exists, in place. */
+export function renderBiomeConfig(rules: RuleMeta[], baseUrl = DEFAULT_BASE_URL): string {
+  const config = buildBiomeConfig(rules)
+  const plugins = pluginRules(rules)
+  const body = JSON.stringify(config, null, 2).split("\n")
+
+  // Annotate the generated JSON: every plugin line names its rule, and every
+  // override names the exception it applies.
+  const annotated = body.map((line) => {
+    const plugin = plugins.find((r) => line.includes(`/${r.id}.grit`))
+    if (plugin) return `${line} // ${plugin.title}`
+    // Each exception path appears on its own line inside "includes"; annotate the
+    // path itself, so a carve-out and the reason for it cannot be separated.
+    const match = line.match(/^(\s*)"([^"]+)",?$/)
+    const path = match?.[2]
+    if (path && config.overrides.some((o) => o.includes.includes(path))) {
+      const reasons = rules
+        .flatMap((r) => r.exceptions.map((e) => ({ rule: r, exception: e })))
+        .filter(({ exception }) => exception.paths?.includes(path))
+        .map(({ rule, exception }) => `${rule.id} — ${firstSentence(exception.reason)}`)
+      return [...reasons.map((r) => `${match?.[1]}// ${r}`), line].join("\n")
+    }
+    return line
+  })
 
   return [
     `// AUTO-GENERATED from ${baseUrl}/api/rules.json — do not edit by hand.`,
     "//",
-    "// Every selector, message, and ignore below comes from a rule record in quebi",
-    `// ui-lib, so this file and ${baseUrl}/rules cannot drift apart. Regenerate with:`,
-    `//   curl -O ${baseUrl}/api/rules/eslint.config.js`,
+    "// Every rule, message, and exception below comes from a rule record in quebi",
+    `// ui-lib, so this file and ${baseUrl}/rules cannot drift apart.`,
     "//",
-    "// Merge these objects into your own flat config, or spread the default export",
-    "// into it. The selectors match JSX nodes, so the files they cover need a",
-    "// parser that produces them — if your config does not set one already, put",
-    "// this in front (npm i -D @typescript-eslint/parser):",
+    "// Merge these keys into your own biome.jsonc. The `plugins` entries are",
+    `// GritQL files served alongside this one — fetch them into ${PLUGIN_DIR}/:`,
+    ...plugins.map((r) => `//   curl -o ${PLUGIN_DIR.slice(2)}/${r.id}.grit ${baseUrl}/api/rules/plugins/${r.id}.grit`),
     "//",
-    '//   import parser from "@typescript-eslint/parser"',
-    '//   { files: ["**/*.{tsx,jsx}"], languageOptions: { parser, parserOptions: { ecmaFeatures: { jsx: true } } } },',
-    ...(warned.length
-      ? [
-          "//",
-          "// Caveat: `no-restricted-syntax` is one rule key, so it carries a single",
-          `// severity for every entry. ${warned.join(", ")} ${warned.length === 1 ? "is" : "are"} declared \`warn\` in the`,
-          "// records and reported at `error` here; move that entry into its own config",
-          "// object if you want it softer.",
-        ]
-      : []),
+    "// Biome's overrides do not scope plugins, so each plugin carries its own",
+    "// exceptions as $filename guards inside the pattern. The overrides below",
+    "// therefore only cover the built-in rules.",
     "",
-    "export default [",
-    blocks.map(renderBlock).join("\n\n"),
-    "]",
+    ...annotated,
     "",
   ].join("\n")
 }
 
-/** The steps that make the config above runnable in a project. */
-export function renderEslintSetup(baseUrl = DEFAULT_BASE_URL): string {
+/** How to install the whole thing. */
+export function renderBiomeSetup(rules: RuleMeta[], baseUrl = DEFAULT_BASE_URL): string {
+  const plugins = pluginRules(rules)
   return [
-    "# 1. A parser that emits JSX nodes (skip if your config already has one)",
-    "npm i -D eslint @typescript-eslint/parser",
+    "# 1. Biome, if the project does not have it yet",
+    "npm i -D @biomejs/biome",
     "",
-    "# 2. The generated config — every ui-lib rule, with its documented exceptions",
-    `curl -o ui-lib.eslint.config.js ${baseUrl}/api/rules/eslint.config.js`,
+    "# 2. The GritQL plugins — one per rule Biome has no built-in for",
+    `mkdir -p ${PLUGIN_DIR.slice(2)}`,
+    ...plugins.map(
+      (r) => `curl -o ${PLUGIN_DIR.slice(2)}/${r.id}.grit ${baseUrl}/api/rules/plugins/${r.id}.grit`,
+    ),
     "",
-    "# 3. Point your own flat config at it",
-    "cat > eslint.config.js <<'EOF'",
-    'import parser from "@typescript-eslint/parser"',
-    'import uiLibRules from "./ui-lib.eslint.config.js"',
+    "# 3. The config — merge these keys into your biome.jsonc",
+    `curl -O ${baseUrl}/api/rules/biome.jsonc`,
     "",
-    "export default [",
-    '  { files: ["**/*.{tsx,jsx}"], languageOptions: { parser, parserOptions: { ecmaFeatures: { jsx: true } } } },',
-    "  ...uiLibRules,",
-    "]",
-    "EOF",
-    "",
-    "npx eslint src",
+    "npx biome lint src",
     "",
   ].join("\n")
 }
 
 /** The runnable checks shown on a rule's page, all derived from its record. */
-export function buildRuleChecks(rule: RuleMeta): RuleCheck[] {
+export function buildRuleChecks(rule: RuleMeta, baseUrl = DEFAULT_BASE_URL): RuleCheck[] {
   const checks: RuleCheck[] = []
+  const biome = rule.enforcement.biome
   const ignores = exceptionPaths(rule)
-  const severity = rule.severity === "error" ? "error" : "warn"
+  const severity = severityOf(rule)
 
-  if (rule.enforcement.selector && rule.enforcement.message) {
+  if (biome?.via === "rule") {
+    const [group, name] = biome.rule.split("/")
+    const config = {
+      linter: {
+        rules: { [group]: { [name]: { level: severity, options: { elements: restrictedElements(rule) } } } },
+      },
+      ...(ignores.length
+        ? {
+            overrides: [
+              { includes: ignores, linter: { rules: { [group]: { [name]: "off" } } } },
+            ],
+          }
+        : {}),
+    }
     checks.push({
-      tool: "eslint",
-      title: "ESLint — no-restricted-syntax",
+      tool: "biome",
+      title: `Biome — ${biome.rule}`,
       description:
-        "This rule on its own, at the severity it is declared with, and its documented exceptions already ignored. Needs a parser that emits JSX nodes (typescript-eslint).",
-      language: "js",
-      code: [
-        "// eslint.config.js",
-        "export default [",
-        "  {",
-        `    files: ${jsArray(jsxGlobs(rule.appliesTo))},`,
-        ...(ignores.length ? [`    ignores: ${jsArray(ignores)},`] : []),
-        "    rules: {",
-        '      "no-restricted-syntax": [',
-        `        ${JSON.stringify(severity)},`,
-        renderEntry(rule, "        "),
-        "      ],",
-        "    },",
-        "  },",
-        "]",
-        "",
-      ].join("\n"),
+        "A built-in Biome rule, so there is nothing to install and no pattern to maintain. One message per element, and the documented exceptions are ordinary `overrides`.",
+      language: "json",
+      code: `// biome.jsonc\n${JSON.stringify(config, null, 2)}\n`,
     })
   }
 
-  // `replacements` also carries component-level advice ("Checkbox -> ConformCheckbox"),
-  // which react/forbid-elements must not see: it forbids JSX element names, and a
-  // rule telling people to ban <Checkbox> outright would be nonsense. JSX says
-  // which is which — intrinsics are lowercase — so the check is only generated
-  // for a rule whose replacements are entirely intrinsic elements.
-  const replacements = rule.replacements ?? []
-  const forbiddenIntrinsics = replacements.filter((r) => /^[a-z][a-z0-9-]*$/.test(r.element))
-  if (replacements.length > 0 && forbiddenIntrinsics.length === replacements.length) {
+  if (biome?.via === "plugin") {
     checks.push({
-      tool: "eslint",
-      title: "ESLint — react/forbid-elements",
-      description:
-        "Reports each element with its own replacement named, rather than one message covering every banned element — worth the extra dependency if your team lives in the editor. Requires eslint-plugin-react.",
+      tool: "biome",
+      title: `Biome — GritQL plugin`,
+      description: `Biome has no built-in rule for this one, so it ships as a GritQL plugin. Save it as ${PLUGIN_DIR.slice(2)}/${rule.id}.grit and add that path to \`plugins\` in your biome.jsonc. Its documented exceptions are compiled in as \`$filename\` guards, because Biome's overrides do not scope plugins.`,
       language: "js",
-      code: [
-        "// Requires eslint-plugin-react registered in your flat config.",
-        '"react/forbid-elements": [',
-        `  ${JSON.stringify(severity)},`,
-        "  {",
-        "    forbid: [",
-        ...forbiddenIntrinsics.map((replacement) => {
-          const use = replacement.use
-            .map((t) => `<${t.name}> from ${t.from}${t.when ? ` (${t.when})` : ""}`)
-            .join(", or ")
-          return `      { element: ${JSON.stringify(replacement.element)}, message: ${JSON.stringify(`Use ${use}.`)} },`
-        }),
-        "    ],",
-        "  },",
-        "],",
-        "",
-      ].join("\n"),
+      code: renderGritPlugin(rule, baseUrl),
     })
   }
 
@@ -337,7 +342,7 @@ export function buildRuleChecks(rule: RuleMeta): RuleCheck[] {
       tool: "ripgrep",
       title: "ripgrep — no setup at all",
       description:
-        "Finds candidates for review in any repo, linter or not. Coarser than the selector: it reads lines, not syntax, so expect false positives and treat a clean run as weaker evidence than a clean lint run.",
+        "Finds candidates for review in any repo, linter or not. Coarser than the Biome check: it reads lines, not syntax, so expect false positives and treat a clean run as weaker evidence than a clean lint run.",
       language: "bash",
       code: [
         `# ${rule.id} — candidates for review`,
@@ -350,18 +355,17 @@ export function buildRuleChecks(rule: RuleMeta): RuleCheck[] {
   }
 
   const judgementCalls = rule.exceptions.filter((e) => !e.paths?.length)
-  if (judgementCalls.length > 0 && rule.enforcement.selector) {
+  if (judgementCalls.length > 0 && biome) {
+    const target = biome.via === "rule" ? `lint/${biome.rule}` : "plugin"
     checks.push({
-      tool: "eslint",
+      tool: "biome",
       title: "Claiming an exception that is not a path",
-      description: `${judgementCalls.length === 1 ? "One exception on this rule is" : `${judgementCalls.length} exceptions on this rule are`} a judgement call, so ${judgementCalls.length === 1 ? "it" : "they"} cannot be an \`ignores\` glob. Justify it where it happens — the note after \`--\` is what makes the carve-out reviewable instead of invisible.`,
+      description: `${judgementCalls.length === 1 ? "One exception on this rule is" : `${judgementCalls.length} exceptions on this rule are`} a judgement call, so ${judgementCalls.length === 1 ? "it" : "they"} cannot be a path. Biome's suppression syntax has a slot for the reason — fill it, because that note is what makes the carve-out reviewable instead of invisible.`,
       language: "tsx",
       code: judgementCalls
-        .map((exception) =>
-          [
-            "{/* eslint-disable-next-line no-restricted-syntax --",
-            `    ${exception.scope}: ${firstSentence(exception.reason)} */}`,
-          ].join("\n"),
+        .map(
+          (exception) =>
+            `{/* biome-ignore ${target}: ${exception.scope} — ${firstSentence(exception.reason)} */}`,
         )
         .join("\n\n"),
     })
@@ -370,5 +374,4 @@ export function buildRuleChecks(rule: RuleMeta): RuleCheck[] {
   return checks
 }
 
-/** Baked into `baseUrl` so the generator and the tests agree on the default. */
-export { DEFAULT_BASE_URL }
+export { DEFAULT_BASE_URL, PLUGIN_DIR }

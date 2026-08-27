@@ -61,7 +61,7 @@ export function RuleSidebar({ onNavigate }: { onNavigate?: () => void }) {
           <h3 className="quebi-eyebrow mb-2 px-3">Enforcing them</h3>
           <NavLink to="/rules#enforcement" onClick={onNavigate} className={rootClasses}>
             <Wrench className="h-4 w-4" />
-            ESLint config
+            Biome config
           </NavLink>
         </div>
       </OverlayScrollbarsComponent>

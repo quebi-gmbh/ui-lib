@@ -163,12 +163,14 @@ export const noRawInteractiveElementsRule: RuleMeta = {
   ],
   enforcement: {
     kind: "lint",
-    selector:
-      'JSXOpeningElement[name.type="JSXIdentifier"][name.name=/^(a|button|dialog|form|input|label|select|table|textarea)$/]',
+    // Biome has a built-in rule for exactly this, and its `elements` option is
+    // an element -> message map: the same shape as `replacements` above, so the
+    // config is generated from that table rather than restating it.
+    biome: { via: "rule", rule: "correctness/noRestrictedElements" },
     message:
-      "Raw interactive/semantic elements are the library's. Import the ui-lib component instead: button -> Button/LinkButton/Toggle, a -> Link/LinkButton, input -> TextField/Input/SearchField/NumberField/Checkbox/RadioGroup/Switch, select -> Select/ComboBox/MultipleSelect, textarea -> Textarea, form -> react-router Form, label -> Label from @/components/field, dialog -> Modal/Drawer/Sheet, table -> Table/AsyncTable. See https://ui-lib.quebi.de/rules/no-raw-interactive-elements",
+      "Raw interactive/semantic elements are the library's. Import the ui-lib component instead. See https://ui-lib.quebi.de/rules/no-raw-interactive-elements",
     grep: "<(a|button|dialog|form|input|label|select|table|textarea)($|[\\s/>])",
-    note: "The check matches on element name, so it also fires inside your copy of the ui-lib components — and it should not: those are the one layer allowed to render the intrinsic. Point the ignore globs at wherever you pasted the component source (components/ui by shadcn convention).",
+    note: "Biome reports one message per element, naming that element's own replacement — so <a> tells you about Link and LinkButton rather than listing all nine. The rule also fires inside your copy of the ui-lib components, which is why the documented exception scopes it away; point it at wherever you pasted the source (components/ui by shadcn convention).",
   },
   tags: ["elements", "accessibility", "react-aria", "tier-1"],
 }

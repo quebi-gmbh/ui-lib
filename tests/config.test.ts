@@ -1,24 +1,30 @@
 /**
- * The config around the selectors: do the documented exceptions actually reach
- * ESLint, do the records hold together, and does the published file say what the
- * blocks say?
+ * The config around the checks: do the documented exceptions actually reach
+ * Biome, do the records hold together, and does the published artifact say what
+ * the records say?
  *
- * The first test is load-bearing for the whole suite. Most cases elsewhere assert
- * that a rule does *not* fire, and every one of those would pass against an empty
- * config — so before trusting a single negative, prove the harness reports at all.
+ * The first tests are load-bearing for the whole suite. Most cases elsewhere
+ * assert that a rule does *not* fire, and every one of those would pass against a
+ * config that failed to load — so before trusting a single negative, prove the
+ * harness reports at all and that every plugin compiles.
  */
 import { describe, expect, test } from "bun:test"
+import { mkdirSync, writeFileSync } from "node:fs"
+import { join } from "node:path"
 import { metaRegistry } from "../src/registry/meta"
 import { rulesRegistry } from "../src/registry/rules"
 import {
-  buildEslintBlocks,
-  buildEslintConfig,
-  buildRuleChecks,
+  buildBiomeConfig,
+  builtInRules,
+  globToFilenameRegex,
   lintRules,
-  renderEslintConfig,
+  pluginRules,
+  renderBiomeConfig,
+  renderGritPlugin,
+  restrictedElements,
 } from "../src/registry/rules/checks"
 import { ruleGroups } from "../src/registry/rules/groups"
-import { component, rulesFiredOn } from "./harness"
+import { biomeBinary, component, projectRoot, rulesFiredOn } from "./harness"
 
 const VIOLATION = component(`    <button onClick={props.onClick}>Save</button>`)
 
@@ -27,23 +33,29 @@ describe("harness", () => {
     expect(rulesFiredOn(VIOLATION)).toContain("no-raw-interactive-elements")
   })
 
-  test("every lint rule is represented in the config", () => {
-    const inConfig = new Set(buildEslintBlocks(rulesRegistry)[0].ruleIds)
-    for (const rule of lintRules(rulesRegistry)) expect(inConfig).toContain(rule.id)
+  test("every GritQL plugin compiles", () => {
+    // A plugin that fails to compile reports once, globally, with no rule
+    // attached, and would quietly turn every "does not fire" case green. The
+    // harness throws on an unattributed diagnostic; this asserts a clean file.
+    for (const rule of pluginRules(rulesRegistry)) {
+      expect(rulesFiredOn("export const x = 1\n", `src/compile-${rule.id}.tsx`)).toEqual([])
+    }
   })
 
-  test("a finding can be traced back to its rule", () => {
-    // The harness identifies rules by the URL in the message, so every message
-    // has to carry one. This is also the contract for a human reading a CI log.
-    for (const rule of lintRules(rulesRegistry)) {
+  test("a diagnostic can be traced back to its rule", () => {
+    // Plugins name themselves in the message; built-ins are matched by category.
+    for (const rule of pluginRules(rulesRegistry)) {
       expect(rule.enforcement.message).toContain(`/rules/${rule.id}`)
+    }
+    for (const rule of builtInRules(rulesRegistry)) {
+      const biome = rule.enforcement.biome
+      expect(biome?.via === "rule" && biome.rule).toBeTruthy()
     }
   })
 })
 
-describe("documented exceptions reach ESLint", () => {
-  test("vendored library source is exempt from the element rules", () => {
-    // The same violation, in a consumer's pasted copy of the components.
+describe("documented exceptions reach Biome", () => {
+  test("vendored library source is exempt from the built-in rule (via overrides)", () => {
     expect(rulesFiredOn(VIOLATION, "components/ui/button.tsx")).not.toContain(
       "no-raw-interactive-elements",
     )
@@ -56,19 +68,24 @@ describe("documented exceptions reach ESLint", () => {
     expect(rulesFiredOn(VIOLATION, "app/routes/signup.tsx")).toContain("no-raw-interactive-elements")
   })
 
+  test("vendored library source is exempt from the plugin rules (via $filename)", () => {
+    const surface = component(
+      `    <div className="rounded-quebi-md border border-quebi-line/10 p-6">{props.children}</div>`,
+    )
+    expect(rulesFiredOn(surface, "src/routes/page.tsx")).toContain(
+      "no-appearance-classes-on-layout-elements",
+    )
+    expect(rulesFiredOn(surface, "components/ui/card.tsx")).not.toContain(
+      "no-appearance-classes-on-layout-elements",
+    )
+  })
+
   test("the energy-class-badge carve-out silences the hardcoded-value rule there", () => {
     const bands = `export const styles = { A: "bg-[#00843d] text-quebi-fg" }\n`
     expect(rulesFiredOn(bands, "src/routes/chart.tsx")).toContain("no-hardcoded-design-values")
     expect(rulesFiredOn(bands, "components/ui/energy-class-badge.tsx")).not.toContain(
       "no-hardcoded-design-values",
     )
-  })
-
-  test("a narrow carve-out does not re-enable what a broader one relaxed", () => {
-    // energy-class-badge sits inside components/ui/**, which relaxes the element
-    // rules. Emitting one block per exception let the narrower block turn them
-    // back on; the blocks are cumulative to prevent exactly this.
-    expect(rulesFiredOn(VIOLATION, "components/ui/energy-class-badge.tsx")).toEqual([])
   })
 
   test("example files are exempt from the server-validation rule only", () => {
@@ -83,6 +100,35 @@ describe("documented exceptions reach ESLint", () => {
     expect(rulesFiredOn(VIOLATION, "src/registry/button.examples.tsx")).toContain(
       "no-raw-interactive-elements",
     )
+  })
+
+  test("plugin exceptions have to be compiled in, because overrides cannot scope plugins", () => {
+    // This is the reason plugin exceptions are $filename guards rather than
+    // config. If Biome ever learns to scope plugins, this test fails and the
+    // guards can be replaced with overrides.
+    const root = join(projectRoot, "override-probe")
+    mkdirSync(join(root, "vendor"), { recursive: true })
+    const plugin = pluginRules(rulesRegistry).find(
+      (r) => r.id === "validate-on-the-server-with-the-same-schema",
+    )!
+    writeFileSync(join(root, "p.grit"), renderGritPlugin(plugin))
+    writeFileSync(
+      join(root, "biome.json"),
+      JSON.stringify({
+        plugins: ["./p.grit"],
+        linter: { enabled: true, rules: { recommended: false } },
+        overrides: [{ includes: ["vendor/**"], plugins: [] }],
+      }),
+    )
+    writeFileSync(join(root, "vendor", "x.tsx"), `const [form] = useForm({ onValidate: fn })\n`)
+
+    const run = Bun.spawnSync([biomeBinary, "lint", "vendor/x.tsx", "--reporter=json"], {
+      cwd: root,
+      stdout: "pipe",
+      stderr: "pipe",
+    })
+    const diagnostics = JSON.parse(run.stdout.toString()).diagnostics ?? []
+    expect(diagnostics.length).toBeGreaterThan(0)
   })
 })
 
@@ -118,7 +164,6 @@ describe("rule records", () => {
   })
 
   test("every rule has a sidebar label short enough to fit", () => {
-    // The nav column is 16rem; the full titles are sentences and overflow it.
     for (const rule of rulesRegistry) {
       expect(rule.navTitle).toBeTruthy()
       expect((rule.navTitle as string).length).toBeLessThanOrEqual(24)
@@ -129,67 +174,102 @@ describe("rule records", () => {
     for (const rule of rulesRegistry) expect(rule.examples.length).toBeGreaterThan(0)
   })
 
-  test("a lint rule has both a selector and a message naming the replacement", () => {
+  test("a lint rule says how Biome carries it, and its message names the replacement", () => {
     for (const rule of rulesRegistry) {
       if (rule.enforcement.kind !== "lint") continue
-      expect(rule.enforcement.selector).toBeTruthy()
+      expect(rule.enforcement.biome).toBeTruthy()
       expect(rule.enforcement.message).toBeTruthy()
     }
   })
 })
 
-describe("generated checks", () => {
-  test("every lint rule ships a runnable ESLint snippet and a ripgrep command", () => {
-    for (const rule of lintRules(rulesRegistry)) {
-      const tools = buildRuleChecks(rule).map((c) => c.title)
-      expect(tools).toContain("ESLint — no-restricted-syntax")
-      expect(tools).toContain("ripgrep — no setup at all")
+describe("generated config", () => {
+  const config = buildBiomeConfig(rulesRegistry)
+
+  test("one plugin entry per plugin rule, and nothing else", () => {
+    expect(config.plugins.length).toBe(pluginRules(rulesRegistry).length)
+    for (const rule of pluginRules(rulesRegistry)) {
+      expect(config.plugins.some((p) => p.endsWith(`${rule.id}.grit`))).toBe(true)
     }
   })
 
-  test("react/forbid-elements is generated only where every replacement is an intrinsic", () => {
-    const has = (id: string) =>
-      buildRuleChecks(rulesRegistry.find((r) => r.id === id)!).some((c) =>
-        c.title.includes("forbid-elements"),
-      )
-    // Element usage forbids nine intrinsics; the forms rule maps components to
-    // conform-* variants, where "forbid <Checkbox>" would be nonsense.
-    expect(has("no-raw-interactive-elements")).toBe(true)
-    expect(has("bind-fields-through-conform")).toBe(false)
+  test("the built-in rule's messages are derived from the replacement table", () => {
+    const elements = restrictedElements(
+      rulesRegistry.find((r) => r.id === "no-raw-interactive-elements")!,
+    )
+    expect(Object.keys(elements)).toContain("button")
+    expect(elements.button).toContain("<Button>")
+    // Only the rule that is *carried by* noRestrictedElements contributes to the
+    // ban. The forms rules also have replacement tables — mapping components to
+    // conform-* variants, plus a row for the <form> element — and none of that
+    // may leak into an element ban: "forbid <Checkbox>" would be nonsense, and
+    // <form> is already banned by the element rule with its own message.
+    const banned = (
+      config.linter.rules.correctness.noRestrictedElements as {
+        options: { elements: Record<string, string> }
+      }
+    ).options.elements
+    const fromTier1 = restrictedElements(
+      rulesRegistry.find((r) => r.id === "no-raw-interactive-elements")!,
+    )
+    expect(Object.keys(banned).sort()).toEqual(Object.keys(fromTier1).sort())
+    for (const element of Object.keys(banned)) expect(element).toMatch(/^[a-z][a-z0-9-]*$/)
   })
 
-  test("a rule with a judgement-call exception explains how to claim it inline", () => {
-    const rule = rulesRegistry.find((r) => r.id === "no-hardcoded-design-values")!
-    const titles = buildRuleChecks(rule).map((c) => c.title)
-    expect(titles).toContain("Claiming an exception that is not a path")
+  test("each rule keeps its own declared severity", () => {
+    // The whole reason this is Biome rather than one shared rule key: a rule
+    // declared `warn` is reported at `warn`.
+    for (const rule of builtInRules(rulesRegistry)) {
+      const biome = rule.enforcement.biome
+      if (biome?.via !== "rule") continue
+      const [group, name] = biome.rule.split("/")
+      const entry = config.linter.rules[group][name] as { level: string }
+      expect(entry.level).toBe(rule.severity === "error" ? "error" : "warn")
+    }
+    for (const rule of pluginRules(rulesRegistry)) {
+      expect(renderGritPlugin(rule)).toContain(
+        `severity = "${rule.severity === "error" ? "error" : "warn"}"`,
+      )
+    }
+  })
+
+  test("every documented path exception appears in the artifact that enforces it", () => {
+    for (const rule of lintRules(rulesRegistry)) {
+      const paths = rule.exceptions.flatMap((e) => e.paths ?? [])
+      if (!paths.length) continue
+      if (rule.enforcement.biome?.via === "rule") {
+        for (const path of paths) {
+          expect(config.overrides.some((o) => o.includes.includes(path))).toBe(true)
+        }
+      } else {
+        const plugin = renderGritPlugin(rule)
+        for (const path of paths) expect(plugin).toContain(globToFilenameRegex(path))
+      }
+    }
   })
 })
 
-describe("published eslint.config.js", () => {
-  const rendered = renderEslintConfig(rulesRegistry)
+describe("published biome.jsonc", () => {
+  const rendered = renderBiomeConfig(rulesRegistry)
 
   test("names every rule it enforces", () => {
-    for (const rule of lintRules(rulesRegistry)) expect(rendered).toContain(rule.id)
-  })
-
-  test("carries the same blocks the tests ran", () => {
-    const blocks = buildEslintConfig(rulesRegistry)
-    for (const block of blocks) {
-      expect(rendered).toContain(JSON.stringify(block.files[0]))
+    for (const rule of pluginRules(rulesRegistry)) expect(rendered).toContain(`${rule.id}.grit`)
+    for (const rule of builtInRules(rulesRegistry)) {
+      const biome = rule.enforcement.biome
+      if (biome?.via === "rule") expect(rendered).toContain(biome.rule.split("/")[1])
     }
-    // "export default [" plus one object per block.
-    expect(rendered.split("    files:").length - 1).toBe(blocks.length)
   })
 
-  test("tells the reader how to supply a JSX parser", () => {
-    expect(rendered).toContain("@typescript-eslint/parser")
-  })
-
-  test("states the severity caveat when a warn-level rule is present", () => {
-    const warned = lintRules(rulesRegistry).filter((r) => r.severity !== "error")
-    if (warned.length > 0) {
-      expect(rendered).toContain("carries a single")
-      for (const rule of warned) expect(rendered).toContain(rule.id)
+  test("every path exception carries its reason, next to the path", () => {
+    for (const rule of builtInRules(rulesRegistry)) {
+      for (const exception of rule.exceptions) {
+        if (!exception.paths?.length) continue
+        expect(rendered).toContain(`${rule.id} —`)
+      }
     }
+  })
+
+  test("says how to fetch the plugins it lists", () => {
+    expect(rendered).toContain("api/rules/plugins/")
   })
 })

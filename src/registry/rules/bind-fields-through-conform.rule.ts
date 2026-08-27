@@ -136,14 +136,22 @@ const volume = useInputControl(fields.volume)
   ],
   enforcement: {
     kind: "lint",
-    // Fires on a ui-lib control that is being handed pieces of field metadata
-    // directly (name={fields.x.name}, defaultValue={fields.x.initialValue}) —
-    // the signature of a binding done by hand where a variant exists.
-    selector:
-      'JSXOpeningElement[name.name=/^(Checkbox|Select|MultipleSelect|AsyncSelect|AsyncMultipleSelect|NumberField|DateField|DatePicker|ColorPicker|ColorSwatchPicker|DaySchedule|StoragePicker|TextField)$/]:has(JSXExpressionContainer MemberExpression[property.name=/^(name|errors|initialValue|defaultValue|errorId|formId)$/])',
+    // Fires on a ui-lib control being handed pieces of field metadata directly
+    // (name={fields.x.name}, defaultValue={fields.x.initialValue}) — the
+    // signature of a binding done by hand where a variant exists. Both element
+    // forms are matched, since a bound control is as often self-closing.
+    biome: {
+      via: "plugin",
+      pattern: `or {
+  JsxOpeningElement(name = $el, attributes = $attrs),
+  JsxSelfClosingElement(name = $el, attributes = $attrs)
+} as $control where {
+  $el <: r"^(?:Checkbox|Select|MultipleSelect|AsyncSelect|AsyncMultipleSelect|NumberField|DateField|DatePicker|ColorPicker|ColorSwatchPicker|DaySchedule|StoragePicker|TextField)$",
+  $attrs <: contains or { \`$meta.name\`, \`$meta.errors\`, \`$meta.initialValue\`, \`$meta.errorId\`, \`$meta.formId\` }`,
+    },
     message:
-      "This control is being wired to a Conform field by hand. Use the conform-* variant instead and pass field={fields.x}: Checkbox -> ConformCheckbox, Select -> ConformSelect, NumberField -> ConformNumberField, DatePicker -> ConformDatePicker, TextField/Input -> ConformField (see the full table on the rule page). For controls with no variant, spread getInputProps(field) rather than picking metadata off one property at a time. See https://ui-lib.quebi.de/rules/bind-fields-through-conform",
-    grep: "name=\\\\{[a-zA-Z]+\\\\.[a-zA-Z]+\\\\.name\\\\}|useState.*\\\\b(value|checked|selected)\\\\b",
+      "This control is being wired to a Conform field by hand. Use the conform-* variant and pass field={fields.x}: Checkbox -> ConformCheckbox, Select -> ConformSelect, NumberField -> ConformNumberField, DatePicker -> ConformDatePicker, TextField/Input -> ConformField. For controls with no variant, spread getInputProps(field) rather than picking metadata off one property at a time. See https://ui-lib.quebi.de/rules/bind-fields-through-conform",
+    grep: "name=\\{[a-zA-Z]+\\.[a-zA-Z]+\\.name\\}",
     note: "This is a ui-lib convention, not a Conform requirement — Conform's own examples pick metadata off property by property, which is exactly the shape the check looks for. It fires only on ui-lib control names, so Conform's native-input examples do not trip it. It cannot see a field bound entirely through useState with a literal name; that shape needs review, and it is the common one in code written before the conform-* variants existed.",
   },
   tags: ["forms", "conform", "accessibility", "tier-1"],

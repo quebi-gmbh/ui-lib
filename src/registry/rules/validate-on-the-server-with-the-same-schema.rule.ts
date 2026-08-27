@@ -78,14 +78,18 @@ export async function action({ request }: Route.ActionArgs) {
   ],
   enforcement: {
     kind: "lint",
-    // A useForm config object with no lastResult key: the form has no way to
+    // A useForm() call whose options carry no lastResult: the form has no way to
     // render what the server said, which in practice means nobody asked it.
-    selector:
-      'CallExpression[callee.name="useForm"] > ObjectExpression:not(:has(Property[key.name="lastResult"]))',
+    biome: {
+      via: "plugin",
+      pattern: `\`useForm($options)\` as $call where {
+  $options <: JsObjectExpression(),
+  $options <: not contains \`lastResult\``,
+    },
     message:
       "useForm without lastResult: this form cannot display anything the server says, which in practice means the server is not validating. Parse the same schema in your route action, return submission.reply(), and pass it here as lastResult. See https://ui-lib.quebi.de/rules/validate-on-the-server-with-the-same-schema",
-    grep: "useForm\\\\(",
-    note: "The check looks for the missing option, which is a proxy: it cannot confirm your action actually re-parses the schema, and it will fire on a form that is genuinely client-only (scope it away with the exceptions rather than switching it off). Reading it the other way round is the useful part — a form that does pass has somewhere to put the server's answer.",
+    grep: "useForm\\(",
+    note: "The check looks for the missing option, which is a proxy: it cannot confirm your action actually re-parses the schema, and it will fire on a form that is genuinely client-only (scope that away with the exceptions rather than switching it off). It only reads options written inline — useForm(options) with the object in a variable is skipped on purpose, because the alternative is reporting every such call whether or not it passes lastResult. Reading it the other way round is the useful part: a form that passes has somewhere to put the server's answer.",
   },
   tags: ["forms", "conform", "validation", "security", "tier-3"],
 }
