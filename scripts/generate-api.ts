@@ -170,10 +170,14 @@ function buildEslintConfig(lintRules: RuleMeta[]): string {
   for (const rule of lintRules) {
     for (const exception of rule.exceptions) {
       if (!exception.paths?.length) continue
-      const key = exception.paths.join("|")
+      // Sort the key: two rules listing the same globs in a different order are
+      // the same carve-out, and emitting them as two blocks means the later one
+      // silently re-enables what the earlier one relaxed.
+      const paths = [...exception.paths].sort()
+      const key = paths.join("|")
       let group = groups.find((g) => g.paths.join("|") === key)
       if (!group) {
-        group = { paths: exception.paths, reasons: [], disabled: new Set() }
+        group = { paths, reasons: [], disabled: new Set() }
         groups.push(group)
       }
       group.disabled.add(rule.id)
@@ -287,7 +291,13 @@ function buildRuleChecks(rule: RuleMeta): RuleCheck[] {
     })
   }
 
-  if (rule.replacements?.length) {
+  // `replacements` also carries component-level advice ("Checkbox -> ConformCheckbox"),
+  // which react/forbid-elements must not see: it forbids JSX element names, and
+  // a rule telling people to ban <Checkbox> outright would be nonsense. JSX says
+  // which is which — intrinsics are lowercase.
+  const replacements = rule.replacements ?? []
+  const forbiddenIntrinsics = replacements.filter((r) => /^[a-z][a-z0-9-]*$/.test(r.element))
+  if (replacements.length > 0 && forbiddenIntrinsics.length === replacements.length) {
     checks.push({
       tool: "eslint",
       title: "ESLint — react/forbid-elements",
@@ -300,7 +310,7 @@ function buildRuleChecks(rule: RuleMeta): RuleCheck[] {
         `  ${JSON.stringify(severity)},`,
         "  {",
         "    forbid: [",
-        ...rule.replacements.map((replacement) => {
+        ...forbiddenIntrinsics.map((replacement) => {
           const use = replacement.use
             .map((t) => `<${t.name}> from ${t.from}${t.when ? ` (${t.when})` : ""}`)
             .join(", or ")

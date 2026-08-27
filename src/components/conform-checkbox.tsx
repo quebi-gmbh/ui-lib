@@ -34,7 +34,17 @@ export function ConformCheckbox({ field, label, className, ...props }: ConformCh
       >
         {label}
       </Checkbox>
-      {hasErrors && <p className="text-sm text-red-500">{field.errors?.join(", ")}</p>}
+      {/* getInputProps() puts aria-describedby={field.errorId} on the control
+          whenever the field is invalid, so the message has to carry that id —
+          without it the attribute points at nothing and the error is never
+          announced. RAC's <FieldError> is not usable here: it renders null
+          unless a FieldErrorContext supplies isInvalid, and a bare Checkbox
+          (unlike TextField or CheckboxGroup) provides none. */}
+      {hasErrors && (
+        <p id={field.errorId} className="block text-[12px] text-red-500">
+          {field.errors?.join(", ")}
+        </p>
+      )}
     </div>
   )
 }

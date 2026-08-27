@@ -1,7 +1,10 @@
+import { bindFieldsThroughConformRule } from "./bind-fields-through-conform.rule"
 import { getRuleGroup, ruleGroups } from "./groups"
 import { noAppearanceClassesOnLayoutElementsRule } from "./no-appearance-classes-on-layout-elements.rule"
 import { noHardcodedDesignValuesRule } from "./no-hardcoded-design-values.rule"
 import { noRawInteractiveElementsRule } from "./no-raw-interactive-elements.rule"
+import { renderFieldTextThroughTheFieldRule } from "./render-field-text-through-the-field.rule"
+import { validateOnTheServerWithTheSameSchemaRule } from "./validate-on-the-server-with-the-same-schema.rule"
 import type { RuleGroup, RuleMeta, RuleSeverity } from "./types"
 
 export * from "./types"
@@ -15,6 +18,9 @@ export const rulesRegistry: RuleMeta[] = [
   noRawInteractiveElementsRule,
   noAppearanceClassesOnLayoutElementsRule,
   noHardcodedDesignValuesRule,
+  bindFieldsThroughConformRule,
+  renderFieldTextThroughTheFieldRule,
+  validateOnTheServerWithTheSameSchemaRule,
 ]
 
 export function getRule(id: string | undefined): RuleMeta | undefined {
