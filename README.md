@@ -38,6 +38,8 @@ full workflow. In short:
 | `/api/components/<name>.tsx` | Raw, copy-paste-ready source |
 | `/api/registry.json` | shadcn registry index |
 | `/r/<name>.json` | shadcn registry item |
+| `/api/rules.json` | Usage rules: when a raw HTML element is allowed and what to import instead |
+| `/api/rules/<id>.json` | One rule: rationale, wrong/right pair, exceptions, enforcement selector |
 
 A typical agent flow:
 
@@ -47,6 +49,21 @@ A typical agent flow:
 4. Install the npm `dependencies`.
 
 Or just have the agent run the `npx shadcn add <url>` command above, which resolves all of that.
+
+## Rules
+
+> **Layout is yours. Appearance is the library's.**
+
+[ui-lib.quebi.de/rules](https://ui-lib.quebi.de/rules) documents when a raw HTML element is allowed
+in an app that uses ui-lib, and which component to import when it is not — in three tiers:
+interactive and semantic elements (`button`, `input`, `a`, `dialog`, …) are always the library's;
+layout elements (`div`, `span`, `section`, …) are yours as long as their classes only lay things
+out; design values are always quebi tokens.
+
+Rules are registry records (`src/registry/rules/*.rule.ts`), not prose: the page, the JSON
+endpoints, `llms.txt` and the Claude skill all render from the same data, each rule names its
+replacement component and its documented exceptions, and the build fails if a rule points at a
+component that no longer exists.
 
 ## Development
 
@@ -65,7 +82,8 @@ The site is a Vite + React Router SPA that auto-deploys to GitHub Pages on merge
 ```
 src/components/      component source (what gets shipped/copy-pasted)
 src/registry/        per-component metadata (*.meta.ts) + live gallery examples (*.examples.tsx)
-src/routes/          the SPA pages (landing, gallery, component detail)
+src/registry/rules/  usage rule records (*.rule.ts) behind /rules and /api/rules*.json
+src/routes/          the SPA pages (landing, gallery, component detail, rules)
 scripts/generate-api.ts   builds the static AI-discovery API from source
 ```
 

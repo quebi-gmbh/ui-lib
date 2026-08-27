@@ -8,6 +8,10 @@ export function Footer() {
           Components
         </Link>
         <span aria-hidden>·</span>
+        <Link to="/rules" className="hover:text-quebi-fg">
+          Rules
+        </Link>
+        <span aria-hidden>·</span>
         <a href="https://quebi.de/en/imprint" className="hover:text-quebi-fg">
           Imprint
         </a>
