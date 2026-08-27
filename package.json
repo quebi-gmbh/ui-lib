@@ -39,6 +39,7 @@
     "valibot": "^1.4.2"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.5.10",
     "@react-router/dev": "^8.1.0",
     "@react-router/fs-routes": "^8.1.0",
     "@react-router/node": "^8.1.0",
@@ -48,8 +49,6 @@
     "@types/node": "^26.0.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@typescript-eslint/parser": "^8.68.0",
-    "eslint": "^10.9.1",
     "satori": "^0.26.0",
     "shiki": "^4.3.0",
     "tailwindcss": "^4.0.0",

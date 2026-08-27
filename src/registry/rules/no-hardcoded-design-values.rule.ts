@@ -99,17 +99,19 @@ export const noHardcodedDesignValuesRule: RuleMeta = {
   ],
   enforcement: {
     kind: "lint",
-    // Matches any string literal, not just className attributes: quebi components
-    // keep their classes in tailwind-variants objects and cn() calls, so an
-    // attribute-only selector misses exactly the code this rule is about — the
-    // energy-class-badge band colours among it, which would have left this
-    // rule's own documented exception unreachable.
-    selector:
-      'Literal[value=/\\[#[0-9a-fA-F]{3,8}\\]|\\[\\d+(px|rem|em)\\]|(^|[\\s:])(bg|text|border|ring|fill|stroke|from|via|to)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\\d{2,3}/]',
+    // Both string kinds again: quebi components keep their classes in
+    // tailwind-variants objects and cn() calls, so checking only JSX attributes
+    // would miss the code this rule is most about — including the
+    // energy-class-badge band colours its own exception is written for.
+    biome: {
+      via: "plugin",
+      pattern: `or { string(), JsxString() } as $value where {
+  $value <: r".*(?:\\[#[0-9a-fA-F]{3,8}\\]|\\[[0-9]+(?:px|rem|em)\\]|\\b(?:bg|text|border|ring|fill|stroke|from|via|to)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-[0-9]{2,3}\\b).*"`,
+    },
     message:
-      "Hardcoded design value. Use a quebi token: colours -> bg-quebi-*/text-quebi-*/border-quebi-line, radii -> rounded-quebi-{sm,md,lg}, elevation -> shadow-quebi-glow. Raw palette scales (text-gray-500) are hardcoded values too — they do not follow the theme. If the value is mandated by something outside the design system, add it to the rule's exceptions with its justification. See https://ui-lib.quebi.de/rules/no-hardcoded-design-values",
+      "Hardcoded design value. Use a quebi token: colours -> bg-quebi-*/text-quebi-*/border-quebi-line, radii -> rounded-quebi-{sm,md,lg}, elevation -> shadow-quebi-glow. Raw palette scales (text-gray-500) are hardcoded values too — they do not follow the theme. See https://ui-lib.quebi.de/rules/no-hardcoded-design-values",
     grep: "\\[#[0-9a-fA-F]{3,8}\\]|\\b(bg|text|border|ring|fill|stroke)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-[0-9]{2,3}",
-    note: "The checks read .tsx/.jsx only, so a hex literal in a stylesheet slips past — pair them with a CSS-side check everywhere except the file that defines your theme. A value that is genuinely mandated from outside the design system is not always a file you can ignore wholesale, so the last snippet shows how to claim that exception inline.",
+    note: "The check reads .tsx/.jsx only, so a hex in a stylesheet slips past — pair it with a CSS-side check everywhere except the file that defines your theme. A value mandated from outside the design system is not always a whole file you can except, so the last snippet shows how to claim that carve-out inline.",
   },
   tags: ["tokens", "tailwind", "theming", "tier-3"],
 }

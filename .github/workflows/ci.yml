@@ -17,8 +17,8 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      # Runs the rule selectors through ESLint with the generated config —
-      # the same file consumers download from /api/rules/eslint.config.js.
+      # Runs every rule through the real Biome CLI with the generated config and
+      # GritQL plugins — the same artifacts consumers download from /api/rules/.
       - run: bun run test
 
       - run: bun run typecheck

@@ -25,8 +25,10 @@ import { metaRegistry } from "../src/registry/meta"
 import { getRuleGroup, ruleGroups, rulesRegistry } from "../src/registry/rules"
 import {
   buildRuleChecks,
-  renderEslintConfig,
-  renderEslintSetup,
+  pluginRules,
+  renderBiomeConfig,
+  renderBiomeSetup,
+  renderGritPlugin,
 } from "../src/registry/rules/checks"
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..")
@@ -37,6 +39,7 @@ const API = join(PUBLIC, "api")
 const COMPONENTS_OUT = join(API, "components")
 const REGISTRY_OUT = join(PUBLIC, "r")
 const RULES_OUT = join(API, "rules")
+const RULE_PLUGINS_OUT = join(RULES_OUT, "plugins")
 
 const BASE_URL = "https://ui-lib.quebi.de"
 const HOST = "ui-lib.quebi.de"
@@ -104,9 +107,9 @@ async function main() {
   // is replaced with transparent so the quebi surface shows through.
   const highlighter = await createHighlighter({
     themes: ["vesper", "github-light"],
-    langs: ["tsx", "markdown", "js", "bash"],
+    langs: ["tsx", "markdown", "js", "bash", "json"],
   })
-  const highlight = (code: string, lang: "tsx" | "markdown" | "js" | "bash" = "tsx") =>
+  const highlight = (code: string, lang: "tsx" | "markdown" | "js" | "bash" | "json" = "tsx") =>
     highlighter.codeToHtml(code, {
       lang,
       themes: { dark: "vesper", light: "github-light" },
@@ -123,6 +126,7 @@ async function main() {
   await mkdir(COMPONENTS_OUT, { recursive: true })
   await mkdir(REGISTRY_OUT, { recursive: true })
   await mkdir(RULES_OUT, { recursive: true })
+  await mkdir(RULE_PLUGINS_OUT, { recursive: true })
 
   const catalog: unknown[] = []
   const registryIndex: { name: string; title: string; url: string }[] = []
@@ -314,8 +318,10 @@ async function main() {
       // severity on it, and a message that does not name the replacement makes
       // the reader go hunting — both are the failure this whole route exists to
       // prevent, so they fail the build.
-      if (!rule.enforcement.selector) {
-        throw new Error(`Rule "${rule.id}" is enforced by lint but has no selector`)
+      if (!rule.enforcement.biome) {
+        throw new Error(
+          `Rule "${rule.id}" is enforced by lint but says nothing about how Biome carries it`,
+        )
       }
       if (!rule.enforcement.message) {
         throw new Error(
@@ -347,35 +353,18 @@ async function main() {
     rulesCatalog.push(ruleJson)
   }
 
-  // The whole lint config, generated from the same records. This repo has no
-  // lint setup of its own to wire it into; it is published as an artifact a
-  // consuming app can drop in, which is the point of keeping `selector` and
-  // `message` on the record in the first place.
-  const eslintConfig = renderEslintConfig(rulesRegistry, BASE_URL)
-  await writeFile(join(RULES_OUT, "eslint.config.js"), eslintConfig)
+  // The whole lint setup, generated from the same records: one Biome config plus
+  // a GritQL plugin per rule Biome has no built-in for. This repo has no lint
+  // setup of its own to wire them into; they are published as artifacts a
+  // consuming app drops in, which is the point of keeping `biome` and `message`
+  // on the record in the first place.
+  const biomeConfig = renderBiomeConfig(rulesRegistry, BASE_URL)
+  await writeFile(join(RULES_OUT, "biome.jsonc"), biomeConfig)
+  for (const rule of pluginRules(rulesRegistry)) {
+    await writeFile(join(RULE_PLUGINS_OUT, `${rule.id}.grit`), renderGritPlugin(rule, BASE_URL))
+  }
 
-  // How to run the config above — the same steps this config was verified with.
-  const eslintSetup = [
-    "# 1. A parser that emits JSX nodes (skip if your config already has one)",
-    "npm i -D eslint @typescript-eslint/parser",
-    "",
-    "# 2. The generated config — every ui-lib rule, with its documented exceptions",
-    `curl -O ${BASE_URL}/api/rules/eslint.config.js`,
-    "",
-    "# 3. Point your own flat config at it",
-    "cat > eslint.config.js <<'EOF'",
-    'import parser from "@typescript-eslint/parser"',
-    'import uiLibRules from "./ui-lib.eslint.config.js"',
-    "",
-    "export default [",
-    '  { files: ["**/*.{tsx,jsx}"], languageOptions: { parser, parserOptions: { ecmaFeatures: { jsx: true } } } },',
-    "  ...uiLibRules,",
-    "]",
-    "EOF",
-    "",
-    "npx eslint src",
-    "",
-  ].join("\n")
+  const biomeSetup = renderBiomeSetup(rulesRegistry, BASE_URL)
 
   // rules.json — every rule in one fetch, mirroring api/index.json.
   await writeFile(
@@ -391,8 +380,11 @@ async function main() {
         rules: rulesCatalog,
         enforcement: {
           description:
-            "Every rule carries runnable checks in its `checks` array, generated from the same record. The link below is all of them merged into one ESLint flat config.",
-          eslintConfig: `${BASE_URL}/api/rules/eslint.config.js`,
+            "Every rule carries runnable checks in its `checks` array, generated from the same record. Biome carries them: a built-in rule where one fits, a GritQL plugin otherwise.",
+          biomeConfig: `${BASE_URL}/api/rules/biome.jsonc`,
+          plugins: pluginRules(rulesRegistry).map(
+            (r) => `${BASE_URL}/api/rules/plugins/${r.id}.grit`,
+          ),
         },
       },
       null,
@@ -422,13 +414,13 @@ async function main() {
     ...ruleCheckEntries.map((r) => `  ${JSON.stringify(r.id)}: ${JSON.stringify(r.checks)},`),
     "}",
     "",
-    "/** Every rule merged into one ESLint flat config, for the /rules index. */",
-    `export const eslintConfigSource = ${JSON.stringify(eslintConfig)}`,
-    `export const eslintConfigHighlighted = ${JSON.stringify(highlight(eslintConfig, "js"))}`,
+    "/** Every rule as one Biome config, for the /rules index. */",
+    `export const biomeConfigSource = ${JSON.stringify(biomeConfig)}`,
+    `export const biomeConfigHighlighted = ${JSON.stringify(highlight(biomeConfig, "json"))}`,
     "",
     "/** The steps that make the config above runnable in a project. */",
-    `export const eslintSetupSource = ${JSON.stringify(eslintSetup)}`,
-    `export const eslintSetupHighlighted = ${JSON.stringify(highlight(eslintSetup, "bash"))}`,
+    `export const biomeSetupSource = ${JSON.stringify(biomeSetup)}`,
+    `export const biomeSetupHighlighted = ${JSON.stringify(highlight(biomeSetup, "bash"))}`,
     "",
   ].join("\n")
   await writeFile(join(SRC_DIR, "registry/rules/highlighted.generated.ts"), ruleHighlightModule)
@@ -458,10 +450,10 @@ async function main() {
     "To check a codebase against these rules rather than reason about them:",
     "",
     "```sh",
-    `curl -O ${BASE_URL}/api/rules/eslint.config.js   # every rule, exceptions included`,
+    `curl -O ${BASE_URL}/api/rules/biome.jsonc   # every rule, exceptions included`,
     "```",
     "",
-    "It needs a JSX-capable parser (`@typescript-eslint/parser`); the file's header comment shows the two lines to prepend. With no linter available at all, each rule's `checks` array also carries a ripgrep command that needs nothing installed.",
+    "Biome parses TSX natively, so there is nothing else to configure. Rules Biome has no built-in for ship as GritQL plugins listed in that config's `plugins` key; fetch each one next to it. With no linter available at all, each rule's `checks` array also carries a ripgrep command that needs nothing installed.",
     "",
   ]
 
@@ -538,8 +530,9 @@ async function main() {
     `- [${BASE_URL}/api/registry.json](${BASE_URL}/api/registry.json) — shadcn-compatible registry index.`,
     `- ${BASE_URL}/r/<name>.json — shadcn registry item (source + resolved dependency URLs).`,
     `- [${BASE_URL}/api/rules.json](${BASE_URL}/api/rules.json) — usage rules: when a raw HTML element is allowed, and what to import when it is not. Read this before writing JSX against the library.`,
-    `- ${BASE_URL}/api/rules/<id>.json — one rule: rationale, wrong/right pair, exceptions, and a \`checks\` array of runnable ESLint/ripgrep snippets generated from it.`,
-    `- ${BASE_URL}/api/rules/eslint.config.js — every rule as one ESLint flat config, with the documented exceptions already applied as \`ignores\`.`,
+    `- ${BASE_URL}/api/rules/<id>.json — one rule: rationale, wrong/right pair, exceptions, and a \`checks\` array of runnable Biome/ripgrep snippets generated from it.`,
+    `- ${BASE_URL}/api/rules/biome.jsonc — every rule as one Biome config, with the documented exceptions applied.`,
+    `- ${BASE_URL}/api/rules/plugins/<id>.grit — the GritQL plugin for a rule Biome has no built-in for.`,
     "",
     "## How an agent uses this",
     "",
@@ -657,15 +650,16 @@ Full records (rationale, real wrong/right pairs from the library's own source, a
 exceptions) at **${BASE_URL}/api/rules.json**, or human-readable at **${BASE_URL}/rules**.
 
 To *check* code rather than just follow the rules, every record carries a \`checks\` array of runnable
-snippets generated from it, and all of them are published merged as one ESLint flat config:
+snippets generated from it, and all of them are published merged as one Biome config:
 
 \`\`\`sh
-curl -O ${BASE_URL}/api/rules/eslint.config.js
+curl -O ${BASE_URL}/api/rules/biome.jsonc
 \`\`\`
 
-Needs a JSX-capable parser (\`@typescript-eslint/parser\`) — the file's header shows the two lines to
-prepend. In a repo with no linter, use the \`ripgrep\` entry in each rule's \`checks\` array instead; it
-needs nothing installed.
+Biome parses TSX natively, so there is nothing else to configure. Rules Biome has no built-in for
+ship as GritQL plugins listed in that file's \`plugins\` key — fetch each one alongside it. In a repo
+with no linter at all, use the \`ripgrep\` entry in each rule's \`checks\` array; it needs nothing
+installed.
 
 ## Don't
 
@@ -690,7 +684,7 @@ needs nothing installed.
   await writeFile(join(SRC_DIR, "registry/skill.generated.ts"), skillModule)
 
   console.log(
-    `Generated API for ${catalog.length} component(s) and ${rulesCatalog.length} rule(s): api/index.json, api/components/*, api/rules.json, api/rules/* (+ eslint.config.js), r/*, registry.json, llms.txt, sitemap.xml, robots.txt`,
+    `Generated API for ${catalog.length} component(s) and ${rulesCatalog.length} rule(s): api/index.json, api/components/*, api/rules.json, api/rules/* (+ biome.jsonc, plugins/*.grit), r/*, registry.json, llms.txt, sitemap.xml, robots.txt`,
   )
 }
 

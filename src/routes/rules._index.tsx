@@ -9,10 +9,10 @@ import { Code } from "@/components/text"
 import { seo } from "@/lib/seo"
 import { groupRules, rulesRegistry, severityIntent } from "@/registry/rules"
 import {
-  eslintConfigHighlighted,
-  eslintConfigSource,
-  eslintSetupHighlighted,
-  eslintSetupSource,
+  biomeConfigHighlighted,
+  biomeConfigSource,
+  biomeSetupHighlighted,
+  biomeSetupSource,
 } from "@/registry/rules/highlighted.generated"
 
 export function meta() {
@@ -78,7 +78,7 @@ export default function Rules() {
           Run the rules, don't just read them
         </h3>
         <p className="mt-3 max-w-quebi-content text-base leading-relaxed text-quebi-fg-muted">
-          Every rule on this page as one ESLint config, exceptions included. It is rebuilt from these
+          Every rule on this page as one Biome config, exceptions included. It is rebuilt from these
           rules whenever they change, so re-download it rather than maintaining a copy by hand — that
           way a rule we sharpen reaches your CI. Enforcing one rule at a time? Each rule's page
           carries its own snippet, plus a <Code>ripgrep</Code> one-liner for projects with no linter
@@ -86,33 +86,35 @@ export default function Rules() {
         </p>
 
         <Note intent="info" className="mt-6">
-          Nothing to install from us: these are ESLint's own rules plus a JSX parser your setup very
-          likely already has. You own the config once it lands in your project — soften a rule to{" "}
-          <Code>warn</Code>, scope it to part of the tree, or drop an entry you disagree with.
+          Nothing to install from us beyond Biome itself, which parses TSX with no parser to
+          configure. Two rules of the six are Biome's own; the rest ship as GritQL plugin files you
+          save next to the config. You own all of it once it lands — soften a rule to{" "}
+          <Code>warn</Code>, scope it with <Code>overrides</Code>, or drop an entry you disagree
+          with.
         </Note>
 
         <div className="mt-8">
           <h4 className="text-base font-semibold text-quebi-fg">Wire it up</h4>
           <div className="mt-3">
-            <CodeBlock html={eslintSetupHighlighted} code={eslintSetupSource} />
+            <CodeBlock html={biomeSetupHighlighted} code={biomeSetupSource} />
           </div>
         </div>
 
         <div className="mt-8">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h4 className="text-base font-semibold text-quebi-fg">
-              eslint.config.js — all {rulesRegistry.length} rules
+              biome.jsonc — all {rulesRegistry.length} rules
             </h4>
             <UiLink
-              href="/api/rules/eslint.config.js"
+              href="/api/rules/biome.jsonc"
               className="inline-flex items-center gap-1.5 text-sm font-medium"
             >
               <FileCode className="h-4 w-4" />
-              /api/rules/eslint.config.js
+              /api/rules/biome.jsonc
             </UiLink>
           </div>
           <div className="mt-3">
-            <CodeBlock html={eslintConfigHighlighted} code={eslintConfigSource} />
+            <CodeBlock html={biomeConfigHighlighted} code={biomeConfigSource} />
           </div>
         </div>
       </section>

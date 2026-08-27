@@ -40,7 +40,8 @@ full workflow. In short:
 | `/r/<name>.json` | shadcn registry item |
 | `/api/rules.json` | Usage rules: when a raw HTML element is allowed and what to import instead |
 | `/api/rules/<id>.json` | One rule: rationale, wrong/right pair, exceptions, runnable checks |
-| `/api/rules/eslint.config.js` | Every rule as one ESLint flat config, exceptions applied |
+| `/api/rules/biome.jsonc` | Every rule as one Biome config, exceptions applied |
+| `/api/rules/plugins/<id>.grit` | The GritQL plugin for a rule Biome has no built-in for |
 
 A typical agent flow:
 
@@ -66,12 +67,14 @@ endpoints, `llms.txt` and the Claude skill all render from the same data, each r
 replacement component and its documented exceptions, and the build fails if a rule points at a
 component that no longer exists.
 
-The checks are generated from those same records rather than written alongside them — a per-rule
-ESLint snippet, a `react/forbid-elements` variant with one message per element, and a ripgrep
-command for repos with no linter — and all of them merged into one downloadable config at
-[`/api/rules/eslint.config.js`](https://ui-lib.quebi.de/api/rules/eslint.config.js), with each
-documented exception applied as an `ignores` glob. ui-lib itself has no lint setup, so nothing is
-enforced on the library's own source yet; the config is for the apps that consume it.
+The checks are generated from those same records rather than written alongside them. **Biome**
+carries them two ways: the element rule is its built-in `noRestrictedElements`, configured from the
+same replacement table the page renders, and the rest ship as **GritQL plugins**. Everything is
+published ready to drop in — [`/api/rules/biome.jsonc`](https://ui-lib.quebi.de/api/rules/biome.jsonc)
+plus one `.grit` file per plugin rule — with each documented exception applied: `overrides` for the
+built-in rule, `$filename` guards inside the pattern for the plugins, because Biome's overrides do
+not scope plugins. ui-lib itself has no lint setup, so nothing is enforced on the library's own
+source; the config is for the apps that consume it.
 
 ## Development
 
@@ -84,9 +87,10 @@ bun run test       # rule suite: selectors, exceptions, generated config
 bun run build      # generate API + typecheck + production build
 ```
 
-`bun run test` covers the rules under `tests/`: every selector is run through ESLint with the
-generated config — the same file consumers download — and checked for true/false positives and
-negatives, with each known blind spot asserted as a miss so the list only shrinks deliberately.
+`bun run test` covers the rules under `tests/`: every check is run through the real Biome CLI with
+the generated config and plugins — the same artifacts consumers download — and checked for true and
+false positives and negatives, with each known blind spot asserted as a miss so the list only
+shrinks deliberately.
 (The library components themselves have no tests; the stale `*.test.tsx` files in the top-level
 `components/` folder are leftovers from the Cellestial port and do not run.)
 

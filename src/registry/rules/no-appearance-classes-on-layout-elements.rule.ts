@@ -129,21 +129,21 @@ export const noAppearanceClassesOnLayoutElementsRule: RuleMeta = {
   ],
   enforcement: {
     kind: "lint",
-    // Any string literal, not just className attributes — a hand-built surface is
-    // as likely to sit in a cn() call as in an attribute.
-    // The high-confidence subset of the policy above: a class list carrying both
-    // a radius and a border is the surface signature — that is a Card, a Panel,
-    // or a Badge being rebuilt. Linting the full policy (any bg-*, shadow-*, or
-    // text sizing) fires on legitimate page chrome like a <header> with
-    // bg-quebi-bg, which is how a rule gets switched off wholesale. Verified
-    // against this repo: the tightened selector reports the two hand-built Card
-    // surfaces and leaves the page chrome alone.
-    selector:
-      'Literal[value=/(rounded-.*\\bborder\\b|\\bborder\\b.*rounded-)/]',
+    // Matches both string kinds a class list can live in: a JSX attribute value
+    // (JsxString) and a plain JS string (the arguments to cn()). The check is
+    // narrower than the rule on purpose — it looks for a class list carrying
+    // both a radius and a border, the signature of a rebuilt surface. Flagging
+    // every appearance class also flags a page header with bg-quebi-bg, and a
+    // check that cries wolf gets switched off.
+    biome: {
+      via: "plugin",
+      pattern: `or { string(), JsxString() } as $classes where {
+  $classes <: r".*(?:rounded-.*\\bborder\\b|\\bborder\\b.*rounded-).*"`,
+    },
     message:
-      "Appearance classes (bg-*, border-*, rounded-*, shadow-*, ring-*, text sizing/colour, font weight) on a layout element mean a ui-lib component is being reinvented — import Card/Badge/Note/Panel instead. Layout and spacing classes are fine. See https://ui-lib.quebi.de/rules/no-appearance-classes-on-layout-elements",
+      "Appearance classes on a layout element mean a ui-lib component is being reinvented — import Card/Badge/Note instead. Layout and spacing classes are fine. See https://ui-lib.quebi.de/rules/no-appearance-classes-on-layout-elements",
     grep: 'className="[^"]*(rounded-[^"]*\\bborder\\b|\\bborder\\b[^"]*rounded-)',
-    note: "The check is narrower than the rule: it looks for a class list carrying both a radius and a border, the signature of a rebuilt surface. Flagging every appearance class would also flag a page header with bg-quebi-bg, and a check that cries wolf gets switched off. So expect it to catch the Cards and miss the subtler cases — the rest of this rule stays a review question. Both checks read static strings only; a className assembled with cn() or a template literal slips past either way.",
+    note: "The check is narrower than the rule: it looks for a class list carrying both a radius and a border. Expect it to catch the rebuilt Cards and miss the subtler cases — the rest of this rule stays a review question. It reads string literals, so a class list assembled from a template literal slips past either check.",
   },
   tags: ["elements", "layout", "tailwind", "tier-2"],
 }

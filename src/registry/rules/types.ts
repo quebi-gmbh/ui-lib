@@ -10,12 +10,38 @@
 export type RuleSeverity = "error" | "warn"
 
 /**
- * How a rule is (or will be) checked.
- * - `lint`       — expressible as a static check; `selector` carries the AST selector.
+ * How a rule is checked.
+ * - `lint`       — Biome checks it; see `RuleEnforcement.biome`.
  * - `types`      — the type system already rejects it.
  * - `convention` — human/agent review only.
  */
 export type RuleEnforcementKind = "lint" | "types" | "convention"
+
+/**
+ * Which of Biome's two mechanisms carries the rule.
+ *
+ * `rule` is a built-in Biome rule whose options are derived from the record —
+ * nothing is hand-written, so the config cannot describe something the page does
+ * not. `plugin` is a GritQL pattern, for the checks Biome has no built-in rule
+ * for; the generator wraps it in a plugin file and compiles the rule's
+ * documented exceptions into it as `$filename` guards.
+ */
+export type BiomeEnforcement =
+  | {
+      via: "rule"
+      /** Fully-qualified Biome rule, e.g. "correctness/noRestrictedElements". */
+      rule: string
+    }
+  | {
+      via: "plugin"
+      /**
+       * The GritQL pattern body: everything between `language js;` and the
+       * closing brace of the `where` block, minus the filename guards and the
+       * register_diagnostic call, which the generator adds. Written against
+       * Biome's CST node names (PascalCase, snake_case fields).
+       */
+      pattern: string
+    }
 
 /** A themed set of rules. Rules point at a group through `RuleMeta.category`. */
 export interface RuleGroup {
@@ -94,22 +120,22 @@ export interface RuleException {
 export interface RuleEnforcement {
   kind: RuleEnforcementKind
   /**
-   * ESLint (esquery) selector for a `no-restricted-syntax` check. The generated
-   * lint config is built from this, so the documented rule and the enforced rule
-   * come from one record and cannot drift.
+   * How Biome carries the rule. The generated `biome.jsonc` and the `.grit`
+   * plugins are built from this, so the documented rule and the enforced rule
+   * come from one record and cannot drift. Required when `kind` is "lint".
    */
-  selector?: string
+  biome?: BiomeEnforcement
   /**
-   * The message the linter prints. It must say what to use instead — a rule that
-   * only names what is forbidden makes the reader go looking for the answer.
+   * The message Biome prints. It must say what to use instead — a rule that only
+   * names what is forbidden makes the reader go looking for the answer.
    * Required when `kind` is "lint"; the build enforces that.
    */
   message?: string
   /**
    * A ripgrep pattern that finds candidates for this rule with no lint setup at
-   * all. Coarser than the selector (it cannot see the AST), so it is a review
-   * aid, not a gate — but it is the only check available to an agent working in
-   * a repo with no linter, which is most of them.
+   * all. Coarser than the Biome check (it reads lines, not syntax), so it is a
+   * review aid, not a gate — but it is the only check available to an agent
+   * working in a repo with no linter, which is most of them.
    */
   grep?: string
   /** What is true today about enforcement. */
@@ -122,13 +148,13 @@ export interface RuleEnforcement {
  * enforces it cannot disagree.
  */
 export interface RuleCheck {
-  /** Tool the snippet is for, e.g. "eslint", "ripgrep". */
+  /** Tool the snippet is for, e.g. "biome", "ripgrep". */
   tool: string
   title: string
   /** What this check does and does not catch. */
   description: string
   /** Shiki language id for the snippet. */
-  language: "js" | "bash" | "tsx"
+  language: "json" | "bash" | "tsx" | "js"
   code: string
 }
 
