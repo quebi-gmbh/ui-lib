@@ -21,6 +21,16 @@ export function Header() {
           >
             Components
           </NavLink>
+          <NavLink
+            to="/rules"
+            className={({ isActive }) =>
+              `transition-colors duration-200 ${
+                isActive ? "text-quebi-brand" : "text-quebi-fg-muted hover:text-quebi-fg"
+              }`
+            }
+          >
+            Rules
+          </NavLink>
           <a
             href="https://github.com/quebi-gmbh"
             target="_blank"
