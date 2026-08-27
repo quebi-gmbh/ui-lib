@@ -139,6 +139,14 @@ describe("rule records", () => {
     for (const id of ids) expect(id).toMatch(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
   })
 
+  test("no rule id collides with a static page under /rules", () => {
+    // React Router ranks a static route above a dynamic one, so a rule with an
+    // id matching one of these would resolve to that page — a 200 with the
+    // wrong content. The generator refuses to build; this states the list.
+    const reserved = new Set(["enforcement"])
+    for (const rule of rulesRegistry) expect(reserved.has(rule.id)).toBe(false)
+  })
+
   test("every rule belongs to a known group", () => {
     const groups = new Set(ruleGroups.map((g) => g.id))
     for (const rule of rulesRegistry) expect(groups).toContain(rule.category)
