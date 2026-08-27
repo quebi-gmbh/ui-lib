@@ -6,6 +6,7 @@ import type { RuleMeta } from "./types"
 export const noHardcodedDesignValuesRule: RuleMeta = {
   id: "no-hardcoded-design-values",
   title: "Design values come from quebi tokens, never from literals",
+  navTitle: "Design values",
   summary:
     "No arbitrary values (bg-[#f00], text-[13px]), no raw Tailwind palette scales (text-gray-500), no hex in style props. Use the quebi token that means the thing — and if a value is genuinely domain-mandated, record it as an exception with its justification.",
   severity: "error",

@@ -6,6 +6,7 @@ import type { RuleMeta } from "./types"
 export const validateOnTheServerWithTheSameSchemaRule: RuleMeta = {
   id: "validate-on-the-server-with-the-same-schema",
   title: "Validate on the server with the same schema",
+  navTitle: "Server validation",
   summary:
     "Client validation is UX. Export one schema, parse it again in the route action, return submission.reply(), and feed that back through useForm({ lastResult }) — a form whose only validation is onValidate is an unvalidated form.",
   severity: "error",

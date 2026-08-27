@@ -6,6 +6,7 @@ import type { RuleMeta } from "./types"
 export const bindFieldsThroughConformRule: RuleMeta = {
   id: "bind-fields-through-conform",
   title: "Bind fields through Conform, never by hand",
+  navTitle: "Field binding",
   summary:
     "Take the binding off the field metadata: the conform-* variant where one exists, getInputProps (or useInputControl) where it doesn't, and getFormProps on the form element. Per-field useState and a hand-passed name are the failure mode.",
   severity: "error",

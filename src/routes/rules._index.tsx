@@ -28,7 +28,7 @@ export default function Rules() {
   const groups = groupRules()
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-6 py-12">
+    <div>
       <span className="quebi-eyebrow">Guidelines</span>
       <h1 className="mt-3 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">Rules</h1>
       <p className="mt-4 max-w-quebi-content text-base leading-relaxed text-quebi-fg-muted">
@@ -72,7 +72,7 @@ export default function Rules() {
         ))}
       </div>
 
-      <section className="mt-20">
+      <section id="enforcement" className="mt-20 scroll-mt-24">
         <h2 className="quebi-eyebrow mb-4">Enforcement</h2>
         <h3 className="text-2xl font-semibold tracking-tight text-quebi-fg">
           Run the rules, don't just read them

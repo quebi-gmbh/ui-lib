@@ -117,6 +117,14 @@ describe("rule records", () => {
     }
   })
 
+  test("every rule has a sidebar label short enough to fit", () => {
+    // The nav column is 16rem; the full titles are sentences and overflow it.
+    for (const rule of rulesRegistry) {
+      expect(rule.navTitle).toBeTruthy()
+      expect((rule.navTitle as string).length).toBeLessThanOrEqual(24)
+    }
+  })
+
   test("every rule shows a wrong/right pair", () => {
     for (const rule of rulesRegistry) expect(rule.examples.length).toBeGreaterThan(0)
   })

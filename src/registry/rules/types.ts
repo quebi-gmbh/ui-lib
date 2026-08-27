@@ -137,6 +137,11 @@ export interface RuleMeta {
   /** kebab-case id; also the `/rules/<id>` slug and the api/rules/<id>.json name. */
   id: string
   title: string
+  /**
+   * Two or three words for the sidebar, where the full title does not fit.
+   * Falls back to `title` when absent, which will overflow — so keep it short.
+   */
+  navTitle?: string
   /** One sentence, shown in listings and in llms.txt. Says what to do, not only what not to. */
   summary: string
   severity: RuleSeverity

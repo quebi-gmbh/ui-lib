@@ -6,6 +6,7 @@ import type { RuleMeta } from "./types"
 export const noAppearanceClassesOnLayoutElementsRule: RuleMeta = {
   id: "no-appearance-classes-on-layout-elements",
   title: "Layout elements are yours — until their classes describe appearance",
+  navTitle: "Layout elements",
   summary:
     "div, span, section, ul, li and friends are fine and necessary. Keep their classes to layout and spacing; the moment you add bg-*, border-*, rounded-*, shadow-* or text sizing/colour you are rebuilding a component that already exists.",
   severity: "warn",
