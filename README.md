@@ -80,8 +80,15 @@ Requires [Bun](https://bun.sh).
 ```sh
 bun install
 bun run dev        # dev server (regenerates the API first)
+bun run test       # rule suite: selectors, exceptions, generated config
 bun run build      # generate API + typecheck + production build
 ```
+
+`bun run test` covers the rules under `tests/`: every selector is run through ESLint with the
+generated config — the same file consumers download — and checked for true/false positives and
+negatives, with each known blind spot asserted as a miss so the list only shrinks deliberately.
+(The library components themselves have no tests; the stale `*.test.tsx` files in the top-level
+`components/` folder are leftovers from the Cellestial port and do not run.)
 
 The site is a Vite + React Router SPA that auto-deploys to GitHub Pages on merge to `main`.
 
@@ -91,6 +98,7 @@ The site is a Vite + React Router SPA that auto-deploys to GitHub Pages on merge
 src/components/      component source (what gets shipped/copy-pasted)
 src/registry/        per-component metadata (*.meta.ts) + live gallery examples (*.examples.tsx)
 src/registry/rules/  usage rule records (*.rule.ts) behind /rules and /api/rules*.json
+tests/               rule suite (bun test): selectors, exceptions, generated config
 src/routes/          the SPA pages (landing, gallery, component detail, rules)
 scripts/generate-api.ts   builds the static AI-discovery API from source
 ```

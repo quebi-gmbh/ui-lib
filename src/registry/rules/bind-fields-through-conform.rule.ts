@@ -14,6 +14,7 @@ export const bindFieldsThroughConformRule: RuleMeta = {
   rationale: [
     "Field metadata carries more than a name. getInputProps derives the name, the id, the form id, required, the default value, aria-invalid, and the aria-describedby that points at the error message. Passing name=\"email\" by hand gets you one of those seven and drops the rest — and because the field still submits, nothing looks broken. What breaks is invisible: the control no longer announces its error, no longer repopulates after a failed submit, and no longer resets with the form.",
     "Per-field useState is the other half of the same mistake. The form already tracks every value, its dirty state, and its errors; a second copy in component state disagrees with the first the moment anything non-trivial happens — a server-side rejection that should refill the form, a reset, a default arriving from a loader. The bug always surfaces later than the code that caused it.",
+    "Conform itself permits the manual form — its docs read fields.email.name and fields.email.initialValue off the metadata directly, and the tutorial only reaches for the helpers at the end, to \"minimize the boilerplate\" for native inputs. That is the honest status of this rule: manual access is legal Conform, and it is fine as long as you also wire aria-invalid and aria-describedby yourself. This rule exists because that last part is the part everyone skips, and because ui-lib ships components where the wiring is already done.",
     "Thirteen of the library's components ship a Conform-bound variant, chosen because their binding is subtle enough to be worth wrapping (a Select that has to submit through a hidden input, a DatePicker that has to serialise a calendar value). Everything else you bind yourself with getInputProps, or with useInputControl when the control has no native form value. That is not a worse path — it is the same metadata, read explicitly.",
   ],
   appliesTo: ["app/**/*.{tsx,jsx}", "src/**/*.{tsx,jsx}"],
@@ -72,7 +73,7 @@ export const bindFieldsThroughConformRule: RuleMeta = {
       element: "Everything else (Slider, TagField, InputOTP, ColorField, DropZone, …)",
       use: [
         { name: "getInputProps", from: "@conform-to/react", when: "the control renders a real input" },
-        { name: "useInputControl", from: "@conform-to/react", when: "the control has no native form value and needs value/change/blur" },
+        { name: "useInputControl", from: "@conform-to/react", when: "the control has no native form value — it returns value/change/focus/blur and is what Conform documents for custom inputs" },
       ],
       note: "Twenty-one of the library's form controls have no conform-* variant. Binding them explicitly is expected; reaching for useState instead is not.",
     },
@@ -142,7 +143,7 @@ const volume = useInputControl(fields.volume)
     message:
       "This control is being wired to a Conform field by hand. Use the conform-* variant instead and pass field={fields.x}: Checkbox -> ConformCheckbox, Select -> ConformSelect, NumberField -> ConformNumberField, DatePicker -> ConformDatePicker, TextField/Input -> ConformField (see the full table on the rule page). For controls with no variant, spread getInputProps(field) rather than picking metadata off one property at a time. See https://ui-lib.quebi.de/rules/bind-fields-through-conform",
     grep: "name=\\\\{[a-zA-Z]+\\\\.[a-zA-Z]+\\\\.name\\\\}|useState.*\\\\b(value|checked|selected)\\\\b",
-    note: "The check looks for metadata being picked off property by property, which is the reliable signal. It cannot see a field bound entirely through useState with a literal name — that one needs review, and it is the more common shape in code that predates the conform-* variants.",
+    note: "This is a ui-lib convention, not a Conform requirement — Conform's own examples pick metadata off property by property, which is exactly the shape the check looks for. It fires only on ui-lib control names, so Conform's native-input examples do not trip it. It cannot see a field bound entirely through useState with a literal name; that shape needs review, and it is the common one in code written before the conform-* variants existed.",
   },
   tags: ["forms", "conform", "accessibility", "tier-1"],
 }
