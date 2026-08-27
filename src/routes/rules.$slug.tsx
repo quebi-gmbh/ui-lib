@@ -209,11 +209,16 @@ export default function RuleDetail() {
         <section className="mt-12">
           <h2 className="text-lg font-semibold text-quebi-fg">How to check this</h2>
           <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
-            Generated from this rule's record, not written alongside it — the selector, the message,
-            and the <Code>ignores</Code> globs are the same data the page above renders, so a check
-            that passes here cannot be enforcing a different rule than the one documented.{" "}
-            {rule.enforcement.note}
+            Add one of these to your project and the rule holds without anyone having to remember
+            it — including the agent writing half the JSX. The exceptions below are already applied,
+            so a documented carve-out will not be reported.
           </p>
+          {rule.enforcement.note ? (
+            <p className="mt-3 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
+              <span className="text-quebi-fg">What it will and will not catch: </span>
+              {rule.enforcement.note}
+            </p>
+          ) : null}
           <div className="mt-6 space-y-8">
             {checks.map((check) => (
               <article key={check.title}>
@@ -231,14 +236,14 @@ export default function RuleDetail() {
             ))}
           </div>
           <p className="mt-6 text-sm leading-relaxed text-quebi-fg-muted">
-            Every rule merged into one config, with the documented exceptions already applied:{" "}
+            Enforcing more than this one rule?{" "}
             <Link
               to="/rules"
               className="font-medium text-quebi-brand transition-colors duration-200 hover:text-quebi-brand-hover"
             >
-              see the full ESLint config
-            </Link>
-            .
+              Take the whole config
+            </Link>{" "}
+            instead of collecting snippets.
           </p>
         </section>
       ) : null}
@@ -246,8 +251,9 @@ export default function RuleDetail() {
       <section className="mt-12">
         <h2 className="text-lg font-semibold text-quebi-fg">Exceptions</h2>
         <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
-          Carve-outs are part of the rule, not a way around it. Each one names its scope and why it
-          is legitimate; the build rejects an exception without a justification.
+          Carve-outs are part of the rule, not a way around it. Each one is already an ignore glob
+          in the checks above, so the cases listed here need no disable comment — and a case that is
+          not listed is one to argue for, not to silence.
         </p>
         <div className="mt-4 space-y-3">
           {rule.exceptions.map((exception) => (

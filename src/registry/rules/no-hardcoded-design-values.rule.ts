@@ -79,7 +79,7 @@ export const noHardcodedDesignValuesRule: RuleMeta = {
   ],
   exceptions: [
     {
-      scope: "src/components/energy-class-badge.tsx (the seven A-G band colours)",
+      scope: "energy-class-badge.tsx — the seven A-G band colours",
       paths: ["src/components/energy-class-badge.tsx", "components/ui/energy-class-badge.tsx"],
       reason:
         "The EU energy-label colour scale is specified by regulation. The colours are domain-semantic — they identify the efficiency band the way the letter does — so they must not move with the quebi theme. The surrounding chip (radius, font, neutral fallback, text colours) is on quebi tokens, and the letter is always rendered as text so colour is never the sole signal.",
@@ -102,7 +102,7 @@ export const noHardcodedDesignValuesRule: RuleMeta = {
     message:
       "Hardcoded design value. Use a quebi token: colours -> bg-quebi-*/text-quebi-*/border-quebi-line, radii -> rounded-quebi-{sm,md,lg}, elevation -> shadow-quebi-glow. Raw palette scales (text-gray-500) are hardcoded values too — they do not follow the theme. If the value is mandated by something outside the design system, add it to the rule's exceptions with its justification. See https://ui-lib.quebi.de/rules/no-hardcoded-design-values",
     grep: "\\[#[0-9a-fA-F]{3,8}\\]|\\b(bg|text|border|ring|fill|stroke)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-[0-9]{2,3}",
-    note: "Pairs with a CSS-side check for hex literals outside src/quebi-theme.css, which the JSX selector cannot see. The brand-mark exception is not expressible as a path, so it needs an inline disable comment naming the brand — the last snippet below.",
+    note: "The checks read .tsx/.jsx only, so a hex literal in a stylesheet slips past — pair them with a CSS-side check everywhere except the file that defines your theme. A value that is genuinely mandated from outside the design system is not always a file you can ignore wholesale, so the last snippet shows how to claim that exception inline.",
   },
   tags: ["tokens", "tailwind", "theming", "tier-3"],
 }
