@@ -12,6 +12,8 @@ export const noHardcodedDesignValuesRule: RuleMeta = {
   severity: "error",
   category: "element-usage",
   tier: 3,
+  failureMode:
+    "An agent that cannot recall a token name writes the value it can see: `bg-[#0ea5e9]`, `text-gray-500`. It renders identically today, which is exactly why nobody catches it, and it stops following the theme the moment the theme moves.",
   rationale: [
     "A token is a promise that one edit changes every site of a colour, radius, or elevation. A literal opts out of that promise silently: bg-[#0b0f14] looks identical to bg-quebi-bg today and stops matching the day the theme moves, and nothing fails when it does.",
     "Raw palette scales are the same defect wearing a nicer name. text-gray-500 is not a token — it is a hardcoded value with a Tailwind alias, it has no light/dark behaviour of its own, and it is why a page ends up with four almost-identical greys. quebi's tokens (quebi-fg-muted, quebi-fg-subtle, quebi-line) resolve per theme; the palette scales do not.",

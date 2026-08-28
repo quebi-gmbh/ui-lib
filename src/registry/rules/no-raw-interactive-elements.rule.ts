@@ -12,6 +12,8 @@ export const noRawInteractiveElementsRule: RuleMeta = {
   severity: "error",
   category: "element-usage",
   tier: 1,
+  failureMode:
+    "An agent reaches for a styled `<button>` because it is the shortest path to something that looks right on screen. What it produces looks correct in review and has lost focus management, press handling, and every ARIA connection the library's component would have brought.",
   rationale: [
     "These elements are not markup, they are behaviour. A ui-lib component wraps each one in a react-aria-components primitive that supplies focus management, press handling (pointer, keyboard, touch, and the 300ms-free press semantics), disabled and pending states, and the ARIA wiring that connects a control to its label, description, and error text. Rendering the intrinsic yourself throws all of that away and nothing in review reliably catches the absence of behaviour.",
     "Styling is the wrong axis to judge this on. An *unstyled* <button> is worse than a styled one, not better: it still misses focus-visible rings, still fails to pick up the react-aria context its ancestors provide (a Dialog's close-on-press, a Toolbar's roving tabindex, a Form's submission state), and it silently reads as a plain button to assistive technology. The safe-looking case is the trap.",

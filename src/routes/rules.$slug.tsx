@@ -87,6 +87,13 @@ export default function RuleDetail() {
       </header>
 
       <section className="mt-12">
+        <h2 className="text-lg font-semibold text-quebi-fg">What this catches</h2>
+        <Note intent="warning" className="mt-3">
+          {rule.failureMode}
+        </Note>
+      </section>
+
+      <section className="mt-12">
         <h2 className="text-lg font-semibold text-quebi-fg">Why</h2>
         <div className="mt-3 space-y-4">
           {rule.rationale.map((paragraph) => (

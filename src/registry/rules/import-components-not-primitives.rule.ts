@@ -12,6 +12,8 @@ export const importComponentsNotPrimitivesRule: RuleMeta = {
   severity: "error",
   category: "element-usage",
   tier: 4,
+  failureMode:
+    "An agent trained on react-aria's own documentation imports `Button` from `react-aria-components`, because that is what the examples it learned from do. The JSX then reads as if the library were being used while none of its design is present.",
   rationale: [
     "The element rules stop at the element name, and this walks straight past them. `import { Button } from \"react-aria-components\"` renders `<Button>`, which no element check objects to — and gets you a control with the accessibility but none of the design: no intents, no sizes, no focus ring in the quebi idiom, nothing that follows a token change. It is the same layering mistake as a hand-rolled `<button>`, one level up, and it is harder to spot in review because the JSX looks right.",
     "There are exactly three layers here and each imports from the one below it. App code imports quebi components. Quebi components import react-aria primitives — that is what they are for; quebi's Button does not wrap `<button>`, it wraps react-aria's Button. React-aria renders the intrinsic. A layer reaching two levels down is the definition of a leaky abstraction, and the import is the last place it can leak.",

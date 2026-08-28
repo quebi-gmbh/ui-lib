@@ -12,6 +12,8 @@ export const renderFieldTextThroughTheFieldRule: RuleMeta = {
   severity: "error",
   category: "forms",
   tier: 2,
+  failureMode:
+    "An agent renders the error message as a red paragraph next to the control, because that is what it looks like on screen. The control is left pointing at an id that does not exist, so the one group of users who cannot see the red text is the group that hears nothing.",
   rationale: [
     "An error message is only an error message if the control points at it. getInputProps sets aria-describedby to field.errorId the moment a field is invalid, so if nothing on the page carries that id the attribute dangles: the message is on screen, the screen reader says nothing, and the markup reviews as correct. This is the single most common way an accessible component library ends up in an inaccessible form.",
     "Inside a react-aria field — TextField, NumberField, CheckboxGroup, DatePicker — FieldError does the whole job: it renders with slot=\"errorMessage\", the field owns the id, and it inherits the invalid state so it appears and disappears on its own. Outside one, FieldError renders null on purpose (it needs a FieldErrorContext), which is why a bare Checkbox needs its message to carry id={field.errorId} explicitly. Knowing which case you are in is the whole skill here.",

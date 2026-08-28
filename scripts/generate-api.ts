@@ -22,7 +22,14 @@ import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { createHighlighter } from "shiki"
 import { metaRegistry } from "../src/registry/meta"
-import { getRuleGroup, ruleGroups, rulesRegistry } from "../src/registry/rules"
+import {
+  failureModes,
+  getRuleGroup,
+  RULES_LEDE,
+  ruleGroups,
+  rulesRegistry,
+  whyLintNotInstructions,
+} from "../src/registry/rules"
 import {
   buildRuleChecks,
   deriveRacPrimitives,
@@ -321,6 +328,11 @@ async function main() {
         throw new Error(`Rule "${rule.id}" has an exception without a justification (${exception.scope})`)
       }
     }
+    if (!rule.failureMode?.trim()) {
+      throw new Error(
+        `Rule "${rule.id}" does not say which behaviour it catches — a rule nobody can argue with is a rule nobody will keep`,
+      )
+    }
     if (rule.examples.length === 0) {
       throw new Error(`Rule "${rule.id}" has no wrong/right example`)
     }
@@ -380,6 +392,22 @@ async function main() {
 
   const biomeSetup = renderBiomeSetup(rulesRegistry, BASE_URL)
 
+  // Every failure mode has to name rules that exist, and every rule has to be
+  // claimed by one: a rule nothing motivates is a rule nobody will defend.
+  const claimed = new Set(failureModes.flatMap((m) => m.ruleIds))
+  for (const mode of failureModes) {
+    for (const id of mode.ruleIds) {
+      if (!seenRuleIds.has(id)) {
+        throw new Error(`Failure mode "${mode.id}" points at unknown rule "${id}"`)
+      }
+    }
+  }
+  for (const rule of rulesRegistry) {
+    if (!claimed.has(rule.id)) {
+      throw new Error(`Rule "${rule.id}" is not claimed by any failure mode in why.ts`)
+    }
+  }
+
   // rules.json — every rule in one fetch, mirroring api/index.json.
   await writeFile(
     join(API, "rules.json"),
@@ -391,6 +419,7 @@ async function main() {
         baseUrl: BASE_URL,
         count: rulesCatalog.length,
         groups: ruleGroups,
+        why: { lede: RULES_LEDE, failureModes, insteadOfInstructions: whyLintNotInstructions },
         rules: rulesCatalog,
         enforcement: {
           description:
@@ -443,6 +472,14 @@ async function main() {
   // so the prose an agent reads and the page a human reads cannot disagree.
   const rulesLlmsSection = [
     "## Rules for writing code against this library",
+    "",
+    RULES_LEDE,
+    "",
+    ...failureModes.flatMap((mode) => [`- **${mode.title}.** ${mode.body}`]),
+    "",
+    `These are lint rules rather than instructions on purpose. ${whyLintNotInstructions.points
+      .map((p) => p.title)
+      .join("; ")}. Every message names the replacement, so the correction arrives with the error.`,
     "",
     ...ruleGroups.flatMap((group) => {
       const groupRules = rulesRegistry.filter((r) => r.category === group.id)
@@ -661,6 +698,14 @@ Always start from **${BASE_URL}/llms.txt**, which documents the workflow and lis
   \`rounded-quebi-*\`, etc.). If the target project lacks them, bring in the quebi theme too.
 
 ## Rules — how to write JSX against this library
+
+${RULES_LEDE}
+
+${failureModes.map((m) => `- **${m.title}.** ${m.body}`).join("\n")}
+
+They are lint rules rather than lines in a prompt because a rule is checked on every file, and its
+message names the replacement at the point of the mistake. Run them (see below) and you get the
+correction directly; you do not have to remember any of this.
 
 ${rulesSkillSection}
 Full records (rationale, real wrong/right pairs from the library's own source, and documented

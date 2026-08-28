@@ -12,7 +12,7 @@ import { describe, expect, test } from "bun:test"
 import { mkdirSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { metaRegistry } from "../src/registry/meta"
-import { rulesRegistry } from "../src/registry/rules"
+import { failureModes, rulesRegistry } from "../src/registry/rules"
 import {
   buildBiomeConfig,
   builtInRules,
@@ -186,6 +186,21 @@ describe("rule records", () => {
     for (const rule of rulesRegistry) {
       expect(rule.navTitle).toBeTruthy()
       expect((rule.navTitle as string).length).toBeLessThanOrEqual(24)
+    }
+  })
+
+  test("every rule names the behaviour it catches, and something claims it", () => {
+    // A rule nobody can argue with is a rule nobody will keep: each one has to
+    // say what agents actually do, and be claimed by one of the failure modes.
+    const claimed = new Set(failureModes.flatMap((m) => m.ruleIds))
+    for (const rule of rulesRegistry) {
+      expect(rule.failureMode.trim().length).toBeGreaterThan(0)
+      expect(claimed.has(rule.id)).toBe(true)
+    }
+    for (const mode of failureModes) {
+      for (const id of mode.ruleIds) {
+        expect(rulesRegistry.some((r) => r.id === id)).toBe(true)
+      }
     }
   })
 

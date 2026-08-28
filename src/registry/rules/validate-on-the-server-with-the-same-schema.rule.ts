@@ -12,6 +12,8 @@ export const validateOnTheServerWithTheSameSchemaRule: RuleMeta = {
   severity: "error",
   category: "forms",
   tier: 3,
+  failureMode:
+    "An agent asked for a validated form writes `onValidate` and stops, because the form is now visibly validating. The action it also wrote parses nothing, so the validation is decoration — anything not sent from that form goes straight through.",
   rationale: [
     "onValidate runs in a browser the user controls. Nothing that reaches your database went through your form — it went through the network, and a request made with curl skips every check the client performed. Client-side validation exists so people find out about a mistake without waiting for a round trip; it is not a gate, and treating it as one is how a required field turns out not to be required.",
     "One schema module imported by both sides is what keeps the two ends in agreement. The alternative — a schema in the component and a handful of if-statements in the action — drifts on the first change, and the drift presents as the worst kind of bug: a form that passes in the browser and fails on the server, or worse, passes on both while enforcing different things.",

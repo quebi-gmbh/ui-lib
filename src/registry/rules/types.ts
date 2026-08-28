@@ -31,6 +31,13 @@ export type BiomeEnforcement =
       via: "rule"
       /** Fully-qualified Biome rule, e.g. "correctness/noRestrictedElements". */
       rule: string
+      /**
+       * Options for rules whose configuration *is* the rule's content — a line
+       * limit, say. Where the options can be derived from the record instead
+       * (the element ban from `replacements`, the import ban from the library's
+       * own imports) they are derived, and this is left out.
+       */
+      options?: Record<string, unknown>
     }
   | {
       via: "plugin"
@@ -182,6 +189,14 @@ export interface RuleMeta {
   category: string
   /** Position within the group's tiers, when the group is tiered. */
   tier?: number
+  /**
+   * The behaviour this rule exists to catch, in one sentence.
+   *
+   * Every rule here was written because coding agents reliably do a particular
+   * thing — not because someone preferred a style. Naming that thing is what
+   * makes the rule arguable: if the behaviour is not real, the rule should go.
+   */
+  failureMode: string
   /** Why the rule exists, one paragraph per entry. */
   rationale: string[]
   /** Globs (in a consuming app) the rule applies to. */
