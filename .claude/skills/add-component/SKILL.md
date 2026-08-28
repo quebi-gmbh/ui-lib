@@ -47,7 +47,10 @@ Pull from `src/quebi-theme.css` tokens (the quebi-styleguide skill is the source
 - Brand teal: `bg-quebi-brand`, `text-quebi-brand`, hover `quebi-brand-hover`. Teal is the accent —
   reserve it for the primary/active state, not body text or headings.
 - Borders: the signature is `border border-cyan-500/10` (or `/20` for interactive).
-- Radii: `rounded-quebi-sm` (inputs/buttons), `rounded-quebi-md` (cards/surfaces).
+- Radii: `rounded-quebi-sm` (inputs/buttons), `rounded-quebi-md` (cards/surfaces). If a variant
+  changes the radius (`isCircle`, `isSquare`, …), put the radius on *every* branch of that variant
+  and none of it in `base` — a base radius and a variant radius both survive the merge, and the
+  sheet decides the winner, so the variant silently loses. `tests/radius-merge.test.ts` enforces it.
 - Depth = glows, never drop shadows: `shadow-quebi-glow`, `shadow-quebi-glow-strong`.
 - Motion: `transition-* duration-150/200`, `hover:scale-[1.02]` (buttons) / `hover:-translate-y-0.5`
   (cards). No bouncy springs.
@@ -146,6 +149,7 @@ Conform variants wrap a base form component and bind it to a Conform field. Rule
 - ❌ Don't hand-write or edit anything under `public/api/` or `public/r/` — it's generated.
 - ❌ Don't duplicate the `cn` helper or import shared code by relative path.
 - ❌ Don't keep Cellestial tokens when porting.
+- ❌ Don't set a radius in `base` and override it from a variant — see the radii note above.
 - ❌ Don't set a conform variant's `category` to "Conform" (the nav derives that).
 - ❌ Don't invent a new `category` string when an existing one fits.
 

@@ -22,7 +22,7 @@ export const toggleStyles = tv({
   base: [
     "inline-flex items-center justify-center gap-2",
     "font-sans font-semibold whitespace-nowrap select-none cursor-pointer",
-    "rounded-quebi-sm border border-solid",
+    "border border-solid",
     "transition-all duration-200 ease-out",
     "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
     "disabled:opacity-50 disabled:cursor-not-allowed",
@@ -53,9 +53,10 @@ export const toggleStyles = tv({
       "sq-md": "size-11 p-0 *:data-[slot=icon]:size-5",
       "sq-lg": "size-12 p-0 *:data-[slot=icon]:size-6",
     },
+    // Radius belongs to the variant, not `base` — see button.tsx.
     isCircle: {
       true: "rounded-full",
-      false: "",
+      false: "rounded-quebi-sm",
     },
   },
   defaultVariants: {

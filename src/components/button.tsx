@@ -21,7 +21,7 @@ export const buttonStyles = tv({
   base: [
     "inline-flex items-center justify-center gap-2",
     "font-sans font-semibold whitespace-nowrap select-none cursor-pointer",
-    "rounded-quebi-sm border border-solid",
+    "border border-solid",
     "transition-all duration-200 ease-out",
     "hover:scale-[1.02] active:scale-100",
     "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
@@ -58,9 +58,14 @@ export const buttonStyles = tv({
       "sq-md": "size-11 p-0 *:data-[slot=icon]:size-5",
       "sq-lg": "size-12 p-0 *:data-[slot=icon]:size-6",
     },
+    // The radius lives here, not in `base`: `rounded-quebi-sm` and
+    // `rounded-full` are not one group to tailwind-merge (it cannot know
+    // `quebi-sm` is a radius token), so a base radius survives the merge and
+    // wins on sheet order — `isCircle` silently does nothing. Mutually
+    // exclusive branches never rely on the merge at all.
     isCircle: {
       true: "rounded-full",
-      false: "",
+      false: "rounded-quebi-sm",
     },
   },
   defaultVariants: {
