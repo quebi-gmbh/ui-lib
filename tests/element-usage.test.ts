@@ -178,3 +178,54 @@ describe(TOKENS, () => {
     expect(fires(TOKENS, `.badge { background: #0ea5e9; }`, "src/app.css")).toBe(false)
   })
 })
+
+const PRIMITIVES = "import-components-not-primitives"
+
+describe(PRIMITIVES, () => {
+  test("true positive: a primitive imported straight into app code", () => {
+    expect(fires(PRIMITIVES, `import { Button } from "react-aria-components"\n`)).toBe(true)
+  })
+
+  test("true positive: any of the ~114 primitives the library wraps", () => {
+    for (const name of ["TextField", "ListBox", "Modal", "ColorSwatch"]) {
+      expect(fires(PRIMITIVES, `import { ${name} } from "react-aria-components"\n`)).toBe(true)
+    }
+  })
+
+  test("true positive: renaming it does not hide it", () => {
+    expect(
+      fires(PRIMITIVES, `import { Button as AriaButton } from "react-aria-components"\n`),
+    ).toBe(true)
+  })
+
+  test("true negative: the quebi component", () => {
+    expect(fires(PRIMITIVES, `import { Button } from "@/components/button"\n`)).toBe(false)
+  })
+
+  test("no false positive: type-only imports are erased, so they stay allowed", () => {
+    // The reason this rule is a deny-list: an allow-list flags this, and it
+    // appears all over legitimate app code.
+    expect(
+      fires(PRIMITIVES, `import type { DateValue, Selection } from "react-aria-components"\n`),
+    ).toBe(false)
+  })
+
+  test("no false positive: helpers the library does not wrap", () => {
+    expect(
+      fires(PRIMITIVES, `import { parseColor, useLocale } from "react-aria-components"\n`),
+    ).toBe(false)
+  })
+
+  test("the library itself may import primitives — that is what it is for", () => {
+    const code = `import { Button } from "react-aria-components"\n`
+    expect(fires(PRIMITIVES, code, "components/ui/button.tsx")).toBe(false)
+    expect(fires(PRIMITIVES, code, "src/components/button.tsx")).toBe(false)
+  })
+
+  test("known blind spot: a re-export chain reaching react-aria by another name", () => {
+    // The check reads import sources; it cannot follow `export * from` through a
+    // local module that re-exports the primitive.
+    const code = `import { Button } from "@/lib/re-exports"\n`
+    expect(fires(PRIMITIVES, code)).toBe(false)
+  })
+})

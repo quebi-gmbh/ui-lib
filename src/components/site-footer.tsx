@@ -1,4 +1,5 @@
 import { Link } from "react-router"
+import { Link as UiLink } from "@/components/link"
 
 export function Footer() {
   return (
@@ -12,45 +13,45 @@ export function Footer() {
           Rules
         </Link>
         <span aria-hidden>·</span>
-        <a href="https://quebi.de/en/imprint" className="hover:text-quebi-fg">
+        <UiLink href="https://quebi.de/en/imprint" className="hover:text-quebi-fg">
           Imprint
-        </a>
+        </UiLink>
         <span aria-hidden>·</span>
-        <a href="https://quebi.de/en/privacy" className="hover:text-quebi-fg">
+        <UiLink href="https://quebi.de/en/privacy" className="hover:text-quebi-fg">
           Privacy
-        </a>
+        </UiLink>
         <span aria-hidden>·</span>
-        <a
+        <UiLink
           href="https://github.com/quebi-gmbh/ui-lib/blob/main/LICENSE"
           target="_blank"
           rel="noreferrer"
           className="hover:text-quebi-fg"
         >
           MIT License
-        </a>
+        </UiLink>
         <span aria-hidden>·</span>
-        <a
+        <UiLink
           href="https://github.com/quebi-gmbh"
           target="_blank"
           rel="noreferrer"
           className="hover:text-quebi-fg"
         >
           GitHub
-        </a>
+        </UiLink>
       </nav>
       <p className="mt-4 text-center text-xs text-quebi-fg-subtle">
         © 2026 quebi GmbH · From Germany · Open source under MIT
       </p>
       <p className="mt-1 text-center text-xs text-quebi-fg-subtle">
         Hosted for free on{" "}
-        <a
+        <UiLink
           href="https://pages.github.com/"
           target="_blank"
           rel="noreferrer"
           className="hover:text-quebi-fg"
         >
           GitHub Pages
-        </a>{" "}
+        </UiLink>{" "}
         — thank you, GitHub.
       </p>
     </footer>

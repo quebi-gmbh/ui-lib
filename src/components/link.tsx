@@ -59,6 +59,7 @@ function ExternalLink({
 }: ExternalLinkProps) {
   const anchorProps = rest as React.AnchorHTMLAttributes<HTMLAnchorElement>
   return (
+    // biome-ignore lint/correctness/noRestrictedElements: this is the anchor's wrapping layer. An external href (http(s)/mailto/tel) must render a plain <a> so it keeps working outside a router context, which is exactly what react-aria's Link cannot do here.
     <a
       ref={ref}
       href={href}

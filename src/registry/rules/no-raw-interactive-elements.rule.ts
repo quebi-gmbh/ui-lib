@@ -150,10 +150,11 @@ export const noRawInteractiveElementsRule: RuleMeta = {
   ],
   exceptions: [
     {
-      scope: "The ui-lib component source itself, wherever you pasted it (components/ui/**)",
+      scope: "<input> inside the ui-lib component source (components/ui/**)",
       paths: ["src/components/**", "components/ui/**"],
+      elements: ["input"],
       reason:
-        "The library is where the intrinsic gets wrapped. Exactly one layer is allowed to render <button>/<input>/<a>, and it is the component that adds the behaviour. This rule governs app code that consumes ui-lib, not the primitives themselves.",
+        "Only <input>, and only there. A component that owns a controlled value has to submit it through a hidden input, and react-aria has no primitive for that — a hidden input is not an interactive control, so none of this rule's reasoning applies to it. Everything else on the list stays banned inside the library too: quebi's Button does not wrap <button>, it wraps react-aria's Button, so there is no layer here that needs the raw element.",
     },
     {
       scope: "A <form> that submits on the client only, with no route action behind it",

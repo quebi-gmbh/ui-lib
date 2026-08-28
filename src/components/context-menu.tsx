@@ -78,6 +78,7 @@ const ContextMenuTrigger = ({ className, ...props }: ContextMenuTriggerProps) =>
     })
   }
   return (
+    // biome-ignore lint/correctness/noRestrictedElements: the trigger is defined by onContextMenu, a DOM event react-aria's Button does not forward, and it spreads arbitrary button props onto the element.
     <button
       className={cn(
         "cursor-default outline-hidden disabled:opacity-60 disabled:forced-colors:disabled:text-[GrayText]",

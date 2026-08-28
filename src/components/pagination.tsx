@@ -1,6 +1,7 @@
 "use client"
 
 import { cn } from "@/lib/utils"
+import { Link, type LinkProps } from "react-aria-components"
 
 /**
  * Pagination — quebi design system
@@ -63,7 +64,7 @@ const PaginationList = ({ className, ref, ...props }: React.ComponentProps<"ul">
   />
 )
 
-interface PaginationItemProps extends Omit<React.ComponentProps<"a">, "children" | "className"> {
+interface PaginationItemProps extends Omit<LinkProps, "children" | "className"> {
   className?: string
   isCurrent?: boolean
   children?: string | number
@@ -71,7 +72,7 @@ interface PaginationItemProps extends Omit<React.ComponentProps<"a">, "children"
 
 const PaginationItem = ({ className, isCurrent, children, href, ...props }: PaginationItemProps) => (
   <li>
-    <a
+    <Link
       data-slot="pagination-item"
       href={isCurrent ? undefined : href}
       aria-current={isCurrent ? "page" : undefined}
@@ -83,11 +84,11 @@ const PaginationItem = ({ className, isCurrent, children, href, ...props }: Pagi
       {...props}
     >
       {children}
-    </a>
+    </Link>
   </li>
 )
 
-interface PaginationNavProps extends Omit<React.ComponentProps<"a">, "className" | "children"> {
+interface PaginationNavProps extends Omit<LinkProps, "className" | "children"> {
   className?: string
   children?: React.ReactNode
 }
@@ -102,10 +103,12 @@ const NavLink = ({
   const isDisabled = href === undefined
   return (
     <li>
-      <a
+      <Link
         data-slot="pagination-item"
         aria-label={label}
-        aria-disabled={isDisabled ? true : undefined}
+        // react-aria's own disabled state: it removes the href, blocks the press,
+        // and sets aria-disabled, which the hand-written version only did in ARIA.
+        isDisabled={isDisabled}
         href={href}
         className={cn(
           navTargetClasses,
@@ -115,7 +118,7 @@ const NavLink = ({
         {...props}
       >
         {children}
-      </a>
+      </Link>
     </li>
   )
 }

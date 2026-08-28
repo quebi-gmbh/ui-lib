@@ -115,6 +115,13 @@ export interface RuleException {
    * handled with an inline disable comment instead.
    */
   paths?: string[]
+  /**
+   * For an element rule: which elements this carve-out excuses, rather than the
+   * whole rule. Without it the rule is switched off entirely in `paths`, which
+   * is almost always too broad — a library's own source needs `<input>` for
+   * hidden form values, not a licence to hand-roll `<button>`.
+   */
+  elements?: string[]
 }
 
 export interface RuleEnforcement {

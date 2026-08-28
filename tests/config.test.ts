@@ -24,7 +24,7 @@ import {
   restrictedElements,
 } from "../src/registry/rules/checks"
 import { ruleGroups } from "../src/registry/rules/groups"
-import { biomeBinary, component, projectRoot, rulesFiredOn } from "./harness"
+import { biomeBinary, component, projectRoot, racPrimitives, rulesFiredOn } from "./harness"
 
 const VIOLATION = component(`    <button onClick={props.onClick}>Save</button>`)
 
@@ -55,13 +55,24 @@ describe("harness", () => {
 })
 
 describe("documented exceptions reach Biome", () => {
-  test("vendored library source is exempt from the built-in rule (via overrides)", () => {
-    expect(rulesFiredOn(VIOLATION, "components/ui/button.tsx")).not.toContain(
+  test("the element ban still applies inside vendored library source", () => {
+    // The carve-out there is for <input>, not for the whole rule: quebi's Button
+    // wraps react-aria's Button, not <button>, so no layer needs the raw element.
+    expect(rulesFiredOn(VIOLATION, "components/ui/button.tsx")).toContain(
       "no-raw-interactive-elements",
     )
-    expect(rulesFiredOn(VIOLATION, "src/components/button.tsx")).not.toContain(
+    expect(rulesFiredOn(VIOLATION, "src/components/button.tsx")).toContain(
       "no-raw-interactive-elements",
     )
+  })
+
+  test("...but <input> is excused there, because hidden inputs have no primitive", () => {
+    const hidden = component(`    <input type="hidden" name="storage" value={props.value} />`)
+    expect(rulesFiredOn(hidden, "components/ui/storage-picker.tsx")).not.toContain(
+      "no-raw-interactive-elements",
+    )
+    // In app code it stays banned.
+    expect(rulesFiredOn(hidden, "src/routes/page.tsx")).toContain("no-raw-interactive-elements")
   })
 
   test("app code is still checked — the exception is scoped, not global", () => {
@@ -192,7 +203,7 @@ describe("rule records", () => {
 })
 
 describe("generated config", () => {
-  const config = buildBiomeConfig(rulesRegistry)
+  const config = buildBiomeConfig(rulesRegistry, undefined, racPrimitives)
 
   test("one plugin entry per plugin rule, and nothing else", () => {
     expect(config.plugins.length).toBe(pluginRules(rulesRegistry).length)
@@ -258,7 +269,7 @@ describe("generated config", () => {
 })
 
 describe("published biome.jsonc", () => {
-  const rendered = renderBiomeConfig(rulesRegistry)
+  const rendered = renderBiomeConfig(rulesRegistry, undefined, racPrimitives)
 
   test("names every rule it enforces", () => {
     for (const rule of pluginRules(rulesRegistry)) expect(rendered).toContain(`${rule.id}.grit`)

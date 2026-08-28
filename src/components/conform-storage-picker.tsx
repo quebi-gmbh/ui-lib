@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import type { ListData } from "react-stately"
 import { cn } from "@/lib/utils"
 import { FieldError, Label } from "@/components/field"
+import { Button } from "react-aria-components"
 
 /**
  * Device storage helpers (inlined to keep this component self-contained).
@@ -122,10 +123,9 @@ export function ConformStoragePicker({
         {DEVICE_STORAGE_OPTIONS.map((storageGb) => {
           const isSelected = selectedStorage.has(storageGb)
           return (
-            <button
+            <Button
               key={storageGb}
-              type="button"
-              onClick={() => handleStorageToggle(storageGb)}
+              onPress={() => handleStorageToggle(storageGb)}
               className={cn(
                 "rounded-quebi-sm px-3 py-1.5 font-medium text-sm transition-all duration-150",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
@@ -135,7 +135,7 @@ export function ConformStoragePicker({
               )}
             >
               {formatStorageDisplay(storageGb)}
-            </button>
+            </Button>
           )
         })}
       </div>

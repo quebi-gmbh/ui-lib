@@ -12,6 +12,7 @@ import {
 import { createPortal } from "react-dom"
 import { tv } from "tailwind-variants"
 import { cn } from "@/lib/utils"
+import { Button } from "react-aria-components"
 
 /**
  * Toast — quebi design system
@@ -181,10 +182,9 @@ function ToastItem({ toast, onDismiss }: { toast: ToastRecord; onDismiss: (id: s
           <div className="mt-1 text-quebi-fg-muted">{toast.description}</div>
         )}
       </div>
-      <button
-        type="button"
+      <Button
         aria-label="Dismiss notification"
-        onClick={() => onDismiss(toast.id)}
+        onPress={() => onDismiss(toast.id)}
         className={cn(
           "-mr-1 -mt-1 shrink-0 cursor-pointer rounded-quebi-sm p-1 text-current/70",
           "transition-colors duration-150 hover:bg-quebi-surface/10 hover:text-current",
@@ -192,7 +192,7 @@ function ToastItem({ toast, onDismiss }: { toast: ToastRecord; onDismiss: (id: s
         )}
       >
         <CloseIcon className="size-4" />
-      </button>
+      </Button>
     </div>
   )
 }

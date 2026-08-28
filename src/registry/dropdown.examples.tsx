@@ -1,5 +1,5 @@
 import { Settings, Trash2, User } from "lucide-react"
-import { ListBox } from "react-aria-components"
+import { ListBox } from "@/components/list-box"
 import {
   DropdownDescription,
   DropdownItem,

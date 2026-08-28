@@ -1,5 +1,6 @@
 import { useState } from "react"
-import { ColorSwatch, parseColor } from "react-aria-components"
+import { parseColor } from "react-aria-components"
+import { ColorSwatch } from "@/components/color-swatch"
 import { ColorSwatchPicker, ColorSwatchPickerItem } from "@/components/color-swatch-picker"
 import type { ComponentExample } from "./types"
 

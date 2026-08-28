@@ -1,5 +1,6 @@
 import { Link, NavLink } from "react-router"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { Link as UiLink } from "@/components/link"
 
 export function Header() {
   return (
@@ -31,14 +32,14 @@ export function Header() {
           >
             Rules
           </NavLink>
-          <a
+          <UiLink
             href="https://github.com/quebi-gmbh"
             target="_blank"
             rel="noreferrer"
             className="text-quebi-fg-muted transition-colors duration-200 hover:text-quebi-fg"
           >
             GitHub
-          </a>
+          </UiLink>
           <ThemeToggle />
         </nav>
       </div>

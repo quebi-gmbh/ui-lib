@@ -1,3 +1,4 @@
+// biome-ignore lint/style/noRestrictedImports: this example's subject is the raw composition — Dialog is the surface, and react-aria's DialogTrigger/Modal/ModalOverlay are how it gets presented. quebi's same-named exports mean something different (its Modal takes DialogTriggerProps), so they are not substitutes here.
 import {
   DialogTrigger as AriaDialogTrigger,
   Modal,

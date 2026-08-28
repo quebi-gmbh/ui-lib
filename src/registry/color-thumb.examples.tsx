@@ -1,4 +1,4 @@
-import { ColorArea } from "react-aria-components"
+import { ColorArea } from "@/components/color-area"
 import { ColorThumb } from "@/components/color-thumb"
 import type { ComponentExample } from "./types"
 
