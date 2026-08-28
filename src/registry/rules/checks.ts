@@ -162,6 +162,36 @@ function patternBinding(pattern: string): string {
   return match[1]
 }
 
+/**
+ * The react-aria primitives the library wraps, read out of its own source.
+ *
+ * This is the deny-list for app code: if a quebi component wraps a primitive,
+ * app code must import the quebi component and not reach past it. Deriving it
+ * means wrapping a new primitive tomorrow forbids it in app code automatically,
+ * with no list to maintain.
+ *
+ * Value imports only, and only PascalCase ones: `parseColor` and `useLocale`
+ * have no quebi equivalent and stay importable, and type-only imports are erased
+ * at build time, so banning them would be noise.
+ */
+export function deriveRacPrimitives(componentSources: string[]): string[] {
+  const names = new Set<string>()
+  for (const source of componentSources) {
+    const imports = source.matchAll(
+      /import\s+(type\s+)?\{([^}]*)\}\s+from\s+"react-aria-components"/g,
+    )
+    for (const match of imports) {
+      if (match[1]) continue // `import type { ... }`
+      for (const clause of match[2].split(",")) {
+        const name = clause.trim().split(/\s+as\s+/)[0].trim()
+        if (!name || name.startsWith("type ")) continue
+        if (/^[A-Z]/.test(name)) names.add(name)
+      }
+    }
+  }
+  return [...names].sort()
+}
+
 /** The `elements` option for noRestrictedElements, derived from `replacements`. */
 export function restrictedElements(rule: RuleMeta): Record<string, string> {
   const elements: Record<string, string> = {}
@@ -179,30 +209,64 @@ export function restrictedElements(rule: RuleMeta): Record<string, string> {
 
 interface BiomeRuleConfig {
   level: "error" | "warn"
-  options?: { elements: Record<string, string> }
+  options?:
+    | { elements: Record<string, string> }
+    | { paths: Record<string, { importNames: string[]; message: string }> }
 }
 
 /** The generated config as data: what goes in `biome.jsonc`. */
 export interface BiomeConfig {
   plugins: string[]
   linter: { rules: Record<string, Record<string, BiomeRuleConfig | "off">> }
-  overrides: { includes: string[]; linter: { rules: Record<string, Record<string, "off">> } }[]
+  overrides: {
+    includes: string[]
+    linter: { rules: Record<string, Record<string, BiomeRuleConfig | "off">> }
+  }[]
 }
 
 const PLUGIN_DIR = "./ui-lib-rules"
 
-export function buildBiomeConfig(rules: RuleMeta[], pluginDir = PLUGIN_DIR): BiomeConfig {
+/**
+ * Options for a built-in Biome rule. Each of the two is derived from a different
+ * part of the record — the element ban from the replacement table, the import ban
+ * from the primitives the library wraps — and neither is written by hand.
+ */
+function ruleOptions(rule: RuleMeta, primitives: string[]): { options?: BiomeRuleConfig["options"] } {
+  const biome = rule.enforcement.biome
+  if (biome?.via !== "rule") return {}
+  if (biome.rule === "style/noRestrictedImports") {
+    if (primitives.length === 0) {
+      throw new Error(
+        `Rule "${rule.id}" bans primitive imports, but no primitives were derived — pass the library's component sources to buildBiomeConfig`,
+      )
+    }
+    return {
+      options: {
+        paths: {
+          "react-aria-components": {
+            importNames: primitives,
+            message: rule.enforcement.message ?? rule.summary,
+          },
+        },
+      },
+    }
+  }
+  const elements = restrictedElements(rule)
+  return Object.keys(elements).length ? { options: { elements } } : {}
+}
+
+export function buildBiomeConfig(
+  rules: RuleMeta[],
+  pluginDir = PLUGIN_DIR,
+  primitives: string[] = [],
+): BiomeConfig {
   const linterRules: BiomeConfig["linter"]["rules"] = {}
   for (const rule of builtInRules(rules)) {
     const biome = rule.enforcement.biome
     if (biome?.via !== "rule") continue
     const [group, name] = biome.rule.split("/")
-    const elements = restrictedElements(rule)
     linterRules[group] ??= {}
-    linterRules[group][name] = {
-      level: severityOf(rule),
-      ...(Object.keys(elements).length ? { options: { elements } } : {}),
-    }
+    linterRules[group][name] = { level: severityOf(rule), ...ruleOptions(rule, primitives) }
   }
 
   // One override per distinct path set, switching off the built-in rules that
@@ -221,7 +285,21 @@ export function buildBiomeConfig(rules: RuleMeta[], pluginDir = PLUGIN_DIR): Bio
       overrides.push(override)
     }
     override.linter.rules[group] ??= {}
-    override.linter.rules[group][name] = "off"
+    // An exception that names elements leaves the rule on and removes just those
+    // elements, so a carve-out for hidden inputs does not also license a
+    // hand-rolled <button> in the same directory.
+    const excused = new Set(
+      rule.exceptions
+        .filter((e) => e.paths?.some((p) => paths.includes(p)))
+        .flatMap((e) => e.elements ?? []),
+    )
+    const remaining = Object.fromEntries(
+      Object.entries(restrictedElements(rule)).filter(([element]) => !excused.has(element)),
+    )
+    override.linter.rules[group][name] =
+      excused.size > 0 && Object.keys(remaining).length > 0
+        ? { level: severityOf(rule), options: { elements: remaining } }
+        : "off"
   }
 
   return {
@@ -232,8 +310,12 @@ export function buildBiomeConfig(rules: RuleMeta[], pluginDir = PLUGIN_DIR): Bio
 }
 
 /** `biome.jsonc` — JSONC so each carve-out can say why it exists, in place. */
-export function renderBiomeConfig(rules: RuleMeta[], baseUrl = DEFAULT_BASE_URL): string {
-  const config = buildBiomeConfig(rules)
+export function renderBiomeConfig(
+  rules: RuleMeta[],
+  baseUrl = DEFAULT_BASE_URL,
+  primitives: string[] = [],
+): string {
+  const config = buildBiomeConfig(rules, PLUGIN_DIR, primitives)
   const plugins = pluginRules(rules)
   const body = JSON.stringify(config, null, 2).split("\n")
 

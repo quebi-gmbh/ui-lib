@@ -261,6 +261,7 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
             >
               {item.name}
               {!isDisabled && (
+                // biome-ignore lint/correctness/noRestrictedElements: as in async-select — onMouseDown preventDefault holds focus on the input and stopPropagation stops chip removal reopening the listbox; onPress is neither DOM event.
                 <button
                   type="button"
                   aria-label={`Remove ${item.name}`}

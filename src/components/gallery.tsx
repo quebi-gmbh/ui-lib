@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, ImageIcon, ZoomIn } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Modal, ModalContent } from "@/components/modal"
+import { Button } from "react-aria-components"
 
 export interface GalleryItem {
   id: string
@@ -61,10 +62,9 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
 
   return (
     <div data-slot="gallery" className={cn("flex flex-col gap-2", className)}>
-      <button
-        type="button"
+      <Button
         aria-label="Enlarge image"
-        onClick={() => setLightboxOpen(true)}
+        onPress={() => setLightboxOpen(true)}
         className="group relative flex aspect-[4/3] w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-quebi-md border border-quebi-line/10 bg-quebi-bg transition-shadow duration-200 hover:shadow-quebi-glow"
       >
         <img
@@ -76,7 +76,7 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
         <span className="absolute right-2 bottom-2 rounded-quebi-sm bg-black/60 p-1.5 text-white opacity-0 backdrop-blur-sm transition-opacity duration-200 group-hover:opacity-100">
           <ZoomIn className="size-4" aria-hidden />
         </span>
-      </button>
+      </Button>
 
       {hasMultiple && (
         <ul
@@ -87,11 +87,10 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
         >
           {items.map((item, index) => (
             <li key={item.id}>
-              <button
-                type="button"
+              <Button
                 aria-label={item.alt || `Image ${index + 1}`}
                 aria-current={index === activeIndex}
-                onClick={() => setSelectedIndex(index)}
+                onPress={() => setSelectedIndex(index)}
                 className={cn(
                   "size-14 shrink-0 overflow-hidden rounded-quebi-sm border bg-quebi-bg transition-colors duration-150",
                   index === activeIndex
@@ -100,7 +99,7 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
                 )}
               >
                 <img src={item.src} alt="" className="size-full object-contain" loading="lazy" />
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
@@ -129,22 +128,20 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
             />
             {hasMultiple && (
               <>
-                <button
-                  type="button"
+                <Button
                   aria-label="Previous image"
-                  onClick={() => step(-1)}
+                  onPress={() => step(-1)}
                   className="absolute start-2 rounded-full bg-black/60 p-2 text-white backdrop-blur-sm transition-colors duration-150 hover:bg-black/80"
                 >
                   <ChevronLeft className="size-6" aria-hidden />
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
                   aria-label="Next image"
-                  onClick={() => step(1)}
+                  onPress={() => step(1)}
                   className="absolute end-2 rounded-full bg-black/60 p-2 text-white backdrop-blur-sm transition-colors duration-150 hover:bg-black/80"
                 >
                   <ChevronRight className="size-6" aria-hidden />
-                </button>
+                </Button>
                 <span className="absolute bottom-3 rounded-full bg-black/60 px-2 py-0.5 text-xs text-white tabular-nums backdrop-blur-sm">
                   {activeIndex + 1} / {items.length}
                 </span>

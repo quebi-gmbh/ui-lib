@@ -45,6 +45,7 @@ export function LinkToggleGroup<T extends string = string>({
       {options.map((opt) => {
         const isActive = current === opt.value
         return (
+          // biome-ignore lint/correctness/noRestrictedElements: these anchors are the tabs of a tablist — role="tab" and aria-selected are the component's purpose, and react-aria's Link does not accept a role override.
           <a
             key={opt.value}
             role="tab"

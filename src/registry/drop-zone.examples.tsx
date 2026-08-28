@@ -1,5 +1,6 @@
 import { useState } from "react"
-import { Button, FileTrigger } from "react-aria-components"
+import { Button } from "@/components/button"
+import { FileTrigger } from "@/components/file-trigger"
 import { DropZone } from "@/components/drop-zone"
 import type { ComponentExample } from "./types"
 

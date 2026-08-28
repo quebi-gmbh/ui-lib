@@ -281,6 +281,7 @@ export function AsyncSelect<T extends AsyncSelectOption>({
         />
 
         {selected && !isDisabled && (
+          // biome-ignore lint/correctness/noRestrictedElements: needs onMouseDown preventDefault to keep focus on the combobox input, and stopPropagation so the click does not reopen the listbox — react-aria's Button exposes onPress, which is neither DOM event.
           <button
             type="button"
             aria-label="Clear selection"

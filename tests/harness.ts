@@ -6,14 +6,30 @@
  * temp project, then runs the real Biome CLI over fixtures. Nothing is
  * re-implemented for the tests, so a passing test describes what a consumer gets.
  */
-import { mkdirSync, rmSync, writeFileSync } from "node:fs"
+import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
-import { buildBiomeConfig, pluginRules, renderGritPlugin } from "../src/registry/rules/checks"
+import {
+  buildBiomeConfig,
+  deriveRacPrimitives,
+  pluginRules,
+  renderGritPlugin,
+} from "../src/registry/rules/checks"
 import { rulesRegistry } from "../src/registry/rules"
 
 const ROOT = join("/tmp", `quebi-rules-tests-${process.pid}`)
 const BIOME = join(import.meta.dir, "..", "node_modules", ".bin", "biome")
 const PLUGIN_DIR = "ui-lib-rules"
+
+/**
+ * The primitive deny-list, derived from the library's real source exactly as the
+ * generator derives it — so the tests exercise the published list, not a stand-in.
+ */
+const componentsDir = join(import.meta.dir, "..", "src", "components")
+export const racPrimitives = deriveRacPrimitives(
+  readdirSync(componentsDir)
+    .filter((file) => file.endsWith(".tsx"))
+    .map((file) => readFileSync(join(componentsDir, file), "utf8")),
+)
 
 function setUp() {
   rmSync(ROOT, { recursive: true, force: true })
@@ -23,7 +39,10 @@ function setUp() {
     writeFileSync(join(ROOT, PLUGIN_DIR, `${rule.id}.grit`), renderGritPlugin(rule))
   }
 
-  const config = buildBiomeConfig(rulesRegistry, `./${PLUGIN_DIR}`)
+  // The primitive deny-list is derived from the library's real source, exactly
+  // as the generator does it — so the tests exercise the published list, not a
+  // stand-in.
+  const config = buildBiomeConfig(rulesRegistry, `./${PLUGIN_DIR}`, racPrimitives)
   writeFileSync(
     join(ROOT, "biome.json"),
     JSON.stringify(

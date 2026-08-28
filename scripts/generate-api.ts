@@ -25,6 +25,7 @@ import { metaRegistry } from "../src/registry/meta"
 import { getRuleGroup, ruleGroups, rulesRegistry } from "../src/registry/rules"
 import {
   buildRuleChecks,
+  deriveRacPrimitives,
   pluginRules,
   renderBiomeConfig,
   renderBiomeSetup,
@@ -368,7 +369,10 @@ async function main() {
   // setup of its own to wire them into; they are published as artifacts a
   // consuming app drops in, which is the point of keeping `biome` and `message`
   // on the record in the first place.
-  const biomeConfig = renderBiomeConfig(rulesRegistry, BASE_URL)
+  // The primitives app code may not import are exactly the ones the library
+  // wraps, read from the sources gathered above — never a hand-kept list.
+  const racPrimitives = deriveRacPrimitives(sources.map((s) => s.source))
+  const biomeConfig = renderBiomeConfig(rulesRegistry, BASE_URL, racPrimitives)
   await writeFile(join(RULES_OUT, "biome.jsonc"), biomeConfig)
   for (const rule of pluginRules(rulesRegistry)) {
     await writeFile(join(RULE_PLUGINS_OUT, `${rule.id}.grit`), renderGritPlugin(rule, BASE_URL))

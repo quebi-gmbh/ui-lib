@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Moon, Sun } from "lucide-react"
+import { Button } from "react-aria-components"
 
 type Theme = "light" | "dark"
 
@@ -46,11 +47,9 @@ export function ThemeToggle() {
   }
 
   return (
-    <button
-      type="button"
-      onClick={toggle}
+    <Button
+      onPress={toggle}
       aria-label={`Switch to ${next} theme`}
-      title={`Switch to ${next} theme`}
       className="inline-flex size-9 items-center justify-center rounded-quebi-sm border border-quebi-line/20 text-quebi-fg-muted transition-colors duration-200 hover:border-quebi-brand hover:text-quebi-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50"
     >
       {/* Icon reflects the target action; before mount (theme undefined) both are
@@ -61,6 +60,6 @@ export function ThemeToggle() {
         ) : (
           <Sun className="size-4" aria-hidden />
         ))}
-    </button>
+    </Button>
   )
 }

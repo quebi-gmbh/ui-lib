@@ -4,6 +4,7 @@ import { useState } from "react"
 import type { FieldMetadata } from "@conform-to/react"
 import { cn } from "@/lib/utils"
 import { DaySchedule, type DaySpan, type DayScheduleProps } from "@/components/day-schedule"
+import { Label } from "@/components/field"
 
 /**
  * ConformDaySchedule — DaySchedule wired to Conform.
@@ -50,10 +51,10 @@ export function ConformDaySchedule({
   return (
     <div className="flex flex-col gap-2">
       {label && (
-        <label htmlFor={field.id} className="text-sm text-quebi-fg">
+        <Label htmlFor={field.id} className="text-sm text-quebi-fg">
           {label}
           {field.required && <span className="ml-0.5 text-quebi-brand">*</span>}
-        </label>
+        </Label>
       )}
 
       {/* The submitted value. Kept in sync with the interactive schedule below. */}

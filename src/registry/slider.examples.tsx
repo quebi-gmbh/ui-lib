@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Label } from "react-aria-components"
+import { Label } from "@/components/field"
 import {
   Slider,
   SliderFill,

@@ -1,10 +1,7 @@
-import {
-  ColorField,
-  ColorSwatch,
-  ColorSwatchPicker,
-  ColorSwatchPickerItem,
-  Input,
-} from "react-aria-components"
+import { ColorField } from "@/components/color-field"
+import { ColorSwatch } from "@/components/color-swatch"
+import { ColorSwatchPicker, ColorSwatchPickerItem } from "@/components/color-swatch-picker"
+import { Input } from "@/components/input"
 import { ColorPicker, EyeDropper } from "@/components/color-picker"
 import type { ComponentExample } from "./types"
 

@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Check, Copy } from "lucide-react"
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react"
 import { cn } from "@/lib/utils"
+import { Button } from "react-aria-components"
 
 interface CodeBlockProps {
   /** Pre-highlighted Shiki HTML (from the build-time API). */
@@ -31,15 +32,14 @@ export function CodeBlock({ html, code, className }: CodeBlockProps) {
         className,
       )}
     >
-      <button
-        type="button"
-        onClick={copy}
+      <Button
+        onPress={copy}
         aria-label={copied ? "Copied" : "Copy code"}
         className="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-quebi-sm border border-quebi-line/20 bg-quebi-bg/80 px-2.5 py-1.5 text-xs font-medium text-quebi-fg-muted backdrop-blur transition-colors duration-200 hover:border-quebi-brand hover:text-quebi-brand"
       >
         {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
         {copied ? "Copied" : "Copy"}
-      </button>
+      </Button>
       <OverlayScrollbarsComponent
         defer
         options={{ scrollbars: { theme: "os-theme-quebi", autoHide: "leave", autoHideDelay: 600 } }}
