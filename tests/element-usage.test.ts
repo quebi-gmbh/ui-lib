@@ -14,6 +14,7 @@
  * do, and the list should only ever shrink deliberately.
  */
 import { describe, expect, test } from "bun:test"
+import { rulesRegistry } from "../src/registry/rules"
 import { component, fireCount, fires } from "./harness"
 
 const RULE = "no-raw-interactive-elements"
@@ -227,5 +228,41 @@ describe(PRIMITIVES, () => {
     // local module that re-exports the primitive.
     const code = `import { Button } from "@/lib/re-exports"\n`
     expect(fires(PRIMITIVES, code)).toBe(false)
+  })
+})
+
+const LENGTH = "keep-files-readable"
+
+const lines = (n: number) =>
+  Array.from({ length: n }, (_, i) => `export const value${i} = ${i}`).join("\n")
+
+describe(LENGTH, () => {
+  test("true positive: a file past the limit", () => {
+    expect(fires(LENGTH, lines(520))).toBe(true)
+  })
+
+  test("true negative: a file under it", () => {
+    expect(fires(LENGTH, lines(480))).toBe(false)
+  })
+
+  test("the boundary is where the rule says it is", () => {
+    expect(fires(LENGTH, lines(500))).toBe(false)
+    expect(fires(LENGTH, lines(501))).toBe(true)
+  })
+
+  test("it warns rather than fails — the number is a prompt, not a law", () => {
+    const rule = rulesRegistry.find((r) => r.id === LENGTH)
+    expect(rule?.severity).toBe("warn")
+  })
+
+  test("vendored library source is exempt: you cannot split what you did not write", () => {
+    expect(fires(LENGTH, lines(900), "components/ui/sidebar.tsx")).toBe(false)
+  })
+
+  test("known blind spot: it counts lines, not responsibilities", () => {
+    // 480 lines of imports and comments passes; a 200-line file doing four jobs
+    // passes too. The rule is a proxy, and this is the shape of its error.
+    const commentary = Array.from({ length: 480 }, (_, i) => `// note ${i}`).join("\n")
+    expect(fires(LENGTH, commentary)).toBe(false)
   })
 })

@@ -12,6 +12,8 @@ export const bindFieldsThroughConformRule: RuleMeta = {
   severity: "error",
   category: "forms",
   tier: 1,
+  failureMode:
+    "An agent wires a form field the way it has seen a thousand times — `useState`, `value`, `onChange`, a literal `name` — instead of reading the binding off the field metadata. The form still submits, so nothing looks broken; what is missing is the error wiring, the default value, and the repopulation after a failed submit.",
   rationale: [
     "Field metadata carries more than a name. getInputProps derives the name, the id, the form id, required, the default value, aria-invalid, and the aria-describedby that points at the error message. Passing name=\"email\" by hand gets you one of those seven and drops the rest — and because the field still submits, nothing looks broken. What breaks is invisible: the control no longer announces its error, no longer repopulates after a failed submit, and no longer resets with the form.",
     "Per-field useState is the other half of the same mistake. The form already tracks every value, its dirty state, and its errors; a second copy in component state disagrees with the first the moment anything non-trivial happens — a server-side rejection that should refill the form, a reset, a default arriving from a loader. The bug always surfaces later than the code that caused it.",

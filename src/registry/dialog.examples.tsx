@@ -1,9 +1,10 @@
-// biome-ignore lint/style/noRestrictedImports: this example's subject is the raw composition — Dialog is the surface, and react-aria's DialogTrigger/Modal/ModalOverlay are how it gets presented. quebi's same-named exports mean something different (its Modal takes DialogTriggerProps), so they are not substitutes here.
+// biome-ignore-start lint/style/noRestrictedImports: this example's subject is the raw composition — Dialog is the surface, and react-aria's DialogTrigger/Modal/ModalOverlay are how it gets presented. quebi's same-named exports mean something different (its Modal takes DialogTriggerProps), so they are not substitutes here. A range suppression because Biome reports one diagnostic per imported name.
 import {
   DialogTrigger as AriaDialogTrigger,
   Modal,
   ModalOverlay,
 } from "react-aria-components"
+// biome-ignore-end lint/style/noRestrictedImports: end of the raw-composition imports.
 import { Button } from "@/components/button"
 import {
   Dialog,

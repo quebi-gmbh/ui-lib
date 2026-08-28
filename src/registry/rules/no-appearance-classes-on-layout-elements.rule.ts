@@ -12,6 +12,8 @@ export const noAppearanceClassesOnLayoutElementsRule: RuleMeta = {
   severity: "warn",
   category: "element-usage",
   tier: 2,
+  failureMode:
+    "An agent rebuilds a Card in each file it touches — a div with a radius, a border and a surface tint — because writing four classes is faster than discovering that `Card` exists. The design system then drifts one file at a time, and no single diff looks wrong.",
   rationale: [
     "Layout is the consumer's job. Forcing every flex row through a <Stack> or a <Container> is a known failure mode: it buys nothing, it makes the markup harder to read, and it produces components whose only content is a className passthrough. A plain <div className=\"flex items-center gap-3\"> is correct code and this rule leaves it alone.",
     "Appearance is the library's job. A div that carries bg-*, border-*, rounded-*, shadow-* or text sizing/colour is not laying anything out — it is drawing a surface. Every such div is a Card, Badge, Note, or Panel that was reinvented instead of imported, and it will not follow the next token or theme change. That is the actual signal worth catching, and it is checkable from the class list alone: no scope analysis, no type information.",

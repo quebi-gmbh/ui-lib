@@ -2,9 +2,21 @@ import { Link } from "react-router"
 import { ArrowRight } from "lucide-react"
 import { Badge } from "@/components/badge"
 import { Card, CardDescription, CardTitle } from "@/components/card"
+import {
+  DescriptionDetails,
+  DescriptionList,
+  DescriptionTerm,
+} from "@/components/description-list"
 import { Code } from "@/components/text"
 import { seo } from "@/lib/seo"
-import { groupRules, rulesRegistry, severityIntent } from "@/registry/rules"
+import {
+  failureModes,
+  groupRules,
+  RULES_LEDE,
+  rulesRegistry,
+  severityIntent,
+  whyLintNotInstructions,
+} from "@/registry/rules"
 
 export function meta() {
   return seo({
@@ -29,7 +41,47 @@ export default function Rules() {
         same rules as JSON from <Code>/api/rules.json</Code>.
       </p>
 
-      <div className="mt-12 space-y-16">
+      <section className="mt-12">
+        <h2 className="quebi-eyebrow mb-4">Why these exist</h2>
+        <p className="max-w-quebi-content text-base leading-relaxed text-quebi-fg-muted">
+          {RULES_LEDE}
+        </p>
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {failureModes.map((mode) => (
+            <Card key={mode.id}>
+              <CardTitle className="text-base">{mode.title}</CardTitle>
+              <CardDescription className="mt-2">{mode.body}</CardDescription>
+              <ul className="mt-4 flex flex-wrap gap-1.5">
+                {mode.ruleIds.map((id) => (
+                  <li key={id}>
+                    <Link to={`/rules/${id}`}>
+                      <Badge intent="outline">
+                        {rulesRegistry.find((r) => r.id === id)?.navTitle ?? id}
+                      </Badge>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          ))}
+        </div>
+
+        <div className="mt-8">
+          <h3 className="text-lg font-semibold text-quebi-fg">
+            {whyLintNotInstructions.title}
+          </h3>
+          <DescriptionList className="mt-3">
+            {whyLintNotInstructions.points.map((point) => (
+              <div key={point.title} className="contents">
+                <DescriptionTerm>{point.title}</DescriptionTerm>
+                <DescriptionDetails>{point.body}</DescriptionDetails>
+              </div>
+            ))}
+          </DescriptionList>
+        </div>
+      </section>
+
+      <div className="mt-16 space-y-16">
         {groups.map(({ group, rules }) => (
           <section key={group.id}>
             <h2 className="quebi-eyebrow mb-4">{group.title}</h2>

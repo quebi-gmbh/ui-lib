@@ -212,6 +212,7 @@ interface BiomeRuleConfig {
   options?:
     | { elements: Record<string, string> }
     | { paths: Record<string, { importNames: string[]; message: string }> }
+    | Record<string, unknown>
 }
 
 /** The generated config as data: what goes in `biome.jsonc`. */
@@ -234,6 +235,9 @@ const PLUGIN_DIR = "./ui-lib-rules"
 function ruleOptions(rule: RuleMeta, primitives: string[]): { options?: BiomeRuleConfig["options"] } {
   const biome = rule.enforcement.biome
   if (biome?.via !== "rule") return {}
+  // Options the record states outright — a threshold, say — where there is
+  // nothing in the record to derive them from.
+  if (biome.options) return { options: biome.options as BiomeRuleConfig["options"] }
   if (biome.rule === "style/noRestrictedImports") {
     if (primitives.length === 0) {
       throw new Error(

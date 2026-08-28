@@ -1,6 +1,7 @@
 import { bindFieldsThroughConformRule } from "./bind-fields-through-conform.rule"
 import { getRuleGroup, ruleGroups } from "./groups"
 import { importComponentsNotPrimitivesRule } from "./import-components-not-primitives.rule"
+import { keepFilesReadableRule } from "./keep-files-readable.rule"
 import { noAppearanceClassesOnLayoutElementsRule } from "./no-appearance-classes-on-layout-elements.rule"
 import { noHardcodedDesignValuesRule } from "./no-hardcoded-design-values.rule"
 import { noRawInteractiveElementsRule } from "./no-raw-interactive-elements.rule"
@@ -9,6 +10,7 @@ import { validateOnTheServerWithTheSameSchemaRule } from "./validate-on-the-serv
 import type { RuleGroup, RuleMeta, RuleSeverity } from "./types"
 
 export * from "./types"
+export * from "./why"
 export { getRuleGroup, ruleGroups }
 
 /**
@@ -20,6 +22,7 @@ export const rulesRegistry: RuleMeta[] = [
   noAppearanceClassesOnLayoutElementsRule,
   noHardcodedDesignValuesRule,
   importComponentsNotPrimitivesRule,
+  keepFilesReadableRule,
   bindFieldsThroughConformRule,
   renderFieldTextThroughTheFieldRule,
   validateOnTheServerWithTheSameSchemaRule,
