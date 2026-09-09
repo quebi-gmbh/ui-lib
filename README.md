@@ -104,8 +104,8 @@ gate — `git commit --no-verify` skips it, and CI runs the same lint over the w
 the generated config and plugins — the same artifacts consumers download — and checked for true and
 false positives and negatives, with each known blind spot asserted as a miss so the list only
 shrinks deliberately.
-(The library components themselves have no tests; the stale `*.test.tsx` files in the top-level
-`components/` folder are leftovers from the Cellestial port and do not run.)
+(The library components themselves have no rendering tests — the repo has no DOM test environment.
+`tests/formatted-number.test.ts` covers the formatters that are callable without one.)
 
 The site is a Vite + React Router SPA that auto-deploys to GitHub Pages on merge to `main`.
 
