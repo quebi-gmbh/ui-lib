@@ -194,7 +194,9 @@ export default function RuleDetail() {
               <h3 className="text-base font-semibold text-quebi-fg">{example.title}</h3>
               {example.source ? (
                 <p className="mt-1 text-sm text-quebi-fg-subtle">
-                  Real code from <Code>{example.source}</Code>
+                  {example.sourceFixed ? "Was real code in " : "Real code from "}
+                  <Code>{example.source}</Code>
+                  {example.sourceFixed ? ", until it was fixed" : null}
                 </p>
               ) : null}
               <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">

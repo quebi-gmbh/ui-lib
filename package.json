@@ -8,12 +8,16 @@
     "predev": "bun run generate:api",
     "dev": "react-router dev",
     "generate:api": "bun run scripts/generate-api.ts",
+    "generate:lint": "bun run scripts/generate-lint-config.ts",
     "generate:og": "bun run scripts/generate-og.ts",
     "test": "bun test tests",
     "build": "bun run generate:api && bun run generate:og && react-router build",
     "start": "react-router-serve ./build/server/index.js",
     "preview": "vite preview",
-    "typecheck": "bun run generate:api && react-router typegen && tsc -b"
+    "typecheck": "bun run generate:api && react-router typegen && tsc -b",
+    "lint": "biome lint",
+    "lint:fix": "biome lint --write",
+    "prepare": "lefthook install || echo 'lefthook: git hooks not installed (a global core.hooksPath is set); run `bunx lefthook install --force` if you want them'"
   },
   "packageManager": "bun@1.3.14",
   "dependencies": {
@@ -49,6 +53,7 @@
     "@types/node": "^26.0.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "lefthook": "^2.1.12",
     "satori": "^0.26.0",
     "shiki": "^4.3.0",
     "tailwindcss": "^4.0.0",

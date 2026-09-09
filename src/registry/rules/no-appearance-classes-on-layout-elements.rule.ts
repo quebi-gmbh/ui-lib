@@ -68,6 +68,7 @@ export const noAppearanceClassesOnLayoutElementsRule: RuleMeta = {
     {
       title: "An appearance-styled article is a Card",
       source: "src/routes/_index.tsx (features grid)",
+      sourceFixed: true,
       wrong: `<article
   key={title}
   className="group relative rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02] p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-quebi-brand/30 hover:shadow-quebi-glow"
@@ -88,6 +89,7 @@ export const noAppearanceClassesOnLayoutElementsRule: RuleMeta = {
     {
       title: "The same surface, hand-built inside a link",
       source: "src/routes/components._index.tsx (catalog grid)",
+      sourceFixed: true,
       wrong: `<Link
   to={\`/components/\${c.slug}\`}
   className="group relative rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02] p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-quebi-brand/30 hover:shadow-quebi-glow"

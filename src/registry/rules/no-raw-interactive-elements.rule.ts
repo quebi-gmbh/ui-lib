@@ -36,6 +36,7 @@ export const noRawInteractiveElementsRule: RuleMeta = {
         { name: "Link", from: "@/components/link", slug: "link", when: "an inline text link (it renders a plain anchor for http(s)/mailto/tel hrefs, so external links keep working outside a router)" },
         { name: "LinkButton", from: "@/components/link-button", slug: "link-button", when: "a link that should look like a button" },
       ],
+      note: "In a React Router app, navigation between your own routes stays on the router's <Link>/<NavLink>: they render an anchor and add client-side navigation, and this rule is not asking you to give that up. Reach for ui-lib's <Link> for everything the router does not own — an external site, a static file served from /public, a mailto: — which is exactly where a raw <a> tends to survive.",
     },
     {
       element: "input",
@@ -98,6 +99,7 @@ export const noRawInteractiveElementsRule: RuleMeta = {
     {
       title: "A raw anchor where a LinkButton belongs",
       source: "src/routes/_index.tsx (hero GitHub link)",
+      sourceFixed: true,
       wrong: `<a
   href="https://github.com/quebi-gmbh"
   target="_blank"
@@ -116,6 +118,7 @@ export const noRawInteractiveElementsRule: RuleMeta = {
     {
       title: "A styled raw button where a Button belongs",
       source: "src/routes/components.tsx (mobile sidebar toggle)",
+      sourceFixed: true,
       wrong: `<button
   type="button"
   onClick={() => setMobileOpen((o) => !o)}

@@ -18,6 +18,7 @@ const PlanForm = () => {
   })
 
   return (
+    // biome-ignore lint/correctness/noRestrictedElements: documented exception — a form with no route action behind it. This demo validates and submits entirely in the browser (the gallery is a static site, so there is nothing to post to); in an app that has an action, this is <Form> from react-router. https://ui-lib.quebi.de/rules/no-raw-interactive-elements
     <form
       id={form.id}
       onSubmit={form.onSubmit}

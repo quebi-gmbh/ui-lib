@@ -1,0 +1,36 @@
+# Pre-commit hook. Installed by `bun install` (the `prepare` script runs
+# `lefthook install`); `bunx lefthook install` re-installs it by hand.
+#
+# This is a convenience, not a gate: `git commit --no-verify` skips it, and it
+# only sees what is on disk, not what is staged. The gate is CI, which runs the
+# same lint over the whole repo plus the test suite.
+#
+# It is deliberately cheap. `bun run typecheck` is not here — it regenerates the
+# API and runs React Router's typegen first, which takes long enough that people
+# would start reaching for --no-verify out of habit, and a hook nobody lets run
+# enforces nothing.
+pre-commit:
+  parallel: true
+  commands:
+    # The rules this repo publishes, applied to this repo, on the staged files
+    # only. Biome filters out anything outside `files.includes` in biome.jsonc,
+    # so --no-errors-on-unmatched keeps a commit that touches only, say, a
+    # markdown file from failing on "no files were processed".
+    lint:
+      glob: "*.{tsx,jsx}"
+      run: bunx biome lint --no-errors-on-unmatched {staged_files}
+
+    # biome.jsonc and ui-lib-rules/*.grit are generated from the rule records, so
+    # a change to a record has to bring the config with it. Only runs when a
+    # record is actually in the commit, which is rare — the usual commit pays
+    # nothing for this.
+    lint-config-in-sync:
+      glob: "src/registry/rules/*.ts"
+      run: |
+        bun run generate:lint
+        git diff --quiet -- biome.jsonc ui-lib-rules || {
+          echo
+          echo "biome.jsonc / ui-lib-rules are out of date with src/registry/rules/."
+          echo "They have just been regenerated — review and 'git add' them."
+          exit 1
+        }

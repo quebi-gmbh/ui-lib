@@ -1,3 +1,4 @@
+import { Link } from "@/components/link"
 import { Note } from "@/components/note"
 import type { ComponentExample } from "./types"
 
@@ -65,7 +66,7 @@ export const noteExamples: ComponentExample[] = [
       <Column>
         <Note intent="warning" title="Action needed">
           <strong>VAT rate changed.</strong> Review affected plans in{" "}
-          <a href="#settings">billing settings</a> before your next publish.
+          <Link href="#settings">billing settings</Link> before your next publish.
         </Note>
       </Column>
     ),

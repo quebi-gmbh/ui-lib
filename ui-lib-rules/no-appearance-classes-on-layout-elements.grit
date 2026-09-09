@@ -1,0 +1,21 @@
+// Layout elements are yours — until their classes describe appearance
+// AUTO-GENERATED from https://ui-lib.quebi.de/api/rules/no-appearance-classes-on-layout-elements.json — do not edit by hand.
+//
+// https://ui-lib.quebi.de/rules/no-appearance-classes-on-layout-elements
+
+language js;
+
+or { string(), JsxString() } as $classes where {
+  $classes <: r".*(?:rounded-.*\bborder\b|\bborder\b.*rounded-).*",
+  // documented exception: src/components/**
+  not $filename <: r".*src/components/.*",
+  // documented exception: components/ui/**
+  not $filename <: r".*components/ui/.*",
+  // local scope: src/registry/*.examples.tsx — An example shows one component in isolation, so it has to hand-build the scaffolding around it — the fixed-height box a ScrollArea scrolls inside, the bordered chip a ColorThumb sits on, the status colours a Tracker renders as data. None of that is an app reimplementing a Card, which is what these two rules are about; and the tier-2 check is a class-string match, so it also fires on a ui-lib component's own className prop. Tier 1 and tier 4 stay on here — an example is copied verbatim, so a raw <button> in one propagates into every app that copies it.
+  not $filename <: r".*src/registry/[^/]*\.examples\.tsx$",
+  register_diagnostic(
+    span = $classes,
+    message = "Appearance classes on a layout element mean a ui-lib component is being reinvented — import Card/Badge/Note instead. Layout and spacing classes are fine. See https://ui-lib.quebi.de/rules/no-appearance-classes-on-layout-elements",
+    severity = "warn"
+  )
+}

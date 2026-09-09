@@ -106,6 +106,13 @@ export interface RuleExample {
   right: string
   /** Repo-relative origin of the wrong snippet, when it is real code. */
   source?: string
+  /**
+   * The cited code has since been fixed. The snippet is kept verbatim — a
+   * violation that really happened, with the change that removed it, is worth
+   * more than an invented pair — but the page must not claim the code is still
+   * there, so it says "was" rather than "is".
+   */
+  sourceFixed?: boolean
   note?: string
 }
 
