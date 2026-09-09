@@ -53,9 +53,13 @@ export interface AsyncSelectProps<T extends AsyncSelectOption> {
   isInvalid?: boolean
   /** When set, the selection is mirrored into a hidden input for form submission. */
   name?: string
+  /** The `<form>` to associate the hidden input with, by id. */
+  form?: string
   className?: string
   id?: string
   "aria-label"?: string
+  /** ids of the elements describing this control — a hint, an error message. */
+  "aria-describedby"?: string
 }
 
 const keyOf = (option: AsyncSelectOption) => String(option.id)
@@ -70,9 +74,11 @@ export function AsyncSelect<T extends AsyncSelectOption>({
   isDisabled,
   isInvalid,
   name,
+  form,
   className,
   id,
   "aria-label": ariaLabel = "Select an item",
+  "aria-describedby": ariaDescribedBy,
 }: AsyncSelectProps<T>) {
   const reactId = useId()
   const listboxId = `${reactId}-listbox`
@@ -261,6 +267,7 @@ export function AsyncSelect<T extends AsyncSelectOption>({
           aria-activedescendant={open && activeKey ? optionId(activeKey) : undefined}
           aria-label={ariaLabel}
           aria-invalid={isInvalid || undefined}
+          aria-describedby={ariaDescribedBy}
           disabled={isDisabled}
           value={inputValue}
           placeholder={placeholder}
@@ -378,7 +385,7 @@ export function AsyncSelect<T extends AsyncSelectOption>({
       </PopoverContent>
 
       {name && (
-        <input type="hidden" name={name} value={selected ? keyOf(selected) : ""} />
+        <input type="hidden" name={name} form={form} value={selected ? keyOf(selected) : ""} />
       )}
     </div>
   )

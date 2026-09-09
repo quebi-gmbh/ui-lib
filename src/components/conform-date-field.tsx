@@ -5,15 +5,20 @@ import { type CalendarDate, parseDate } from "@internationalized/date"
 import type { DateFieldProps, DateValue } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { DateField, DateInput } from "@/components/date-field"
-import { FieldError, Label } from "@/components/field"
+import { Description, FieldError, Label } from "@/components/field"
 
-interface ConformDateFieldProps
-  extends Omit<DateFieldProps<DateValue>, "name" | "defaultValue" | "isRequired" | "isInvalid"> {
-  // A date field: the wire value is an ISO string that Conform coerces to a Date,
-  // so the metadata carries `Date | string`. Only
-  // name/initialValue/required/errors/id are read off the metadata.
+export interface ConformDateFieldProps
+  extends Omit<
+    DateFieldProps<DateValue>,
+    "name" | "form" | "value" | "defaultValue" | "isRequired" | "isInvalid"
+  > {
+  /**
+   * A date field: the wire value is an ISO `YYYY-MM-DD` string that Conform
+   * coerces to a Date, so the metadata carries `Date | string`.
+   */
   field: FieldMetadata<Date | string>
   label?: string
+  description?: string
 }
 
 /** Parse a Conform field's string default (ISO `YYYY-MM-DD`) into a CalendarDate.
@@ -31,17 +36,26 @@ function toDefaultValue(value: unknown): CalendarDate | undefined {
  * ConformDateField — DateField wired to Conform.
  *
  * Binds a date Conform field to the quebi segmented DateField: derives name,
- * required, default, and validity from the field metadata and renders inline
- * errors. The control submits an ISO `YYYY-MM-DD` string via its hidden input.
+ * id, form, required, default, and validity from the field metadata and renders
+ * inline errors. The control submits an ISO `YYYY-MM-DD` string via the hidden
+ * input react-aria renders for it.
  */
-export function ConformDateField({ field, label, className, ...props }: ConformDateFieldProps) {
+export function ConformDateField({
+  field,
+  label,
+  description,
+  className,
+  ...props
+}: ConformDateFieldProps) {
   const hasErrors = !field.valid && !!field.errors
   const isRequired = field.required ?? false
 
   return (
     <DateField
       {...props}
+      id={field.id}
       name={field.name}
+      form={field.formId}
       defaultValue={toDefaultValue(field.initialValue)}
       isRequired={isRequired}
       isInvalid={hasErrors}
@@ -54,6 +68,9 @@ export function ConformDateField({ field, label, className, ...props }: ConformD
         </Label>
       )}
       <DateInput />
+      {/* No ids on these two: the react-aria field generates its own for the
+          description and error slots and already points the control at them. */}
+      {description && <Description>{description}</Description>}
       {hasErrors && <FieldError>{field.errors?.join(", ")}</FieldError>}
     </DateField>
   )
