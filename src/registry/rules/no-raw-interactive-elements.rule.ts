@@ -36,7 +36,7 @@ export const noRawInteractiveElementsRule: RuleMeta = {
         { name: "Link", from: "@/components/link", slug: "link", when: "an inline text link (it renders a plain anchor for http(s)/mailto/tel hrefs, so external links keep working outside a router)" },
         { name: "LinkButton", from: "@/components/link-button", slug: "link-button", when: "a link that should look like a button" },
       ],
-      note: "In a React Router app, navigation between your own routes stays on the router's <Link>/<NavLink>: they render an anchor and add client-side navigation, and this rule is not asking you to give that up. Reach for ui-lib's <Link> for everything the router does not own — an external site, a static file served from /public, a mailto: — which is exactly where a raw <a> tends to survive.",
+      note: "In a React Router app, navigation between your own routes stays on the router's <Link>/<NavLink>: they render an anchor and add client-side navigation, and this rule is not asking you to give that up. Reach for ui-lib's <Link> for everything the router does not own — an external site, a static file served from /public, a mailto: — which is exactly where a raw <a> tends to survive. When one of your own routes should look like a button, keep the router's <Link> and take the appearance from `buttonStyles` (exported by @/components/button) instead of reaching for LinkButton: LinkButton is react-aria's Link, and with no react-aria RouterProvider wired to your router it navigates with a full page load. Composing the styles keeps client-side navigation and the design tokens at the same time.",
     },
     {
       element: "input",
@@ -141,6 +141,28 @@ export const noRawInteractiveElementsRule: RuleMeta = {
   Components
 </Button>`,
       note: "Layout classes (mb-4, lg:hidden) stay on the component — that part is yours. Everything describing how the control looks moves to intent/size. onClick becomes onPress.",
+    },
+    {
+      title: "A raw search box where a SearchField belongs",
+      source: "src/components/component-sidebar.tsx (the docs-site sidebar, not a library primitive)",
+      sourceFixed: true,
+      wrong: `<div className="relative">
+  <Search className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 h-4 w-4 text-quebi-fg-subtle" />
+  <input
+    type="search"
+    value={query}
+    onChange={(e) => setQuery(e.target.value)}
+    placeholder="Search components"
+    aria-label="Search components"
+    className="w-full rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] py-2 pr-3 pl-9 text-sm text-quebi-fg placeholder:text-quebi-fg-subtle transition-colors duration-200 focus:border-quebi-brand focus:outline-none"
+  />
+</div>`,
+      right: `import { SearchField, SearchInput } from "@/components/search-field"
+
+<SearchField aria-label="Search components" value={query} onChange={setQuery}>
+  <SearchInput placeholder="Search components" />
+</SearchField>`,
+      note: "Eleven lines become three, and the field gains what the raw input never had: a clear button, Escape-to-clear, and an icon the component positions instead of an absolutely-positioned sibling that has to be kept in sync with the padding. onChange hands you the value rather than an event. The <input> carve-out below is about the layer that owns a control's value, not about a directory name — a sidebar that happens to sit next to the library source is still app code.",
     },
     {
       title: "An unstyled button is not the safe case",

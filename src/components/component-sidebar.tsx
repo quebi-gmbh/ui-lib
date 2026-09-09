@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react"
 import { NavLink } from "react-router"
-import { LayoutGrid, Search } from "lucide-react"
+import { LayoutGrid } from "lucide-react"
 import { OverlayScrollbarsComponent } from "overlayscrollbars-react"
+import { SearchField, SearchInput } from "@/components/search-field"
 import { cn } from "@/lib/utils"
 import { registry } from "@/registry"
 import { filterComponents, groupByCategory } from "@/registry/grouping"
@@ -15,17 +16,9 @@ export function ComponentSidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       {/* Search */}
-      <div className="relative">
-        <Search className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 h-4 w-4 text-quebi-fg-subtle" />
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search components"
-          aria-label="Search components"
-          className="w-full rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] py-2 pr-3 pl-9 text-sm text-quebi-fg placeholder:text-quebi-fg-subtle transition-colors duration-200 focus:border-quebi-brand focus:outline-none"
-        />
-      </div>
+      <SearchField aria-label="Search components" value={query} onChange={setQuery}>
+        <SearchInput placeholder="Search components" />
+      </SearchField>
 
       {/* All components — home base for the catalog */}
       <NavLink

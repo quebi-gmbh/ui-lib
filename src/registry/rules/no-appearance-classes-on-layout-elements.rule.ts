@@ -106,6 +106,26 @@ export const noAppearanceClassesOnLayoutElementsRule: RuleMeta = {
       note: "Two copies of the same surface in two routes is how a design system starts drifting. The Link keeps only its layout classes.",
     },
     {
+      title: "A router link wearing a hand-written copy of buttonStyles",
+      source: "src/routes/_index.tsx (hero primary CTA)",
+      sourceFixed: true,
+      wrong: `<Link
+  to="/components"
+  className="inline-flex items-center gap-2 rounded-quebi-sm bg-quebi-brand px-6 py-3 font-semibold text-quebi-on-brand transition-all duration-200 hover:scale-[1.02] hover:bg-quebi-brand-hover hover:shadow-quebi-glow-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50"
+>
+  Browse components
+</Link>`,
+      right: `import { buttonStyles } from "@/components/button"
+
+<Link
+  to="/components"
+  className={buttonStyles({ intent: "primary", size: "lg", className: "text-base" })}
+>
+  Browse components
+</Link>`,
+      note: "The navigation is the router's, so the element stays react-router's <Link> — but the appearance is the library's. `intent=\"primary\" size=\"lg\"` is what those eleven classes were approximating, plus the focus-ring offset they left out. This is the composition to reach for when a route of your own has to look like a button: LinkButton would restyle it correctly and lose client-side navigation.",
+    },
+    {
       title: "Do not launder plain layout through a component",
       wrong: `<Card className="flex items-center gap-3 border-0 bg-transparent p-0">
   <Avatar src={user.avatar} />

@@ -2,7 +2,8 @@ import { Link as RouterLink } from "react-router"
 import { ArrowRight, Bot, Boxes, Copy } from "lucide-react"
 import { registry } from "@/registry"
 import { seo } from "@/lib/seo"
-import { Card } from "@/components/card"
+import { buttonStyles } from "@/components/button"
+import { Card, CardDescription, CardTitle } from "@/components/card"
 import { CodeBlock } from "@/components/code-block"
 import { Link } from "@/components/link"
 import { LinkButton } from "@/components/link-button"
@@ -41,12 +42,15 @@ function Hero() {
           for AI agents.
         </p>
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
+          {/* Internal route, so it stays on the router's Link for client-side
+              navigation — the appearance comes from buttonStyles rather than
+              from a hand-written copy of it. See /rules/no-raw-interactive-elements. */}
           <RouterLink
             to="/components"
-            className="inline-flex items-center gap-2 rounded-quebi-sm bg-quebi-brand px-6 py-3 font-semibold text-quebi-on-brand transition-all duration-200 hover:scale-[1.02] hover:bg-quebi-brand-hover hover:shadow-quebi-glow-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50"
+            className={buttonStyles({ intent: "primary", size: "lg", className: "text-base" })}
           >
             Browse components
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight data-slot="icon" aria-hidden />
           </RouterLink>
           <LinkButton
             href="https://github.com/quebi-gmbh"
@@ -96,16 +100,12 @@ function Features() {
       </div>
       <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
         {features.map(({ icon: Icon, eyebrow, title, body }) => (
-          <article key={title}>
-            <Card interactive className="group relative p-6">
-              <Icon className="h-6 w-6 text-quebi-brand" strokeWidth={1.75} />
-              <span className="mt-4 block text-xs font-medium uppercase tracking-wider text-quebi-brand">
-                {eyebrow}
-              </span>
-              <h3 className="mt-2 text-xl font-semibold text-quebi-fg">{title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-quebi-fg-muted">{body}</p>
-            </Card>
-          </article>
+          <Card key={title} interactive>
+            <Icon data-slot="icon" className="h-6 w-6 text-quebi-brand" strokeWidth={1.75} />
+            <span className="quebi-eyebrow mt-4">{eyebrow}</span>
+            <CardTitle className="mt-2">{title}</CardTitle>
+            <CardDescription className="mt-3">{body}</CardDescription>
+          </Card>
         ))}
       </div>
     </section>
@@ -133,14 +133,10 @@ function ForAgents() {
       </div>
 
       <div className="mx-auto mt-10 max-w-2xl">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-quebi-brand">
-          Add a component with the shadcn CLI
-        </p>
+        <p className="quebi-eyebrow mb-2">Add a component with the shadcn CLI</p>
         <Snippet symbol="" text="npx shadcn@latest add https://ui-lib.quebi.de/r/button.json" />
 
-        <p className="mt-8 mb-3 text-xs font-medium uppercase tracking-wider text-quebi-brand">
-          Or fetch the API directly
-        </p>
+        <p className="quebi-eyebrow mt-8 mb-3">Or fetch the API directly</p>
         <Card className="overflow-hidden p-0">
           <ul className="divide-y divide-quebi-line/10">
             {endpoints.map((e) => (
@@ -184,7 +180,7 @@ function ClaudeSkill() {
       </div>
 
       <div className="mx-auto mt-10 max-w-3xl">
-        <p className="mb-2 text-xs font-medium uppercase tracking-wider text-quebi-brand">Set it up</p>
+        <p className="quebi-eyebrow mb-2">Set it up</p>
         <ol className="mb-8 space-y-2 text-sm leading-relaxed text-quebi-fg-muted">
           <li>
             <span className="text-quebi-fg">1.</span> Save the skill below to{" "}
