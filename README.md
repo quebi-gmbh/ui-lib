@@ -73,8 +73,15 @@ same replacement table the page renders, and the rest ship as **GritQL plugins**
 published ready to drop in — [`/api/rules/biome.jsonc`](https://ui-lib.quebi.de/api/rules/biome.jsonc)
 plus one `.grit` file per plugin rule — with each documented exception applied: `overrides` for the
 built-in rule, `$filename` guards inside the pattern for the plugins, because Biome's overrides do
-not scope plugins. ui-lib itself has no lint setup, so nothing is enforced on the library's own
-source; the config is for the apps that consume it.
+not scope plugins.
+
+ui-lib runs the rules on itself. `bun run lint` checks this repo with a config generated from the
+same records (`biome.jsonc` + `ui-lib-rules/*.grit`, both committed and both rebuilt by
+`bun run generate:lint`), and a pre-commit hook runs it on staged files. The gallery under
+`src/routes/` gets every rule at full strength — it is a real React Router app built out of these
+components, and it is the standing proof that the rules are livable. The scope decisions for the
+other two kinds of code here (the gallery examples, the component source) live in
+`scripts/generate-lint-config.ts`, each naming the rules it relaxes and why.
 
 ## Development
 
@@ -83,9 +90,15 @@ Requires [Bun](https://bun.sh).
 ```sh
 bun install
 bun run dev        # dev server (regenerates the API first)
+bun run lint       # this repo, checked against the rules it publishes
+bun run lint:fix   # the same, applying Biome's safe fixes
 bun run test       # rule suite: selectors, exceptions, generated config
 bun run build      # generate API + typecheck + production build
 ```
+
+`bun install` installs the pre-commit hook (lefthook), which lints staged files and, when a rule
+record is in the commit, checks that the generated config came with it. It is a convenience, not a
+gate — `git commit --no-verify` skips it, and CI runs the same lint over the whole tree.
 
 `bun run test` covers the rules under `tests/`: every check is run through the real Biome CLI with
 the generated config and plugins — the same artifacts consumers download — and checked for true and
@@ -105,6 +118,9 @@ src/registry/rules/  usage rule records (*.rule.ts) behind /rules and /api/rules
 tests/               rule suite (bun test): selectors, exceptions, generated config
 src/routes/          the SPA pages (landing, gallery, component detail, rules)
 scripts/generate-api.ts   builds the static AI-discovery API from source
+scripts/generate-lint-config.ts  builds this repo's own biome.jsonc + ui-lib-rules/*.grit
+biome.jsonc          generated — the rules, scoped to this repo (do not edit by hand)
+ui-lib-rules/        generated — the GritQL plugins biome.jsonc loads
 ```
 
 ### Adding a component

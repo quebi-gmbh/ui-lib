@@ -1,0 +1,20 @@
+// Validate on the server with the same schema
+// AUTO-GENERATED from https://ui-lib.quebi.de/api/rules/validate-on-the-server-with-the-same-schema.json — do not edit by hand.
+//
+// https://ui-lib.quebi.de/rules/validate-on-the-server-with-the-same-schema
+
+language js;
+
+`useForm($options)` as $call where {
+  $options <: JsObjectExpression(),
+  $options <: not contains `lastResult`,
+  // documented exception: **/*.stories.{tsx,jsx}
+  not $filename <: r"(?:.*/)?[^/]*\.stories\.(?:tsx|jsx)$",
+  // documented exception: **/*.examples.{tsx,jsx}
+  not $filename <: r"(?:.*/)?[^/]*\.examples\.(?:tsx|jsx)$",
+  register_diagnostic(
+    span = $call,
+    message = "useForm without lastResult: this form cannot display anything the server says, which in practice means the server is not validating. Parse the same schema in your route action, return submission.reply(), and pass it here as lastResult. See https://ui-lib.quebi.de/rules/validate-on-the-server-with-the-same-schema",
+    severity = "error"
+  )
+}

@@ -1,8 +1,12 @@
-import { Link } from "react-router"
+import { Link as RouterLink } from "react-router"
 import { ArrowRight, Bot, Boxes, Copy } from "lucide-react"
 import { registry } from "@/registry"
 import { seo } from "@/lib/seo"
+import { Card } from "@/components/card"
 import { CodeBlock } from "@/components/code-block"
+import { Link } from "@/components/link"
+import { LinkButton } from "@/components/link-button"
+import { Snippet } from "@/components/snippet"
 import { skillHighlighted, skillSource } from "@/registry/skill.generated"
 
 export function meta() {
@@ -19,11 +23,11 @@ function Hero() {
     <header className="relative overflow-hidden bg-quebi-bg">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-40 left-1/2 z-[1] h-[400px] w-[400px] -translate-x-1/2 rounded-full bg-quebi-brand/40 blur-3xl"
+        className="pointer-events-none absolute -top-40 left-1/2 z-[1] size-100 -translate-x-1/2 rounded-full bg-quebi-brand/40 blur-3xl"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 right-0 z-[1] h-[300px] w-[300px] rounded-full bg-purple-400/20 blur-3xl"
+        className="pointer-events-none absolute bottom-0 right-0 z-[1] size-75 rounded-full bg-quebi-accent/20 blur-3xl"
       />
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-quebi-grid" />
 
@@ -37,21 +41,23 @@ function Hero() {
           for AI agents.
         </p>
         <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
-          <Link
+          <RouterLink
             to="/components"
             className="inline-flex items-center gap-2 rounded-quebi-sm bg-quebi-brand px-6 py-3 font-semibold text-quebi-on-brand transition-all duration-200 hover:scale-[1.02] hover:bg-quebi-brand-hover hover:shadow-quebi-glow-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50"
           >
             Browse components
             <ArrowRight className="h-4 w-4" />
-          </Link>
-          <a
+          </RouterLink>
+          <LinkButton
             href="https://github.com/quebi-gmbh"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-quebi-sm border border-quebi-line/20 px-6 py-3 text-quebi-fg transition-colors duration-200 hover:border-quebi-brand hover:text-quebi-brand"
+            intent="outline"
+            size="lg"
+            className="text-base font-normal"
           >
             GitHub
-          </a>
+          </LinkButton>
         </div>
       </div>
     </header>
@@ -90,16 +96,15 @@ function Features() {
       </div>
       <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
         {features.map(({ icon: Icon, eyebrow, title, body }) => (
-          <article
-            key={title}
-            className="group relative rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02] p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-quebi-brand/30 hover:shadow-quebi-glow"
-          >
-            <Icon className="h-6 w-6 text-quebi-brand" strokeWidth={1.75} />
-            <span className="mt-4 block text-xs font-medium uppercase tracking-wider text-quebi-brand">
-              {eyebrow}
-            </span>
-            <h3 className="mt-2 text-xl font-semibold text-quebi-fg">{title}</h3>
-            <p className="mt-3 text-sm leading-relaxed text-quebi-fg-muted">{body}</p>
+          <article key={title}>
+            <Card interactive className="group relative p-6">
+              <Icon className="h-6 w-6 text-quebi-brand" strokeWidth={1.75} />
+              <span className="mt-4 block text-xs font-medium uppercase tracking-wider text-quebi-brand">
+                {eyebrow}
+              </span>
+              <h3 className="mt-2 text-xl font-semibold text-quebi-fg">{title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-quebi-fg-muted">{body}</p>
+            </Card>
           </article>
         ))}
       </div>
@@ -131,31 +136,32 @@ function ForAgents() {
         <p className="mb-2 text-xs font-medium uppercase tracking-wider text-quebi-brand">
           Add a component with the shadcn CLI
         </p>
-        <pre className="overflow-x-auto rounded-quebi-md border border-quebi-line/10 bg-quebi-bg p-4 text-sm text-quebi-fg">
-          <code>npx shadcn@latest add https://ui-lib.quebi.de/r/button.json</code>
-        </pre>
+        <Snippet symbol="" text="npx shadcn@latest add https://ui-lib.quebi.de/r/button.json" />
 
         <p className="mt-8 mb-3 text-xs font-medium uppercase tracking-wider text-quebi-brand">
           Or fetch the API directly
         </p>
-        <ul className="divide-y divide-quebi-line/10 overflow-hidden rounded-quebi-md border border-quebi-line/10">
-          {endpoints.map((e) => (
-            <li key={e.url} className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:gap-4">
-              <a
-                href={e.url.includes("<") ? "/api/index.json" : e.url}
-                className="shrink-0 font-mono text-sm text-quebi-brand transition-colors duration-200 hover:text-quebi-brand-hover"
+        <Card className="overflow-hidden p-0">
+          <ul className="divide-y divide-quebi-line/10">
+            {endpoints.map((e) => (
+              <li
+                key={e.url}
+                className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:gap-4"
               >
-                {e.url}
-              </a>
-              <span className="text-sm text-quebi-fg-muted">{e.desc}</span>
-            </li>
-          ))}
-        </ul>
+                <Link
+                  href={e.url.includes("<") ? "/api/index.json" : e.url}
+                  className="shrink-0 font-mono text-sm"
+                >
+                  {e.url}
+                </Link>
+                <span className="text-sm text-quebi-fg-muted">{e.desc}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
         <p className="mt-4 text-center text-sm text-quebi-fg-subtle">
           Start with{" "}
-          <a href="/llms.txt" className="text-quebi-brand hover:text-quebi-brand-hover">
-            llms.txt
-          </a>{" "}
+          <Link href="/llms.txt">llms.txt</Link>{" "}
           — it documents the whole workflow for agents.
         </p>
       </div>
@@ -188,13 +194,9 @@ function ClaudeSkill() {
           </li>
           <li>
             <span className="text-quebi-fg">2.</span> Or download it directly:{" "}
-            <a
-              href="/skills/quebi-ui-lib/SKILL.md"
-              className="text-quebi-brand hover:text-quebi-brand-hover"
-              download
-            >
+            <Link href="/skills/quebi-ui-lib/SKILL.md" download>
               SKILL.md
-            </a>
+            </Link>
             .
           </li>
           <li>

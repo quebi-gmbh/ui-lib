@@ -1,7 +1,9 @@
 import { useState } from "react"
 import { Outlet } from "react-router"
 import { Menu, X } from "lucide-react"
+import { Button } from "@/components/button"
 import { ComponentSidebar } from "@/components/component-sidebar"
+import { cn } from "@/lib/utils"
 
 export default function ComponentsLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -9,18 +11,22 @@ export default function ComponentsLayout() {
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-12">
       <div className="lg:grid lg:grid-cols-[16rem_1fr] lg:gap-10">
-        <button
-          type="button"
-          onClick={() => setMobileOpen((o) => !o)}
-          className="mb-4 inline-flex items-center gap-2 rounded-quebi-sm border border-quebi-line/20 px-3 py-2 text-sm text-quebi-fg-muted transition-colors duration-200 hover:border-quebi-brand hover:text-quebi-brand lg:hidden"
+        <Button
+          intent="outline"
+          size="sm"
+          onPress={() => setMobileOpen((open) => !open)}
           aria-expanded={mobileOpen}
+          className="mb-4 lg:hidden"
         >
-          {mobileOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          {mobileOpen ? <X data-slot="icon" aria-hidden /> : <Menu data-slot="icon" aria-hidden />}
           Components
-        </button>
+        </Button>
 
         <aside
-          className={`${mobileOpen ? "block" : "hidden"} mb-8 lg:mb-0 lg:block lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)]`}
+          className={cn(
+            mobileOpen ? "block" : "hidden",
+            "mb-8 lg:mb-0 lg:block lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)]",
+          )}
         >
           <ComponentSidebar onNavigate={() => setMobileOpen(false)} />
         </aside>

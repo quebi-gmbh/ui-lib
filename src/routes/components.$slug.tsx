@@ -1,5 +1,8 @@
 import { Link, data, useParams } from "react-router"
 import { ChevronRight } from "lucide-react"
+import { Badge } from "@/components/badge"
+import { Card } from "@/components/card"
+import { Skeleton } from "@/components/skeleton"
 import { getComponent } from "@/registry"
 import { componentSources } from "@/registry/sources.generated"
 import { CodeBlock } from "@/components/code-block"
@@ -67,12 +70,9 @@ export default function ComponentDetail() {
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {component.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full border border-quebi-line/10 px-3 py-1 text-xs text-quebi-fg-subtle"
-            >
+            <Badge key={tag} intent="outline">
               {tag}
-            </span>
+            </Badge>
           ))}
         </div>
       </div>
@@ -86,9 +86,9 @@ export default function ComponentDetail() {
                 {example.description}
               </p>
             )}
-            <div className="mt-4 flex min-h-[120px] items-center justify-center rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02] p-8">
+            <Card className="mt-4 min-h-30 items-center justify-center p-8">
               {example.render()}
-            </div>
+            </Card>
           </div>
         ))}
       </div>
@@ -104,7 +104,7 @@ export default function ComponentDetail() {
           {sourceData ? (
             <CodeBlock html={sourceData.highlighted} code={sourceData.source} />
           ) : (
-            <div className="h-40 animate-pulse rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02]" />
+            <Skeleton className="h-40 rounded-quebi-md" />
           )}
         </div>
       </div>

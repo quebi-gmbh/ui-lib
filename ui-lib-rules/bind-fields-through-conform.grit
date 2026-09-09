@@ -1,0 +1,23 @@
+// Bind fields through Conform, never by hand
+// AUTO-GENERATED from https://ui-lib.quebi.de/api/rules/bind-fields-through-conform.json — do not edit by hand.
+//
+// https://ui-lib.quebi.de/rules/bind-fields-through-conform
+
+language js;
+
+or {
+  JsxOpeningElement(name = $el, attributes = $attrs),
+  JsxSelfClosingElement(name = $el, attributes = $attrs)
+} as $control where {
+  $el <: r"^(?:Checkbox|Select|MultipleSelect|AsyncSelect|AsyncMultipleSelect|NumberField|DateField|DatePicker|ColorPicker|ColorSwatchPicker|DaySchedule|StoragePicker|TextField)$",
+  $attrs <: contains or { `$meta.name`, `$meta.errors`, `$meta.initialValue`, `$meta.errorId`, `$meta.formId` },
+  // documented exception: components/ui/**
+  not $filename <: r".*components/ui/.*",
+  // documented exception: src/components/**
+  not $filename <: r".*src/components/.*",
+  register_diagnostic(
+    span = $control,
+    message = "This control is being wired to a Conform field by hand. Use the conform-* variant and pass field={fields.x}: Checkbox -> ConformCheckbox, Select -> ConformSelect, NumberField -> ConformNumberField, DatePicker -> ConformDatePicker, TextField/Input -> ConformField. For controls with no variant, spread getInputProps(field) rather than picking metadata off one property at a time. See https://ui-lib.quebi.de/rules/bind-fields-through-conform",
+    severity = "error"
+  )
+}

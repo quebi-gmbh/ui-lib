@@ -1,5 +1,6 @@
 import { Link } from "react-router"
 import { ArrowRight } from "lucide-react"
+import { Card, CardDescription, CardTitle } from "@/components/card"
 import { registry } from "@/registry"
 import { groupByCategory } from "@/registry/grouping"
 import { seo } from "@/lib/seo"
@@ -32,18 +33,14 @@ export default function Components() {
             <h2 className="quebi-eyebrow mb-4">{group.category}</h2>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               {group.components.map((c) => (
-                <Link
-                  key={c.slug}
-                  to={`/components/${c.slug}`}
-                  className="group relative rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02] p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-quebi-brand/30 hover:shadow-quebi-glow"
-                >
-                  <h3 className="text-xl font-semibold text-quebi-fg">{c.name}</h3>
-                  <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-quebi-fg-muted">
-                    {c.description}
-                  </p>
-                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-quebi-brand transition-colors duration-200 group-hover:text-quebi-brand-hover">
-                    View <ArrowRight className="h-4 w-4" />
-                  </span>
+                <Link key={c.slug} to={`/components/${c.slug}`} className="group block">
+                  <Card interactive className="p-6">
+                    <CardTitle>{c.name}</CardTitle>
+                    <CardDescription className="mt-2 line-clamp-2">{c.description}</CardDescription>
+                    <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-quebi-brand transition-colors duration-200 group-hover:text-quebi-brand-hover">
+                      View <ArrowRight className="h-4 w-4" />
+                    </span>
+                  </Card>
                 </Link>
               ))}
             </div>

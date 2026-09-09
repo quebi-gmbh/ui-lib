@@ -109,8 +109,26 @@ function assertRegexLiteralsClose(rule: RuleMeta, pattern: string): void {
   }
 }
 
+/**
+ * An extra `$filename` guard that is not one of the rule's published exceptions.
+ *
+ * Biome's `overrides` cannot scope plugins, so a project that needs a plugin
+ * rule switched off somewhere has to compile the guard into its own copy of the
+ * plugin. `reason` is written into the file next to the guard, so a carve-out
+ * and the argument for it stay together — the same discipline the published
+ * exceptions follow.
+ */
+export interface ExtraPluginIgnore {
+  glob: string
+  reason: string
+}
+
 /** The plugin file for one rule: the pattern, its exception guards, its diagnostic. */
-export function renderGritPlugin(rule: RuleMeta, baseUrl = DEFAULT_BASE_URL): string {
+export function renderGritPlugin(
+  rule: RuleMeta,
+  baseUrl = DEFAULT_BASE_URL,
+  extraIgnores: ExtraPluginIgnore[] = [],
+): string {
   const enforcement = rule.enforcement.biome
   if (enforcement?.via !== "plugin") {
     throw new Error(`Rule "${rule.id}" is not carried by a GritQL plugin`)
@@ -123,6 +141,10 @@ export function renderGritPlugin(rule: RuleMeta, baseUrl = DEFAULT_BASE_URL): st
     ...exceptionPaths(rule).map(
       (glob) =>
         `  // documented exception: ${glob}\n  not $filename <: r"${globToFilenameRegex(glob)}"`,
+    ),
+    ...extraIgnores.map(
+      ({ glob, reason }) =>
+        `  // local scope: ${glob} — ${reason}\n  not $filename <: r"${globToFilenameRegex(glob)}"`,
     ),
     [
       "  register_diagnostic(",

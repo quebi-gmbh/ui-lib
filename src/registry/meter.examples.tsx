@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Meter, MeterHeader, MeterTrack, MeterValue } from "@/components/meter"
+import { Slider, SliderTrack } from "@/components/slider"
 import type { ComponentExample } from "./types"
 
 const Col = ({ children }: { children: React.ReactNode }) => (
@@ -102,15 +103,13 @@ export const meterExamples: ComponentExample[] = [
               </MeterHeader>
               <MeterTrack />
             </Meter>
-            <input
-              type="range"
-              min={0}
-              max={100}
+            <Slider
               value={value}
-              onChange={(e) => setValue(Number(e.target.value))}
+              onChange={(next) => setValue(next as number)}
               aria-label="Adjust value"
-              className="accent-quebi-brand"
-            />
+            >
+              <SliderTrack />
+            </Slider>
           </div>
         )
       }

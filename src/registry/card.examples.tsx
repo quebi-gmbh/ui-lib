@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/card"
+import { Button } from "@/components/button"
 import type { ComponentExample } from "./types"
 
 export const cardExamples: ComponentExample[] = [
@@ -69,12 +70,9 @@ export const cardExamples: ComponentExample[] = [
       <Card className="max-w-sm">
         <CardHeader title="Team members" description="3 people have access to this project.">
           <CardAction>
-            <button
-              type="button"
-              className="rounded-quebi-sm border border-quebi-line/20 px-3 py-1.5 text-sm text-quebi-fg transition-colors hover:border-quebi-brand hover:text-quebi-brand"
-            >
+            <Button intent="outline" size="sm">
               Invite
-            </button>
+            </Button>
           </CardAction>
         </CardHeader>
       </Card>
