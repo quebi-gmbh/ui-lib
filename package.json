@@ -10,7 +10,7 @@
     "generate:api": "bun run scripts/generate-api.ts",
     "generate:lint": "bun run scripts/generate-lint-config.ts",
     "generate:og": "bun run scripts/generate-og.ts",
-    "test": "bun test tests",
+    "test": "bun test",
     "build": "bun run generate:api && bun run generate:og && react-router build",
     "start": "react-router-serve ./build/server/index.js",
     "preview": "vite preview",

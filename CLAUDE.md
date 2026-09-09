@@ -64,5 +64,3 @@ register, plus the quebi styling and self-contained-dependency conventions.
   `tests/repo-lint.test.ts` instead.
 - `src/registry/*.examples.tsx` is copied verbatim by agents through
   `/api/components/<slug>.json`. A shortcut taken in an example propagates.
-- The top-level `components/` folder is dead Cellestial-port code (task #4 removes it). Do not add
-  to it; `src/components/` is the real one.

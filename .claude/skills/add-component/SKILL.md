@@ -57,8 +57,10 @@ Pull from `src/quebi-theme.css` tokens (the quebi-styleguide skill is the source
 - Focus: `focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg`.
 - Invalid: `border-red-500` / `text-red-500`. Eyebrow labels: the `quebi-eyebrow` utility.
 
-When porting from the old `components/` folder (Cellestial), **restyle entirely** — don't keep its
-tokens. Keep its accessibility structure (react-aria, slots, render props) and rewrite the classes.
+When porting a component from the Cellestial-era source (it lived in a top-level `components/`
+folder, deleted in task #4 — recover a file from git history if you need one), **restyle entirely**
+— don't keep its tokens. Keep its accessibility structure (react-aria, slots, render props) and
+rewrite the classes.
 
 ## Steps
 
