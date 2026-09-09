@@ -43,7 +43,8 @@ export const renderFieldTextThroughTheFieldRule: RuleMeta = {
   examples: [
     {
       title: "An error the control cannot point at",
-      source: "src/components/conform-checkbox.tsx (fixed — the message had no id while the control already referenced one)",
+      source: "src/components/conform-checkbox.tsx (the message had no id while the control already referenced one)",
+      sourceFixed: true,
       wrong: `const inputProps = getInputProps(field, { type: "checkbox" })
 // inputProps carries aria-describedby={field.errorId} whenever the field is invalid
 
