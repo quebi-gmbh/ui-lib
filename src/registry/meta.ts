@@ -28,17 +28,33 @@ import { comboBoxMeta } from "./combo-box.meta"
 import { commandMenuMeta } from "./command-menu.meta"
 import { conformAsyncMultipleSelectMeta } from "./conform-async-multiple-select.meta"
 import { conformAsyncSelectMeta } from "./conform-async-select.meta"
+import { conformCalendarMeta } from "./conform-calendar.meta"
 import { conformCheckboxMeta } from "./conform-checkbox.meta"
+import { conformCheckboxGroupMeta } from "./conform-checkbox-group.meta"
+import { conformChoiceBoxMeta } from "./conform-choice-box.meta"
+import { conformColorFieldMeta } from "./conform-color-field.meta"
 import { conformColorPickerMeta } from "./conform-color-picker.meta"
 import { conformColorSwatchPickerMeta } from "./conform-color-swatch-picker.meta"
+import { conformComboBoxMeta } from "./conform-combo-box.meta"
 import { conformDateFieldMeta } from "./conform-date-field.meta"
 import { conformDatePickerMeta } from "./conform-date-picker.meta"
+import { conformDateRangePickerMeta } from "./conform-date-range-picker.meta"
 import { conformDayScheduleMeta } from "./conform-day-schedule.meta"
 import { conformFieldMeta } from "./conform-field.meta"
+import { conformFileTriggerMeta } from "./conform-file-trigger.meta"
+import { conformInputOtpMeta } from "./conform-input-otp.meta"
 import { conformMultipleSelectMeta } from "./conform-multiple-select.meta"
 import { conformNumberFieldMeta } from "./conform-number-field.meta"
+import { conformRadioGroupMeta } from "./conform-radio-group.meta"
+import { conformRangeCalendarMeta } from "./conform-range-calendar.meta"
+import { conformSearchFieldMeta } from "./conform-search-field.meta"
 import { conformSelectMeta } from "./conform-select.meta"
+import { conformSliderMeta } from "./conform-slider.meta"
 import { conformStoragePickerMeta } from "./conform-storage-picker.meta"
+import { conformSwitchMeta } from "./conform-switch.meta"
+import { conformTagFieldMeta } from "./conform-tag-field.meta"
+import { conformTextareaMeta } from "./conform-textarea.meta"
+import { conformTimeFieldMeta } from "./conform-time-field.meta"
 import { containerMeta } from "./container.meta"
 import { contextMenuMeta } from "./context-menu.meta"
 import { dateFieldMeta } from "./date-field.meta"
@@ -142,17 +158,33 @@ export const metaRegistry: ComponentMeta[] = [
   commandMenuMeta,
   conformAsyncMultipleSelectMeta,
   conformAsyncSelectMeta,
+  conformCalendarMeta,
   conformCheckboxMeta,
+  conformCheckboxGroupMeta,
+  conformChoiceBoxMeta,
+  conformColorFieldMeta,
   conformColorPickerMeta,
   conformColorSwatchPickerMeta,
+  conformComboBoxMeta,
   conformDateFieldMeta,
   conformDatePickerMeta,
+  conformDateRangePickerMeta,
   conformDayScheduleMeta,
   conformFieldMeta,
+  conformFileTriggerMeta,
+  conformInputOtpMeta,
   conformMultipleSelectMeta,
   conformNumberFieldMeta,
+  conformRadioGroupMeta,
+  conformRangeCalendarMeta,
+  conformSearchFieldMeta,
   conformSelectMeta,
+  conformSliderMeta,
   conformStoragePickerMeta,
+  conformSwitchMeta,
+  conformTagFieldMeta,
+  conformTextareaMeta,
+  conformTimeFieldMeta,
   containerMeta,
   contextMenuMeta,
   dateFieldMeta,

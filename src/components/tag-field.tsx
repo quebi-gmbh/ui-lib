@@ -30,11 +30,22 @@ import { cn } from "@/lib/utils"
  * and a hidden mirror input so the comma-joined value submits with a form.
  */
 
-interface TagFieldProps
+export interface TagFieldProps
   extends Pick<
     TextFieldProps,
-    "isDisabled" | "isReadOnly" | "aria-label" | "aria-labelledby"
+    "isDisabled" | "isReadOnly" | "aria-label" | "aria-labelledby" | "aria-describedby"
   > {
+  /**
+   * Force the invalid styling on. Left undefined the field decides for itself
+   * (empty + `isRequired` + touched), which is what a standalone TagField does;
+   * a field whose validity is owned elsewhere — a Conform schema, say — passes
+   * it in.
+   */
+  isInvalid?: boolean
+  /** id of the visible text input, so an external Label can point at it. */
+  id?: string
+  /** The `<form>` to associate the hidden mirror input with, by id. */
+  form?: string
   /** Controlled set of tags. */
   value?: Selection
   /** Called with the next set of tags whenever they change. */
@@ -67,8 +78,11 @@ export function TagField({
   inputValue: controlledInput,
   onInputValueChange,
   isRequired,
+  isInvalid: isInvalidProp,
   requiredMessage,
   name = "tags",
+  id,
+  form,
   label,
   description,
   placeholder,
@@ -88,25 +102,27 @@ export function TagField({
     return selection === "all" ? [] : Array.from(selection).map((v) => String(v))
   }, [selection])
 
-  const isInvalid = Boolean(isRequired && list.length === 0 && touched)
+  const isInvalid = isInvalidProp ?? Boolean(isRequired && list.length === 0 && touched)
   const errorText = requiredMessage ?? "At least one item is required"
 
   useEffect(() => {
     const input = hiddenRef.current
-    const form = input?.form
-    if (!form || !input) return
+    // Resolved from the DOM rather than the `form` prop: the input may simply
+    // be nested inside its form, and either way this is the element that fires.
+    const formEl = input?.form
+    if (!formEl || !input) return
     const onSubmit = (e: Event) => {
       if (isRequired && list.length === 0) {
         e.preventDefault()
         setTouched(true)
         input.setCustomValidity(errorText)
-        form.reportValidity()
+        formEl.reportValidity()
       } else {
         input.setCustomValidity("")
       }
     }
-    form.addEventListener("submit", onSubmit)
-    return () => form.removeEventListener("submit", onSubmit)
+    formEl.addEventListener("submit", onSubmit)
+    return () => formEl.removeEventListener("submit", onSubmit)
   }, [isRequired, list.length, errorText])
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -157,6 +173,8 @@ export function TagField({
         isReadOnly={props.isReadOnly}
         aria-label={props["aria-label"]}
         aria-labelledby={props["aria-labelledby"]}
+        aria-describedby={props["aria-describedby"]}
+        id={id}
         className="group flex w-full flex-col gap-y-1.5"
       >
         {label != null && (
@@ -184,9 +202,11 @@ export function TagField({
             {description}
           </Text>
         )}
-        <FieldError className="block text-[12px] text-red-500">
-          {isInvalid ? errorText : undefined}
-        </FieldError>
+        {isInvalidProp === undefined && (
+          <FieldError className="block text-[12px] text-red-500">
+            {isInvalid ? errorText : undefined}
+          </FieldError>
+        )}
       </TextField>
 
       {list.length > 0 ? (
@@ -245,6 +265,7 @@ export function TagField({
       <input
         ref={hiddenRef}
         name={name}
+        form={form}
         value={list.join(",")}
         required={Boolean(isRequired)}
         readOnly

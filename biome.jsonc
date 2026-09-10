@@ -111,6 +111,7 @@
                   "DisclosureStateContext",
                   "DropZone",
                   "FieldError",
+                  "FieldErrorContext",
                   "FileTrigger",
                   "GridList",
                   "GridListHeader",
@@ -203,7 +204,7 @@
         // no-hardcoded-design-values — The components resolve palette scales deliberately — a danger state on red-500, a Badge intent on emerald-500 — and they are not yours to re-token.
         // import-components-not-primitives — This is the layer that imports the primitives — it is what makes the components components.
         // keep-files-readable — You did not write it and cannot split it without forking it.
-        // bind-fields-through-conform — The conform-* variants are where getInputProps is called and the metadata is spread onto a control.
+        // bind-fields-through-conform — The conform-* variants are where the metadata is read off the field and put onto a control.
         // render-field-text-through-the-field — The conform-* variants and the field primitives are where this markup is supposed to live — they are the layer that renders the label, the description, and the error, and wires the ids between them.
         "components/ui/**",
         // no-raw-interactive-elements — Only <input>, and only there.
@@ -211,7 +212,7 @@
         // no-hardcoded-design-values — The components resolve palette scales deliberately — a danger state on red-500, a Badge intent on emerald-500 — and they are not yours to re-token.
         // import-components-not-primitives — This is the layer that imports the primitives — it is what makes the components components.
         // keep-files-readable — You did not write it and cannot split it without forking it.
-        // bind-fields-through-conform — The conform-* variants are where getInputProps is called and the metadata is spread onto a control.
+        // bind-fields-through-conform — The conform-* variants are where the metadata is read off the field and put onto a control.
         // render-field-text-through-the-field — The conform-* variants and the field primitives are where this markup is supposed to live — they are the layer that renders the label, the description, and the error, and wires the ids between them.
         "src/components/**"
       ],

@@ -6,17 +6,7 @@ import { ColorSwatch } from "react-aria-components"
 import type { ListData } from "react-stately"
 import { cn } from "@/lib/utils"
 import { ColorSwatchPicker, ColorSwatchPickerItem } from "@/components/color-swatch-picker"
-import { Description, FieldError, Label } from "@/components/field"
-
-/**
- * ConformColorSwatchPicker — multi-select color picker wired to Conform.
- *
- * A wrapping grid of named color swatches that submits an array of color keys.
- * Selection is mirrored into a Conform `ListData` binding and a hidden input so
- * the value (comma-joined keys) participates in the form and surfaces inline
- * validation errors. Built on the quebi ColorSwatchPicker for layout and tokens;
- * toggling is handled per-swatch since the underlying picker is single-select.
- */
+import { describedBy, Description, Field, FieldError, Label } from "@/components/field"
 
 /** A selectable color: a stable `key` submitted to the form plus its `hex` swatch. */
 export interface SwatchColor {
@@ -39,7 +29,7 @@ export const DEFAULT_SWATCH_COLORS: SwatchColor[] = [
   { key: "purple", hex: "#a855f7" },
 ]
 
-interface ConformColorSwatchPickerProps {
+export interface ConformColorSwatchPickerProps {
   /**
    * A field whose value is a set of color keys. List-backed fields surface as
    * `string | string[]` (a comma-joined string on the wire, an array after
@@ -55,6 +45,20 @@ interface ConformColorSwatchPickerProps {
   className?: string
 }
 
+/**
+ * ConformColorSwatchPicker — multi-select color picker wired to Conform.
+ *
+ * A wrapping grid of named color swatches that submits an array of color keys.
+ * Built on the quebi ColorSwatchPicker for layout and tokens; toggling is
+ * handled per-swatch since the underlying picker is single-select.
+ *
+ * Unlike the other variants this one does not own its value: the selection
+ * lives in the `list` the caller passes, because a Conform list binding is what
+ * lets the same tags be rendered and removed elsewhere on the page. The hidden
+ * input below mirrors that list, so repopulation after a failed submit comes
+ * from re-seeding the list from `field.initialValue` — it is the caller's state
+ * that has to survive, and Conform cannot reset a list it does not own.
+ */
 export function ConformColorSwatchPicker({
   field,
   label,
@@ -91,12 +95,27 @@ export function ConformColorSwatchPicker({
   const selectedSet = new Set(selectedKeys)
 
   return (
-    <div className={cn("space-y-1.5", className)}>
-      {label && <Label>{label}</Label>}
-      {description && <Description>{description}</Description>}
+    <Field className={cn("space-y-1.5", className)}>
+      {label && (
+        <Label className={cn(hasErrors && "text-red-500")}>
+          {label}
+          {field.required && <span className="ml-1 text-quebi-brand">*</span>}
+        </Label>
+      )}
+      {/* These ids are ours to set: the swatch grid is not a react-aria field,
+          so nothing generates them and the aria-describedby below is their only
+          reference. */}
+      {description && <Description id={field.descriptionId}>{description}</Description>}
 
       {/* The picker provides quebi layout/tokens; multi-select is driven by `list`. */}
-      <ColorSwatchPicker aria-label={label ?? "Colors"}>
+      <ColorSwatchPicker
+        aria-label={label ?? "Colors"}
+        aria-invalid={hasErrors || undefined}
+        aria-describedby={describedBy(
+          hasErrors && field.errorId,
+          description && field.descriptionId,
+        )}
+      >
         {colors.map((color) => {
           const isSelected = selectedSet.has(color.key)
           return (
@@ -123,9 +142,9 @@ export function ConformColorSwatchPicker({
       </ColorSwatchPicker>
 
       {/* Mirror the selection into the form as a comma-joined list of keys. */}
-      <input type="hidden" name={field.name} value={currentKeys.join(",")} />
+      <input type="hidden" name={field.name} form={field.formId} value={currentKeys.join(",")} />
 
-      {hasErrors && <FieldError>{field.errors?.join(", ")}</FieldError>}
-    </div>
+      {hasErrors && <FieldError id={field.errorId}>{field.errors?.join(", ")}</FieldError>}
+    </Field>
   )
 }

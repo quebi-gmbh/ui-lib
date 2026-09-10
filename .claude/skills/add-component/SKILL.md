@@ -128,10 +128,45 @@ Conform variants wrap a base form component and bind it to a Conform field. Rule
   anything with a `conform-` slug (or a `conform` tag) into a separate **Conform** group via
   `src/registry/grouping.ts` — you do not set category to "Conform".
 - **Import the base** via `@/components/<base-slug>` so it becomes a `registryDependency`.
-- **Field prop typing**: use `field: FieldMetadata<any, any, string[]>` — checkbox-style fields
-  surface as `boolean | "on"` depending on the valibot schema; only name/default/required/errors are used.
+- **Field prop typing**: use the concrete type — `FieldMetadata<string>`, `FieldMetadata<boolean>`,
+  `FieldMetadata<string[]>`. Where the wire value and the parsed value differ, say so with a union:
+  `FieldMetadata<number | string>` (NumberField), `FieldMetadata<Date | string>` (DateField),
+  `FieldMetadata<string | DaySpan[]>` (DaySchedule). Not `FieldMetadata<any, any, string[]>` —
+  `any` hides exactly the mismatch this prop exists to catch.
+- **Export the props interface**: `export interface Conform<Name>Props`, so a consumer can extend it.
 - The example should use a real `useForm` + valibot (`@conform-to/valibot`, `parseWithValibot`, `import * as v from "valibot"`)
   so validation is demonstrable. See `src/registry/conform-checkbox.examples.tsx`.
+
+### The shape every variant follows
+
+The 29 variants are deliberately identical in structure. Copy the closest one and keep these:
+
+```tsx
+const hasErrors = !field.valid && !!field.errors     // exactly this expression
+const isRequired = field.required ?? false
+```
+
+- **Bind by naming the props, never by spreading `getInputProps`.** The helper returns the DOM
+  names (`required`, `defaultChecked`, `min`, `max`); react-aria takes `isRequired`,
+  `defaultSelected`, `minValue`, `maxValue`. A JSX spread skips excess-property checking, so the
+  mismatched half is dropped by `filterDOMProps` with no error anywhere. Set all seven —
+  `id`, `name`, `form`, required, default, invalid, described-by — by name.
+- **Error message, one shape everywhere:**
+  `{hasErrors && <FieldError>{field.errors?.join(", ")}</FieldError>}`
+- **Whoever owns the ids does the wiring.** Inside a react-aria field (TextField, RadioGroup,
+  ComboBox, DateField, …) the field generates ids for its description and error slots and already
+  points the control at them: pass no `id` and no `aria-describedby`. Outside one (Switch, Slider,
+  ChoiceBox, a hidden-input control) nothing does, so set `id={field.errorId}` /
+  `id={field.descriptionId}` and `aria-describedby={describedBy(...)}` from `@/components/field`.
+- **Required marker:** `{isRequired && <span className="ml-1 text-quebi-brand">*</span>}` in the
+  label, and `cn(hasErrors && "text-red-500")` on the label itself.
+- **A control with no native form value** (TimeField, DateRangePicker, FileTrigger, ChoiceBox,
+  Calendar, DaySchedule, ColorPicker) uses `useControl` + `BaseControl` from
+  `@conform-to/react/future`, never `useState` + a hand-written hidden input. `BaseControl` renders
+  the input with the `hidden` **attribute** and no React `value` prop; both are load-bearing and
+  both fail silently when broken — see the comment in `src/components/conform-time-field.tsx`.
+- **Import order:** conform → npm → `@/lib/utils` → `@/components/*` (alphabetical).
+- **JSDoc goes above the function**, not above the interface.
 
 ## Verification checklist
 

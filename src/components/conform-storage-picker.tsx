@@ -2,10 +2,10 @@
 
 import type { FieldMetadata } from "@conform-to/react"
 import { useEffect, useState } from "react"
+import { Button } from "react-aria-components"
 import type { ListData } from "react-stately"
 import { cn } from "@/lib/utils"
-import { FieldError, Label } from "@/components/field"
-import { Button } from "react-aria-components"
+import { describedBy, Description, Field, FieldError, Label } from "@/components/field"
 
 /**
  * Device storage helpers (inlined to keep this component self-contained).
@@ -39,7 +39,7 @@ export function normalizeStorageValue(value: string | number): number {
   return unit === "tb" ? Math.round(amount * 1024) : Math.round(amount)
 }
 
-interface ConformStoragePickerProps {
+export interface ConformStoragePickerProps {
   // A list-backed field: the storage labels surface as a comma-joined string on
   // the wire (`string`) or an array after parsing (`string[]`); only
   // name/default/required/errors/valid are read off the metadata.
@@ -57,6 +57,12 @@ interface ConformStoragePickerProps {
  * Selected sizes are kept in a react-stately list (so they can be surfaced as
  * removable tags elsewhere) and mirrored into a hidden input as a comma-joined
  * string for form submission. Validity is derived from the Conform field.
+ *
+ * Unlike the other variants this one does not own its value: the selection
+ * lives in the `list` the caller passes, which is what lets the same sizes be
+ * rendered and removed elsewhere on the page. Repopulation after a failed
+ * submit therefore comes from re-seeding that list from `field.initialValue` —
+ * Conform cannot reset a list it does not own.
  */
 export function ConformStoragePicker({
   field,
@@ -114,12 +120,29 @@ export function ConformStoragePicker({
   }
 
   return (
-    <div className={cn("space-y-2", className)}>
-      {label && <Label>{label}</Label>}
+    <Field className={cn("space-y-2", className)}>
+      {label && (
+        <Label className={cn(hasErrors && "text-red-500")}>
+          {label}
+          {field.required && <span className="ml-1 text-quebi-brand">*</span>}
+        </Label>
+      )}
 
-      {description && <p className="text-[12px] text-quebi-fg-muted">{description}</p>}
+      {/* These ids are ours to set: a chip group is not a react-aria field, so
+          nothing generates them and the aria-describedby below is their only
+          reference. */}
+      {description && <Description id={field.descriptionId}>{description}</Description>}
 
-      <div className="flex flex-wrap gap-2">
+      <div
+        className="flex flex-wrap gap-2"
+        role="group"
+        aria-label={label ?? "Storage"}
+        aria-invalid={hasErrors || undefined}
+        aria-describedby={describedBy(
+          hasErrors && field.errorId,
+          description && field.descriptionId,
+        )}
+      >
         {DEVICE_STORAGE_OPTIONS.map((storageGb) => {
           const isSelected = selectedStorage.has(storageGb)
           return (
@@ -144,10 +167,11 @@ export function ConformStoragePicker({
       <input
         type="hidden"
         name={field.name}
+        form={field.formId}
         value={list.items.map((item) => item.name).join(",")}
       />
 
-      <FieldError>{hasErrors && field.errors?.join(", ")}</FieldError>
-    </div>
+      {hasErrors && <FieldError id={field.errorId}>{field.errors?.join(", ")}</FieldError>}
+    </Field>
   )
 }

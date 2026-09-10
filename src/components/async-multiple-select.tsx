@@ -54,9 +54,13 @@ export interface AsyncMultipleSelectProps<T extends AsyncMultipleSelectOption> {
   isInvalid?: boolean
   /** When set, the selection is mirrored into hidden inputs for form submission. */
   name?: string
+  /** The `<form>` to associate the hidden inputs with, by id. */
+  form?: string
   className?: string
   id?: string
   "aria-label"?: string
+  /** ids of the elements describing this control — a hint, an error message. */
+  "aria-describedby"?: string
 }
 
 const keyOf = (option: AsyncMultipleSelectOption) => String(option.id)
@@ -73,9 +77,11 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
   isDisabled,
   isInvalid,
   name,
+  form,
   className,
   id,
   "aria-label": ariaLabel = "Select items",
+  "aria-describedby": ariaDescribedBy,
 }: AsyncMultipleSelectProps<T>) {
   const reactId = useId()
   const listboxId = `${reactId}-listbox`
@@ -297,6 +303,7 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
           aria-activedescendant={open && activeKey ? optionId(activeKey) : undefined}
           aria-label={ariaLabel}
           aria-invalid={isInvalid || undefined}
+          aria-describedby={ariaDescribedBy}
           disabled={isDisabled}
           value={inputValue}
           placeholder={selectedItems.length === 0 ? placeholder : undefined}
@@ -385,7 +392,7 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
 
       {name &&
         selectedItems.map((item) => (
-          <input key={keyOf(item)} type="hidden" name={name} value={keyOf(item)} />
+          <input key={keyOf(item)} type="hidden" name={name} form={form} value={keyOf(item)} />
         ))}
     </div>
   )
