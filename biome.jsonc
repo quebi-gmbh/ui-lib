@@ -67,7 +67,7 @@
               "form": "Use <Form> from react-router (submitting to a route action), or <ConformField> from @/components/conform-field (binding fields to a Conform form).",
               "label": "Use <Label> from @/components/field (composing a field by hand).",
               "dialog": "Use <Modal> from @/components/modal (a centered overlay), or <Drawer> from @/components/drawer (an edge-anchored panel), or <Sheet> from @/components/sheet (a side sheet), or <Dialog> from @/components/dialog (the dialog content itself (title, body, footer)).",
-              "table": "Use <Table> from @/components/table (a static table (with TableHeader, TableBody, TableColumn, TableRow, TableCell)), or <AsyncTable> from @/components/async-table (sorting and filtering are server-driven)."
+              "table": "Use <Table> from @/components/table (a static table (with TableHeader, TableBody, TableColumn, TableRow, TableCell)), or <DataTable> from @/components/data-table (every row is already in the browser and the table has to sort, filter, page or group them), or <AsyncTable> from @/components/async-table (the rows are a page of a larger answer — sorting, filtering and paging are queries)."
             }
           }
         }
@@ -92,6 +92,7 @@
                   "CalendarStateContext",
                   "Cell",
                   "Checkbox",
+                  "CheckboxContext",
                   "CheckboxGroup",
                   "Collection",
                   "CollectionRendererContext",
@@ -178,6 +179,8 @@
                   "Table",
                   "TableBody",
                   "TableHeader",
+                  "TableLayout",
+                  "TableLoadMoreItem",
                   "Tabs",
                   "Tag",
                   "TagGroup",
@@ -193,7 +196,8 @@
                   "TooltipTrigger",
                   "Tree",
                   "TreeItem",
-                  "TreeItemContent"
+                  "TreeItemContent",
+                  "Virtualizer"
                 ],
                 "message": "react-aria-components is ui-lib's dependency, not yours: import the quebi component instead (Button -> @/components/button, TextField -> @/components/text-field, and so on). Helpers the library does not wrap, like parseColor, and type-only imports stay allowed. See https://ui-lib.quebi.de/rules/import-components-not-primitives"
               }
@@ -252,13 +256,26 @@
                   "form": "Use <Form> from react-router (submitting to a route action), or <ConformField> from @/components/conform-field (binding fields to a Conform form).",
                   "label": "Use <Label> from @/components/field (composing a field by hand).",
                   "dialog": "Use <Modal> from @/components/modal (a centered overlay), or <Drawer> from @/components/drawer (an edge-anchored panel), or <Sheet> from @/components/sheet (a side sheet), or <Dialog> from @/components/dialog (the dialog content itself (title, body, footer)).",
-                  "table": "Use <Table> from @/components/table (a static table (with TableHeader, TableBody, TableColumn, TableRow, TableCell)), or <AsyncTable> from @/components/async-table (sorting and filtering are server-driven)."
+                  "table": "Use <Table> from @/components/table (a static table (with TableHeader, TableBody, TableColumn, TableRow, TableCell)), or <DataTable> from @/components/data-table (every row is already in the browser and the table has to sort, filter, page or group them), or <AsyncTable> from @/components/async-table (the rows are a page of a larger answer — sorting, filtering and paging are queries)."
                 }
               }
             }
           },
           "style": {
             "noRestrictedImports": "off",
+            "noExcessiveLinesPerFile": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        // local scope, keep-files-readable — A shared lib module cannot be split, and not as a matter of taste: generate-api.ts emits each @/lib/* module a component imports as its own registry:lib item with registryDependencies hardcoded to [], so a second module imported by the first would land in a consumer's project as a dangling import.
+        "src/lib/*.ts"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
             "noExcessiveLinesPerFile": "off"
           }
         }

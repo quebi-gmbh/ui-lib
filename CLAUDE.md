@@ -35,9 +35,11 @@ messages you would give a consumer are the ones you get:
   hydration bug.
 - **The platform will do it for you. That is not the same as your app doing it.** `alert`,
   `confirm` and `prompt` are out: feedback is a `Toast` under a `ToastProvider`, a question is a
-  `Modal` whose own button runs the rest of the handler. And `AsyncTable` reports sort intent
-  through `onSortChange` so you can re-query — sorting its `rows` in the component reorders the
-  answer to the last query instead of asking for a new one. Both of these warn rather than fail,
+  `Modal` whose own button runs the rest of the handler. And `AsyncTable` reports the whole new
+  query through `onQueryChange` so you can re-run it — sorting its `rows` in the component
+  reorders one page of the answer to the last query instead of asking for a new one. When the
+  rows really are all of them, that is `DataTable`, which sorts them with the TanStack row model
+  on purpose. Both of these warn rather than fail,
   because both fixes are a change of shape rather than a change of import.
 
 Each message names its replacement and links to the rule page. If a rule is wrong for a case you
