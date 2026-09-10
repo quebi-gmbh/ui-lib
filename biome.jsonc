@@ -209,7 +209,7 @@
       },
       "suspicious": {
         "noAlert": {
-          "level": "warn"
+          "level": "error"
         }
       }
     }

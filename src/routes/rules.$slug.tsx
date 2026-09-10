@@ -274,11 +274,22 @@ export default function RuleDetail() {
           not listed is one to argue for, not to silence.
         </p>
         <div className="mt-4 space-y-3">
-          {rule.exceptions.map((exception) => (
-            <Note key={exception.scope} intent="warning" title={exception.scope}>
-              {exception.reason}
+          {/* A rule can legitimately have none, and an empty heading reads like
+              a page that failed to load. Say it instead: no exceptions is a
+              claim about the rule, not a gap in the record. */}
+          {rule.exceptions.length === 0 ? (
+            <Note intent="success" title="None">
+              Every case this rule covers has a replacement that is an import, so there is nothing
+              here that a documented carve-out would be honest about. A case it gets wrong is one to
+              argue for on the record, not to silence with a suppression comment.
             </Note>
-          ))}
+          ) : (
+            rule.exceptions.map((exception) => (
+              <Note key={exception.scope} intent="warning" title={exception.scope}>
+                {exception.reason}
+              </Note>
+            ))
+          )}
         </div>
       </section>
 
