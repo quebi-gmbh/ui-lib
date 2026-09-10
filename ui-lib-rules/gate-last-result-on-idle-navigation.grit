@@ -1,0 +1,27 @@
+// Gate lastResult on an idle navigation
+// AUTO-GENERATED from https://ui-lib.quebi.de/api/rules/gate-last-result-on-idle-navigation.json — do not edit by hand.
+//
+// https://ui-lib.quebi.de/rules/gate-last-result-on-idle-navigation
+
+language js;
+
+`useForm($options)` as $call where {
+  $options <: JsObjectExpression(),
+  $options <: contains bubble or {
+    JsPropertyObjectMember(name = $name, value = $value) where {
+      $name <: `lastResult`,
+      $value <: not contains `navigation.state`,
+      $value <: not contains `fetcher.state`
+    },
+    JsShorthandPropertyObjectMember(name = $name) where { $name <: `lastResult` }
+  },
+  // documented exception: **/*.stories.{tsx,jsx}
+  not $filename <: r"(?:.*/)?[^/]*\.stories\.(?:tsx|jsx)$",
+  // documented exception: **/*.examples.{tsx,jsx}
+  not $filename <: r"(?:.*/)?[^/]*\.examples\.(?:tsx|jsx)$",
+  register_diagnostic(
+    span = $call,
+    message = "lastResult is applied on every render, so an ungated one lands before React Router has revalidated the loader data behind the form — a form with loader defaults snaps back to its previous value after a reset. Pass lastResult: navigation.state === 'idle' ? lastResult : null (or fetcher.state for a fetcher). See https://ui-lib.quebi.de/rules/gate-last-result-on-idle-navigation",
+    severity = "error"
+  )
+}

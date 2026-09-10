@@ -30,12 +30,20 @@
     "./ui-lib-rules/no-appearance-classes-on-layout-elements.grit",
     // Design values come from quebi tokens, never from literals
     "./ui-lib-rules/no-hardcoded-design-values.grit",
+    // Format numbers and dates through the library, with an explicit locale
+    "./ui-lib-rules/format-values-through-the-library.grit",
     // Bind fields through Conform, never by hand
     "./ui-lib-rules/bind-fields-through-conform.grit",
     // Label, description and error come from the field — not from markup beside it
     "./ui-lib-rules/render-field-text-through-the-field.grit",
     // Validate on the server with the same schema
-    "./ui-lib-rules/validate-on-the-server-with-the-same-schema.grit"
+    "./ui-lib-rules/validate-on-the-server-with-the-same-schema.grit",
+    // Seed a Checkbox or Switch with defaultSelected, not the spread alone
+    "./ui-lib-rules/seed-toggles-with-default-selected.grit",
+    // Gate lastResult on an idle navigation
+    "./ui-lib-rules/gate-last-result-on-idle-navigation.grit",
+    // An intent button submits — never type="button"
+    "./ui-lib-rules/intent-buttons-must-not-be-type-button.grit"
   ],
   "linter": {
     "enabled": true,
@@ -203,16 +211,20 @@
         // no-hardcoded-design-values — The components resolve palette scales deliberately — a danger state on red-500, a Badge intent on emerald-500 — and they are not yours to re-token.
         // import-components-not-primitives — This is the layer that imports the primitives — it is what makes the components components.
         // keep-files-readable — You did not write it and cannot split it without forking it.
+        // format-values-through-the-library — The formatters this rule points at are implemented there: FormattedNumber, FormattedDate and the Calendar's month/year labels all call Intl directly, which is what makes the rest of the codebase able not to.
         // bind-fields-through-conform — The conform-* variants are where getInputProps is called and the metadata is spread onto a control.
         // render-field-text-through-the-field — The conform-* variants and the field primitives are where this markup is supposed to live — they are the layer that renders the label, the description, and the error, and wires the ids between them.
+        // seed-toggles-with-default-selected — This is the layer that spreads getInputProps onto a control and adds the two props afterwards — ConformCheckbox is the fix, not an instance of the problem.
         "components/ui/**",
         // no-raw-interactive-elements — Only <input>, and only there.
         // no-appearance-classes-on-layout-elements — Components are made of appearance-styled divs — that is what a component is.
         // no-hardcoded-design-values — The components resolve palette scales deliberately — a danger state on red-500, a Badge intent on emerald-500 — and they are not yours to re-token.
         // import-components-not-primitives — This is the layer that imports the primitives — it is what makes the components components.
         // keep-files-readable — You did not write it and cannot split it without forking it.
+        // format-values-through-the-library — The formatters this rule points at are implemented there: FormattedNumber, FormattedDate and the Calendar's month/year labels all call Intl directly, which is what makes the rest of the codebase able not to.
         // bind-fields-through-conform — The conform-* variants are where getInputProps is called and the metadata is spread onto a control.
         // render-field-text-through-the-field — The conform-* variants and the field primitives are where this markup is supposed to live — they are the layer that renders the label, the description, and the error, and wires the ids between them.
+        // seed-toggles-with-default-selected — This is the layer that spreads getInputProps onto a control and adds the two props afterwards — ConformCheckbox is the fix, not an instance of the problem.
         "src/components/**"
       ],
       "linter": {

@@ -23,12 +23,13 @@ export const failureModes: FailureMode[] = [
   {
     id: "reimplements-components",
     title: "It rebuilds what already exists",
-    body: "Asked for a card, a button, a badge, an agent writes one. Producing four Tailwind classes is faster and more certain than discovering that the library ships the component — and the result renders correctly, so nothing in review objects. Repeated across a codebase, that is how a design system stops being a system: not through one bad decision, but through fifty reasonable ones in fifty files.",
+    body: "Asked for a card, a button, a badge, an agent writes one. Producing four Tailwind classes is faster and more certain than discovering that the library ships the component — and the result renders correctly, so nothing in review objects. The same reflex reaches past the library for the values inside those components: toLocaleString() is one call, and it looks right on the machine that wrote it. Repeated across a codebase, that is how a design system stops being a system: not through one bad decision, but through fifty reasonable ones in fifty files.",
     ruleIds: [
       "no-raw-interactive-elements",
       "no-appearance-classes-on-layout-elements",
       "no-hardcoded-design-values",
       "import-components-not-primitives",
+      "format-values-through-the-library",
     ],
   },
   {
@@ -39,6 +40,9 @@ export const failureModes: FailureMode[] = [
       "bind-fields-through-conform",
       "render-field-text-through-the-field",
       "validate-on-the-server-with-the-same-schema",
+      "seed-toggles-with-default-selected",
+      "gate-last-result-on-idle-navigation",
+      "intent-buttons-must-not-be-type-button",
     ],
   },
   {

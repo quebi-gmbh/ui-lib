@@ -75,10 +75,10 @@ export const bindFieldsThroughConformRule: RuleMeta = {
     {
       element: "Everything else (Slider, TagField, InputOTP, ColorField, DropZone, …)",
       use: [
-        { name: "getInputProps", from: "@conform-to/react", when: "the control renders a real input" },
+        { name: "getInputProps", from: "@conform-to/react", when: "the control renders a real input — except Checkbox and Switch, where the spread alone loses the default state (tier 4)" },
         { name: "useInputControl", from: "@conform-to/react", when: "the control has no native form value — it returns value/change/focus/blur and is what Conform documents for custom inputs" },
       ],
-      note: "Twenty-one of the library's form controls have no conform-* variant. Binding them explicitly is expected; reaching for useState instead is not.",
+      note: "Twenty-one of the library's form controls have no conform-* variant. Binding them explicitly is expected; reaching for useState instead is not. Two controls are not covered by this row: Checkbox and Switch take defaultSelected and isRequired, not the defaultChecked and required that getInputProps emits, and drop both without a word — see the tier-4 rule before spreading onto either.",
     },
   ],
   examples: [

@@ -12,6 +12,11 @@ import { useLocale } from "react-aria-components"
  * prop). This is a headless formatter: it renders a bare `<span>` so it inherits
  * surrounding quebi typography — apply tokens via `className` or the `children`
  * render prop.
+ *
+ * Mount an `I18nProvider` at the root of your app, or pass `locale`. With
+ * neither, `useLocale()` falls back to whatever the runtime says — the SSR
+ * default on the server and the browser's setting in the client — which is the
+ * locale mismatch this component exists to prevent, reintroduced one level up.
  */
 
 export interface FormattedNumberProps {
@@ -20,7 +25,10 @@ export interface FormattedNumberProps {
    */
   value: number | string
   /**
-   * Locale for formatting. Defaults to the locale from the nearest I18nProvider.
+   * Locale for formatting. Defaults to the locale from the nearest
+   * I18nProvider — and, with no provider mounted, to the runtime's own default,
+   * which differs between a prerender and the browser. Pass it explicitly
+   * wherever the answer has to be the same in both.
    */
   locale?: string
   /**

@@ -294,6 +294,11 @@ async function main() {
   const ruleHighlights: { id: string; examples: { wrong: string; right: string }[] }[] = []
   const ruleCheckEntries: { id: string; checks: (RuleCheck & { highlighted: string })[] }[] = []
   const rulesCatalog: unknown[] = []
+  // The primitives app code may not import are exactly the ones the library
+  // wraps, read from the sources gathered above — never a hand-kept list. Both
+  // the published config and each rule page's own snippet are built from it, so
+  // a rule page cannot show options the config does not have.
+  const racPrimitives = deriveRacPrimitives(sources.map((s) => s.source))
 
   for (const rule of rulesRegistry) {
     if (!KEBAB.test(rule.id)) {
@@ -360,7 +365,7 @@ async function main() {
 
     // Runnable checks, derived from the record — never hand-written, so the rule
     // a human reads and the config a machine runs come from the same source.
-    const checks = buildRuleChecks(rule)
+    const checks = buildRuleChecks(rule, BASE_URL, racPrimitives)
     ruleCheckEntries.push({
       id: rule.id,
       checks: checks.map((c) => ({ ...c, highlighted: highlight(c.code, c.language) })),
@@ -381,9 +386,6 @@ async function main() {
   // setup of its own to wire them into; they are published as artifacts a
   // consuming app drops in, which is the point of keeping `biome` and `message`
   // on the record in the first place.
-  // The primitives app code may not import are exactly the ones the library
-  // wraps, read from the sources gathered above — never a hand-kept list.
-  const racPrimitives = deriveRacPrimitives(sources.map((s) => s.source))
   const biomeConfig = renderBiomeConfig(rulesRegistry, BASE_URL, racPrimitives)
   await writeFile(join(RULES_OUT, "biome.jsonc"), biomeConfig)
   for (const rule of pluginRules(rulesRegistry)) {

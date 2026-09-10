@@ -1,0 +1,24 @@
+// Seed a Checkbox or Switch with defaultSelected, not the spread alone
+// AUTO-GENERATED from https://ui-lib.quebi.de/api/rules/seed-toggles-with-default-selected.json — do not edit by hand.
+//
+// https://ui-lib.quebi.de/rules/seed-toggles-with-default-selected
+
+language js;
+
+or {
+  JsxOpeningElement(name = $el, attributes = $attrs),
+  JsxSelfClosingElement(name = $el, attributes = $attrs)
+} as $control where {
+  $el <: r"^(?:Checkbox|Switch)$",
+  $attrs <: contains JsxSpreadAttribute(argument = `getInputProps($field, $options)`),
+  $attrs <: not contains JsxAttribute(name = `defaultSelected`),
+  // documented exception: src/components/**
+  not $filename <: r".*src/components/.*",
+  // documented exception: components/ui/**
+  not $filename <: r".*components/ui/.*",
+  register_diagnostic(
+    span = $control,
+    message = "react-aria's Checkbox and Switch read defaultSelected and isRequired; getInputProps emits defaultChecked and required, and both are dropped silently — the control renders unchecked after a failed submit. Use <ConformCheckbox field={fields.x} /> from @/components/conform-checkbox, or add defaultSelected={field.defaultChecked} and isRequired={field.required ?? false} after the spread. See https://ui-lib.quebi.de/rules/seed-toggles-with-default-selected",
+    severity = "error"
+  )
+}

@@ -17,7 +17,7 @@ through. `bun run lint:fix` applies Biome's safe fixes.
 
 ## The rules are not advice, they are lint
 
-`/rules` publishes eight rules about using this library. They are enforced here too, so the same
+`/rules` publishes twelve rules about using this library. They are enforced here too, so the same
 messages you would give a consumer are the ones you get:
 
 - **Layout is yours. Appearance is the library's.** Raw `button`, `a`, `input`, `select`,
@@ -25,8 +25,13 @@ messages you would give a consumer are the ones you get:
   names. `div`/`span` are fine until their classes describe a surface (radius + border = you are
   rebuilding `Card`). Design values are quebi tokens, never `bg-[#f00]` or `text-gray-500`.
 - **Validation is yours. Wiring is the library's.** Conform fields bind through the `conform-*`
-  variants; label, description and error come from the field, not from markup beside it.
+  variants; label, description and error come from the field, not from markup beside it. A
+  `Checkbox` or `Switch` also needs `defaultSelected`; `lastResult` is gated on an idle
+  navigation; an intent button is `type="submit"`.
 - Import components, not `react-aria-components` primitives, above the library layer.
+- Numbers and dates go through `FormattedNumber` / `FormattedDate` (or `formatNumber(value,
+  locale)`), never a bare `toLocaleString()` — the site is prerendered, so an implicit locale is a
+  hydration bug.
 
 Each message names its replacement and links to the rule page. If a rule is wrong for a case you
 hit, the answer is a documented exception with a reason — either an `exceptions` entry on the

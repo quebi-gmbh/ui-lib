@@ -35,7 +35,9 @@ describe(BIND, () => {
   })
 
   test("true negative: getInputProps spread onto a control", () => {
-    const code = component(`    <Checkbox {...getInputProps(fields.terms, { type: "checkbox" })} />`)
+    // A TextField takes the spread as-is. (A Checkbox does not — that is the
+    // tier-4 rule below, and this rule stays quiet about it either way.)
+    const code = component(`    <TextField {...getInputProps(fields.email, { type: "email" })} />`)
     expect(fires(BIND, code)).toBe(false)
   })
 
@@ -141,10 +143,12 @@ describe(SERVER, () => {
   })
 
   test("true negative: lastResult is threaded back from the action", () => {
-    // conform.guide's Remix integration, verbatim in shape.
+    // conform.guide's Remix integration, verbatim in shape — including the
+    // idle-navigation guard the tier-5 rule is about.
     const code = `const lastResult = useActionData()
+const navigation = useNavigation()
 const [form, fields] = useForm({
-  lastResult,
+  lastResult: navigation.state === "idle" ? lastResult : null,
   onValidate: ({ formData }) => parseWithValibot(formData, { schema }),
 })
 `
@@ -170,5 +174,154 @@ const [form, fields] = useForm({
     // lastResult present, action absent. The check reads the option, not the server.
     const code = `const [form] = useForm({ lastResult: undefined })\n`
     expect(fires(SERVER, code)).toBe(false)
+  })
+})
+
+const TOGGLES = "seed-toggles-with-default-selected"
+
+describe(TOGGLES, () => {
+  test("true positive: a Checkbox bound by the spread alone", () => {
+    const code = component(`    <Checkbox {...getInputProps(fields.terms, { type: "checkbox" })} />`)
+    expect(fires(TOGGLES, code)).toBe(true)
+  })
+
+  test("true positive: the same on a Switch, which has no variant to reach for", () => {
+    const code = component(
+      `    <Switch {...getInputProps(fields.notify, { type: "checkbox" })}>Notify me</Switch>`,
+    )
+    expect(fires(TOGGLES, code)).toBe(true)
+  })
+
+  test("true negative: the conform-* variant", () => {
+    expect(fires(TOGGLES, component(`    <ConformCheckbox field={fields.terms} />`))).toBe(false)
+  })
+
+  test("true negative: the spread plus the two props react-aria actually reads", () => {
+    const code = component(
+      `    <Switch {...getInputProps(fields.notify, { type: "checkbox" })} defaultSelected={fields.notify.defaultChecked} isRequired={fields.notify.required ?? false} />`,
+    )
+    expect(fires(TOGGLES, code)).toBe(false)
+  })
+
+  test("no false positive: a TextField takes the spread as it is", () => {
+    const code = component(`    <TextField {...getInputProps(fields.email, { type: "email" })} />`)
+    expect(fires(TOGGLES, code)).toBe(false)
+  })
+
+  test("no false positive: some other spread onto a Checkbox", () => {
+    expect(fires(TOGGLES, component(`    <Checkbox {...props.rest} />`))).toBe(false)
+  })
+
+  test("no false positive: getInputProps mentioned but not spread", () => {
+    const code = component(
+      `    <Checkbox onFocus={() => getInputProps(fields.terms, { type: "checkbox" })} />`,
+    )
+    expect(fires(TOGGLES, code)).toBe(false)
+  })
+
+  test("known blind spot: the props assigned to a local first", () => {
+    // The shape conform-checkbox.tsx itself uses, so the rule cannot see it.
+    const code = `const inputProps = getInputProps(props.field, { type: "checkbox" })\n${component(`    <Checkbox {...inputProps} />`)}`
+    expect(fires(TOGGLES, code)).toBe(false)
+  })
+
+  test("the library source may spread it — that is where the fix lives", () => {
+    const code = component(`    <Checkbox {...getInputProps(props.field, { type: "checkbox" })} />`)
+    expect(fires(TOGGLES, code, "src/components/conform-checkbox.tsx")).toBe(false)
+  })
+})
+
+const GATE = "gate-last-result-on-idle-navigation"
+
+describe(GATE, () => {
+  test("true positive: the shorthand, which is the shape people write", () => {
+    const code = `const [form, fields] = useForm({ lastResult, onValidate: fn })\n`
+    expect(fires(GATE, code)).toBe(true)
+  })
+
+  test("true positive: written out, but ungated", () => {
+    const code = `const [form] = useForm({ lastResult: actionData })\n`
+    expect(fires(GATE, code)).toBe(true)
+  })
+
+  test("true negative: gated on the navigation state", () => {
+    const code = `const [form] = useForm({
+  lastResult: navigation.state === "idle" ? lastResult : null,
+})
+`
+    expect(fires(GATE, code)).toBe(false)
+  })
+
+  test("true negative: gated on a fetcher's state", () => {
+    const code = `const [form] = useForm({
+  lastResult: fetcher.state === "idle" ? fetcher.data : null,
+})
+`
+    expect(fires(GATE, code)).toBe(false)
+  })
+
+  test("no false positive: a form that passes no lastResult at all", () => {
+    // That is tier 3's finding, not this one's — the two never both fire.
+    const code = `const [form] = useForm({ onValidate: fn })\n`
+    expect(fires(GATE, code)).toBe(false)
+  })
+
+  test("no false positive: lastResult read somewhere that is not useForm", () => {
+    expect(fires(GATE, `const shown = lastResult?.status === "error"\n`)).toBe(false)
+  })
+
+  test("example files are exempt — a gallery form has no navigation", () => {
+    const code = `const [form] = useForm({ lastResult: props.actionData })\n`
+    expect(fires(GATE, code, "src/registry/conform-select.examples.tsx")).toBe(false)
+  })
+
+  test("known blind spot: options passed as a variable are invisible", () => {
+    const code = `const options = { lastResult }\nconst [form] = useForm(options)\n`
+    expect(fires(GATE, code)).toBe(false)
+  })
+})
+
+const INTENT = "intent-buttons-must-not-be-type-button"
+
+describe(INTENT, () => {
+  test("true positive: an insert button typed as a plain button", () => {
+    const code = component(
+      `    <Button type="button" {...form.insert.getButtonProps({ name: fields.items.name })}>Add</Button>`,
+    )
+    expect(fires(INTENT, code)).toBe(true)
+  })
+
+  test("true positive: the same written as an expression", () => {
+    const code = component(
+      `    <Button type={"button"} {...form.remove.getButtonProps({ name: fields.items.name, index: 0 })}>Remove</Button>`,
+    )
+    expect(fires(INTENT, code)).toBe(true)
+  })
+
+  test("true negative: type=\"submit\"", () => {
+    const code = component(
+      `    <Button type="submit" {...form.insert.getButtonProps({ name: fields.items.name })}>Add</Button>`,
+    )
+    expect(fires(INTENT, code)).toBe(false)
+  })
+
+  test("true negative: the intent dispatched from a handler instead", () => {
+    const code = component(
+      `    <Button type="button" onPress={() => form.insert({ name: fields.items.name })}>Add</Button>`,
+    )
+    expect(fires(INTENT, code)).toBe(false)
+  })
+
+  test("no false positive: an ordinary button that submits nothing", () => {
+    expect(fires(INTENT, component(`    <Button type="button">Cancel</Button>`))).toBe(false)
+  })
+
+  test("known blind spot: no type attribute at all — react-aria defaults to button", () => {
+    // The worse case, and the one a syntactic check cannot see. The ripgrep
+    // line in the record is the wider net.
+    const code = component(
+      `    <Button {...form.insert.getButtonProps({ name: fields.items.name })}>Add</Button>`,
+    )
+    expect(fires(INTENT, code)).toBe(false)
   })
 })

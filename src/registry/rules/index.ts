@@ -1,11 +1,15 @@
 import { bindFieldsThroughConformRule } from "./bind-fields-through-conform.rule"
+import { formatValuesThroughTheLibraryRule } from "./format-values-through-the-library.rule"
+import { gateLastResultOnIdleNavigationRule } from "./gate-last-result-on-idle-navigation.rule"
 import { getRuleGroup, ruleGroups } from "./groups"
 import { importComponentsNotPrimitivesRule } from "./import-components-not-primitives.rule"
+import { intentButtonsMustNotBeTypeButtonRule } from "./intent-buttons-must-not-be-type-button.rule"
 import { keepFilesReadableRule } from "./keep-files-readable.rule"
 import { noAppearanceClassesOnLayoutElementsRule } from "./no-appearance-classes-on-layout-elements.rule"
 import { noHardcodedDesignValuesRule } from "./no-hardcoded-design-values.rule"
 import { noRawInteractiveElementsRule } from "./no-raw-interactive-elements.rule"
 import { renderFieldTextThroughTheFieldRule } from "./render-field-text-through-the-field.rule"
+import { seedTogglesWithDefaultSelectedRule } from "./seed-toggles-with-default-selected.rule"
 import { validateOnTheServerWithTheSameSchemaRule } from "./validate-on-the-server-with-the-same-schema.rule"
 import type { RuleGroup, RuleMeta, RuleSeverity } from "./types"
 
@@ -23,9 +27,13 @@ export const rulesRegistry: RuleMeta[] = [
   noHardcodedDesignValuesRule,
   importComponentsNotPrimitivesRule,
   keepFilesReadableRule,
+  formatValuesThroughTheLibraryRule,
   bindFieldsThroughConformRule,
   renderFieldTextThroughTheFieldRule,
   validateOnTheServerWithTheSameSchemaRule,
+  seedTogglesWithDefaultSelectedRule,
+  gateLastResultOnIdleNavigationRule,
+  intentButtonsMustNotBeTypeButtonRule,
 ]
 
 export function getRule(id: string | undefined): RuleMeta | undefined {
