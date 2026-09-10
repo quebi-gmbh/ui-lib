@@ -7,7 +7,7 @@ Tailwind v4, react-aria-components.
 
 ```sh
 bun run lint        # the rules this repo publishes, run on this repo
-bun run test        # the rule suite (real Biome CLI over the generated artifacts)
+bun run test        # the rule suite (real Biome CLI) + component tests (rendered in happy-dom)
 bun run typecheck   # generate API + react-router typegen + tsc -b
 ```
 
@@ -62,5 +62,11 @@ register, plus the quebi styling and self-contained-dependency conventions.
   for a consumer's fuller Biome setup, which a rules-only config reports as unused suppressions.
   What still holds there — the library hand-rolls none of the controls it forbids — is asserted in
   `tests/repo-lint.test.ts` instead.
+- The `@/…` alias is resolved for `bun test` by the `paths` entry in the *root* `tsconfig.json`.
+  Each project config declares its own copy for tsc; Bun reads only the root one, and without it
+  every component import fails at runtime with "Cannot find module '@/lib/utils'".
+- `tests/` is outside `biome.jsonc`'s file list, so a test fixture may use the raw elements the
+  rules ban (a Conform test needs a real `<form>`). Say why in a comment — it is not a suppression,
+  but the next reader will wonder.
 - `src/registry/*.examples.tsx` is copied verbatim by agents through
   `/api/components/<slug>.json`. A shortcut taken in an example propagates.

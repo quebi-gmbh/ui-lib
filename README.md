@@ -92,7 +92,7 @@ bun install
 bun run dev        # dev server (regenerates the API first)
 bun run lint       # this repo, checked against the rules it publishes
 bun run lint:fix   # the same, applying Biome's safe fixes
-bun run test       # rule suite: selectors, exceptions, generated config
+bun run test       # rule suite + component behaviour tests (rendered in happy-dom)
 bun run build      # generate API + typecheck + production build
 ```
 
@@ -100,12 +100,19 @@ bun run build      # generate API + typecheck + production build
 record is in the commit, checks that the generated config came with it. It is a convenience, not a
 gate — `git commit --no-verify` skips it, and CI runs the same lint over the whole tree.
 
-`bun run test` covers the rules under `tests/`: every check is run through the real Biome CLI with
-the generated config and plugins — the same artifacts consumers download — and checked for true and
-false positives and negatives, with each known blind spot asserted as a miss so the list only
-shrinks deliberately.
-(The library components themselves have no rendering tests — the repo has no DOM test environment.
-`tests/formatted-number.test.ts` covers the formatters that are callable without one.)
+`bun run test` covers two things. The rule suite under `tests/` runs every check through the real
+Biome CLI with the generated config and plugins — the same artifacts consumers download — and
+checks it for true and false positives and negatives, with each known blind spot asserted as a miss
+so the list only shrinks deliberately.
+
+`tests/components/` covers component behaviour, rendered in a real DOM. `bunfig.toml` preloads
+`tests/dom.ts`, which registers happy-dom's globals, React Testing Library's cleanup and the
+jest-dom matchers before any test file loads, so a test just imports `@testing-library/react` and
+renders. What is tested there is behaviour that types and lint cannot see and that breaks silently —
+Gallery's paging and selection, Link's router bypass for `mailto:`/`tel:`/external hrefs,
+EnergyClassBadge's letter-as-text guarantee, ConformField staying editable when Conform supplies a
+default value — not styling. A new component does not need a test file; a stateful one, or one with
+a rule attached to its markup, does.
 
 The site is a Vite + React Router SPA that auto-deploys to GitHub Pages on merge to `main`.
 
@@ -116,6 +123,7 @@ src/components/      component source (what gets shipped/copy-pasted)
 src/registry/        per-component metadata (*.meta.ts) + live gallery examples (*.examples.tsx)
 src/registry/rules/  usage rule records (*.rule.ts) behind /rules and /api/rules*.json
 tests/               rule suite (bun test): selectors, exceptions, generated config
+tests/components/    component behaviour tests, rendered in happy-dom (see tests/dom.ts)
 src/routes/          the SPA pages (landing, gallery, component detail, rules)
 scripts/generate-api.ts   builds the static AI-discovery API from source
 scripts/generate-lint-config.ts  builds this repo's own biome.jsonc + ui-lib-rules/*.grit
