@@ -32,6 +32,7 @@ import { parseWithValibot } from "@conform-to/valibot"
 import { render, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import * as v from "valibot"
+import { Button } from "../../src/components/button"
 import { ChoiceBoxItem, ChoiceBoxLabel } from "../../src/components/choice-box"
 import { ConformChoiceBox } from "../../src/components/conform-choice-box"
 
@@ -77,8 +78,9 @@ describe("what an empty submit has to look like on the wire", () => {
 
 // A raw <form> is what a Conform form binds to; the library's own rule points
 // callers at react-router's <Form>, which would need a router around every test
-// here to prove nothing about the binding. tests/ is outside biome.jsonc's file
-// list, so this is not a suppressed diagnostic.
+// here to prove nothing about the binding. That is the rule's own published
+// exception, and in this repo it is a `localScopes` entry naming <form> alone —
+// so every other element on the tier-1 list is still checked in this file.
 function PlanForm({ defaultPlan }: { defaultPlan?: string }) {
   const [form, fields] = useForm({
     id: "plan-form",
@@ -95,7 +97,7 @@ function PlanForm({ defaultPlan }: { defaultPlan?: string }) {
           </ChoiceBoxItem>
         )}
       </ConformChoiceBox>
-      <button type="submit">Save</button>
+      <Button type="submit">Save</Button>
     </form>
   )
 }
@@ -121,7 +123,7 @@ function AddonsForm() {
           </ChoiceBoxItem>
         )}
       </ConformChoiceBox>
-      <button type="submit">Save</button>
+      <Button type="submit">Save</Button>
     </form>
   )
 }

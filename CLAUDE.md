@@ -73,7 +73,7 @@ register, plus the quebi styling and self-contained-dependency conventions.
 ## Things that will bite you
 
 - `bun run lint` is Biome's recommended set *plus* the rules this repo publishes, over `src/**`,
-  `scripts/**`, `tests/**/*.ts` and the root config files — including `src/components/**`. The
+  `scripts/**`, `tests/**` and the root config files — including `src/components/**`. The
   library source is excepted from nine of the fourteen by the records themselves; what still
   applies there is the element ban minus `<input>`, plus the two platform-defaults rules, which
   the library has no reason to break and so no reason to be excused from. A raw `<button>` in a
@@ -102,8 +102,15 @@ register, plus the quebi styling and self-contained-dependency conventions.
 - The `@/…` alias is resolved for `bun test` by the `paths` entry in the *root* `tsconfig.json`.
   Each project config declares its own copy for tsc; Bun reads only the root one, and without it
   every component import fails at runtime with "Cannot find module '@/lib/utils'".
-- `tests/**/*.tsx` is still outside `biome.jsonc`'s file list (the `.ts` files are in), so a
-  rendering fixture may use the raw elements the rules ban and import react-aria primitives
-  directly — a Conform test needs a real `<form>`. Say why in a comment: it is not a suppression,
-  but the next reader will wonder. A `.ts` test file has no such licence; it is linted like the
-  rest of the repo.
+- `tests/**/*.tsx` is in the file list now, so a rendering fixture gets the same reading as
+  `src/routes/`. Two things a fixture genuinely cannot do are named one at a time in
+  `localScopes`: a raw `<form>` (a Conform form binds to one, and react-router's `<Form>` would
+  need a router mounted around every test), and `useForm` without `lastResult` (there is no route
+  action to return one). The `<form>` entry excuses that element and no other — a raw `<button>`
+  in a fixture is reported exactly as it is in a route, and a test in `repo-lint.test.ts` proves
+  it. Anything else is a `biome-ignore` whose reason says what forces it, and there is one:
+  `conform-binding.test.tsx` imports react-aria primitives because it is asserting what react-aria
+  itself does with an id. Note the one thing you cannot write in the file — Biome has no
+  suppression comment for a GritQL plugin diagnostic, so a fixture that renders a banned shape on
+  purpose (the `getInputProps` spread, in that same file) needs a `localScopes` entry naming the
+  path and the rule.
