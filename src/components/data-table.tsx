@@ -31,6 +31,7 @@ import {
   useRef,
   useState,
 } from "react"
+import { useIsSSR } from "react-aria"
 import type { Selection } from "react-aria-components"
 import {
   Cell,
@@ -61,9 +62,11 @@ import { SelectItem } from "@/components/select"
 import { Skeleton } from "@/components/skeleton"
 import {
   Table,
+  TABLE_BAND_HEIGHT,
   TableBody,
   TableCell,
   TableColumn,
+  TableColumnGroup,
   TableHeader,
   TableRow,
 } from "@/components/table"
@@ -75,6 +78,7 @@ import {
   type DataTableFilterOption,
   type DataTableFilterValue,
   type DataTableFilterVariant,
+  type DataTableHeader,
   type DataTableInstance,
   type DataTableRow,
   type DataTableSelection,
@@ -86,6 +90,7 @@ import {
   isRowSelected,
   nextSorting,
   pageRange,
+  qualifiedLabel,
   selectedKeysFor,
   selectionCount,
   sortPriority,
@@ -109,6 +114,11 @@ import { cn } from "@/lib/utils"
  * through the quebi Table, so ARIA grid semantics, keyboard navigation,
  * typeahead, selection UX, column resize, drag & drop and virtualization are
  * react-aria's — see the ownership table in `@/lib/data-table`.
+ *
+ * That includes the header: a column with child columns becomes a real spanned
+ * header cell through `TableColumnGroup`, so the band is part of the grid rather
+ * than a line of text repeated above each leaf. What makes that possible, and
+ * why every leaf ends up with a band above it, is in that component's doc.
  */
 
 /* -------------------------------------------------------------------------- */
@@ -1273,6 +1283,14 @@ export function DataTableSurface<T extends RowData>({
   const headerGroups = table.getHeaderGroups()
   const leafHeaders = headerGroups.at(-1)?.headers ?? []
   const hasBands = headerGroups.length > 1
+  // The same signal react-aria's own collection uses to pick its SSR path, and
+  // for the same reason: a band is a parent column, and parent columns do not
+  // survive that path. `TableColumnGroup` has the whole story. Until the gate
+  // opens — one render after hydration — the band name rides above each leaf
+  // label instead, in a block the band row's own height, so nothing moves when
+  // the real row arrives.
+  const isSSR = useIsSSR()
+  const showBands = hasBands && !isSSR
   const leafColumns = table.getVisibleLeafColumns()
   const columnCount = leafColumns.length + (selectionMode === "multiple" ? 1 : 0) + (onRowReorder ? 1 : 0)
   // The same key each row is rendered with — a grouped row is its own id, not
@@ -1442,6 +1460,105 @@ export function DataTableSurface<T extends RowData>({
 
   const showSkeleton = isLoading && rows.length === 0
 
+  /** One leaf column: the label, the sort badge, the filter popover, the menu. */
+  const renderLeafColumn = (header: DataTableHeader<T>) => {
+    const column = header.column
+    const meta = column.columnDef.meta
+    const priority = sortPriority(sorting, column.id)
+    const filter = renderFilter?.(column.id)
+    const isFiltered = activeFilters.includes(column.id)
+    return (
+      <TableColumn
+        key={column.id}
+        id={column.id}
+        // react-aria throws unless exactly one column is the row
+        // header, so it is the first visible one rather than a choice.
+        isRowHeader={column.id === leafHeaders[0]?.column.id}
+        allowsSorting={column.getCanSort()}
+        isResizable={allowResize && column.getCanResize()}
+        width={allowResize ? column.getSize() : undefined}
+        minWidth={column.columnDef.minSize}
+        maxWidth={column.columnDef.maxSize}
+        className={cn(
+          alignClass(meta?.align),
+          priorityClass(meta?.priority),
+          stickyHeader && "sticky z-20",
+          column.getIsPinned?.() && "bg-quebi-bg",
+        )}
+        style={{
+          ...pinStyle(column.id),
+          // A sticky leaf row starts below the band row, which sticks at 0.
+          ...(stickyHeader ? { top: showBands ? TABLE_BAND_HEIGHT : 0 } : null),
+        }}
+      >
+        <span className="flex flex-col items-start">
+          {hasBands && !showBands && (
+            // py-3 + TABLE_BAND_HEIGHT + label line + py-3 is exactly the banded
+            // header's two rows, so the gate opening does not shift the page.
+            <span
+              className="flex items-center text-[0.625rem] text-quebi-fg-subtle leading-none tracking-[0.12em]"
+              style={{ height: TABLE_BAND_HEIGHT }}
+            >
+              {meta?.group ?? "\u00a0"}
+            </span>
+          )}
+          <span className="inline-flex items-center gap-1">
+            {meta?.label ?? column.id}
+            {priority != null && sorting.length > 1 && (
+              <span className="grid size-4 place-content-center rounded-full bg-quebi-brand/20 font-semibold text-[10px] text-quebi-brand tabular-nums">
+                {priority}
+              </span>
+            )}
+            {filter && (
+              <Popover>
+                <PopoverTrigger
+                  intent="ghost"
+                  size="sq-xs"
+                  isCircle
+                  aria-label={isFiltered ? `Filter ${meta?.label} (active)` : `Filter ${meta?.label}`}
+                  className={cn("relative", isFiltered && "text-quebi-brand")}
+                >
+                  <Filter data-slot="icon" aria-hidden="true" />
+                </PopoverTrigger>
+                <PopoverContent className="w-72 p-0">
+                  <OutsideTheCollection>{filter}</OutsideTheCollection>
+                </PopoverContent>
+              </Popover>
+            )}
+            <ColumnMenu column={column} onSort={onSortColumn} allowGrouping={allowGrouping} />
+          </span>
+        </span>
+      </TableColumn>
+    )
+  }
+
+  /**
+   * A header cell and everything under it.
+   *
+   * TanStack's header groups are already rectangular: a leaf with no band of
+   * its own gets a placeholder header at every level above it, each holding
+   * exactly one child. Recursing through them therefore puts every leaf at the
+   * same depth in react-aria's collection, which is the condition for
+   * `buildHeaderRows` to produce header rows that can be rendered — a row
+   * shorter than the table gets filled with `placeholder` nodes
+   * react-aria-components has no case for. So a placeholder header is drawn
+   * too, as a band with no label.
+   */
+  function renderHeaderCell(header: DataTableHeader<T>): ReactNode {
+    if (header.subHeaders.length === 0) return renderLeafColumn(header)
+    const meta = header.column.columnDef.meta
+    return (
+      <TableColumnGroup
+        key={header.id}
+        id={`band:${header.id}`}
+        label={header.isPlaceholder ? null : (meta?.label ?? header.column.id)}
+        className={cn(stickyHeader && "sticky top-0 z-20")}
+      >
+        {header.subHeaders.map(renderHeaderCell)}
+      </TableColumnGroup>
+    )
+  }
+
   const tableElement = (
     <Table
       aria-label={ariaLabel}
@@ -1469,72 +1586,17 @@ export function DataTableSurface<T extends RowData>({
         className,
       )}
     >
-      <TableHeader>
-        {leafHeaders.map((header, index) => {
-          const column = header.column
-          const meta = column.columnDef.meta
-          const priority = sortPriority(sorting, column.id)
-          const filter = renderFilter?.(column.id)
-          const isFiltered = activeFilters.includes(column.id)
-          return (
-            <TableColumn
-              key={column.id}
-              id={column.id}
-              // react-aria throws unless exactly one column is the row
-              // header, so it is the first visible one rather than a choice.
-              isRowHeader={index === 0}
-              allowsSorting={column.getCanSort()}
-              isResizable={allowResize && column.getCanResize()}
-              width={allowResize ? column.getSize() : undefined}
-              minWidth={column.columnDef.minSize}
-              maxWidth={column.columnDef.maxSize}
-              className={cn(
-                alignClass(meta?.align),
-                priorityClass(meta?.priority),
-                stickyHeader && "sticky top-0 z-20",
-                column.getIsPinned?.() && "bg-quebi-bg",
-              )}
-              style={pinStyle(column.id)}
-            >
-              <span className="flex flex-col items-start gap-0.5">
-                {hasBands && (
-                  <span className="text-[0.625rem] text-quebi-fg-subtle leading-none tracking-[0.12em]">
-                    {meta?.group ?? " "}
-                  </span>
-                )}
-                <span className="inline-flex items-center gap-1">
-                  {meta?.label ?? column.id}
-                  {priority != null && sorting.length > 1 && (
-                    <span className="grid size-4 place-content-center rounded-full bg-quebi-brand/20 font-semibold text-[10px] text-quebi-brand tabular-nums">
-                      {priority}
-                    </span>
-                  )}
-                  {filter && (
-                    <Popover>
-                      <PopoverTrigger
-                        intent="ghost"
-                        size="sq-xs"
-                        isCircle
-                        aria-label={isFiltered ? `Filter ${meta?.label} (active)` : `Filter ${meta?.label}`}
-                        className={cn("relative", isFiltered && "text-quebi-brand")}
-                      >
-                        <Filter data-slot="icon" aria-hidden="true" />
-                      </PopoverTrigger>
-                      <PopoverContent className="w-72 p-0">
-                        <OutsideTheCollection>{filter}</OutsideTheCollection>
-                      </PopoverContent>
-                    </Popover>
-                  )}
-                  <ColumnMenu
-                    column={column}
-                    onSort={onSortColumn}
-                    allowGrouping={allowGrouping}
-                  />
-                </span>
-              </span>
-            </TableColumn>
-          )
-        })}
+      <TableHeader
+        bandDepth={showBands ? headerGroups.length - 1 : 0}
+        bandClassName={cn(stickyHeader && "sticky top-0 z-20")}
+      >
+        {/* The banded header is a tree: the walk starts at the top header group
+            and ends at a leaf column. Ungated it would also cover the unbanded
+            case, where the top group *is* the leaf row — but not the gated one,
+            where there are bands the collection must not be told about. */}
+        {showBands
+          ? (headerGroups[0]?.headers ?? []).map(renderHeaderCell)
+          : leafHeaders.map(renderLeafColumn)}
       </TableHeader>
 
       <TableBody
@@ -1713,7 +1775,7 @@ function ColumnMenu<T extends RowData>({ column, onSort, allowGrouping }: Column
 
 interface SurfaceFooterProps<T extends RowData> {
   table: DataTableInstance<T>
-  leafHeaders: ReturnType<DataTableInstance<T>["getHeaderGroups"]>[number]["headers"]
+  leafHeaders: DataTableHeader<T>[]
 }
 
 /**
@@ -2156,7 +2218,7 @@ export function DataTable<T extends RowData>({
               <DataTableColumnChooser
                 columns={table.getAllLeafColumns().map((column) => ({
                   id: column.id,
-                  label: column.columnDef.meta?.label ?? column.id,
+                  label: qualifiedLabel(column.columnDef.meta, column.id),
                   isVisible: column.getIsVisible(),
                   canHide: column.getCanHide(),
                 }))}

@@ -23,8 +23,9 @@ const columnShowcase: DataTableColumn<Order>[] = [
   {
     id: "order",
     header: "Order",
-    // Child columns render as a header band above the two below it. One
-    // vocabulary: a column with `columns` is a group, everything else is a leaf.
+    // Child columns render as a header band: one cell above the two below it,
+    // spanning both. One vocabulary — a column with `columns` is a group,
+    // everything else is a leaf.
     columns: [
       { id: "reference", header: "Reference", accessorKey: "reference", width: 130 },
       {
@@ -114,7 +115,7 @@ const ColumnShowcase = () => (
     defaultPageSize={8}
     showFooter
     grid
-    caption="Accessor, derived and display columns under two levels of header, with a column total in the footer."
+    caption="Accessor, derived and display columns under a banded header, with a column total in the footer."
   />
 )
 
@@ -185,7 +186,7 @@ export const dataTableExamples: ComponentExample[] = [
   {
     title: "Columns, cells and footers",
     description:
-      "Accessor columns (by key and by function), a display column, two levels of header band, per-column alignment and width, truncation with a tooltip, an empty-value placeholder, and a footer total that follows the filters. Money and counts go through FormattedCurrency and FormattedNumber — the site is prerendered, so an implicit locale would be a hydration bug.",
+      "Accessor columns (by key and by function), a display column, a banded header whose bands are single cells spanning the columns under them, per-column alignment and width, truncation with a tooltip, an empty-value placeholder, and a footer total that follows the filters. The band row needs the client — react-aria's server path cannot build a parent column — so the prerendered HTML carries the band name above each label and the spanned row arrives with hydration, at the same height. Money and counts go through FormattedCurrency and FormattedNumber — the site is prerendered, so an implicit locale would be a hydration bug.",
     render: () => <ColumnShowcase />,
   },
   {
