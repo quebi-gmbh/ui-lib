@@ -34,11 +34,14 @@ messages you would give a consumer are the ones you get:
   locale)`), never a bare `toLocaleString()` — the site is prerendered, so an implicit locale is a
   hydration bug.
 - **The platform will do it for you. That is not the same as your app doing it.** `alert`,
-  `confirm` and `prompt` are out: feedback is a `Toast` under a `ToastProvider`, a question is a
-  `Modal` whose own button runs the rest of the handler. And `AsyncTable` reports sort intent
+  `confirm` and `prompt` are out, and this one **fails**: feedback is a `Toast` under a
+  `ToastProvider`, and a question is `await confirm(...)` from `useConfirm()` under a
+  `ConfirmProvider` — it returns `Promise<boolean>`, so the branch below the question survives and
+  the fix is an import plus an `await`, not a refactor. (`<AlertDialog isOpen …>` is the same
+  surface where something else owns the open state.) `AsyncTable`, by contrast, reports sort intent
   through `onSortChange` so you can re-query — sorting its `rows` in the component reorders the
-  answer to the last query instead of asking for a new one. Both of these warn rather than fail,
-  because both fixes are a change of shape rather than a change of import.
+  answer to the last query instead of asking for a new one — and that one still warns, because the
+  fix really is a change of shape.
 
 Each message names its replacement and links to the rule page. If a rule is wrong for a case you
 hit, the answer is a documented exception with a reason — either an `exceptions` entry on the
