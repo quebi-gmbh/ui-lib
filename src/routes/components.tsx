@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Outlet } from "react-router"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/button"
-import { ComponentSidebar } from "@/components/component-sidebar"
+import { ComponentSidebar } from "@/site/component-sidebar"
 import { cn } from "@/lib/utils"
 
 export default function ComponentsLayout() {

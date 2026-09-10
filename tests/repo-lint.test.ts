@@ -19,6 +19,7 @@ import {
   pluginRules,
   renderGritPlugin,
 } from "../src/registry/rules/checks"
+import { metaRegistry } from "../src/registry/meta"
 import { rulesRegistry } from "../src/registry/rules"
 import {
   CONFIG_FILE,
@@ -132,6 +133,22 @@ describe("the generated config is the one the rule records describe", () => {
 })
 
 describe("the repo obeys the rules it publishes", () => {
+  test("src/components holds nothing but published components", () => {
+    // The carve-out that excludes src/components/** from biome.jsonc is an
+    // argument about a layer — the library owns appearance and imports the
+    // primitives — and it is only true of files that layer actually contains.
+    // Seven docs-site files once lived here and were excused by the address
+    // rather than by the argument, including a raw <input type="search"> that a
+    // human, not the linter, had to find. `slug` is what makes a file part of
+    // the library, so that is the membership test: anything without one is app
+    // code and belongs in src/site/, where the full rule set can see it.
+    const published = new Set(metaRegistry.map((m) => `${m.slug}.tsx`))
+    const unpublished = readdirSync(join(ROOT, "src", "components"))
+      .filter((file) => file.endsWith(".tsx"))
+      .filter((file) => !published.has(file))
+    expect(unpublished).toEqual([])
+  })
+
   test("`bun run lint` is clean", () => {
     const diagnostics = lint([])
     expect(diagnostics.map(describeDiagnostic)).toEqual([])

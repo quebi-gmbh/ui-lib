@@ -112,11 +112,13 @@ The site is a Vite + React Router SPA that auto-deploys to GitHub Pages on merge
 ### Project layout
 
 ```
-src/components/      component source (what gets shipped/copy-pasted)
+src/components/      component source (what gets shipped/copy-pasted) — nothing else
 src/registry/        per-component metadata (*.meta.ts) + live gallery examples (*.examples.tsx)
 src/registry/rules/  usage rule records (*.rule.ts) behind /rules and /api/rules*.json
 tests/               rule suite (bun test): selectors, exceptions, generated config
 src/routes/          the SPA pages (landing, gallery, component detail, rules)
+src/site/            the SPA's own chrome (header, footer, sidebars, code block) — app code,
+                     linted at full strength like src/routes/
 scripts/generate-api.ts   builds the static AI-discovery API from source
 scripts/generate-lint-config.ts  builds this repo's own biome.jsonc + ui-lib-rules/*.grit
 biome.jsonc          generated — the rules, scoped to this repo (do not edit by hand)

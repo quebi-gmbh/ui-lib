@@ -5,7 +5,7 @@ import { Card } from "@/components/card"
 import { Skeleton } from "@/components/skeleton"
 import { getComponent } from "@/registry"
 import { componentSources } from "@/registry/sources.generated"
-import { CodeBlock } from "@/components/code-block"
+import { CodeBlock } from "@/site/code-block"
 import { seo } from "@/lib/seo"
 import type { Route } from "./+types/components.$slug"
 
