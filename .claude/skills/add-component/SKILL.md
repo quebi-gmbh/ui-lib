@@ -118,6 +118,18 @@ bun run build        # regenerates the API and type-checks; must be clean
 
 Then check the verification list below.
 
+### 6. A behaviour test, if the component has behaviour
+
+`bun test` renders: `bunfig.toml` preloads `tests/dom.ts`, which installs happy-dom's globals,
+React Testing Library's cleanup and the jest-dom matchers. A test file in `tests/components/`
+imports the component by relative path (`../../src/components/<slug>`) and renders it — see
+`tests/components/gallery.test.tsx` for the stateful case.
+
+Most components need nothing here; write one when the component has state a user drives (selection,
+paging, open/closed), branches on its input (Link's external-href bypass), or carries an
+accessibility guarantee the markup could quietly drop (a decorative icon's `aria-hidden`, a value
+rendered as text and not only as colour). Test that behaviour, not class names.
+
 ## Conform variants
 
 Conform variants wrap a base form component and bind it to a Conform field. Rules:
@@ -180,6 +192,8 @@ const isRequired = field.required ?? false
 - [ ] Visit `/components/<slug>` (run `bun run dev`): examples render on-brand, the source block
       shows highlighted source, the sidebar lists it under the right category, breadcrumbs read right.
 - [ ] For a conform variant: it appears under the **Conform** nav group and its form validates.
+- [ ] If the component has state, an input-dependent branch, or an accessibility guarantee:
+      a test in `tests/components/`, and `bun test` is clean.
 
 ## Don't
 

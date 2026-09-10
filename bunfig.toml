@@ -1,0 +1,8 @@
+# `bun test` configuration.
+#
+# The preload gives every test file a DOM: happy-dom's globals, React Testing
+# Library's automatic cleanup, and the jest-dom matchers. It is registered here
+# rather than imported per file so a test that forgets the import cannot half-run
+# against a missing `document`.
+[test]
+preload = ["./tests/dom.ts"]

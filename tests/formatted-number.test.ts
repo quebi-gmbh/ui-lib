@@ -10,9 +10,10 @@
  *
  * These assertions were carried over from the Cellestial-era
  * `components/formatted-number.test.tsx`, which never ran: it imported
- * `@testing-library/react`, which the repo does not depend on. Only the
- * DOM-free half survived the move; the component-rendering half needs a test
- * environment this repo does not have yet.
+ * `@testing-library/react`, which the repo did not depend on. Only the DOM-free
+ * half survived the move; the component-rendering half now lives in
+ * `tests/components/formatted-number.test.tsx`, against the DOM environment
+ * added in task #8.
  */
 import { describe, expect, test } from "bun:test"
 import { formatCurrency, formatNumber } from "../src/components/formatted-number"

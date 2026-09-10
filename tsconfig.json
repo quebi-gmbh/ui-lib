@@ -1,8 +1,8 @@
 {
   // The solution file does not compile anything itself, but `bun test` reads
-  // path aliases from the root tsconfig — and tests/conform-binding.test.tsx
-  // imports components that resolve `@/lib/utils`. The per-project configs
-  // repeat this; it is not inherited from here.
+  // path aliases from the root tsconfig — and every test that renders a
+  // component pulls in `@/lib/utils` and `@/components/*` through it. The
+  // per-project configs repeat this; it is not inherited from here.
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {

@@ -12,13 +12,16 @@
  *      `getInputProps`, because react-aria's prop names differ from the DOM's
  *      and `filterDOMProps` drops the mismatched half without complaint.
  *
- * The third block pins react-aria's id ownership, which decides where each
- * variant puts `id={field.errorId}` — and where it must not.
+ * The third block pins react-aria's id ownership, which is what decides where
+ * each variant puts `id={field.errorId}`.
+ *
+ * The DOM comes from `tests/dom.ts`, preloaded for every test file (see
+ * `bunfig.toml`); happy-dom refuses a second global registration, so this file
+ * no longer registers its own. It keeps mounting through `createRoot` by hand
+ * rather than through React Testing Library because what it asserts is the
+ * hand-off between Conform and react-aria, which is easier to read as explicit
+ * mount / act steps.
  */
-import { GlobalRegistrator } from "@happy-dom/global-registrator"
-
-GlobalRegistrator.register()
-
 import { describe, expect, test } from "bun:test"
 import { type FieldMetadata, getInputProps, useForm } from "@conform-to/react"
 import { BaseControl, useControl } from "@conform-to/react/future"
@@ -30,9 +33,6 @@ import * as v from "valibot"
 import { ConformField } from "../src/components/conform-field"
 import { ConformSwitch } from "../src/components/conform-switch"
 import { Switch } from "../src/components/switch"
-
-// react-dom looks for this to decide whether act() is supported.
-;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
 async function mount(element: React.ReactElement) {
   const container = document.createElement("div")
@@ -149,11 +149,20 @@ describe("getInputProps is not spreadable onto a react-aria control", () => {
 })
 
 describe("react-aria owns the ids inside its own fields", () => {
-  test("an explicit id on a FieldError is not the id the control points at", async () => {
-    // Why no conform-* variant sets id={field.errorId} inside a react-aria
-    // field: the field generates ids for its description and error slots and
-    // wires aria-describedby to those. Overriding the element's id leaves the
-    // attribute pointing at nothing, and nothing anywhere says so.
+  test("react-aria follows an explicit id on a FieldError", async () => {
+    // This assertion used to read the other way — that overriding the element's
+    // id left aria-describedby pointing at nothing — and it was an artifact of
+    // the environment, not of react-aria. This file used to call
+    // GlobalRegistrator.register() in its body, which ESM hoisting runs *after*
+    // its imports: react-aria was evaluated with no `document`, took its
+    // server-rendering path, and there its layout effects (the ones that read
+    // the rendered id back) are no-ops. Loaded into a DOM — a browser, or this
+    // suite now that tests/dom.ts registers happy-dom in a preload — react-aria
+    // reads the id the element actually has and points the control at it.
+    //
+    // So the react-aria-field variants leaving FieldError's id alone is a
+    // convention, not a repair: react-aria's own id would be wired up just as
+    // correctly. See the task-8 follow-up.
     const container = await mount(
       <TextField isInvalid>
         <Label>Email</Label>
@@ -163,7 +172,9 @@ describe("react-aria owns the ids inside its own fields", () => {
     )
     const input = container.querySelector("input") as HTMLInputElement
     expect(container.querySelector("[slot=errorMessage]")?.id).toBe("mine")
-    expect(input.getAttribute("aria-describedby")).not.toContain("mine")
+    expect(input.getAttribute("aria-describedby")?.split(" ")).toContain("mine")
+    // What actually matters: the text a screen reader would read out.
+    expect(input).toHaveAccessibleDescription("boom")
   })
 
   test("ConformField's error message is the one its input points at", async () => {
