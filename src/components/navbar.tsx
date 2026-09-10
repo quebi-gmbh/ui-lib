@@ -110,10 +110,6 @@ const NavbarProvider = ({
     [open, setOpen, isMobile, toggleNavbar],
   )
 
-  if (isMobile === undefined) {
-    return null
-  }
-
   return (
     <NavbarContext value={contextValue}>
       <div
