@@ -15,7 +15,11 @@
   "files": {
     "includes": [
       "src/**/*.tsx",
-      "src/**/*.jsx"
+      "src/**/*.jsx",
+      "src/**/*.ts",
+      "scripts/**/*.ts",
+      "tests/**/*.ts",
+      "*.ts"
     ]
   },
   "formatter": {

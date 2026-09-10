@@ -11,9 +11,10 @@ bun run test        # the rule suite (real Biome CLI) + component tests (rendere
 bun run typecheck   # generate API + react-router typegen + tsc -b
 ```
 
-Run `bun run lint` after editing anything under `src/`. It is fast (well under a second) and it is
-the same check the pre-commit hook and CI run, so a clean run here means the commit will go
-through. `bun run lint:fix` applies Biome's safe fixes.
+Run `bun run lint` after editing anything under `src/`, `scripts/` or `tests/` — all three are in
+the file list, along with the root config files. It is fast (well under a second) and it is the
+same check the pre-commit hook and CI run, so a clean run here means the commit will go through.
+`bun run lint:fix` applies Biome's safe fixes. `bun run typecheck` covers `scripts/` too.
 
 ## The rules are not advice, they are lint
 
@@ -68,18 +69,29 @@ register, plus the quebi styling and self-contained-dependency conventions.
 
 ## Things that will bite you
 
-- `bun run lint` is Biome's recommended set *plus* the rules this repo publishes, over
-  `src/**/*.{tsx,jsx}` — including `src/components/**`. The library source is excepted from nine
-  of them by the records themselves; what still applies there is the element ban minus `<input>`
-  plus the two platform-defaults rules, which the library has no reason to break and so no reason
-  to be excused from. A raw `<button>` in a library component fails the pre-commit hook like
-  anywhere else. Its `biome-ignore lint/a11y/...` comments now land on rules that actually run, which is
-  what let the directory back into the file list.
+- `bun run lint` is Biome's recommended set *plus* the rules this repo publishes, over `src/**`,
+  `scripts/**`, `tests/**/*.ts` and the root config files — including `src/components/**`. The
+  library source is excepted from nine of the fourteen by the records themselves; what still
+  applies there is the element ban minus `<input>`, plus the two platform-defaults rules, which
+  the library has no reason to break and so no reason to be excused from. A raw `<button>` in a
+  library component fails the pre-commit hook like anywhere else. Its
+  `biome-ignore lint/a11y/...` comments now land on rules that actually run, which is what let the
+  directory back into the file list.
 - That exception is an argument about a *layer*, not about a directory, so only published
   components may live there: a test fails if a file in `src/components/` has no `slug` in
   `src/registry/meta.ts`. The site's own chrome lives in `src/site/` (header, footer, sidebars,
   theme toggle, code block) and is linted at full strength, exactly like `src/routes/`. Put new
   app-side UI there; do not park it next to the library source.
+- The plugin rules are about JSX, and each `.grit` plugin says so itself: the generator compiles
+  the record's `appliesTo` into a `$filename` guard alongside the exception guards, because Biome
+  loads plugins globally and `overrides` cannot scope them. That is what lets the file list above
+  be the repo's code rather than only its TSX — a `.ts` file is linted by Biome's recommended set
+  and by the built-in rules the records configure, and the plugin rules stay quiet about a file no
+  record claims. Widen a record's `appliesTo` and its plugin widens with it; there is no per-plugin
+  guard to hand-edit. A built-in is scoped by the config that switches it on instead, so its
+  `appliesTo` is documentation — which is why `no-browser-dialogs` names `.ts` and `.js` too: a
+  `confirm()` in a helper module is the same bug as one in a component, and the rule really does
+  fire there.
 - CSS is still outside the file list: Biome cannot parse Tailwind v4's at-rules. The
   `no-hardcoded-design-values` record documents that gap.
 - `src/registry/*.examples.tsx` is copied verbatim by agents through
@@ -87,6 +99,8 @@ register, plus the quebi styling and self-contained-dependency conventions.
 - The `@/…` alias is resolved for `bun test` by the `paths` entry in the *root* `tsconfig.json`.
   Each project config declares its own copy for tsc; Bun reads only the root one, and without it
   every component import fails at runtime with "Cannot find module '@/lib/utils'".
-- `tests/` is outside `biome.jsonc`'s file list, so a test fixture may use the raw elements the
-  rules ban (a Conform test needs a real `<form>`). Say why in a comment — it is not a suppression,
-  but the next reader will wonder.
+- `tests/**/*.tsx` is still outside `biome.jsonc`'s file list (the `.ts` files are in), so a
+  rendering fixture may use the raw elements the rules ban and import react-aria primitives
+  directly — a Conform test needs a real `<form>`. Say why in a comment: it is not a suppression,
+  but the next reader will wonder. A `.ts` test file has no such licence; it is linted like the
+  rest of the repo.

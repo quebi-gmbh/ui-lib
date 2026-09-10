@@ -14,10 +14,12 @@ or {
   `new Intl.RelativeTimeFormat($args)`
 } as $call where {
   $call <: not within JsFunctionDeclaration(id = r"^(?:format[A-Z]|use[A-Z]).*"),
+  // applies to: app/**/*.{tsx,jsx}, src/**/*.{tsx,jsx}
+  $filename <: r"(?:(?:.*/)?app/(?:.*/)?[^/]*\.(?:tsx|jsx)$|(?:.*/)?src/(?:.*/)?[^/]*\.(?:tsx|jsx)$)",
   // documented exception: src/components/**
-  not $filename <: r".*src/components/.*",
+  not $filename <: r"(?:.*/)?src/components/.*",
   // documented exception: components/ui/**
-  not $filename <: r".*components/ui/.*",
+  not $filename <: r"(?:.*/)?components/ui/.*",
   register_diagnostic(
     span = $call,
     message = "This formats a value against whatever locale the runtime has, which differs between the prerender and the browser. Render <FormattedNumber>, <FormattedCurrency> or <FormattedDate> from @/components/formatted-number and @/components/formatted-date, or call formatNumber(value, locale) / formatCurrency(value, locale) where a string is needed. See https://ui-lib.quebi.de/rules/format-values-through-the-library",

@@ -15,11 +15,13 @@ pre-commit:
     # Biome's recommended set plus the rules this repo publishes, applied to
     # this repo, on the staged files only — including `src/components/**`, so a
     # raw <button> added to a library component fails here rather than in CI.
+    # `.ts` is in the glob because the repo's own TypeScript is in the file list
+    # now: scripts/, tests/ and src/**/*.ts are linted like everything else.
     # Biome filters out anything outside `files.includes` in biome.jsonc,
     # so --no-errors-on-unmatched keeps a commit that touches only, say, a
     # markdown file from failing on "no files were processed".
     lint:
-      glob: "*.{tsx,jsx}"
+      glob: "*.{ts,tsx,jsx}"
       run: bunx biome lint --no-errors-on-unmatched {staged_files}
 
     # biome.jsonc and ui-lib-rules/*.grit are generated from the rule records, so

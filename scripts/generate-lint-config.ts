@@ -84,10 +84,24 @@ export const localScopes: LocalScope[] = [
 ]
 
 /**
- * Files this repo lints, derived from the rules' own `appliesTo` globs.
+ * Files this repo lints: its own TypeScript, all of it.
  *
- * Every rule declares `src/**\/*.{tsx,jsx}`, so that is the whole list — no
- * subtractions. `src/components/**` used to be one: the library primitives carry
+ * This list used to be the rules' `appliesTo` and nothing else — `src/**\/*.tsx`
+ * — which quietly meant that every `.ts` file in the repo went unchecked:
+ * `scripts/`, `tests/`, the rule records themselves, `src/lib/`. That was not the
+ * rules' doing. It was a plugin-loading detail leaking into the file list: Biome
+ * loads GritQL plugins globally, so before each plugin carried its record's
+ * `appliesTo` as a `$filename` guard, the only way to keep a JSX rule from
+ * answering questions about a `.ts` file was to keep the `.ts` file out of the
+ * run. `renderGritPlugin` compiles that guard now, so the file list is free to be
+ * what it should have been: the code in this repo.
+ *
+ * Which matters because most of what runs here is Biome's recommended set, and
+ * a `noAssignInExpressions` in a generator is the same defect as one in a
+ * component. The generator that emits this very config was one of the files
+ * outside the run.
+ *
+ * `src/components/**` used to be a subtraction too: the library primitives carry
  * `biome-ignore lint/a11y/...` comments for a consumer's fuller Biome setup, and
  * a rules-only config reported every one of them as an unused suppression, so
  * the choice was seventeen lines of noise on every run or no linting there at
@@ -102,12 +116,22 @@ export const localScopes: LocalScope[] = [
  * `src/components/` has a `slug` in src/registry/meta.ts — a test fails if one
  * does not — so nothing can be excused by its address any more.
  *
- * The `css` half of tier 3's `appliesTo` stays out: Biome cannot parse Tailwind
- * v4's at-rules, and that rule already documents CSS as outside what its check
- * can see.
+ * CSS stays out, and that is still a gap rather than a decision: Biome cannot
+ * parse Tailwind v4's at-rules, and the `no-hardcoded-design-values` record
+ * documents CSS as outside what its check can see.
  */
 function fileIncludes(): string[] {
-  return ["src/**/*.tsx", "src/**/*.jsx"]
+  return [
+    "src/**/*.tsx",
+    "src/**/*.jsx",
+    "src/**/*.ts",
+    "scripts/**/*.ts",
+    "tests/**/*.ts",
+    // The build's own configuration — react-router.config.ts, vite.config.ts.
+    // A single `*` does not cross a directory separator, so this is the repo
+    // root and nowhere else.
+    "*.ts",
+  ]
 }
 
 /** The Biome rule ids a rule record maps to, for the local-scope overrides. */

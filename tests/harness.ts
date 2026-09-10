@@ -15,6 +15,20 @@ import {
   renderGritPlugin,
 } from "../src/registry/rules/checks"
 import { rulesRegistry } from "../src/registry/rules"
+import type { RuleMeta } from "../src/registry/rules/types"
+
+/**
+ * A rule record by id.
+ *
+ * Tests reach for a specific rule constantly, and `find(...)` hands back
+ * `undefined` when the id is stale — which surfaces as a property access on
+ * undefined several frames away from the id that moved. This names it instead.
+ */
+export function ruleById(id: string): RuleMeta {
+  const rule = rulesRegistry.find((r) => r.id === id)
+  if (!rule) throw new Error(`No rule record has the id "${id}" — has the registry changed?`)
+  return rule
+}
 
 const ROOT = join("/tmp", `quebi-rules-tests-${process.pid}`)
 const BIOME = join(import.meta.dir, "..", "node_modules", ".bin", "biome")

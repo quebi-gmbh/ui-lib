@@ -25,7 +25,11 @@ export const noBrowserDialogsRule: RuleMeta = {
     "It cannot be tested and it cannot be prerendered. `alert` and `confirm` are not defined on the server, so the same call that works in the browser throws during a prerender; in happy-dom they are stubs that return undefined, so a test of the flow behind a `confirm()` either hangs on a decision nobody makes or takes a branch the user never would. A Toast is a rendered node with an aria-live region — `findByRole('status')` — and a Modal is a dialog with a button you can press.",
     "The honest part: neither replacement is an import you can drop in. `toast` is not exported; the queue is reached through `useToast()`, which throws unless a `<ToastProvider>` is mounted above it, so the first fix is to mount one at the root. `confirm()` is worse, because it is synchronous: the code after it assumes an answer. The library ships no `useConfirm()` and no `AlertDialog`, so replacing it means splitting the handler in two and letting a Modal's own action button call the second half. That is a refactor, which is why this rule warns and does not fail — and why it should be promoted to `error` the day a promise-based confirmation lands.",
   ],
-  appliesTo: ["app/**/*.{tsx,jsx}", "src/**/*.{tsx,jsx}"],
+  // The one rule here that is not about JSX. `confirm()` in a `.ts` helper is
+  // the same bug as `confirm()` in a component, and because a built-in Biome
+  // rule is scoped by the config that switches it on rather than by a compiled
+  // `$filename` guard, it really does fire there — so the record says so.
+  appliesTo: ["app/**/*.{ts,tsx,js,jsx}", "src/**/*.{ts,tsx,js,jsx}"],
   examples: [
     {
       title: "Telling the user it worked",

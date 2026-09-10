@@ -58,6 +58,16 @@ describe(DIALOGS, () => {
     expect(fires(DIALOGS, code)).toBe(false)
   })
 
+  test("it reaches a .ts helper, which is what its wider appliesTo is for", () => {
+    // The only rule here that is not about JSX. A built-in is scoped by the
+    // config that switches it on rather than by a compiled $filename guard, so
+    // it really does fire outside a component — and the record's appliesTo says
+    // `{ts,tsx,js,jsx}` rather than inheriting the JSX rules' globs, so the page
+    // and the lint run agree about where it applies.
+    const code = `export const del = () => { if (confirm("Delete?")) remove() }\n`
+    expect(fires(DIALOGS, code, "src/lib/projects.ts")).toBe(true)
+  })
+
   test("each call is reported once", () => {
     expect(fireCount(DIALOGS, `export const save = () => { alert("Saved") }\n`)).toBe(1)
   })

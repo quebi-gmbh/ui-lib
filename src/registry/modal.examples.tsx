@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Button } from "@/components/button"
 import {
   Modal,
@@ -131,5 +132,34 @@ export const modalExamples: ComponentExample[] = [
         </ModalContent>
       </Modal>
     ),
+  },
+  {
+    title: "Opened by state",
+    description:
+      "No trigger element: render `ModalContent` on its own with `isOpen`/`onOpenChange`. This is the shape for a lightbox, a confirm raised from a menu item, or an overlay a route decides to show. Do not wrap it in `Modal` for this — `Modal` is a trigger pairing, and a lone child lands in its trigger slot.",
+    render: () => {
+      const [isOpen, setIsOpen] = useState(false)
+      return (
+        <>
+          <Button intent="outline" onPress={() => setIsOpen(true)}>
+            Delete project
+          </Button>
+          <ModalContent isOpen={isOpen} onOpenChange={setIsOpen} role="alertdialog" size="sm">
+            <ModalHeader>
+              <ModalTitle>Delete project</ModalTitle>
+              <ModalDescription>This cannot be undone.</ModalDescription>
+            </ModalHeader>
+            <ModalFooter>
+              <Button intent="outline" onPress={() => setIsOpen(false)}>
+                Cancel
+              </Button>
+              <Button intent="danger" onPress={() => setIsOpen(false)}>
+                Delete
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </>
+      )
+    },
   },
 ]
