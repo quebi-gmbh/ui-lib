@@ -113,7 +113,7 @@ export const formatValuesThroughTheLibraryRule: RuleMeta = {
       scope: "Your copy of the ui-lib component source (components/ui/**)",
       paths: ["src/components/**", "components/ui/**"],
       reason:
-        "The formatters this rule points at are implemented there: FormattedNumber, FormattedDate and the Calendar's month/year labels all call Intl directly, which is what makes the rest of the codebase able not to.",
+        "The formatters this rule points at are implemented there: FormattedNumber, FormattedDate and the Calendar's month/year labels format through Intl themselves — via the cached constructors in `@/lib/intl`, which build one formatter per (locale, options) pair instead of one per rendered value — which is what makes the rest of the codebase able not to.",
     },
     {
       scope: "Asking the platform what it resolved, rather than formatting with it",

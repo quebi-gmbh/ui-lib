@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { getDateTimeFormat, getRelativeTimeFormat } from "@/lib/intl"
 
 /**
  * FormattedDate — locale-aware date/time formatting
@@ -69,7 +70,7 @@ export function FormattedDate({
 
   // Relative time formatting
   if (relative && reference) {
-    const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" })
+    const rtf = getRelativeTimeFormat(locale, { numeric: "auto" })
     const diffInMs = dateObj.getTime() - reference.getTime()
     const diffInMinutes = Math.round(diffInMs / (1000 * 60))
     const diffInHours = Math.round(diffInMs / (1000 * 60 * 60))
@@ -109,7 +110,7 @@ export function FormattedDate({
   try {
     return (
       <time dateTime={dateObj.toISOString()} className={className}>
-        {new Intl.DateTimeFormat(locale, options).format(dateObj)}
+        {getDateTimeFormat(locale, options).format(dateObj)}
       </time>
     )
   } catch {
