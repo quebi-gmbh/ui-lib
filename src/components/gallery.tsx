@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight, ImageIcon, ZoomIn } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { Modal, ModalContent } from "@/components/modal"
+import { ModalContent } from "@/components/modal"
 import { Button } from "react-aria-components"
 
 export interface GalleryItem {
@@ -105,51 +105,59 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
         </ul>
       )}
 
-      <Modal isOpen={lightboxOpen} onOpenChange={setLightboxOpen}>
-        <ModalContent size="4xl" aria-label={active.alt ?? "Image"} className="p-0!">
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: the Dialog owns
-              focus; this only adds arrow-key paging on top of the nav buttons. */}
-          <div
-            className="relative flex items-center justify-center bg-black"
-            onKeyDown={(event) => {
-              if (event.key === "ArrowLeft") {
-                event.preventDefault()
-                step(-1)
-              } else if (event.key === "ArrowRight") {
-                event.preventDefault()
-                step(1)
-              }
-            }}
-          >
-            <img
-              src={active.src}
-              alt={active.alt ?? ""}
-              className="max-h-[80vh] w-full object-contain"
-            />
-            {hasMultiple && (
-              <>
-                <Button
-                  aria-label="Previous image"
-                  onPress={() => step(-1)}
-                  className="absolute start-2 rounded-full bg-black/60 p-2 text-white backdrop-blur-sm transition-colors duration-150 hover:bg-black/80"
-                >
-                  <ChevronLeft className="size-6" aria-hidden />
-                </Button>
-                <Button
-                  aria-label="Next image"
-                  onPress={() => step(1)}
-                  className="absolute end-2 rounded-full bg-black/60 p-2 text-white backdrop-blur-sm transition-colors duration-150 hover:bg-black/80"
-                >
-                  <ChevronRight className="size-6" aria-hidden />
-                </Button>
-                <span className="absolute bottom-3 rounded-full bg-black/60 px-2 py-0.5 text-xs text-white tabular-nums backdrop-blur-sm">
-                  {activeIndex + 1} / {items.length}
-                </span>
-              </>
-            )}
-          </div>
-        </ModalContent>
-      </Modal>
+      {/* State opens this, not an element, so ModalContent carries the open
+          state itself — wrapping it in `Modal` (a DialogTrigger) would put it
+          in the trigger slot with nothing to press. Focus returns to the hero
+          button on close either way; that is the overlay's focus scope. */}
+      <ModalContent
+        isOpen={lightboxOpen}
+        onOpenChange={setLightboxOpen}
+        size="4xl"
+        aria-label={active.alt ?? "Image"}
+        className="p-0!"
+      >
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: the Dialog owns
+            focus; this only adds arrow-key paging on top of the nav buttons. */}
+        <div
+          className="relative flex items-center justify-center bg-black"
+          onKeyDown={(event) => {
+            if (event.key === "ArrowLeft") {
+              event.preventDefault()
+              step(-1)
+            } else if (event.key === "ArrowRight") {
+              event.preventDefault()
+              step(1)
+            }
+          }}
+        >
+          <img
+            src={active.src}
+            alt={active.alt ?? ""}
+            className="max-h-[80vh] w-full object-contain"
+          />
+          {hasMultiple && (
+            <>
+              <Button
+                aria-label="Previous image"
+                onPress={() => step(-1)}
+                className="absolute start-2 rounded-full bg-black/60 p-2 text-white backdrop-blur-sm transition-colors duration-150 hover:bg-black/80"
+              >
+                <ChevronLeft className="size-6" aria-hidden />
+              </Button>
+              <Button
+                aria-label="Next image"
+                onPress={() => step(1)}
+                className="absolute end-2 rounded-full bg-black/60 p-2 text-white backdrop-blur-sm transition-colors duration-150 hover:bg-black/80"
+              >
+                <ChevronRight className="size-6" aria-hidden />
+              </Button>
+              <span className="absolute bottom-3 rounded-full bg-black/60 px-2 py-0.5 text-xs text-white tabular-nums backdrop-blur-sm">
+                {activeIndex + 1} / {items.length}
+              </span>
+            </>
+          )}
+        </div>
+      </ModalContent>
     </div>
   )
 }
