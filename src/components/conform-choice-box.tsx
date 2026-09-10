@@ -45,6 +45,21 @@ function toDefaultKeys(initialValue: unknown): string[] {
  * control, and its value is a `Set<Key>` rather than a string — so without the
  * hidden control it submits nothing. `BaseControl` renders it with the `hidden`
  * attribute and no React `value` prop; both matter, see `conform-time-field`.
+ *
+ * The registered control mirrors the selection mode, because that is what
+ * decides whether an *empty* selection still submits the field:
+ *
+ * - `"multiple"` registers a `<select multiple>`. With nothing selected it has
+ *   no selected option and submits nothing, which is right: Conform parses an
+ *   absent key for an array field as `[]`, so a `v.array(...)` schema reports
+ *   the author's own `minLength` message.
+ * - `"single"` (and `"none"`) registers a plain `<select>`, whose empty state
+ *   is an `<option value="">` — the same trick react-aria's `HiddenSelect`
+ *   uses. It matters: a `<select multiple>` with nothing selected leaves the
+ *   key out of `FormData` entirely, and for a string field that is not the
+ *   author's "Pick a plan" but valibot's internal `Invalid key: Expected
+ *   "plan" but received undefined`. Submitting `""` puts the key back, and the
+ *   message the consumer wrote is the one that shows.
  */
 export function ConformChoiceBox<T extends object>({
   field,
@@ -53,12 +68,21 @@ export function ConformChoiceBox<T extends object>({
   keys,
   children,
   className,
+  selectionMode = "single",
   ...props
 }: ConformChoiceBoxProps<T>) {
-  const control = useControl<string[]>({ defaultValue: toDefaultKeys(field.initialValue) })
+  const isMultiple = selectionMode === "multiple"
+  const defaultKeys = toDefaultKeys(field.initialValue)
+  const control = useControl<string | string[]>({
+    defaultValue: isMultiple ? defaultKeys : (defaultKeys[0] ?? ""),
+  })
   const hasErrors = !field.valid && !!field.errors
   const isRequired = field.required ?? false
-  const selected = control.options ?? []
+  const selected = isMultiple
+    ? (control.options ?? [])
+    : control.value
+      ? [control.value]
+      : []
 
   return (
     <Field className={cn("flex flex-col gap-1.5", className)}>
@@ -71,22 +95,26 @@ export function ConformChoiceBox<T extends object>({
 
       <BaseControl
         type="select"
-        multiple
+        multiple={isMultiple}
         name={field.name}
         form={field.formId}
         ref={control.register}
-        defaultValue={control.defaultValue ?? []}
+        defaultValue={control.defaultValue ?? (isMultiple ? [] : "")}
       />
 
       <ChoiceBox<T>
         {...props}
+        selectionMode={selectionMode}
         selectedKeys={new Set(selected)}
         onSelectionChange={(selection) => {
           if (selection === "all") {
+            // Only reachable in multiple-selection mode; react-aria never
+            // reports the sentinel for a single selection.
             if (keys) control.change(keys)
             return
           }
-          control.change(Array.from(selection).map(String))
+          const next = Array.from(selection).map(String)
+          control.change(isMultiple ? next : (next[0] ?? ""))
         }}
         aria-label={props["aria-label"] ?? label}
         aria-describedby={describedBy(

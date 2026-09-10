@@ -34,3 +34,33 @@ expect.extend(matchers as unknown as Parameters<typeof expect.extend>[0])
 // Unmounts anything a test rendered and empties the body between tests. Without
 // it every `screen.getBy*` query would see the leftovers of previous tests.
 afterEach(cleanup)
+
+/**
+ * `new Option(...)`, which happy-dom does not install as a global (it has
+ * `HTMLOptionElement`, but not the legacy constructor that is an alias for it).
+ *
+ * Conform reaches for it whenever it has to write a value into a `<select>` it
+ * did not render — `updateField` adds the missing `<option>` with
+ * `element.options.add(new Option(...))`. Every conform-* variant backed by a
+ * hidden select (ChoiceBox) hits that path on the first selection, and without
+ * this it is a ReferenceError in tests and works fine in a browser.
+ */
+if (!("Option" in globalThis)) {
+  Object.defineProperty(globalThis, "Option", {
+    configurable: true,
+    writable: true,
+    value: function Option(
+      text?: string,
+      value?: string,
+      defaultSelected?: boolean,
+      selected?: boolean,
+    ) {
+      const option = document.createElement("option")
+      if (text !== undefined) option.text = text
+      if (value !== undefined) option.value = value
+      if (defaultSelected !== undefined) option.defaultSelected = defaultSelected
+      if (selected !== undefined) option.selected = selected
+      return option
+    },
+  })
+}
