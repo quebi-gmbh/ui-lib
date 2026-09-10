@@ -11,10 +11,12 @@ or {
 } as $control where {
   $el <: r"^(?:Calendar|Checkbox|CheckboxGroup|ChoiceBox|ColorField|ColorPicker|ColorSwatchPicker|ComboBox|DateField|DatePicker|DateRangePicker|DaySchedule|InputOTP|MultipleSelect|AsyncMultipleSelect|AsyncSelect|NumberField|RadioGroup|RangeCalendar|SearchField|Select|Slider|StoragePicker|Switch|TagField|Textarea|TextField|TimeField)$",
   $attrs <: contains or { `$meta.name`, `$meta.errors`, `$meta.initialValue`, `$meta.errorId`, `$meta.formId` },
+  // applies to: app/**/*.{tsx,jsx}, src/**/*.{tsx,jsx}
+  $filename <: r"(?:(?:.*/)?app/(?:.*/)?[^/]*\.(?:tsx|jsx)$|(?:.*/)?src/(?:.*/)?[^/]*\.(?:tsx|jsx)$)",
   // documented exception: components/ui/**
-  not $filename <: r".*components/ui/.*",
+  not $filename <: r"(?:.*/)?components/ui/.*",
   // documented exception: src/components/**
-  not $filename <: r".*src/components/.*",
+  not $filename <: r"(?:.*/)?src/components/.*",
   register_diagnostic(
     span = $control,
     message = "This control is being wired to a Conform field by hand. Use the conform-* variant and pass field={fields.x}: every control that submits a value has one — Checkbox -> ConformCheckbox, Switch -> ConformSwitch, Select -> ConformSelect, RadioGroup -> ConformRadioGroup, Textarea -> ConformTextarea, Slider -> ConformSlider, TimeField -> ConformTimeField, FileTrigger -> ConformFileTrigger, TextField/Input -> ConformField. For a control you built yourself, spread getInputProps(field) onto its real <input>, or use useControl from @conform-to/react/future when it has none — do not pick metadata off one property at a time. See https://ui-lib.quebi.de/rules/bind-fields-through-conform",

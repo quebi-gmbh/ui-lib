@@ -124,6 +124,7 @@ describe(APPEARANCE, () => {
 
   test("known blind spot: a class list built with a template literal is missed", () => {
     const code = component(
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: the string is the fixture's source text, not a template literal that lost its backticks — the interpolation is the whole point of the case.
       "    <div className={`rounded-quebi-md ${props.tone} border border-quebi-line/10`}>{props.children}</div>",
     )
     expect(fires(APPEARANCE, code)).toBe(false)

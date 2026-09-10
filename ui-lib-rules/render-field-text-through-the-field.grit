@@ -11,10 +11,12 @@ JsxElement(opening_element = $open, children = $children) as $message where {
   $children <: contains `$field.errors` until JsxElement(),
   $children <: not contains `$field.errors.length`,
   $attrs <: not contains JsxAttribute(name = r"^id$"),
+  // applies to: app/**/*.{tsx,jsx}, src/**/*.{tsx,jsx}
+  $filename <: r"(?:(?:.*/)?app/(?:.*/)?[^/]*\.(?:tsx|jsx)$|(?:.*/)?src/(?:.*/)?[^/]*\.(?:tsx|jsx)$)",
   // documented exception: components/ui/**
-  not $filename <: r".*components/ui/.*",
+  not $filename <: r"(?:.*/)?components/ui/.*",
   // documented exception: src/components/**
-  not $filename <: r".*src/components/.*",
+  not $filename <: r"(?:.*/)?src/components/.*",
   register_diagnostic(
     span = $message,
     message = "This renders field errors in an element the control cannot reference. Inside a react-aria field use <FieldError> from @/components/field; outside one, put id={field.errorId} on this element so the aria-describedby that getInputProps already emits resolves to it. See https://ui-lib.quebi.de/rules/render-field-text-through-the-field",

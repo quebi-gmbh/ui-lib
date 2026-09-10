@@ -14,7 +14,8 @@
  *    path-scoping mechanism;
  *  - a **GritQL plugin** is loaded globally (`overrides` cannot scope plugins,
  *    which is verified in the test suite), so its exceptions are compiled into
- *    the pattern as `$filename` guards.
+ *    the pattern as `$filename` guards — and so is its `appliesTo`, because a
+ *    globally loaded plugin has no other way to say which files it is about.
  *
  * Both come from the same `exceptions[].paths`. Nothing here is hand-written per
  * rule: a check that cannot be derived from a record is a check that can drift
@@ -54,9 +55,16 @@ export function firstSentence(text: string) {
 }
 
 /**
- * A path glob as a regex fragment for a GritQL `$filename` guard. `$filename`
- * is the file's path, so the pattern is deliberately unanchored at the front:
- * `components/ui/**` has to match whatever prefix the project puts in front of it.
+ * A path glob as a regex fragment for a GritQL `$filename` guard.
+ *
+ * `$filename` is the file's *absolute* path and GritQL matches a regex against
+ * the whole of it, while a rule record's globs are project-relative. The
+ * translation therefore lets any prefix stand in front — `components/ui/**` has
+ * to match whatever directory the project is checked out into — but only a whole
+ * one: the leading wildcard is `(?:.*\/)?` rather than `.*`, so a glob starting
+ * `app/` matches `<root>/app/x.tsx` and not `<root>/myapp/x.tsx`. That mattered
+ * little while these guards only ever subtracted paths; it decides where a rule
+ * fires now that `appliesTo` is compiled in the same way.
  */
 export function globToFilenameRegex(glob: string): string {
   let out = ""
@@ -86,7 +94,30 @@ export function globToFilenameRegex(glob: string): string {
   // A glob ending in ** already covers the tail; anything else names a file, so
   // anchoring stops `components/ui/**` being satisfied by a lookalike path.
   const anchored = glob.endsWith("**") ? out : `${out}$`
-  return glob.startsWith("**") ? anchored : `.*${anchored}`
+  return glob.startsWith("**") ? anchored : `(?:.*/)?${anchored}`
+}
+
+/**
+ * The `$filename` guard that holds a plugin to its record's `appliesTo`.
+ *
+ * A built-in Biome rule is scoped by the config that switches it on, so
+ * `appliesTo` is answered there. A GritQL plugin is loaded globally — `overrides`
+ * does not scope plugins — so without this guard the pattern is run against every
+ * file the project lints, including the ones the record never claimed. Every one
+ * of these rules is about JSX; asked about a `.ts` file it answers anyway, and
+ * the answer is a diagnostic about a file the rule is not about. (This repo's own
+ * `scripts/` and `tests/` are the case that found it.)
+ *
+ * Derived, never written per rule: widening a record's `appliesTo` widens its
+ * plugin, and nothing else has to be remembered.
+ */
+export function appliesToFilenameRegex(rule: RuleMeta): string {
+  if (rule.appliesTo.length === 0) {
+    throw new Error(
+      `Rule "${rule.id}" declares no appliesTo, so its plugin would have no scope to compile`,
+    )
+  }
+  return `(?:${rule.appliesTo.map(globToFilenameRegex).join("|")})`
 }
 
 /**
@@ -156,6 +187,9 @@ export function renderGritPlugin(
   // further clauses, so everything is joined with a comma rather than glued on.
   const clauses = [
     enforcement.pattern,
+    // Scope first, exceptions second: the rule says where it applies before it
+    // says where it does not.
+    `  // applies to: ${rule.appliesTo.join(", ")}\n  $filename <: r"${appliesToFilenameRegex(rule)}"`,
     ...exceptionPaths(rule).map(
       (glob) =>
         `  // documented exception: ${glob}\n  not $filename <: r"${globToFilenameRegex(glob)}"`,
@@ -393,8 +427,11 @@ export function renderBiomeConfig(
     ...plugins.map((r) => `//   curl -o ${PLUGIN_DIR.slice(2)}/${r.id}.grit ${baseUrl}/api/rules/plugins/${r.id}.grit`),
     "//",
     "// Biome's overrides do not scope plugins, so each plugin carries its own",
-    "// exceptions as $filename guards inside the pattern. The overrides below",
-    "// therefore only cover the built-in rules.",
+    "// scope as $filename guards inside the pattern: the paths the rule applies",
+    "// to, and the paths its exceptions carve back out. The overrides below",
+    "// therefore only cover the built-in rules. If your project lays its source",
+    "// out differently from app/ or src/, widen the `applies to` guard in each",
+    "// .grit file to match — otherwise the plugin rules report nothing.",
     "",
     ...annotated,
     "",
@@ -466,7 +503,7 @@ export function buildRuleChecks(
     checks.push({
       tool: "biome",
       title: `Biome — GritQL plugin`,
-      description: `Biome has no built-in rule for this one, so it ships as a GritQL plugin. Save it as ${PLUGIN_DIR.slice(2)}/${rule.id}.grit and add that path to \`plugins\` in your biome.jsonc. Its documented exceptions are compiled in as \`$filename\` guards, because Biome's overrides do not scope plugins.`,
+      description: `Biome has no built-in rule for this one, so it ships as a GritQL plugin. Save it as ${PLUGIN_DIR.slice(2)}/${rule.id}.grit and add that path to \`plugins\` in your biome.jsonc. Because Biome's overrides do not scope plugins, both halves of this rule's scope are compiled in as \`$filename\` guards: the paths it applies to (${rule.appliesTo.join(", ")}) and the paths its documented exceptions carve back out. If your project keeps its components somewhere else, widen the first guard to match.`,
       language: "js",
       code: renderGritPlugin(rule, baseUrl),
     })

@@ -14,6 +14,7 @@ import { join } from "node:path"
 import { metaRegistry } from "../src/registry/meta"
 import { failureModes, rulesRegistry } from "../src/registry/rules"
 import {
+  appliesToFilenameRegex,
   buildBiomeConfig,
   buildRuleChecks,
   builtInRules,
@@ -25,7 +26,7 @@ import {
   restrictedElements,
 } from "../src/registry/rules/checks"
 import { ruleGroups } from "../src/registry/rules/groups"
-import { biomeBinary, component, projectRoot, racPrimitives, rulesFiredOn } from "./harness"
+import { biomeBinary, component, projectRoot, racPrimitives, ruleById, rulesFiredOn } from "./harness"
 
 const VIOLATION = component(`    <button onClick={props.onClick}>Save</button>`)
 
@@ -118,23 +119,27 @@ describe("documented exceptions reach Biome", () => {
     // This is the reason plugin exceptions are $filename guards rather than
     // config. If Biome ever learns to scope plugins, this test fails and the
     // guards can be replaced with overrides.
+    //
+    // The probe lives under `src/` because the plugin now also carries the
+    // record's `appliesTo` as a guard: a file outside it reports nothing for a
+    // reason that has nothing to do with `overrides`, which would make this pass
+    // for the wrong reason.
     const root = join(projectRoot, "override-probe")
-    mkdirSync(join(root, "vendor"), { recursive: true })
-    const plugin = pluginRules(rulesRegistry).find(
-      (r) => r.id === "validate-on-the-server-with-the-same-schema",
-    )!
+    mkdirSync(join(root, "src", "vendor"), { recursive: true })
+    const plugin = ruleById("validate-on-the-server-with-the-same-schema")
+    expect(pluginRules(rulesRegistry)).toContain(plugin)
     writeFileSync(join(root, "p.grit"), renderGritPlugin(plugin))
     writeFileSync(
       join(root, "biome.json"),
       JSON.stringify({
         plugins: ["./p.grit"],
         linter: { enabled: true, rules: { recommended: false } },
-        overrides: [{ includes: ["vendor/**"], plugins: [] }],
+        overrides: [{ includes: ["src/vendor/**"], plugins: [] }],
       }),
     )
-    writeFileSync(join(root, "vendor", "x.tsx"), `const [form] = useForm({ onValidate: fn })\n`)
+    writeFileSync(join(root, "src", "vendor", "x.tsx"), `const [form] = useForm({ onValidate: fn })\n`)
 
-    const run = Bun.spawnSync([biomeBinary, "lint", "vendor/x.tsx", "--reporter=json"], {
+    const run = Bun.spawnSync([biomeBinary, "lint", "src/vendor/x.tsx", "--reporter=json"], {
       cwd: root,
       stdout: "pipe",
       stderr: "pipe",
@@ -143,6 +148,49 @@ describe("documented exceptions reach Biome", () => {
     expect(diagnostics.length).toBeGreaterThan(0)
   })
 })
+
+describe("a plugin fires only where its record says it applies", () => {
+  // Biome loads GritQL plugins globally — `overrides` cannot scope them, which
+  // the case above proves — so a plugin has no way to be told which files it is
+  // about except to carry its record's `appliesTo` as a $filename guard. Without
+  // one, every plugin is asked about every file the project lints and answers
+  // anyway: this repo widened `files.includes` to its own TypeScript and got
+  // twelve diagnostics about `.ts` files no rule had ever claimed.
+
+  /** No JSX, so a built-in rule cannot fire and only a plugin can answer. */
+  const FORMATTING = `export const label = (n: number) => n.toLocaleString()\n`
+
+  test("the guard is compiled from the record, for every plugin", () => {
+    for (const rule of pluginRules(rulesRegistry)) {
+      const plugin = renderGritPlugin(rule)
+      expect(plugin).toContain(`// applies to: ${rule.appliesTo.join(", ")}`)
+      expect(plugin).toContain(`$filename <: r"${appliesToFilenameRegex(rule)}"`)
+    }
+  })
+
+  test("a .ts file is claimed by no record, so no plugin reports on one", () => {
+    // The positive control first: without it this is a test that a broken plugin
+    // also passes.
+    expect(rulesFiredOn(FORMATTING, "src/lib/format.tsx")).toContain(
+      "format-values-through-the-library",
+    )
+    expect(rulesFiredOn(FORMATTING, "src/lib/format.ts")).toEqual([])
+  })
+
+  test("a path outside app/ and src/ is outside appliesTo too", () => {
+    expect(rulesFiredOn(FORMATTING, "scripts/report.tsx")).toEqual([])
+  })
+
+  test("the leading wildcard matches whole directories, not name prefixes", () => {
+    // $filename is absolute, so the guard has to let any checkout path stand in
+    // front of `app/`. It must not let half a directory name: `myapp/` is not
+    // `app/`, and a `.*` prefix would have said it was.
+    const guard = new RegExp(`^${globToFilenameRegex("app/**/*.{tsx,jsx}")}$`)
+    expect(guard.test("/home/me/project/app/routes/x.tsx")).toBe(true)
+    expect(guard.test("/home/me/myapp/routes/x.tsx")).toBe(false)
+  })
+})
+
 
 describe("rule records", () => {
   test("ids are unique and kebab-case", () => {
@@ -229,9 +277,7 @@ describe("generated config", () => {
   })
 
   test("the built-in rule's messages are derived from the replacement table", () => {
-    const elements = restrictedElements(
-      rulesRegistry.find((r) => r.id === "no-raw-interactive-elements")!,
-    )
+    const elements = restrictedElements(ruleById("no-raw-interactive-elements"))
     expect(Object.keys(elements)).toContain("button")
     expect(elements.button).toContain("<Button>")
     // Only the rule that is *carried by* noRestrictedElements contributes to the
@@ -244,9 +290,7 @@ describe("generated config", () => {
         options: { elements: Record<string, string> }
       }
     ).options.elements
-    const fromTier1 = restrictedElements(
-      rulesRegistry.find((r) => r.id === "no-raw-interactive-elements")!,
-    )
+    const fromTier1 = restrictedElements(ruleById("no-raw-interactive-elements"))
     expect(Object.keys(banned).sort()).toEqual(Object.keys(fromTier1).sort())
     for (const element of Object.keys(banned)) expect(element).toMatch(/^[a-z][a-z0-9-]*$/)
   })
@@ -310,11 +354,11 @@ describe("the snippet on a rule's page", () => {
   })
 
   test("a rule whose options are its content keeps them", () => {
-    const rule = rulesRegistry.find((r) => r.id === "keep-files-readable")!
+    const rule = ruleById("keep-files-readable")
     const check = buildRuleChecks(rule, undefined, racPrimitives).find(
       (c) => c.tool === "biome" && c.language === "json",
-    )!
-    expect(check.code).toContain('"maxLines": 500')
+    )
+    expect(check?.code).toContain('"maxLines": 500')
   })
 })
 
