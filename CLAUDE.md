@@ -25,9 +25,9 @@ messages you would give a consumer are the ones you get:
   names. `div`/`span` are fine until their classes describe a surface (radius + border = you are
   rebuilding `Card`). Design values are quebi tokens, never `bg-[#f00]` or `text-gray-500`.
 - **Validation is yours. Wiring is the library's.** Conform fields bind through the `conform-*`
-  variants; label, description and error come from the field, not from markup beside it. A
-  `Checkbox` or `Switch` also needs `defaultSelected`; `lastResult` is gated on an idle
-  navigation; an intent button is `type="submit"`.
+  variants; label, description and error come from the field, not from markup beside it. Never
+  spread `getInputProps` onto a `Checkbox` or `Switch` (both props are dropped in silence);
+  `lastResult` is gated on an idle navigation; an intent button is `type="submit"`.
 - Import components, not `react-aria-components` primitives, above the library layer.
 - Numbers and dates go through `FormattedNumber` / `FormattedDate` (or `formatNumber(value,
   locale)`), never a bare `toLocaleString()` — the site is prerendered, so an implicit locale is a
