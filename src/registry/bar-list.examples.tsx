@@ -1,4 +1,5 @@
 import { BarList } from "@/components/bar-list"
+import { formatNumber } from "@/components/formatted-number"
 import type { ComponentExample } from "./types"
 
 const pages = [
@@ -21,7 +22,7 @@ export const barListExamples: ComponentExample[] = [
     render: () => (
       <BarList
         data={pages}
-        valueFormatter={(value) => value.toLocaleString()}
+        valueFormatter={(value) => formatNumber(value, "de-DE")}
         className="w-full max-w-md"
       />
     ),
@@ -32,7 +33,7 @@ export const barListExamples: ComponentExample[] = [
     render: () => (
       <BarList
         data={pages.slice(0, 4)}
-        valueFormatter={(value) => value.toLocaleString()}
+        valueFormatter={(value) => formatNumber(value, "de-DE")}
         onValueChange={() => {}}
         className="w-full max-w-md"
       />
@@ -48,7 +49,7 @@ export const barListExamples: ComponentExample[] = [
           { name: "tailwind-variants", href: "https://www.tailwind-variants.org", value: 860 },
           { name: "tailwind-merge", href: "https://github.com/dcastil/tailwind-merge", value: 540 },
         ]}
-        valueFormatter={(value) => value.toLocaleString()}
+        valueFormatter={(value) => formatNumber(value, "de-DE")}
         className="w-full max-w-md"
       />
     ),
@@ -59,7 +60,7 @@ export const barListExamples: ComponentExample[] = [
       <BarList
         data={pages}
         sortOrder="ascending"
-        valueFormatter={(value) => value.toLocaleString()}
+        valueFormatter={(value) => formatNumber(value, "de-DE")}
         className="w-full max-w-md"
       />
     ),

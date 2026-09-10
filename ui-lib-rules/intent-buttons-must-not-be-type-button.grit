@@ -1,0 +1,21 @@
+// An intent button submits — never type="button"
+// AUTO-GENERATED from https://ui-lib.quebi.de/api/rules/intent-buttons-must-not-be-type-button.json — do not edit by hand.
+//
+// https://ui-lib.quebi.de/rules/intent-buttons-must-not-be-type-button
+
+language js;
+
+or {
+  JsxOpeningElement(name = $el, attributes = $attrs),
+  JsxSelfClosingElement(name = $el, attributes = $attrs)
+} as $node where {
+  $attrs <: contains JsxSpreadAttribute() as $spread,
+  $spread <: r".*\.(?:insert|remove|reorder|reset|update|validate)\.getButtonProps\(.*",
+  $attrs <: contains JsxAttribute(name = `type`, initializer = $init),
+  $init <: r".*button.*",
+  register_diagnostic(
+    span = $node,
+    message = "A Conform intent button has to be type='submit': getButtonProps supplies name, value, form and formNoValidate but never the type, and a type='button' control fires no submit event, so the insert/remove/reorder is dropped silently. Change it to type='submit', or call form.insert(...) from onPress instead of spreading the props. See https://ui-lib.quebi.de/rules/intent-buttons-must-not-be-type-button",
+    severity = "error"
+  )
+}

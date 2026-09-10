@@ -15,6 +15,7 @@ import { metaRegistry } from "../src/registry/meta"
 import { failureModes, rulesRegistry } from "../src/registry/rules"
 import {
   buildBiomeConfig,
+  buildRuleChecks,
   builtInRules,
   globToFilenameRegex,
   lintRules,
@@ -279,6 +280,61 @@ describe("generated config", () => {
         const plugin = renderGritPlugin(rule)
         for (const path of paths) expect(plugin).toContain(globToFilenameRegex(path))
       }
+    }
+  })
+})
+
+describe("the snippet on a rule's page", () => {
+  const config = buildBiomeConfig(rulesRegistry, undefined, racPrimitives)
+
+  /** The JSON body of a `// biome.jsonc` check snippet. */
+  const parse = (code: string) => JSON.parse(code.replace(/^\/\/.*\n/, ""))
+
+  test("configures the rule exactly as the generated config does", () => {
+    // The bug this pins: the page for keep-files-readable used to publish
+    // `"options": { "elements": {} }` — the element ban's shape, hardcoded for
+    // every built-in — so anyone copying that snippet silently lost the
+    // 500-line threshold the aggregate config had.
+    for (const rule of builtInRules(rulesRegistry)) {
+      const biome = rule.enforcement.biome
+      if (biome?.via !== "rule") continue
+      const [group, name] = biome.rule.split("/")
+      const check = buildRuleChecks(rule, undefined, racPrimitives).find(
+        (c) => c.tool === "biome" && c.language === "json",
+      )
+      expect(check).toBeTruthy()
+      expect(parse((check as { code: string }).code).linter.rules[group][name]).toEqual(
+        config.linter.rules[group][name],
+      )
+    }
+  })
+
+  test("a rule whose options are its content keeps them", () => {
+    const rule = rulesRegistry.find((r) => r.id === "keep-files-readable")!
+    const check = buildRuleChecks(rule, undefined, racPrimitives).find(
+      (c) => c.tool === "biome" && c.language === "json",
+    )!
+    expect(check.code).toContain('"maxLines": 500')
+  })
+})
+
+describe("plugin messages", () => {
+  test("a double quote in a message fails the build rather than mangling the plugin", () => {
+    // GritQL re-interprets the rest of a string literal after an escaped quote:
+    // the text arrives as mojibake and the rule URL with it, which is what the
+    // harness attributes a finding by. Biome reports it as an ordinary
+    // diagnostic, so nothing else would notice.
+    const rule = pluginRules(rulesRegistry)[0]
+    const withQuotes = {
+      ...rule,
+      enforcement: { ...rule.enforcement, message: 'Use type="submit" instead.' },
+    }
+    expect(() => renderGritPlugin(withQuotes)).toThrow(/double quote/)
+  })
+
+  test("every published message is free of them", () => {
+    for (const rule of pluginRules(rulesRegistry)) {
+      expect(rule.enforcement.message).not.toContain('"')
     }
   })
 })

@@ -1,0 +1,24 @@
+// Never spread getInputProps onto a Checkbox or Switch
+// AUTO-GENERATED from https://ui-lib.quebi.de/api/rules/seed-toggles-with-default-selected.json — do not edit by hand.
+//
+// https://ui-lib.quebi.de/rules/seed-toggles-with-default-selected
+
+language js;
+
+or {
+  JsxOpeningElement(name = $el, attributes = $attrs),
+  JsxSelfClosingElement(name = $el, attributes = $attrs)
+} as $control where {
+  $el <: r"^(?:Checkbox|Switch)$",
+  $attrs <: contains JsxSpreadAttribute(argument = `getInputProps($field, $options)`),
+  $attrs <: not contains JsxAttribute(name = `defaultSelected`),
+  // documented exception: src/components/**
+  not $filename <: r".*src/components/.*",
+  // documented exception: components/ui/**
+  not $filename <: r".*components/ui/.*",
+  register_diagnostic(
+    span = $control,
+    message = "react-aria's Checkbox and Switch do not read the defaultChecked and required that getInputProps emits — filterDOMProps drops both silently, so the control renders unchecked after a failed submit. Use <ConformCheckbox field={fields.x} /> or <ConformSwitch field={fields.x} />; inside a wrapper of your own, name the props instead of spreading (defaultSelected={field.defaultChecked}). See https://ui-lib.quebi.de/rules/seed-toggles-with-default-selected",
+    severity = "error"
+  )
+}

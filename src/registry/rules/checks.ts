@@ -110,6 +110,23 @@ function assertRegexLiteralsClose(rule: RuleMeta, pattern: string): void {
 }
 
 /**
+ * GritQL does not read `\"` inside a double-quoted string the way JSON writes
+ * it: the escape is consumed and the rest of the literal is re-interpreted, so
+ * every later `\t`-looking pair becomes a tab and the diagnostic arrives as
+ * mojibake — with the rule's URL destroyed along with the text, which is what
+ * the harness uses to attribute a finding to its rule. Biome reports it as an
+ * ordinary plugin diagnostic, so nothing fails; the message just stops being
+ * readable. A plugin message therefore quotes with 'single quotes'.
+ */
+function assertMessageHasNoDoubleQuotes(rule: RuleMeta, message: string): void {
+  if (message.includes('"')) {
+    throw new Error(
+      `Rule "${rule.id}": its Biome message contains a double quote, which GritQL mangles once it is escaped into the plugin file (the text and the rule URL both come out garbled). Use 'single quotes' in the message — the record's prose can keep the real ones.`,
+    )
+  }
+}
+
+/**
  * An extra `$filename` guard that is not one of the rule's published exceptions.
  *
  * Biome's `overrides` cannot scope plugins, so a project that needs a plugin
@@ -134,6 +151,7 @@ export function renderGritPlugin(
     throw new Error(`Rule "${rule.id}" is not carried by a GritQL plugin`)
   }
   assertRegexLiteralsClose(rule, enforcement.pattern)
+  assertMessageHasNoDoubleQuotes(rule, rule.enforcement.message ?? rule.summary)
   // The pattern ends with its last `where` clause; guards and the diagnostic are
   // further clauses, so everything is joined with a comma rather than glued on.
   const clauses = [
@@ -263,7 +281,7 @@ function ruleOptions(rule: RuleMeta, primitives: string[]): { options?: BiomeRul
   if (biome.rule === "style/noRestrictedImports") {
     if (primitives.length === 0) {
       throw new Error(
-        `Rule "${rule.id}" bans primitive imports, but no primitives were derived — pass the library's component sources to buildBiomeConfig`,
+        `Rule "${rule.id}" bans primitive imports, but no primitives were derived — derive them from the library's component sources and pass them to buildBiomeConfig/buildRuleChecks`,
       )
     }
     return {
@@ -405,7 +423,11 @@ export function renderBiomeSetup(rules: RuleMeta[], baseUrl = DEFAULT_BASE_URL):
 }
 
 /** The runnable checks shown on a rule's page, all derived from its record. */
-export function buildRuleChecks(rule: RuleMeta, baseUrl = DEFAULT_BASE_URL): RuleCheck[] {
+export function buildRuleChecks(
+  rule: RuleMeta,
+  baseUrl = DEFAULT_BASE_URL,
+  primitives: string[] = [],
+): RuleCheck[] {
   const checks: RuleCheck[] = []
   const biome = rule.enforcement.biome
   const ignores = exceptionPaths(rule)
@@ -413,9 +435,14 @@ export function buildRuleChecks(rule: RuleMeta, baseUrl = DEFAULT_BASE_URL): Rul
 
   if (biome?.via === "rule") {
     const [group, name] = biome.rule.split("/")
+    // The same options the generated biome.jsonc gets — a threshold for the
+    // rules whose configuration *is* their content, the element ban for the
+    // element rules, the import ban for the primitives one. Rendering
+    // `{ elements: ... }` for all of them published a keep-files-readable page
+    // whose snippet silently dropped the 500-line limit.
     const config = {
       linter: {
-        rules: { [group]: { [name]: { level: severity, options: { elements: restrictedElements(rule) } } } },
+        rules: { [group]: { [name]: { level: severity, ...ruleOptions(rule, primitives) } } },
       },
       ...(ignores.length
         ? {

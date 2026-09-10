@@ -7,6 +7,7 @@ import {
   LeaderboardStart,
   LeaderboardTitle,
 } from "@/components/leaderboard"
+import { FormattedNumber } from "@/components/formatted-number"
 import type { ComponentExample } from "./types"
 
 const players = [
@@ -35,7 +36,9 @@ export const leaderboardExamples: ComponentExample[] = [
                 <span className="text-quebi-fg-muted tabular-nums">{i + 1}.</span>
                 {player.name}
               </LeaderboardStart>
-              <LeaderboardEnd>{player.score.toLocaleString()}</LeaderboardEnd>
+              <LeaderboardEnd>
+                <FormattedNumber value={player.score} />
+              </LeaderboardEnd>
             </LeaderboardItem>
           ))}
         </LeaderboardContent>
@@ -62,7 +65,9 @@ export const leaderboardExamples: ComponentExample[] = [
                 <span className="text-quebi-fg-muted tabular-nums">{i + 1}.</span>
                 {player.name}
               </LeaderboardStart>
-              <LeaderboardEnd>{player.score.toLocaleString()}</LeaderboardEnd>
+              <LeaderboardEnd>
+                <FormattedNumber value={player.score} />
+              </LeaderboardEnd>
             </LeaderboardItem>
           ))}
         </LeaderboardContent>

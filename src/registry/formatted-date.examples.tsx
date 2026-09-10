@@ -8,6 +8,15 @@ import type { ComponentExample } from "./types"
 
 const testDate = new Date("2024-03-15T14:30:00.000Z")
 
+// Relative output is measured from `now`. Passing it (rather than letting the
+// component read the clock) keeps the example identical in the prerendered HTML
+// and in the browser that hydrates it — and makes the gallery reproducible.
+const now = testDate
+const minutesBefore = (n: number) => new Date(now.getTime() - n * 60 * 1000)
+const hoursAfter = (n: number) => new Date(now.getTime() + n * 60 * 60 * 1000)
+const hoursBefore = (n: number) => new Date(now.getTime() - n * 60 * 60 * 1000)
+const daysBefore = (n: number) => new Date(now.getTime() - n * 24 * 60 * 60 * 1000)
+
 const Stack = ({ children }: { children: React.ReactNode }) => (
   <div className="flex flex-col gap-2 text-quebi-fg">{children}</div>
 )
@@ -64,15 +73,15 @@ export const formattedDateExamples: ComponentExample[] = [
       <Stack>
         <div>
           <Label>5 minutes ago: </Label>
-          <RelativeTime date={new Date(Date.now() - 5 * 60 * 1000)} locale="de" />
+          <RelativeTime date={minutesBefore(5)} now={now} locale="de" />
         </div>
         <div>
           <Label>2 hours from now: </Label>
-          <RelativeTime date={new Date(Date.now() + 2 * 60 * 60 * 1000)} locale="de" />
+          <RelativeTime date={hoursAfter(2)} now={now} locale="de" />
         </div>
         <div>
           <Label>3 days ago: </Label>
-          <RelativeTime date={new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)} locale="de" />
+          <RelativeTime date={daysBefore(3)} now={now} locale="de" />
         </div>
       </Stack>
     ),
@@ -120,7 +129,7 @@ export const formattedDateExamples: ComponentExample[] = [
         </div>
         <div>
           <Label>RelativeTime: </Label>
-          <RelativeTime date={new Date(Date.now() - 2 * 60 * 60 * 1000)} locale="de" />
+          <RelativeTime date={hoursBefore(2)} now={now} locale="de" />
         </div>
       </Stack>
     ),

@@ -93,6 +93,7 @@ export const noRawInteractiveElementsRule: RuleMeta = {
         { name: "Table", from: "@/components/table", slug: "table", when: "a static table (with TableHeader, TableBody, TableColumn, TableRow, TableCell)" },
         { name: "AsyncTable", from: "@/components/async-table", slug: "async-table", when: "sorting and filtering are server-driven" },
       ],
+      note: "Table is not a drop-in for <table>: react-aria throws at runtime unless exactly one Column carries isRowHeader, every Row has an id, and each row has one cell per column — so a hand-rolled table migrated without row ids crashes rather than degrades. AsyncTable does the first two for you (getRowId is required, isRowHeader is assigned to the first column); bare Table does not. There is also no footer or caption wrapper: a <tfoot> has no ui-lib equivalent, and because the primitive ban is derived from what the library imports, TableFooter is not banned — importing it is the honest migration, and the one place this rule sends you to react-aria rather than to a component.",
     },
   ],
   examples: [

@@ -266,3 +266,64 @@ describe(LENGTH, () => {
     expect(fires(LENGTH, commentary)).toBe(false)
   })
 })
+
+const FORMAT = "format-values-through-the-library"
+
+describe(FORMAT, () => {
+  test("true positive: a bare toLocaleString(), the shape with no locale at all", () => {
+    expect(fires(FORMAT, component(`    <span>{props.value.toLocaleString()}</span>`))).toBe(true)
+  })
+
+  test("true positive: the date and time variants", () => {
+    expect(fires(FORMAT, component(`    <span>{props.date.toLocaleDateString()}</span>`))).toBe(true)
+    expect(fires(FORMAT, component(`    <span>{props.date.toLocaleTimeString("de")}</span>`))).toBe(
+      true,
+    )
+  })
+
+  test("true positive: an Intl formatter constructed inline", () => {
+    const code = `const nf = new Intl.NumberFormat("de-DE")\n`
+    expect(fires(FORMAT, code)).toBe(true)
+    expect(fires(FORMAT, `const df = new Intl.DateTimeFormat()\n`)).toBe(true)
+    expect(fires(FORMAT, `const rtf = new Intl.RelativeTimeFormat("de")\n`)).toBe(true)
+  })
+
+  test("true negative: the library formatters", () => {
+    expect(fires(FORMAT, component(`    <FormattedNumber value={props.value} />`))).toBe(false)
+    const helper = `import { formatNumber } from "@/components/formatted-number"\nexport const label = formatNumber(props.value, "de-DE")\n`
+    expect(fires(FORMAT, helper)).toBe(false)
+  })
+
+  test("true negative: a project formatter of your own is allowed to call Intl", () => {
+    // The opt-out written into the pattern: a function declaration named
+    // format* or use* is where a project is expected to put this.
+    const code = `export function formatScore(value: number, locale: string) {
+  return new Intl.NumberFormat(locale).format(value)
+}
+`
+    expect(fires(FORMAT, code)).toBe(false)
+  })
+
+  test("no false positive: a case conversion that merely starts the same way", () => {
+    expect(fires(FORMAT, `const id = String(props.id).toLocaleLowerCase()\n`)).toBe(false)
+  })
+
+  test("the library source is exempt — it is where the formatters live", () => {
+    const code = component(`    <time>{new Intl.DateTimeFormat(props.locale).format(props.d)}</time>`)
+    expect(fires(FORMAT, code, "src/components/formatted-date.tsx")).toBe(false)
+    expect(fires(FORMAT, code, "components/ui/formatted-date.tsx")).toBe(false)
+  })
+
+  test("known false positive: asking the platform which time zone it resolved", () => {
+    // Documented as an exception on the record: there is no library equivalent,
+    // so this one is a suppression with a reason rather than a rewrite. Only the
+    // `new` spelling is a construction, and only that one is matched — the bare
+    // call, which is how the idiom is usually written, slips through.
+    expect(fires(FORMAT, `const zone = new Intl.DateTimeFormat().resolvedOptions().timeZone\n`)).toBe(
+      true,
+    )
+    expect(fires(FORMAT, `const zone = Intl.DateTimeFormat().resolvedOptions().timeZone\n`)).toBe(
+      false,
+    )
+  })
+})
