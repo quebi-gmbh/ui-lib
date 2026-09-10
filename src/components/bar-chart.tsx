@@ -78,6 +78,7 @@ export function BarChart<TValue extends ValueType, TName extends NameType>({
   hideGridLines = false,
   chartProps,
 
+  overlays,
   ...props
 }: BarChartProps<TValue, TName>) {
   const configKeys = useMemo(() => Object.keys(config), [config])
@@ -173,6 +174,8 @@ export function BarChart<TValue extends ValueType, TName extends NameType>({
                 )
               })
             : children}
+
+          {overlays}
         </BarChartPrimitive>
       )}
     </Chart>

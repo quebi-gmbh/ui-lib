@@ -103,6 +103,7 @@ export function AreaChart<TValue extends ValueType, TName extends NameType>({
 
   hideGridLines = false,
   chartProps,
+  overlays,
   ...props
 }: AreaChartProps<TValue, TName>) {
   const configKeys = useMemo(() => Object.keys(config), [config])
@@ -213,6 +214,8 @@ export function AreaChart<TValue extends ValueType, TName extends NameType>({
                 )
               })
             : children}
+
+          {overlays}
         </AreaChartPrimitive>
       )}
     </Chart>

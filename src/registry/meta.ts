@@ -27,6 +27,7 @@ import { colorThumbMeta } from "./color-thumb.meta"
 import { colorWheelMeta } from "./color-wheel.meta"
 import { comboBoxMeta } from "./combo-box.meta"
 import { commandMenuMeta } from "./command-menu.meta"
+import { composedChartMeta } from "./composed-chart.meta"
 import { conformAsyncMultipleSelectMeta } from "./conform-async-multiple-select.meta"
 import { conformAsyncSelectMeta } from "./conform-async-select.meta"
 import { conformCalendarMeta } from "./conform-calendar.meta"
@@ -100,9 +101,12 @@ import { pieChartMeta } from "./pie-chart.meta"
 import { popoverMeta } from "./popover.meta"
 import { progressBarMeta } from "./progress-bar.meta"
 import { progressCircleMeta } from "./progress-circle.meta"
+import { radarChartMeta } from "./radar-chart.meta"
+import { radialBarChartMeta } from "./radial-bar-chart.meta"
 import { radioMeta } from "./radio.meta"
 import { rangeCalendarMeta } from "./range-calendar.meta"
 import { scrollAreaMeta } from "./scroll-area.meta"
+import { scatterChartMeta } from "./scatter-chart.meta"
 import { searchFieldMeta } from "./search-field.meta"
 import { selectMeta } from "./select.meta"
 import { separatorMeta } from "./separator.meta"
@@ -113,6 +117,7 @@ import { skeletonMeta } from "./skeleton.meta"
 import { sliderMeta } from "./slider.meta"
 import { snippetMeta } from "./snippet.meta"
 import { stepperMeta } from "./stepper.meta"
+import { sunburstChartMeta } from "./sunburst-chart.meta"
 import { switchMeta } from "./switch.meta"
 import { tableMeta } from "./table.meta"
 import { tabsMeta } from "./tabs.meta"
@@ -128,6 +133,7 @@ import { toggleGroupMeta } from "./toggle-group.meta"
 import { toolbarMeta } from "./toolbar.meta"
 import { tooltipMeta } from "./tooltip.meta"
 import { trackerMeta } from "./tracker.meta"
+import { treemapMeta } from "./treemap.meta"
 import { treeMeta } from "./tree.meta"
 
 export const metaRegistry: ComponentMeta[] = [
@@ -159,6 +165,7 @@ export const metaRegistry: ComponentMeta[] = [
   colorWheelMeta,
   comboBoxMeta,
   commandMenuMeta,
+  composedChartMeta,
   conformAsyncMultipleSelectMeta,
   conformAsyncSelectMeta,
   conformCalendarMeta,
@@ -232,8 +239,11 @@ export const metaRegistry: ComponentMeta[] = [
   popoverMeta,
   progressBarMeta,
   progressCircleMeta,
+  radarChartMeta,
+  radialBarChartMeta,
   radioMeta,
   rangeCalendarMeta,
+  scatterChartMeta,
   scrollAreaMeta,
   searchFieldMeta,
   selectMeta,
@@ -245,6 +255,7 @@ export const metaRegistry: ComponentMeta[] = [
   sliderMeta,
   snippetMeta,
   stepperMeta,
+  sunburstChartMeta,
   switchMeta,
   tableMeta,
   tabsMeta,
@@ -260,5 +271,6 @@ export const metaRegistry: ComponentMeta[] = [
   toolbarMeta,
   tooltipMeta,
   trackerMeta,
+  treemapMeta,
   treeMeta,
 ]

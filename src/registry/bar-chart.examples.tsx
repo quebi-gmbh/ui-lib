@@ -67,4 +67,18 @@ export const barChartExamples: ComponentExample[] = [
       />
     ),
   },
+  {
+    title: "Legend placement",
+    description:
+      "`legendProps` positions the legend — it is a recharts `Legend` underneath, so `verticalAlign` and `align` are the two axes of that decision, and `ChartLegendContent` reads both to line itself up.",
+    render: () => (
+      <BarChart
+        config={config}
+        data={data}
+        dataKey="month"
+        containerHeight={280}
+        legendProps={{ verticalAlign: "top", align: "left" }}
+      />
+    ),
+  },
 ]

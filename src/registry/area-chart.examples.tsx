@@ -1,3 +1,4 @@
+import { Brush } from "recharts"
 import { AreaChart } from "@/components/area-chart"
 import type { ChartConfig } from "@/components/chart"
 import type { ComponentExample } from "./types"
@@ -17,6 +18,18 @@ const config: ChartConfig = {
   desktop: { label: "Desktop", color: "chart-1" },
   mobile: { label: "Mobile", color: "chart-2" },
 }
+
+// A brush is only worth having when there is more data than fits, so this one
+// gets a year rather than the six months the other examples use.
+const year = [
+  ...data,
+  { month: "Jul", desktop: 291, mobile: 160 },
+  { month: "Aug", desktop: 318, mobile: 205 },
+  { month: "Sep", desktop: 246, mobile: 178 },
+  { month: "Oct", desktop: 275, mobile: 212 },
+  { month: "Nov", desktop: 332, mobile: 240 },
+  { month: "Dec", desktop: 358, mobile: 268 },
+]
 
 export const areaChartExamples: ComponentExample[] = [
   {
@@ -69,6 +82,30 @@ export const areaChartExamples: ComponentExample[] = [
         fillType="solid"
         hideGridLines
         containerHeight={280}
+      />
+    ),
+  },
+  {
+    title: "Brush — zoom and pan",
+    description:
+      "A `Brush` in `overlays` puts a draggable window under the chart: drag its edges to zoom, drag its middle to pan. It sits beside the generated areas rather than replacing them.",
+    render: () => (
+      <AreaChart
+        config={config}
+        data={year}
+        dataKey="month"
+        containerHeight={320}
+        overlays={
+          <Brush
+            dataKey="month"
+            height={26}
+            travellerWidth={8}
+            startIndex={2}
+            endIndex={9}
+            stroke="var(--color-quebi-brand)"
+            fill="var(--color-quebi-bg)"
+          />
+        }
       />
     ),
   },
