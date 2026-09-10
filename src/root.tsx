@@ -1,7 +1,7 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router"
-import { Header } from "@/components/site-header"
-import { Footer } from "@/components/site-footer"
-import { BodyScrollbar } from "@/components/body-scrollbar"
+import { Header } from "@/site/site-header"
+import { Footer } from "@/site/site-footer"
+import { BodyScrollbar } from "@/site/body-scrollbar"
 import "./main.css"
 
 export function Layout({ children }: { children: React.ReactNode }) {

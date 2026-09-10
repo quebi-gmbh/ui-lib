@@ -57,11 +57,15 @@ export interface LocalScope {
 }
 
 /**
- * The three kinds of code in `src/`, and how much of the rule set each gets.
+ * The kinds of code in `src/`, and how much of the rule set each gets.
  *
- * `src/routes/**` is missing from this table on purpose: the gallery is a real
- * React Router app built out of these components, so it gets every rule at full
- * strength and is the standing proof that the rules are livable.
+ * `src/routes/**` and `src/site/**` are missing from this table on purpose: the
+ * gallery is a real React Router app built out of these components, so it gets
+ * every rule at full strength and is the standing proof that the rules are
+ * livable. `src/site/**` exists so that the app's chrome — header, footer,
+ * sidebars, theme toggle, code block — is filed as app code rather than sitting
+ * in `src/components/` and inheriting the library-source carve-out, which is an
+ * argument about a layer and not about an address.
  *
  * Nothing in this table relaxes a rule from Biome's recommended set, and that is
  * deliberate. `src/registry/*.examples.tsx` is the case worth stating: an example
@@ -92,6 +96,11 @@ export const localScopes: LocalScope[] = [
  * already except it from six of the eight ui-lib rules, and the seventh, the
  * tier-1 element ban minus <input>, is the guarantee that had to live in
  * tests/repo-lint.test.ts until now.
+ *
+ * Note what that leaves standing: the carve-out is now the records' business
+ * alone, and it reaches only files that are actually the library. Every file in
+ * `src/components/` has a `slug` in src/registry/meta.ts — a test fails if one
+ * does not — so nothing can be excused by its address any more.
  *
  * The `css` half of tier 3's `appliesTo` stays out: Biome cannot parse Tailwind
  * v4's at-rules, and that rule already documents CSS as outside what its check

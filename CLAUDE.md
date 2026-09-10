@@ -63,6 +63,11 @@ register, plus the quebi styling and self-contained-dependency conventions.
   `<input>`, so a raw `<button>` in a library component fails the pre-commit hook like anywhere
   else. Its `biome-ignore lint/a11y/...` comments now land on rules that actually run, which is
   what let the directory back into the file list.
+- That exception is an argument about a *layer*, not about a directory, so only published
+  components may live there: a test fails if a file in `src/components/` has no `slug` in
+  `src/registry/meta.ts`. The site's own chrome lives in `src/site/` (header, footer, sidebars,
+  theme toggle, code block) and is linted at full strength, exactly like `src/routes/`. Put new
+  app-side UI there; do not park it next to the library source.
 - CSS is still outside the file list: Biome cannot parse Tailwind v4's at-rules. The
   `no-hardcoded-design-values` record documents that gap.
 - `src/registry/*.examples.tsx` is copied verbatim by agents through
