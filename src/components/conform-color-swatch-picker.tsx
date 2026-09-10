@@ -1,9 +1,10 @@
 "use client"
 
 import type { FieldMetadata } from "@conform-to/react"
-import { useState } from "react"
+import { BaseControl } from "@conform-to/react/future"
 import { ColorSwatch } from "react-aria-components"
 import type { ListData } from "react-stately"
+import { type ConformListItem, useConformListControl } from "@/lib/conform-list-control"
 import { cn } from "@/lib/utils"
 import { ColorSwatchPicker, ColorSwatchPickerItem } from "@/components/color-swatch-picker"
 import { describedBy, Description, Field, FieldError, Label } from "@/components/field"
@@ -38,8 +39,13 @@ export interface ConformColorSwatchPickerProps {
   field: FieldMetadata<string | string[]>
   label?: string
   description?: string
-  /** Conform list-data binding. Each item's `name` is a color key. */
-  list: ListData<{ id: number; name: string }>
+  /**
+   * Optional react-stately list mirroring the selection, so the same colors can
+   * be rendered and removed as tags elsewhere on the page. The picker owns the
+   * value either way: removing an item pushes into the field, and a reset or a
+   * `form.update()` re-seeds the list.
+   */
+  list?: ListData<ConformListItem>
   /** Selectable colors. Defaults to {@link DEFAULT_SWATCH_COLORS}. */
   colors?: SwatchColor[]
   className?: string
@@ -48,16 +54,16 @@ export interface ConformColorSwatchPickerProps {
 /**
  * ConformColorSwatchPicker — multi-select color picker wired to Conform.
  *
- * A wrapping grid of named color swatches that submits an array of color keys.
- * Built on the quebi ColorSwatchPicker for layout and tokens; toggling is
- * handled per-swatch since the underlying picker is single-select.
+ * A wrapping grid of named color swatches. The selected keys are submitted as
+ * one comma-joined string through a registered hidden control, so they
+ * repopulate after a failed submit and reset with the form like every other
+ * variant. Built on the quebi ColorSwatchPicker for layout and tokens; toggling
+ * is handled per-swatch since the underlying picker is single-select.
  *
- * Unlike the other variants this one does not own its value: the selection
- * lives in the `list` the caller passes, because a Conform list binding is what
- * lets the same tags be rendered and removed elsewhere on the page. The hidden
- * input below mirrors that list, so repopulation after a failed submit comes
- * from re-seeding the list from `field.initialValue` — it is the caller's state
- * that has to survive, and Conform cannot reset a list it does not own.
+ * `list` is optional and is a projection of that value rather than its home —
+ * see `@/lib/conform-list-control` for why. The default selection is the
+ * field's, not the list's: seed `useForm({ defaultValue: { colors: ["teal"] } })`
+ * and the list follows, which is also what a reset goes back to.
  */
 export function ConformColorSwatchPicker({
   field,
@@ -67,32 +73,8 @@ export function ConformColorSwatchPicker({
   colors = DEFAULT_SWATCH_COLORS,
   className,
 }: ConformColorSwatchPickerProps) {
-  const [selectedKeys, setSelectedKeys] = useState<string[]>(list.items.map((item) => item.name))
-
+  const selection = useConformListControl({ initialValue: field.initialValue, list })
   const hasErrors = !field.valid && !!field.errors
-
-  const toggleColor = (key: string) => {
-    if (selectedKeys.includes(key)) {
-      const item = list.items.find((i) => i.name === key)
-      if (item) list.remove(item.id)
-      setSelectedKeys(selectedKeys.filter((k) => k !== key))
-    } else {
-      const maxId = list.items.length > 0 ? Math.max(...list.items.map((i) => i.id)) : 0
-      list.append({ id: maxId + 1, name: key })
-      setSelectedKeys([...selectedKeys, key])
-    }
-  }
-
-  // Sync local state when the list changes externally (e.g. a tag removed elsewhere).
-  const currentKeys = list.items.map((item) => item.name)
-  if (
-    selectedKeys.length !== currentKeys.length ||
-    !selectedKeys.every((c, i) => c === currentKeys[i])
-  ) {
-    setSelectedKeys(currentKeys)
-  }
-
-  const selectedSet = new Set(selectedKeys)
 
   return (
     <Field className={cn("space-y-1.5", className)}>
@@ -107,7 +89,15 @@ export function ConformColorSwatchPicker({
           reference. */}
       {description && <Description id={field.descriptionId}>{description}</Description>}
 
-      {/* The picker provides quebi layout/tokens; multi-select is driven by `list`. */}
+      <BaseControl
+        name={field.name}
+        form={field.formId}
+        ref={selection.register}
+        defaultValue={selection.defaultValue}
+      />
+
+      {/* The picker provides quebi layout/tokens; multi-select is driven by the
+          control above, one toggle per swatch. */}
       <ColorSwatchPicker
         aria-label={label ?? "Colors"}
         aria-invalid={hasErrors || undefined}
@@ -117,13 +107,13 @@ export function ConformColorSwatchPicker({
         )}
       >
         {colors.map((color) => {
-          const isSelected = selectedSet.has(color.key)
+          const isSelected = selection.isSelected(color.key)
           return (
             <ColorSwatchPickerItem
               key={color.key}
               color={color.hex}
               aria-label={color.label ?? color.key}
-              onPress={() => toggleColor(color.key)}
+              onPress={() => selection.toggle(color.key)}
               className={cn(
                 isSelected &&
                   "ring-2 ring-quebi-brand ring-offset-2 ring-offset-quebi-bg",
@@ -140,9 +130,6 @@ export function ConformColorSwatchPicker({
           )
         })}
       </ColorSwatchPicker>
-
-      {/* Mirror the selection into the form as a comma-joined list of keys. */}
-      <input type="hidden" name={field.name} form={field.formId} value={currentKeys.join(",")} />
 
       {hasErrors && <FieldError id={field.errorId}>{field.errors?.join(", ")}</FieldError>}
     </Field>
