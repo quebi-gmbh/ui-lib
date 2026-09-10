@@ -97,9 +97,9 @@ export function ConformChoiceBox<T extends object>({
         {children}
       </ChoiceBox>
 
-      {/* These ids are ours to set: the control below is not a react-aria
-          field, so nothing generates them and nothing else points at them.
-          The aria-describedby above is the only reference they get. */}
+      {/* These ids are ours to set: the control above is not a react-aria
+          field, so nothing generates them and its aria-describedby is their
+          only reference. */}
       {description && <Description id={field.descriptionId}>{description}</Description>}
       {hasErrors && <FieldError id={field.errorId}>{field.errors?.join(", ")}</FieldError>}
     </Field>

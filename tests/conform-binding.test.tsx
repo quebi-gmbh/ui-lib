@@ -202,4 +202,48 @@ describe("react-aria owns the ids inside its own fields", () => {
     expect(message.textContent).toBe("Required")
     expect(input.getAttribute("aria-describedby")?.split(" ")).toContain(message.id)
   })
+
+  test("outside a react-aria field the variant owns the id, and it resolves", async () => {
+    // The other half of the convention. A bare Switch is not a react-aria
+    // field: it supplies no FieldErrorContext, so nothing generates an id for
+    // the message and nothing points at it. ConformSwitch sets both ends —
+    // id={field.errorId} on the message, describedBy(...) on the control — and
+    // this asserts they meet, which is the failure the id-ownership rule is
+    // there to prevent.
+    //
+    // The switch starts on and the schema rejects that, rather than the more
+    // natural "you must accept": an unchecked switch submits no value at all,
+    // so that shape leaves Conform with no entry to attach a field error to.
+    function App() {
+      const [form, fields] = useForm({
+        defaultValue: { maintenance: true },
+        onValidate({ formData }) {
+          return parseWithValibot(formData, {
+            schema: v.object({
+              maintenance: v.pipe(
+                v.boolean(),
+                v.check((value) => !value, "Turn maintenance off before saving"),
+              ),
+            }),
+          })
+        },
+      })
+      return (
+        <form id={form.id} onSubmit={form.onSubmit} noValidate>
+          <ConformSwitch field={fields.maintenance} label="Maintenance mode" />
+          <button type="submit" data-testid="submit">
+            go
+          </button>
+        </form>
+      )
+    }
+    const container = await mount(<App />)
+    await click(container, "submit")
+    const input = container.querySelector("input") as HTMLInputElement
+    const message = container.querySelector("[slot=errorMessage]") as HTMLElement
+    expect(message.textContent).toBe("Turn maintenance off before saving")
+    expect(message.id).not.toBe("")
+    expect(input.getAttribute("aria-describedby")?.split(" ")).toContain(message.id)
+    expect(input).toHaveAccessibleDescription("Turn maintenance off before saving")
+  })
 })

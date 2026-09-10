@@ -66,11 +66,12 @@ export function ConformCheckboxGroup({
         </Label>
       )}
       {children}
-      {/* No ids on these two, and no aria-describedby above: the react-aria
-          field generates its own ids for the description and error slots and
-          already points the control at them. Setting id={field.errorId} here
-          would replace the id the control references, and the message would
-          stop being announced — verified, it fails silently. */}
+      {/* No ids and no aria-describedby here: this is a react-aria field, so it
+          generates the description and error ids and already points the control
+          at them. Setting id={field.errorId} would not break that — on mount
+          react-aria re-points the control at whatever id the element actually
+          carries — it would just duplicate wiring that is already correct.
+          Outside a react-aria field the ids are yours: see ConformSwitch. */}
       {description && <Description>{description}</Description>}
       {hasErrors && <FieldError>{field.errors?.join(", ")}</FieldError>}
     </CheckboxGroup>

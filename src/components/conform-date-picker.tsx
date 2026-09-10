@@ -68,8 +68,12 @@ export function ConformDatePicker({
         </Label>
       )}
       <DatePickerTrigger />
-      {/* No ids on these two: the react-aria field generates its own for the
-          description and error slots and already points the control at them. */}
+      {/* No ids and no aria-describedby here: this is a react-aria field, so it
+          generates the description and error ids and already points the control
+          at them. Setting id={field.errorId} would not break that — on mount
+          react-aria re-points the control at whatever id the element actually
+          carries — it would just duplicate wiring that is already correct.
+          Outside a react-aria field the ids are yours: see ConformSwitch. */}
       {description && <Description>{description}</Description>}
       {hasErrors && <FieldError>{field.errors?.join(", ")}</FieldError>}
     </DatePicker>

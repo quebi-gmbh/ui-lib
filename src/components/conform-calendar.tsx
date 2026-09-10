@@ -83,9 +83,10 @@ export function ConformCalendar({
         )}
       />
 
-      {/* These ids are ours to set: the control below is not a react-aria
-          field, so nothing generates them and nothing else points at them.
-          The aria-describedby above is the only reference they get. */}
+      {/* These ids are ours to set: react-aria only owns the ids of children
+          rendered inside its field, and these are siblings of the calendar
+          above, not children of it. The aria-describedby above is the only
+          reference they get. */}
       {description && <Description id={field.descriptionId}>{description}</Description>}
       {hasErrors && <FieldError id={field.errorId}>{field.errors?.join(", ")}</FieldError>}
     </Field>
