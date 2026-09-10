@@ -289,7 +289,6 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
           ref={inputRef}
           id={id}
           type="text"
-          // biome-ignore lint/a11y/useSemanticElements: ARIA 1.2 combobox is authored on the text input
           role="combobox"
           aria-expanded={open}
           aria-controls={open ? listboxId : undefined}
@@ -324,7 +323,6 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
         className="w-(--trigger-width) p-0"
       >
         <div
-          // biome-ignore lint/a11y/useFocusableInteractive: the listbox uses virtual focus via the combobox input's aria-activedescendant
           role="listbox"
           id={listboxId}
           aria-multiselectable="true"

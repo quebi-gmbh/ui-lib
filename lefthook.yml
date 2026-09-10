@@ -12,8 +12,10 @@
 pre-commit:
   parallel: true
   commands:
-    # The rules this repo publishes, applied to this repo, on the staged files
-    # only. Biome filters out anything outside `files.includes` in biome.jsonc,
+    # Biome's recommended set plus the rules this repo publishes, applied to
+    # this repo, on the staged files only — including `src/components/**`, so a
+    # raw <button> added to a library component fails here rather than in CI.
+    # Biome filters out anything outside `files.includes` in biome.jsonc,
     # so --no-errors-on-unmatched keeps a commit that touches only, say, a
     # markdown file from failing on "no files were processed".
     lint:

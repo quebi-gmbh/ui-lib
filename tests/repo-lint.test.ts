@@ -11,8 +11,7 @@
  * reasons CI says it is.
  */
 import { describe, expect, test } from "bun:test"
-import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
-import { tmpdir } from "node:os"
+import { readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import {
   buildBiomeConfig,
@@ -158,30 +157,33 @@ describe("the repo obeys the rules it publishes", () => {
     expect(messages.join("\n")).toContain("@/components/button")
   })
 
-  test("the library source keeps its raw elements out", () => {
-    // src/components/** is outside biome.jsonc's `files.includes` — those files
-    // carry `biome-ignore lint/a11y/...` comments aimed at a consumer's fuller
-    // Biome setup, and a rules-only config reports every one of them as an
-    // unused suppression. The guarantee itself (PR #35: the library hand-rolls
-    // none of the controls it forbids) is asserted here instead, with a config
-    // built from the same records and scoped to that directory.
-    const generated = buildBiomeConfig(rulesRegistry, "./unused", racPrimitives)
-    const dir = mkdtempSync(join(tmpdir(), "quebi-library-lint-"))
-    writeFileSync(
-      join(dir, "biome.json"),
-      JSON.stringify({
-        // No `plugins`: every plugin rule already excepts src/components inside
-        // its own pattern, so leaving them out changes nothing and saves having
-        // to resolve their paths from a config outside the repo.
-        files: { includes: ["src/components/**/*.tsx"] },
-        linter: { enabled: true, rules: { preset: "none", ...generated.linter.rules } },
-        overrides: generated.overrides,
-      }),
+  test("a raw <button> in src/components is reported, and a raw <input> is not", () => {
+    // The guarantee PR #35 gave the library source — it hand-rolls none of the
+    // controls it forbids — used to be checked here against a config built by
+    // hand, because src/components/** sat outside biome.jsonc's `files.includes`.
+    // It no longer does, so the "`bun run lint` is clean" case above covers it.
+    // What is left for this test is the negative control that case needs: proof
+    // that the directory is really being linted, and that the one element the
+    // records except there (<input>, the control every text field wraps) is
+    // still excepted.
+    const probe = "src/components/__lint_probe__.tsx"
+    let diagnostics: Diagnostic[]
+    try {
+      writeFileSync(
+        join(ROOT, probe),
+        'export const Probe = () => (\n  <>\n    <button type="button">Save</button>\n    <input type="text" />\n  </>\n)\n',
+      )
+      diagnostics = lint([probe])
+    } finally {
+      rmSync(join(ROOT, probe), { force: true })
+    }
+    const restricted = diagnostics.filter(
+      (d) => d.category === "lint/correctness/noRestrictedElements",
     )
-    const diagnostics = lint([`--config-path=${dir}`, "src/components"]).filter(
-      // Same reason the directory is excluded from biome.jsonc in the first place.
-      (d) => !String(d.category ?? "").startsWith("suppressions/"),
-    )
-    expect(diagnostics.map(describeDiagnostic)).toEqual([])
+    expect(restricted.map(textOf).join("\n")).toContain("@/components/button")
+    // One diagnostic, not two: <input> is the exception the records grant this
+    // directory, and an assertion that only counted <button> would pass just as
+    // well if the exception had quietly been dropped.
+    expect(restricted.map(describeDiagnostic)).toHaveLength(1)
   })
 })

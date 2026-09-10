@@ -17,9 +17,11 @@ import { Label } from "@/components/field"
 
 interface ConformDayScheduleProps
   extends Omit<DayScheduleProps, "spans" | "defaultSpans" | "onSpansChange"> {
-  // Only name/initialValue/required/errors are read off the metadata; the
-  // serialized value is a JSON string regardless of the schema's output type.
-  field: FieldMetadata<any, any, string[]>
+  // Only name/initialValue/required/errors are read off the metadata, and the
+  // serialized value is a JSON string regardless of the schema's output type —
+  // so the field's own type parameters are left at their defaults rather than
+  // being widened to `any` to accept every caller.
+  field: FieldMetadata
   label?: string
   /** Used when the field has no initial value. */
   defaultSpans?: DaySpan[]
