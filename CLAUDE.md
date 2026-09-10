@@ -67,5 +67,10 @@ register, plus the quebi styling and self-contained-dependency conventions.
   for a consumer's fuller Biome setup, which a rules-only config reports as unused suppressions.
   What still holds there — the library hand-rolls none of the controls it forbids — is asserted in
   `tests/repo-lint.test.ts` instead.
+- That exception is an argument about a *layer*, not about a directory, so only published
+  components may live there: a test fails if a file in `src/components/` has no `slug` in
+  `src/registry/meta.ts`. The site's own chrome lives in `src/site/` (header, footer, sidebars,
+  theme toggle, code block) and is linted at full strength, exactly like `src/routes/`. Put new
+  app-side UI there; do not park it next to the library source.
 - `src/registry/*.examples.tsx` is copied verbatim by agents through
   `/api/components/<slug>.json`. A shortcut taken in an example propagates.

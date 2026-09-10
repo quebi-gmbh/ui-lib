@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Outlet } from "react-router"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/button"
-import { RuleSidebar } from "@/components/rule-sidebar"
+import { RuleSidebar } from "@/site/rule-sidebar"
 import { cn } from "@/lib/utils"
 
 /**
