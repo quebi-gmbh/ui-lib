@@ -25,7 +25,7 @@ const twMerge = extendTailwindMerge({
     theme: {
       radius: ["quebi-sm", "quebi-md", "quebi-lg"],
       shadow: ["quebi-glow", "quebi-glow-strong"],
-      container: ["quebi-content"],
+      container: ["quebi-content", "quebi-shell"],
     },
   },
 })
