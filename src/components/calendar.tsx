@@ -69,10 +69,7 @@ const Calendar = <T extends DateValue>({ className, ...props }: CalendarProps<T>
   )
 }
 
-const CalendarHeader = ({
-  className,
-  ...props
-}: React.ComponentProps<"header"> & { isRange?: boolean }) => {
+const CalendarHeader = ({ className, ...props }: React.ComponentProps<"header">) => {
   const { direction } = useLocale()
   return (
     <header

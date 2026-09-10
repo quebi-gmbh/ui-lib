@@ -31,10 +31,26 @@ import { createRoot } from "react-dom/client"
 import { FieldError, Input, Label, TextField } from "react-aria-components"
 import { useListData } from "react-stately"
 import * as v from "valibot"
+import { ChoiceBoxItem, ChoiceBoxLabel } from "../src/components/choice-box"
+import { ConformCalendar } from "../src/components/conform-calendar"
+import { ConformChoiceBox } from "../src/components/conform-choice-box"
+import { ConformColorPicker } from "../src/components/conform-color-picker"
 import { ConformColorSwatchPicker } from "../src/components/conform-color-swatch-picker"
+import {
+  type ConformDateRange,
+  ConformDateRangePicker,
+} from "../src/components/conform-date-range-picker"
+import { ConformDaySchedule } from "../src/components/conform-day-schedule"
 import { ConformField } from "../src/components/conform-field"
+import { ConformFileTrigger } from "../src/components/conform-file-trigger"
+import {
+  type ConformCalendarRange,
+  ConformRangeCalendar,
+} from "../src/components/conform-range-calendar"
 import { ConformStoragePicker } from "../src/components/conform-storage-picker"
 import { ConformSwitch } from "../src/components/conform-switch"
+import { ConformTimeField } from "../src/components/conform-time-field"
+import type { DaySpan } from "../src/components/day-schedule"
 import { Switch } from "../src/components/switch"
 
 // Mounting by hand means unmounting by hand: React Testing Library's automatic
@@ -462,5 +478,103 @@ describe("the list-backed pickers own their value", () => {
       expect(new FormData(form).get("colors")).toBe("teal")
       expect(tags(container)).toEqual(["teal"])
     })
+  })
+})
+
+describe("the registered control stays focusable for Conform's focus-on-error", () => {
+  // After a failed submit, Conform v1 focuses the first errored field with a
+  // bare `element.focus()`. For a control with no native form value that field
+  // is the registered `BaseControl`, and a real browser no-ops `.focus()` on an
+  // element carrying the `hidden` attribute: the focus lands nowhere, no
+  // `focusin` fires, and `useControl`'s `onFocus` never gets to forward it to
+  // the control the user can see. Checked in Chrome — task #11.
+  //
+  // Neither jsdom nor happy-dom models that. Both focus hidden elements and
+  // fire `focusin`, so an end-to-end assertion here would pass either way and
+  // prove nothing. What is pinned instead is the shape the browser needs:
+  // hidden by CSS, `tabIndex={-1}`, and no `hidden` attribute — which is
+  // exactly what was wrong.
+  /** One form, one field named `value`, whatever type the variant binds. */
+  function bound<Value>(render: (field: FieldMetadata<Value>) => React.ReactNode) {
+    return function App() {
+      const [form, fields] = useForm<{ value: Value }>({})
+      return (
+        <form id={form.id} onSubmit={form.onSubmit} noValidate>
+          {render(fields.value)}
+        </form>
+      )
+    }
+  }
+
+  const variants: Array<[string, () => React.ReactElement]> = [
+    ["conform-time-field", bound<string>((f) => <ConformTimeField field={f} label="Opens at" />)],
+    [
+      "conform-calendar",
+      bound<Date | string>((f) => <ConformCalendar field={f} label="Visit on" />),
+    ],
+    ["conform-color-picker", bound<string>((f) => <ConformColorPicker field={f} label="Brand" />)],
+    [
+      "conform-day-schedule",
+      bound<string | DaySpan[]>((f) => <ConformDaySchedule field={f} label="Agenda" />),
+    ],
+    [
+      "conform-choice-box",
+      bound<string | string[]>((f) => (
+        <ConformChoiceBox field={f} label="Plan" items={[{ id: "a", name: "A" }]}>
+          {(item: { id: string; name: string }) => (
+            <ChoiceBoxItem id={item.id} textValue={item.name}>
+              <ChoiceBoxLabel>{item.name}</ChoiceBoxLabel>
+            </ChoiceBoxItem>
+          )}
+        </ConformChoiceBox>
+      )),
+    ],
+    ["conform-file-trigger", bound<File>((f) => <ConformFileTrigger field={f} label="Avatar" />)],
+    [
+      "conform-date-range-picker",
+      bound<ConformDateRange>((f) => <ConformDateRangePicker field={f} label="Stay" />),
+    ],
+    [
+      "conform-range-calendar",
+      bound<ConformCalendarRange>((f) => <ConformRangeCalendar field={f} label="Trip" />),
+    ],
+    // The two list-backed pickers reach `useControl` through
+    // `useConformListControl`, so they need the same shape and the same forward.
+    [
+      "conform-storage-picker",
+      bound<string | string[]>((f) => <ConformStoragePicker field={f} label="Storage" />),
+    ],
+    [
+      "conform-color-swatch-picker",
+      bound<string | string[]>((f) => <ConformColorSwatchPicker field={f} label="Colors" />),
+    ],
+  ]
+
+  for (const [slug, App] of variants) {
+    test(`${slug} hides its registered control with CSS, not with the attribute`, async () => {
+      const container = await mount(<App />)
+      const registered = container.querySelector('[name="value"]') as HTMLElement
+      expect(registered).not.toBeNull()
+      // The three things a real browser reads before it agrees to focus it.
+      expect(registered.hasAttribute("hidden")).toBe(false)
+      expect(registered.getAttribute("tabindex")).toBe("-1")
+      expect(registered.className).toContain("sr-only")
+      // And the one that keeps it a working form value — see conform-time-field.
+      expect(registered.getAttribute("type")).not.toBe("hidden")
+    })
+  }
+
+  test("the forward lands on the visible control, not back on the registered one", async () => {
+    const App = bound<File>((f) => <ConformFileTrigger field={f} label="Avatar" />)
+    const container = await mount(<App />)
+    const registered = container.querySelector('[name="value"]') as HTMLElement
+    // Exactly what @conform-to/dom v1 does to the first errored field.
+    await act(async () => {
+      registered.focus()
+    })
+    const active = document.activeElement as HTMLElement
+    expect(active).not.toBe(registered)
+    expect(active?.tagName).toBe("BUTTON")
+    expect(active?.textContent).toContain("Browse")
   })
 })

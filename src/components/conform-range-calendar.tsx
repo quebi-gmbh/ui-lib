@@ -3,9 +3,17 @@
 import type { FieldMetadata } from "@conform-to/react"
 import { BaseControl, useControl } from "@conform-to/react/future"
 import { type CalendarDate, parseDate } from "@internationalized/date"
+import { useRef } from "react"
 import type { DateValue, RangeCalendarProps, RangeValue } from "react-aria-components"
 import { cn } from "@/lib/utils"
-import { describedBy, Description, Field, FieldError, Label } from "@/components/field"
+import {
+  describedBy,
+  Description,
+  Field,
+  FieldError,
+  focusFirstControl,
+  Label,
+} from "@/components/field"
 import { RangeCalendar } from "@/components/range-calendar"
 
 /** The wire shape: two ISO `YYYY-MM-DD` strings, submitted as `<name>.start` / `<name>.end`. */
@@ -65,6 +73,7 @@ export function ConformRangeCalendar({
   className,
   ...props
 }: ConformRangeCalendarProps) {
+  const calendarRef = useRef<HTMLDivElement>(null)
   const control = useControl<ConformCalendarRange, ConformCalendarRange>({
     defaultValue: (field.initialValue as ConformCalendarRange | undefined) ?? undefined,
     parse: (payload) => {
@@ -74,6 +83,11 @@ export function ConformRangeCalendar({
         start: typeof start === "string" ? start : "",
         end: typeof end === "string" ? end : "",
       }
+    },
+    // Conform focuses the first errored field after a failed submit; that is
+    // the registered control, which nobody can see — hand it to the visible one.
+    onFocus() {
+      focusFirstControl(calendarRef.current)
     },
   })
 
@@ -95,23 +109,28 @@ export function ConformRangeCalendar({
         form={field.formId}
         ref={control.register}
         defaultValue={control.defaultValue}
+        hidden={false}
+        tabIndex={-1}
+        className="sr-only"
       />
 
-      <RangeCalendar
-        {...props}
-        value={toRangeValue(control.payload)}
-        onChange={(range) =>
-          control.change(
-            range ? { start: range.start.toString(), end: range.end.toString() } : null,
-          )
-        }
-        isInvalid={hasErrors}
-        aria-label={props["aria-label"] ?? label}
-        aria-describedby={describedBy(
-          hasErrors && field.errorId,
-          description && field.descriptionId,
-        )}
-      />
+      <div ref={calendarRef}>
+        <RangeCalendar
+          {...props}
+          value={toRangeValue(control.payload)}
+          onChange={(range) =>
+            control.change(
+              range ? { start: range.start.toString(), end: range.end.toString() } : null,
+            )
+          }
+          isInvalid={hasErrors}
+          aria-label={props["aria-label"] ?? label}
+          aria-describedby={describedBy(
+            hasErrors && field.errorId,
+            description && field.descriptionId,
+          )}
+        />
+      </div>
 
       {/* These ids are ours to set: react-aria only owns the ids of children
           rendered inside its field, and these are siblings of the calendar

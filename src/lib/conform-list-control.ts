@@ -50,6 +50,12 @@ export interface UseConformListControlOptions {
    * containing one would come back off the wire as two.
    */
   canonicalize?: (name: string) => string
+  /**
+   * Called when Conform focuses the registered control — which happens after a
+   * failed submit, and which nobody can see. Forward it to the visible picker.
+   * See `focusFirstControl` in `@/components/field`.
+   */
+  onFocus?: () => void
 }
 
 export interface ConformListControl {
@@ -140,6 +146,7 @@ export function useConformListControl({
   initialValue,
   list,
   canonicalize = identity,
+  onFocus,
 }: UseConformListControlOptions): ConformListControl {
   // The field owns the default. A list the caller seeded is only a fallback for
   // a field that declares none, and only its first render counts — read live it
@@ -152,7 +159,7 @@ export function useConformListControl({
   const fromField = toKeys(initialValue).map(canonicalize)
   const defaultKeys = fromField.length > 0 ? fromField : seed.current
 
-  const control = useControl<string>({ defaultValue: defaultKeys.join(",") })
+  const control = useControl<string>({ defaultValue: defaultKeys.join(","), onFocus })
   const keys = splitKeys(control.value).map(canonicalize)
 
   // Keep the two sides in step, and let whichever of them moved win.
