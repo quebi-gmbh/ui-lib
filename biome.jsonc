@@ -42,7 +42,9 @@
     // Gate lastResult on an idle navigation
     "./ui-lib-rules/gate-last-result-on-idle-navigation.grit",
     // An intent button submits — never type="button"
-    "./ui-lib-rules/intent-buttons-must-not-be-type-button.grit"
+    "./ui-lib-rules/intent-buttons-must-not-be-type-button.grit",
+    // Sorting a server-driven table is a query, not an array method
+    "./ui-lib-rules/no-client-sorting-on-a-server-driven-table.grit"
   ],
   "linter": {
     "enabled": true,
@@ -199,6 +201,11 @@
           "options": {
             "maxLines": 500
           }
+        }
+      },
+      "suspicious": {
+        "noAlert": {
+          "level": "warn"
         }
       }
     }

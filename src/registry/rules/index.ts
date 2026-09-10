@@ -6,6 +6,8 @@ import { importComponentsNotPrimitivesRule } from "./import-components-not-primi
 import { intentButtonsMustNotBeTypeButtonRule } from "./intent-buttons-must-not-be-type-button.rule"
 import { keepFilesReadableRule } from "./keep-files-readable.rule"
 import { noAppearanceClassesOnLayoutElementsRule } from "./no-appearance-classes-on-layout-elements.rule"
+import { noBrowserDialogsRule } from "./no-browser-dialogs.rule"
+import { noClientSortingOnAServerDrivenTableRule } from "./no-client-sorting-on-a-server-driven-table.rule"
 import { noHardcodedDesignValuesRule } from "./no-hardcoded-design-values.rule"
 import { noRawInteractiveElementsRule } from "./no-raw-interactive-elements.rule"
 import { renderFieldTextThroughTheFieldRule } from "./render-field-text-through-the-field.rule"
@@ -34,6 +36,8 @@ export const rulesRegistry: RuleMeta[] = [
   seedTogglesWithDefaultSelectedRule,
   gateLastResultOnIdleNavigationRule,
   intentButtonsMustNotBeTypeButtonRule,
+  noBrowserDialogsRule,
+  noClientSortingOnAServerDrivenTableRule,
 ]
 
 export function getRule(id: string | undefined): RuleMeta | undefined {

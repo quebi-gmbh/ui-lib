@@ -295,8 +295,18 @@ function ruleOptions(rule: RuleMeta, primitives: string[]): { options?: BiomeRul
       },
     }
   }
-  const elements = restrictedElements(rule)
-  return Object.keys(elements).length ? { options: { elements } } : {}
+  // The element ban, and only the element ban. This used to be the fall-through
+  // for every other built-in, which was fine while `correctness/noRestrictedElements`
+  // was the only one — and a trap the moment it was not: a rule with a
+  // `replacements` table and any other Biome rule behind it would have been
+  // configured with an `elements` option that rule has never heard of.
+  if (biome.rule === "correctness/noRestrictedElements") {
+    const elements = restrictedElements(rule)
+    return Object.keys(elements).length ? { options: { elements } } : {}
+  }
+  // Everything else is configured by its level alone — `suspicious/noAlert` has
+  // nothing to configure, and the message it prints is Biome's own.
+  return {}
 }
 
 export function buildBiomeConfig(
@@ -497,12 +507,20 @@ export function buildRuleChecks(
       title: "Claiming an exception that is not a path",
       description: `${judgementCalls.length === 1 ? "One exception on this rule is" : `${judgementCalls.length} exceptions on this rule are`} a judgement call, so ${judgementCalls.length === 1 ? "it" : "they"} cannot be a path. Biome's suppression syntax has a slot for the reason — fill it, because that note is what makes the carve-out reviewable instead of invisible.`,
       language: "tsx",
-      code: judgementCalls
-        .map(
+      // The line form, because it is the one that works everywhere a violation
+      // can be: above a call, an import, or a JSX attribute. Only directly
+      // between JSX children does a comment have to be an expression, and this
+      // rule set has as many non-JSX violations as JSX ones, so the wrapping is
+      // stated rather than assumed.
+      code: [
+        ...judgementCalls.map(
           (exception) =>
-            `{/* biome-ignore ${target}: ${exception.scope} — ${firstSentence(exception.reason)} */}`,
-        )
-        .join("\n\n"),
+            `// biome-ignore ${target}: ${exception.scope} — ${firstSentence(exception.reason)}`,
+        ),
+        "",
+        "// Between JSX children, where a comment has to be an expression, the same",
+        "// line is written {/* biome-ignore … */}.",
+      ].join("\n"),
     })
   }
 

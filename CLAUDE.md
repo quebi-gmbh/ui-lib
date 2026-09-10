@@ -17,7 +17,7 @@ through. `bun run lint:fix` applies Biome's safe fixes.
 
 ## The rules are not advice, they are lint
 
-`/rules` publishes twelve rules about using this library. They are enforced here too, so the same
+`/rules` publishes fourteen rules about using this library. They are enforced here too, so the same
 messages you would give a consumer are the ones you get:
 
 - **Layout is yours. Appearance is the library's.** Raw `button`, `a`, `input`, `select`,
@@ -32,6 +32,12 @@ messages you would give a consumer are the ones you get:
 - Numbers and dates go through `FormattedNumber` / `FormattedDate` (or `formatNumber(value,
   locale)`), never a bare `toLocaleString()` — the site is prerendered, so an implicit locale is a
   hydration bug.
+- **The platform will do it for you. That is not the same as your app doing it.** `alert`,
+  `confirm` and `prompt` are out: feedback is a `Toast` under a `ToastProvider`, a question is a
+  `Modal` whose own button runs the rest of the handler. And `AsyncTable` reports sort intent
+  through `onSortChange` so you can re-query — sorting its `rows` in the component reorders the
+  answer to the last query instead of asking for a new one. Both of these warn rather than fail,
+  because both fixes are a change of shape rather than a change of import.
 
 Each message names its replacement and links to the rule page. If a rule is wrong for a case you
 hit, the answer is a documented exception with a reason — either an `exceptions` entry on the
@@ -62,11 +68,12 @@ register, plus the quebi styling and self-contained-dependency conventions.
 
 ## Things that will bite you
 
-- `bun run lint` is Biome's recommended set *plus* the eight rules this repo publishes, over
-  `src/**/*.{tsx,jsx}` — including `src/components/**`. The library source is excepted from most
-  of the eight by the records themselves; what still applies there is the element ban minus
-  `<input>`, so a raw `<button>` in a library component fails the pre-commit hook like anywhere
-  else. Its `biome-ignore lint/a11y/...` comments now land on rules that actually run, which is
+- `bun run lint` is Biome's recommended set *plus* the rules this repo publishes, over
+  `src/**/*.{tsx,jsx}` — including `src/components/**`. The library source is excepted from nine
+  of them by the records themselves; what still applies there is the element ban minus `<input>`
+  plus the two platform-defaults rules, which the library has no reason to break and so no reason
+  to be excused from. A raw `<button>` in a library component fails the pre-commit hook like
+  anywhere else. Its `biome-ignore lint/a11y/...` comments now land on rules that actually run, which is
   what let the directory back into the file list.
 - That exception is an argument about a *layer*, not about a directory, so only published
   components may live there: a test fails if a file in `src/components/` has no `slug` in
