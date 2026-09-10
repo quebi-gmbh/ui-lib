@@ -20,6 +20,7 @@ import {
 } from "react-aria-components"
 import { Button } from "@/components/button"
 import { Select, SelectContent, SelectItem, SelectLabel, SelectTrigger } from "@/components/select"
+import { getDateTimeFormat } from "@/lib/intl"
 import { cn } from "@/lib/utils"
 
 /**
@@ -126,7 +127,7 @@ const SelectMonth = () => {
   const state = calendarState || rangeCalendarState
   const { locale } = useLocale()
   if (!state) throw new Error("SelectMonth must be used within a Calendar or RangeCalendar")
-  const formatter = new Intl.DateTimeFormat(locale, {
+  const formatter = getDateTimeFormat(locale, {
     month: "short",
     timeZone: state.timeZone,
   })
@@ -172,7 +173,7 @@ const SelectYear = () => {
   const state = calendarState || rangeCalendarState
   const { locale } = useLocale()
   if (!state) throw new Error("SelectYear must be used within a Calendar or RangeCalendar")
-  const formatter = new Intl.DateTimeFormat(locale, {
+  const formatter = getDateTimeFormat(locale, {
     year: "numeric",
     timeZone: state.timeZone,
   })

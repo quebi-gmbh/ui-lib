@@ -3,6 +3,7 @@
 import type { ReactNode } from "react"
 import { useCallback } from "react"
 import { useLocale } from "react-aria-components"
+import { getNumberFormat } from "@/lib/intl"
 
 /**
  * FormattedNumber — quebi design system
@@ -50,7 +51,7 @@ export interface FormattedNumberProps {
  * Useful in string contexts (e.g. callback functions) where a React component cannot be used.
  */
 export function formatNumber(value: number, locale: string): string {
-  return new Intl.NumberFormat(locale, {
+  return getNumberFormat(locale, {
     maximumFractionDigits: 0,
   }).format(value)
 }
@@ -69,7 +70,7 @@ export function useFormatNumber() {
  * Useful in string contexts (e.g. callback functions) where a React component cannot be used.
  */
 export function formatCurrency(value: number, locale: string): string {
-  return new Intl.NumberFormat(locale, {
+  return getNumberFormat(locale, {
     style: "currency",
     currency: "EUR",
     minimumFractionDigits: 2,
@@ -111,7 +112,7 @@ export function FormattedNumber({
     return <span className={className}>-</span>
   }
 
-  const formatter = new Intl.NumberFormat(resolvedLocale, options)
+  const formatter = getNumberFormat(resolvedLocale, options)
   const formattedValue = formatter.format(numericValue)
 
   if (children) {
