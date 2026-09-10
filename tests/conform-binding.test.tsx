@@ -577,4 +577,25 @@ describe("the registered control stays focusable for Conform's focus-on-error", 
     expect(active?.tagName).toBe("BUTTON")
     expect(active?.textContent).toContain("Browse")
   })
+
+  test("the swatch grid's forward lands on a swatch option", async () => {
+    // Task #11 verified this forward in Chrome against a ColorSwatchPicker; the
+    // grid is a multi-select ListBox now (task #15), so the element the forward
+    // lands on is a different one. `focusFirstControl` walks `[tabindex]` and
+    // skips anything negative, which is what makes the listbox's own roving
+    // tabindex — -1 on the container, 0 on the current option — resolve to the
+    // option rather than to the wrapper.
+    const App = bound<string | string[]>((f) => (
+      <ConformColorSwatchPicker field={f} label="Colors" />
+    ))
+    const container = await mount(<App />)
+    const registered = container.querySelector('[name="value"]') as HTMLElement
+    await act(async () => {
+      registered.focus()
+    })
+    const active = document.activeElement as HTMLElement
+    expect(active).not.toBe(registered)
+    expect(active?.getAttribute("role")).toBe("option")
+    expect(active?.getAttribute("aria-label")).toBe("black")
+  })
 })
