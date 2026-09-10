@@ -175,10 +175,6 @@ const SidebarProvider = ({
     [state, open, setOpen, isMobile, openMobile, toggleSidebar],
   )
 
-  if (isMobile === undefined) {
-    return null
-  }
-
   return (
     <SidebarContext value={contextValue}>
       <div
