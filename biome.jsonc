@@ -38,7 +38,7 @@
     "./ui-lib-rules/render-field-text-through-the-field.grit",
     // Validate on the server with the same schema
     "./ui-lib-rules/validate-on-the-server-with-the-same-schema.grit",
-    // Seed a Checkbox or Switch with defaultSelected, not the spread alone
+    // Never spread getInputProps onto a Checkbox or Switch
     "./ui-lib-rules/seed-toggles-with-default-selected.grit",
     // Gate lastResult on an idle navigation
     "./ui-lib-rules/gate-last-result-on-idle-navigation.grit",
@@ -119,6 +119,7 @@
                   "DisclosureStateContext",
                   "DropZone",
                   "FieldError",
+                  "FieldErrorContext",
                   "FileTrigger",
                   "GridList",
                   "GridListHeader",
@@ -212,9 +213,9 @@
         // import-components-not-primitives — This is the layer that imports the primitives — it is what makes the components components.
         // keep-files-readable — You did not write it and cannot split it without forking it.
         // format-values-through-the-library — The formatters this rule points at are implemented there: FormattedNumber, FormattedDate and the Calendar's month/year labels all call Intl directly, which is what makes the rest of the codebase able not to.
-        // bind-fields-through-conform — The conform-* variants are where getInputProps is called and the metadata is spread onto a control.
+        // bind-fields-through-conform — The conform-* variants are where the metadata is read off the field and put onto a control.
         // render-field-text-through-the-field — The conform-* variants and the field primitives are where this markup is supposed to live — they are the layer that renders the label, the description, and the error, and wires the ids between them.
-        // seed-toggles-with-default-selected — This is the layer that spreads getInputProps onto a control and adds the two props afterwards — ConformCheckbox is the fix, not an instance of the problem.
+        // seed-toggles-with-default-selected — That is the layer that reads the metadata off the field and names it onto a control.
         "components/ui/**",
         // no-raw-interactive-elements — Only <input>, and only there.
         // no-appearance-classes-on-layout-elements — Components are made of appearance-styled divs — that is what a component is.
@@ -222,9 +223,9 @@
         // import-components-not-primitives — This is the layer that imports the primitives — it is what makes the components components.
         // keep-files-readable — You did not write it and cannot split it without forking it.
         // format-values-through-the-library — The formatters this rule points at are implemented there: FormattedNumber, FormattedDate and the Calendar's month/year labels all call Intl directly, which is what makes the rest of the codebase able not to.
-        // bind-fields-through-conform — The conform-* variants are where getInputProps is called and the metadata is spread onto a control.
+        // bind-fields-through-conform — The conform-* variants are where the metadata is read off the field and put onto a control.
         // render-field-text-through-the-field — The conform-* variants and the field primitives are where this markup is supposed to live — they are the layer that renders the label, the description, and the error, and wires the ids between them.
-        // seed-toggles-with-default-selected — This is the layer that spreads getInputProps onto a control and adds the two props afterwards — ConformCheckbox is the fix, not an instance of the problem.
+        // seed-toggles-with-default-selected — That is the layer that reads the metadata off the field and names it onto a control.
         "src/components/**"
       ],
       "linter": {

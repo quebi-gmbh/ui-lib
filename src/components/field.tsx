@@ -1,8 +1,10 @@
 "use client"
 
+import { use } from "react"
 import type { FieldErrorProps, LabelProps, TextProps } from "react-aria-components"
 import {
   composeRenderProps,
+  FieldErrorContext,
   FieldError as FieldErrorPrimitive,
   Label as LabelPrimitive,
   Text,
@@ -46,20 +48,84 @@ export function Description({ className, ...props }: TextProps) {
   )
 }
 
-export function FieldError({ className, ...props }: FieldErrorProps) {
+/** The shared look of an inline field error, in one place for both branches below. */
+const fieldErrorClasses = (className?: string) =>
+  cn(
+    "block text-[12px] text-red-500",
+    "in-disabled:opacity-50 group-disabled:opacity-50",
+    "forced-colors:text-[Mark]",
+    className,
+  )
+
+/**
+ * FieldError — the inline error message for a field.
+ *
+ * Inside a react-aria field (TextField, NumberField, RadioGroup, …) this is
+ * RAC's FieldError, which reads validity off the surrounding FieldErrorContext.
+ *
+ * Outside one it renders the message itself. That branch is the reason this
+ * wrapper exists: RAC's FieldError returns `null` whenever no FieldErrorContext
+ * supplies `isInvalid`, and a bare Checkbox, Switch, Slider, or hidden-input
+ * control provides none — so the same JSX that shows an error inside a
+ * TextField silently shows nothing next to a Switch. Falling back keeps one
+ * error shape usable everywhere, which is what lets every conform-* variant
+ * render its message the same way:
+ *
+ *     {hasErrors && <FieldError id={field.errorId}>{field.errors?.join(", ")}</FieldError>}
+ *
+ * Render props (a function `className` or `children`) only make sense with a
+ * ValidationResult behind them, so the fallback branch ignores them — there is
+ * nothing to compute them from.
+ */
+export function FieldError({ className, children, elementType, style, ...props }: FieldErrorProps) {
+  const validation = use(FieldErrorContext)
+
+  if (validation === null) {
+    if (typeof children === "function" || children == null || children === false) return null
+    return (
+      <span
+        {...props}
+        slot="errorMessage"
+        style={typeof style === "function" ? undefined : style}
+        className={fieldErrorClasses(typeof className === "string" ? className : undefined)}
+      >
+        {children}
+      </span>
+    )
+  }
+
   return (
     <FieldErrorPrimitive
       {...props}
-      className={composeRenderProps(className, (className) =>
-        cn(
-          "block text-[12px] text-red-500",
-          "in-disabled:opacity-50 group-disabled:opacity-50",
-          "forced-colors:text-[Mark]",
-          className,
-        ),
-      )}
-    />
+      elementType={elementType}
+      style={style}
+      className={composeRenderProps(className, (className) => fieldErrorClasses(className))}
+    >
+      {children}
+    </FieldErrorPrimitive>
   )
+}
+
+/**
+ * Joins the ids a control's `aria-describedby` should point at, dropping the
+ * ones that are not currently rendered.
+ *
+ *     aria-describedby={describedBy(hasErrors && field.errorId, description && field.descriptionId)}
+ *
+ * An `aria-describedby` pointing at an element that is not on the page is worse
+ * than none at all: assistive technology announces nothing and there is no
+ * attribute missing to notice.
+ *
+ * Only reach for this when the control is **not** a react-aria field. Inside a
+ * TextField, NumberField, RadioGroup, ComboBox, Select, DateField, TimeField,
+ * Calendar (…) the field generates its own ids for the description and error
+ * slots and already points the control at them — give those children an id of
+ * your own and the control keeps referencing the generated one, so the message
+ * silently stops being announced. Whoever owns the ids does the wiring.
+ */
+export function describedBy(...ids: Array<string | false | null | undefined>) {
+  const joined = ids.filter(Boolean).join(" ")
+  return joined === "" ? undefined : joined
 }
 
 export function Field({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {

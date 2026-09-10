@@ -34,9 +34,11 @@ describe(BIND, () => {
     expect(fires(BIND, code)).toBe(false)
   })
 
-  test("true negative: getInputProps spread onto a control", () => {
-    // A TextField takes the spread as-is. (A Checkbox does not — that is the
-    // tier-4 rule below, and this rule stays quiet about it either way.)
+  test("known blind spot: a spread names nothing, so this check sees no metadata", () => {
+    // The rule says to name the props rather than spread onto a component, but
+    // its selector reads named attributes — a spread hands the whole object
+    // over. For the two controls where that is silently wrong (Checkbox and
+    // Switch) the tier-4 rule below is the check.
     const code = component(`    <TextField {...getInputProps(fields.email, { type: "email" })} />`)
     expect(fires(BIND, code)).toBe(false)
   })
@@ -185,20 +187,24 @@ describe(TOGGLES, () => {
     expect(fires(TOGGLES, code)).toBe(true)
   })
 
-  test("true positive: the same on a Switch, which has no variant to reach for", () => {
+  test("true positive: the same on a Switch, whose isRequired does not even exist", () => {
     const code = component(
       `    <Switch {...getInputProps(fields.notify, { type: "checkbox" })}>Notify me</Switch>`,
     )
     expect(fires(TOGGLES, code)).toBe(true)
   })
 
-  test("true negative: the conform-* variant", () => {
+  test("true negative: the conform-* variants", () => {
     expect(fires(TOGGLES, component(`    <ConformCheckbox field={fields.terms} />`))).toBe(false)
+    expect(fires(TOGGLES, component(`    <ConformSwitch field={fields.notify} />`))).toBe(false)
   })
 
-  test("true negative: the spread plus the two props react-aria actually reads", () => {
+  test("true negative: a wrapper that names the seed after the spread", () => {
+    // Not the shape app code should write — tier 1 sends it to the variant —
+    // but the prop react-aria actually reads is there, so this check steps
+    // aside rather than reporting a control that works.
     const code = component(
-      `    <Switch {...getInputProps(fields.notify, { type: "checkbox" })} defaultSelected={fields.notify.defaultChecked} isRequired={fields.notify.required ?? false} />`,
+      `    <Switch {...getInputProps(fields.notify, { type: "checkbox" })} defaultSelected={fields.notify.defaultChecked} />`,
     )
     expect(fires(TOGGLES, code)).toBe(false)
   })
@@ -220,12 +226,13 @@ describe(TOGGLES, () => {
   })
 
   test("known blind spot: the props assigned to a local first", () => {
-    // The shape conform-checkbox.tsx itself uses, so the rule cannot see it.
+    // The check reads the spread where it is written; a local in between hides
+    // it, the same way the other form plugins lose sight of an option object.
     const code = `const inputProps = getInputProps(props.field, { type: "checkbox" })\n${component(`    <Checkbox {...inputProps} />`)}`
     expect(fires(TOGGLES, code)).toBe(false)
   })
 
-  test("the library source may spread it — that is where the fix lives", () => {
+  test("the library source is exempt — that is the layer that names the props", () => {
     const code = component(`    <Checkbox {...getInputProps(props.field, { type: "checkbox" })} />`)
     expect(fires(TOGGLES, code, "src/components/conform-checkbox.tsx")).toBe(false)
   })

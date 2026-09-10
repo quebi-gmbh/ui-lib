@@ -29,17 +29,33 @@ import { comboBoxExamples } from "./combo-box.examples"
 import { commandMenuExamples } from "./command-menu.examples"
 import { conformAsyncMultipleSelectExamples } from "./conform-async-multiple-select.examples"
 import { conformAsyncSelectExamples } from "./conform-async-select.examples"
+import { conformCalendarExamples } from "./conform-calendar.examples"
 import { conformCheckboxExamples } from "./conform-checkbox.examples"
+import { conformCheckboxGroupExamples } from "./conform-checkbox-group.examples"
+import { conformChoiceBoxExamples } from "./conform-choice-box.examples"
+import { conformColorFieldExamples } from "./conform-color-field.examples"
 import { conformColorPickerExamples } from "./conform-color-picker.examples"
 import { conformColorSwatchPickerExamples } from "./conform-color-swatch-picker.examples"
+import { conformComboBoxExamples } from "./conform-combo-box.examples"
 import { conformDateFieldExamples } from "./conform-date-field.examples"
 import { conformDatePickerExamples } from "./conform-date-picker.examples"
+import { conformDateRangePickerExamples } from "./conform-date-range-picker.examples"
 import { conformDayScheduleExamples } from "./conform-day-schedule.examples"
 import { conformFieldExamples } from "./conform-field.examples"
+import { conformFileTriggerExamples } from "./conform-file-trigger.examples"
+import { conformInputOtpExamples } from "./conform-input-otp.examples"
 import { conformMultipleSelectExamples } from "./conform-multiple-select.examples"
 import { conformNumberFieldExamples } from "./conform-number-field.examples"
+import { conformRadioGroupExamples } from "./conform-radio-group.examples"
+import { conformRangeCalendarExamples } from "./conform-range-calendar.examples"
+import { conformSearchFieldExamples } from "./conform-search-field.examples"
 import { conformSelectExamples } from "./conform-select.examples"
+import { conformSliderExamples } from "./conform-slider.examples"
 import { conformStoragePickerExamples } from "./conform-storage-picker.examples"
+import { conformSwitchExamples } from "./conform-switch.examples"
+import { conformTagFieldExamples } from "./conform-tag-field.examples"
+import { conformTextareaExamples } from "./conform-textarea.examples"
+import { conformTimeFieldExamples } from "./conform-time-field.examples"
 import { containerExamples } from "./container.examples"
 import { contextMenuExamples } from "./context-menu.examples"
 import { dateFieldExamples } from "./date-field.examples"
@@ -143,17 +159,33 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "command-menu": commandMenuExamples,
   "conform-async-multiple-select": conformAsyncMultipleSelectExamples,
   "conform-async-select": conformAsyncSelectExamples,
+  "conform-calendar": conformCalendarExamples,
   "conform-checkbox": conformCheckboxExamples,
+  "conform-checkbox-group": conformCheckboxGroupExamples,
+  "conform-choice-box": conformChoiceBoxExamples,
+  "conform-color-field": conformColorFieldExamples,
   "conform-color-picker": conformColorPickerExamples,
   "conform-color-swatch-picker": conformColorSwatchPickerExamples,
+  "conform-combo-box": conformComboBoxExamples,
   "conform-date-field": conformDateFieldExamples,
   "conform-date-picker": conformDatePickerExamples,
+  "conform-date-range-picker": conformDateRangePickerExamples,
   "conform-day-schedule": conformDayScheduleExamples,
   "conform-field": conformFieldExamples,
+  "conform-file-trigger": conformFileTriggerExamples,
+  "conform-input-otp": conformInputOtpExamples,
   "conform-multiple-select": conformMultipleSelectExamples,
   "conform-number-field": conformNumberFieldExamples,
+  "conform-radio-group": conformRadioGroupExamples,
+  "conform-range-calendar": conformRangeCalendarExamples,
+  "conform-search-field": conformSearchFieldExamples,
   "conform-select": conformSelectExamples,
+  "conform-slider": conformSliderExamples,
   "conform-storage-picker": conformStoragePickerExamples,
+  "conform-switch": conformSwitchExamples,
+  "conform-tag-field": conformTagFieldExamples,
+  "conform-textarea": conformTextareaExamples,
+  "conform-time-field": conformTimeFieldExamples,
   "container": containerExamples,
   "context-menu": contextMenuExamples,
   "date-field": dateFieldExamples,

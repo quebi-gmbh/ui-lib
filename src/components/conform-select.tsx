@@ -2,44 +2,70 @@
 
 import type { FieldMetadata } from "@conform-to/react"
 import type { PropsWithChildren } from "react"
-import { FieldError, Label } from "@/components/field"
+import type { SelectProps } from "react-aria-components"
+import { cn } from "@/lib/utils"
+import { Description, FieldError, Label } from "@/components/field"
 import { Select, SelectContent, SelectTrigger } from "@/components/select"
 
-interface ConformSelectProps {
-  // A single-value select bound to a string form value. Only
-  // name/id/initialValue/value/errors are read off the metadata.
+export interface ConformSelectProps<T extends object>
+  extends Omit<
+    SelectProps<T>,
+    | "name"
+    | "form"
+    | "selectedKey"
+    | "defaultSelectedKey"
+    | "isRequired"
+    | "isInvalid"
+    | "children"
+  > {
+  /** A single-value select bound to a string form value — the chosen item's key. */
   field: FieldMetadata<string>
   label?: string
-  isDisabled?: boolean
+  description?: string
 }
 
 /**
  * ConformSelect — Select wired to Conform.
  *
  * Binds a single-value Conform field to the quebi Select: derives name, id,
- * default selection, and validity from the field metadata and renders inline
- * errors. Pass option items (SelectItem) as children.
+ * form, required, default selection, and validity from the field metadata and
+ * renders inline errors. Pass option items (SelectItem) as children.
  */
-export function ConformSelect({
+export function ConformSelect<T extends object>({
   field,
-  children,
   label,
-  isDisabled,
-}: PropsWithChildren<ConformSelectProps>) {
+  description,
+  children,
+  className,
+  ...props
+}: PropsWithChildren<ConformSelectProps<T>>) {
+  const hasErrors = !field.valid && !!field.errors
+  const isRequired = field.required ?? false
+  const initialValue = (field.initialValue as string) ?? ""
+
   return (
-    <div>
-      <Select
-        id={field.id}
-        name={field.name}
-        defaultSelectedKey={(field.initialValue as string) || (field.value as string) || ""}
-        isInvalid={!!field.errors}
-        isDisabled={isDisabled}
-      >
-        {label && <Label htmlFor={field.id}>{label}</Label>}
-        <SelectTrigger />
-        <SelectContent>{children}</SelectContent>
-        <FieldError>{field.errors?.join(", ")}</FieldError>
-      </Select>
-    </div>
+    <Select<T>
+      {...props}
+      id={field.id}
+      name={field.name}
+      form={field.formId}
+      defaultSelectedKey={initialValue === "" ? null : initialValue}
+      isRequired={isRequired}
+      isInvalid={hasErrors}
+      className={cn("flex w-full flex-col gap-1.5", className)}
+    >
+      {label && (
+        <Label className={cn(hasErrors && "text-red-500")}>
+          {label}
+          {isRequired && <span className="ml-1 text-quebi-brand">*</span>}
+        </Label>
+      )}
+      <SelectTrigger />
+      <SelectContent>{children}</SelectContent>
+      {/* No ids on these two: the react-aria field generates its own for the
+          description and error slots and already points the control at them. */}
+      {description && <Description>{description}</Description>}
+      {hasErrors && <FieldError>{field.errors?.join(", ")}</FieldError>}
+    </Select>
   )
 }
