@@ -34,6 +34,7 @@ import { parseWithValibot } from "@conform-to/valibot"
 import { act, render, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import * as v from "valibot"
+import { Button } from "../../src/components/button"
 import { ConformRadioGroup } from "../../src/components/conform-radio-group"
 import { Radio } from "../../src/components/radio"
 
@@ -115,7 +116,7 @@ function PlanForm({ defaultPlan }: { defaultPlan?: string }) {
         <Radio value="pro">Pro</Radio>
         <Radio value="team">Team</Radio>
       </ConformRadioGroup>
-      <button type="submit">Save</button>
+      <Button type="submit">Save</Button>
     </form>
   )
 }

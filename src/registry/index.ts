@@ -59,6 +59,7 @@ import { conformTextareaExamples } from "./conform-textarea.examples"
 import { conformTimeFieldExamples } from "./conform-time-field.examples"
 import { containerExamples } from "./container.examples"
 import { contextMenuExamples } from "./context-menu.examples"
+import { dataTableExamples } from "./data-table.examples"
 import { dateFieldExamples } from "./date-field.examples"
 import { datePickerExamples } from "./date-picker.examples"
 import { dateRangePickerExamples } from "./date-range-picker.examples"
@@ -190,6 +191,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "conform-time-field": conformTimeFieldExamples,
   "container": containerExamples,
   "context-menu": contextMenuExamples,
+  "data-table": dataTableExamples,
   "date-field": dateFieldExamples,
   "date-picker": datePickerExamples,
   "date-range-picker": dateRangePickerExamples,

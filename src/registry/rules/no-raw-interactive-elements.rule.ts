@@ -91,9 +91,10 @@ export const noRawInteractiveElementsRule: RuleMeta = {
       element: "table",
       use: [
         { name: "Table", from: "@/components/table", slug: "table", when: "a static table (with TableHeader, TableBody, TableColumn, TableRow, TableCell)" },
-        { name: "AsyncTable", from: "@/components/async-table", slug: "async-table", when: "sorting and filtering are server-driven" },
+        { name: "DataTable", from: "@/components/data-table", slug: "data-table", when: "every row is already in the browser and the table has to sort, filter, page or group them" },
+        { name: "AsyncTable", from: "@/components/async-table", slug: "async-table", when: "the rows are a page of a larger answer — sorting, filtering and paging are queries" },
       ],
-      note: "Table is not a drop-in for <table>: react-aria throws at runtime unless exactly one Column carries isRowHeader, every Row has an id, and each row has one cell per column — so a hand-rolled table migrated without row ids crashes rather than degrades. AsyncTable does the first two for you (getRowId is required, isRowHeader is assigned to the first column); bare Table does not. There is also no footer or caption wrapper: a <tfoot> has no ui-lib equivalent, and because the primitive ban is derived from what the library imports, TableFooter is not banned — importing it is the honest migration, and the one place this rule sends you to react-aria rather than to a component.",
+      note: "Table is not a drop-in for <table>: react-aria throws at runtime unless exactly one Column carries isRowHeader, every Row has an id, and each row has one cell per column — so a hand-rolled table migrated without row ids crashes rather than degrades. DataTable and AsyncTable do all three for you (getRowId is required, the row header is the first column, the cells come from the column list); bare Table does not. Between the two, the question is where the rows come from, not how many there are: DataTable holds the dataset and sorts it, AsyncTable reports intent and re-queries. There is also no footer or caption wrapper on bare Table: a <tfoot> has no ui-lib equivalent, and because the primitive ban is derived from what the library imports, TableFooter is not banned — importing it is the honest migration, and the one place this rule sends you to react-aria rather than to a component.",
     },
   ],
   examples: [

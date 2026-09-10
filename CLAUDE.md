@@ -38,10 +38,11 @@ messages you would give a consumer are the ones you get:
   `ToastProvider`, and a question is `await confirm(...)` from `useConfirm()` under a
   `ConfirmProvider` — it returns `Promise<boolean>`, so the branch below the question survives and
   the fix is an import plus an `await`, not a refactor. (`<AlertDialog isOpen …>` is the same
-  surface where something else owns the open state.) `AsyncTable`, by contrast, reports sort intent
-  through `onSortChange` so you can re-query — sorting its `rows` in the component reorders the
-  answer to the last query instead of asking for a new one — and that one still warns, because the
-  fix really is a change of shape.
+  surface where something else owns the open state.) `AsyncTable`, by contrast, reports the whole
+  new query through `onQueryChange` so you can re-run it — sorting its `rows` in the component
+  reorders one page of the answer to the last query instead of asking for a new one — and that one
+  still warns, because the fix really is a change of shape. When the rows really are all of them,
+  that is `DataTable`, which sorts them with the TanStack row model on purpose.
 
 Each message names its replacement and links to the rule page. If a rule is wrong for a case you
 hit, the answer is a documented exception with a reason — either an `exceptions` entry on the

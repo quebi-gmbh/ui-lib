@@ -58,6 +58,7 @@ import { conformTextareaMeta } from "./conform-textarea.meta"
 import { conformTimeFieldMeta } from "./conform-time-field.meta"
 import { containerMeta } from "./container.meta"
 import { contextMenuMeta } from "./context-menu.meta"
+import { dataTableMeta } from "./data-table.meta"
 import { dateFieldMeta } from "./date-field.meta"
 import { datePickerMeta } from "./date-picker.meta"
 import { dateRangePickerMeta } from "./date-range-picker.meta"
@@ -189,6 +190,7 @@ export const metaRegistry: ComponentMeta[] = [
   conformTimeFieldMeta,
   containerMeta,
   contextMenuMeta,
+  dataTableMeta,
   dateFieldMeta,
   datePickerMeta,
   dateRangePickerMeta,

@@ -94,6 +94,12 @@ export interface LocalScope {
  * is left switched on. What that buys is the property the whole file list is
  * for: a raw `<button>`, a `toLocaleString()` or a `confirm()` in a fixture is
  * reported there exactly as it would be in `src/routes/`.
+ *
+ * `src/lib/*.ts` is the one entry that is not about a kind of code but about
+ * how a file leaves this repo: a `@/lib/*` module is published as its own
+ * `registry:lib` item with no registry dependencies, so it cannot be split
+ * without landing a dangling import in someone else's project. Only the length
+ * rule is relaxed, and only there.
  */
 export const localScopes: LocalScope[] = [
   {
@@ -101,6 +107,12 @@ export const localScopes: LocalScope[] = [
     rules: ["no-appearance-classes-on-layout-elements", "no-hardcoded-design-values"],
     reason:
       "An example shows one component in isolation, so it has to hand-build the scaffolding around it — the fixed-height box a ScrollArea scrolls inside, the bordered chip a ColorThumb sits on, the status colours a Tracker renders as data. None of that is an app reimplementing a Card, which is what these two rules are about; and the tier-2 check is a class-string match, so it also fires on a ui-lib component's own className prop. Tier 1 and tier 4 stay on here — an example is copied verbatim, so a raw <button> in one propagates into every app that copies it.",
+  },
+  {
+    includes: ["src/lib/*.ts"],
+    rules: ["keep-files-readable"],
+    reason:
+      "A shared lib module cannot be split, and not as a matter of taste: generate-api.ts emits each @/lib/* module a component imports as its own registry:lib item with registryDependencies hardcoded to [], so a second module imported by the first would land in a consumer's project as a dangling import. src/lib/data-table.ts is the headless core both tables share — column vocabulary, sorting seam, selection model, query contract — and the rule's question, 'can this be split into files that stand alone', has an answer here that is no for a reason outside the file. The library-source exception the record already carries makes the same argument about src/components/**; this is the same layer, filed at a different address. Everything else about these files is linted, including Biome's recommended set.",
   },
   {
     includes: ["tests/**/*.tsx"],

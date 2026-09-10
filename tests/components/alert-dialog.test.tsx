@@ -32,16 +32,14 @@ function Asker({
 }) {
   const confirm = useConfirm()
   return (
-    <>
-      <Button
-        onPress={async () => {
-          const answer = await confirm(question)
-          document.title = answer ? "yes" : "no"
-        }}
-      >
-        {label}
-      </Button>
-    </>
+    <Button
+      onPress={async () => {
+        const answer = await confirm(question)
+        document.title = answer ? "yes" : "no"
+      }}
+    >
+      {label}
+    </Button>
   )
 }
 

@@ -17,7 +17,7 @@ export const keepFilesReadableRule: RuleMeta = {
   rationale: [
     "Length is a proxy, and a good one. A 2,000-line route is not bad because of the number; it is bad because it is holding a page, four sub-components, three data transforms and a form, none of which can be read, tested, or reused on their own. The line count is simply the first symptom visible from outside, which is what makes it checkable.",
     "It compounds specifically with agents. Every edit starts by reading the file, so an oversized file makes every future change more expensive and less accurate — more context spent, more chance of an edit landing in the wrong one of four similar blocks. Splitting is the cheapest thing you can do to keep later work correct, and it is nearly free at 500 lines and painful at 2,000.",
-    "500 is deliberately generous. This library is 119 components and 117 of them are under it; the two that are not — sidebar and chart — are composite components with many sub-parts, which is the honest case for exceeding the limit rather than a licence to. If a file needs to be longer, say so in the pull request; the warning exists to make that a decision rather than an accident.",
+    "500 is deliberately generous. This library is 130 components and 126 of them are under it; the four that are not — sidebar, chart, and the two data tables — are composite components with many sub-parts, which is the honest case for exceeding the limit rather than a licence to. If a file needs to be longer, say so in the pull request; the warning exists to make that a decision rather than an accident.",
   ],
   appliesTo: ["app/**/*.{tsx,jsx}", "src/**/*.{tsx,jsx}"],
   examples: [
