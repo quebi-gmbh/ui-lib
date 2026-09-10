@@ -82,6 +82,7 @@ const PieChart = <TValue extends ValueType, TName extends NameType>({
 
   valueFormatter = (value: number) => value.toString(),
   pieProps,
+  overlays,
   ...props
 }: PieChartProps<TValue, TName>) => {
   const parsedLabelInput = parseLabelInput(label, valueFormatter, data, dataKey)
@@ -156,6 +157,8 @@ const PieChart = <TValue extends ValueType, TName extends NameType>({
               {...tooltipProps}
             />
           )}
+
+          {overlays}
         </PieChartPrimitive>
       )}
     </Chart>

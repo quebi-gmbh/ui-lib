@@ -70,6 +70,7 @@ export function LineChart<TValue extends ValueType, TName extends NameType>({
   hideGridLines = false,
   chartProps,
   lineProps,
+  overlays,
   ...props
 }: LineChartProps<TValue, TName>) {
   const configKeys = useMemo(() => Object.keys(config), [config])
@@ -154,6 +155,8 @@ export function LineChart<TValue extends ValueType, TName extends NameType>({
                 )
               })
             : children}
+
+          {overlays}
         </LineChartPrimitive>
       )}
     </Chart>

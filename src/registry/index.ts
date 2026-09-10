@@ -28,6 +28,7 @@ import { colorThumbExamples } from "./color-thumb.examples"
 import { colorWheelExamples } from "./color-wheel.examples"
 import { comboBoxExamples } from "./combo-box.examples"
 import { commandMenuExamples } from "./command-menu.examples"
+import { composedChartExamples } from "./composed-chart.examples"
 import { conformAsyncMultipleSelectExamples } from "./conform-async-multiple-select.examples"
 import { conformAsyncSelectExamples } from "./conform-async-select.examples"
 import { conformCalendarExamples } from "./conform-calendar.examples"
@@ -101,9 +102,12 @@ import { pieChartExamples } from "./pie-chart.examples"
 import { popoverExamples } from "./popover.examples"
 import { progressBarExamples } from "./progress-bar.examples"
 import { progressCircleExamples } from "./progress-circle.examples"
+import { radarChartExamples } from "./radar-chart.examples"
+import { radialBarChartExamples } from "./radial-bar-chart.examples"
 import { radioExamples } from "./radio.examples"
 import { rangeCalendarExamples } from "./range-calendar.examples"
 import { scrollAreaExamples } from "./scroll-area.examples"
+import { scatterChartExamples } from "./scatter-chart.examples"
 import { searchFieldExamples } from "./search-field.examples"
 import { selectExamples } from "./select.examples"
 import { separatorExamples } from "./separator.examples"
@@ -114,6 +118,7 @@ import { skeletonExamples } from "./skeleton.examples"
 import { sliderExamples } from "./slider.examples"
 import { snippetExamples } from "./snippet.examples"
 import { stepperExamples } from "./stepper.examples"
+import { sunburstChartExamples } from "./sunburst-chart.examples"
 import { switchExamples } from "./switch.examples"
 import { tableExamples } from "./table.examples"
 import { tabsExamples } from "./tabs.examples"
@@ -129,6 +134,7 @@ import { toggleGroupExamples } from "./toggle-group.examples"
 import { toolbarExamples } from "./toolbar.examples"
 import { tooltipExamples } from "./tooltip.examples"
 import { trackerExamples } from "./tracker.examples"
+import { treemapExamples } from "./treemap.examples"
 import { treeExamples } from "./tree.examples"
 
 const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
@@ -160,6 +166,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "color-wheel": colorWheelExamples,
   "combo-box": comboBoxExamples,
   "command-menu": commandMenuExamples,
+  "composed-chart": composedChartExamples,
   "conform-async-multiple-select": conformAsyncMultipleSelectExamples,
   "conform-async-select": conformAsyncSelectExamples,
   "conform-calendar": conformCalendarExamples,
@@ -233,8 +240,11 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "popover": popoverExamples,
   "progress-bar": progressBarExamples,
   "progress-circle": progressCircleExamples,
+  "radar-chart": radarChartExamples,
+  "radial-bar-chart": radialBarChartExamples,
   "radio": radioExamples,
   "range-calendar": rangeCalendarExamples,
+  "scatter-chart": scatterChartExamples,
   "scroll-area": scrollAreaExamples,
   "search-field": searchFieldExamples,
   "select": selectExamples,
@@ -246,6 +256,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "slider": sliderExamples,
   "snippet": snippetExamples,
   "stepper": stepperExamples,
+  "sunburst-chart": sunburstChartExamples,
   "switch": switchExamples,
   "table": tableExamples,
   "tabs": tabsExamples,
@@ -261,6 +272,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "toolbar": toolbarExamples,
   "tooltip": tooltipExamples,
   "tracker": trackerExamples,
+  "treemap": treemapExamples,
   "tree": treeExamples,
 }
 

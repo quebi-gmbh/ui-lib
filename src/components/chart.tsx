@@ -84,18 +84,44 @@ type ChartConfig = {
 }
 
 // Quebi teal-led series palette. chart-1 is the brand teal; the rest are
-// complementary hues tuned for the dark quebi surface.
+// complementary hues tuned for the dark quebi surface. chart-6 to chart-10 are
+// the overflow ring: hierarchical charts (Treemap, Sunburst) routinely have more
+// branches than a five-series line chart ever does, and cycling five hues twice
+// makes two unrelated branches look like the same one.
 const CHART_COLORS = {
   "chart-1": "var(--color-quebi-brand)",
   "chart-2": "#a78bfa", // violet
   "chart-3": "#38bdf8", // sky
   "chart-4": "#fbbf24", // amber
   "chart-5": "#f472b6", // pink
+  "chart-6": "#34d399", // emerald
+  "chart-7": "#fb923c", // orange
+  "chart-8": "#818cf8", // indigo
+  "chart-9": "#fb7185", // rose
+  "chart-10": "#a3e635", // lime
 } as const
 
 type ChartColorKeys = keyof typeof CHART_COLORS | (string & {})
 
 const DEFAULT_COLORS = ["chart-1", "chart-2", "chart-3", "chart-4", "chart-5"] as const
+
+/**
+ * The full ten-hue ring. `DEFAULT_COLORS` stays at five so the series charts
+ * keep the palette they were designed against; pass this where a chart has more
+ * categories than series, such as a Treemap or a Sunburst.
+ */
+const EXTENDED_COLORS = [
+  "chart-1",
+  "chart-2",
+  "chart-3",
+  "chart-4",
+  "chart-5",
+  "chart-6",
+  "chart-7",
+  "chart-8",
+  "chart-9",
+  "chart-10",
+] as const
 
 type ChartContextProps = {
   config: ChartConfig
@@ -194,6 +220,14 @@ interface BaseChartProps<TValue extends ValueType, TName extends NameType>
   }
 
   cartesianGridProps?: CartesianGridProps
+
+  /**
+   * Extra recharts children — a `Brush`, a `ReferenceLine`, a `ReferenceArea` —
+   * rendered *alongside* the series the config generates. `children` replaces
+   * those series; this is the slot for the case where you want to keep them and
+   * add something next to them.
+   */
+  overlays?: React.ReactNode
 
   legend?: LegendContentType | boolean
   legendProps?: Omit<React.ComponentProps<typeof LegendPrimitive>, "content" | "ref">
@@ -367,7 +401,7 @@ const XAxis = ({
   className,
   intervalType = "preserveStartEnd",
   minTickGap = 5,
-  domain = ["auto", "auto"],
+  domain,
   ...props
 }: XAxisProps) => {
   const { dataKey, data, layout } = useChart()
@@ -386,6 +420,9 @@ const XAxis = ({
       ticks={ticks}
       tickLine={false}
       axisLine={false}
+      // Destructured but never forwarded before this line, so a numeric X axis
+      // (a scatter plot's) could not be given a domain at all.
+      domain={domain}
       minTickGap={minTickGap}
       dataKey={layout === "horizontal" ? dataKey : undefined}
       {...props}
@@ -415,11 +452,15 @@ const YAxis = ({
   return (
     <YAxisPrimitive
       className={cn("text-quebi-fg-muted text-xs **:[text]:fill-quebi-fg-muted", className)}
-      width={(width ?? layout === "horizontal") ? 40 : 80}
+      // Both of these used to bind tighter than intended — `width ?? layout ===
+      // "horizontal"` is a boolean, so an explicit `width` was always discarded,
+      // and `type || layout === "horizontal"` made every axis numeric, so
+      // `type="category"` could not be asked for. The parentheses are the fix.
+      width={width ?? (layout === "horizontal" ? 40 : 80)}
       domain={domain}
       tick={tick}
       dataKey={layout === "horizontal" ? undefined : dataKey}
-      type={type || layout === "horizontal" ? "number" : "category"}
+      type={type ?? (layout === "horizontal" ? "number" : "category")}
       interval={layout === "horizontal" ? undefined : "equidistantPreserveStart"}
       axisLine={false}
       tickLine={false}
@@ -608,6 +649,19 @@ const ChartLegendContent = ({
     return null
   }
 
+  // `item.value` is the fallback for a series identified by name rather than by
+  // data key — a Scatter carries its points in its own `data`, so every scatter
+  // series would otherwise land on the literal "value" and collide with the
+  // others on both the React key and the toggle id.
+  const keyFor = (item: LegendPayload) => `${nameKey || item.dataKey || item.value || "value"}`
+
+  // Recharts can report one entry several times: a radial bar chart builds its
+  // legend from the rows, and registers all of them once per series. Two items
+  // with one id are a duplicate React key and a toggle that selects both.
+  const items = payload.filter(
+    (item, index) => payload.findIndex((other) => keyFor(other) === keyFor(item)) === index,
+  )
+
   return (
     <ToggleButtonGroup
       ref={ref}
@@ -617,15 +671,18 @@ const ChartLegendContent = ({
         align === "right" ? "justify-end" : align === "left" ? "justify-start" : "justify-center",
         className,
       )}
-      selectedKeys={selectedLegend ? [selectedLegend] : undefined}
+      // `[]`, not `undefined`: an undefined `selectedKeys` makes the group
+      // uncontrolled, and the first click flips it to controlled — React logs
+      // the switch and the group briefly owns state the chart is meant to own.
+      selectedKeys={selectedLegend ? [selectedLegend] : []}
       onSelectionChange={(v) => {
         const key = [...v][0]?.toString() ?? null
         onLegendSelect(key)
       }}
       selectionMode="single"
     >
-      {payload.map((item: LegendPayload) => {
-        const key = `${nameKey || item.dataKey || "value"}`
+      {items.map((item: LegendPayload) => {
+        const key = keyFor(item)
         const itemConfig = getPayloadConfigFromPayload(config, item, key)
 
         return (
@@ -681,6 +738,7 @@ export {
   ChartTooltipContent,
   constructCategoryColors,
   DEFAULT_COLORS,
+  EXTENDED_COLORS,
   getColorValue,
   XAxis,
   YAxis,
