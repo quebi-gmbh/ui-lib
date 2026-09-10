@@ -1,5 +1,5 @@
 import { Link, NavLink } from "react-router"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { ThemeToggle } from "@/site/theme-toggle"
 import { Link as UiLink } from "@/components/link"
 
 export function Header() {
