@@ -8,6 +8,8 @@ language js;
 `useForm($options)` as $call where {
   $options <: JsObjectExpression(),
   $options <: not contains `lastResult`,
+  // applies to: app/**/*.{tsx,jsx}, src/**/*.{tsx,jsx}
+  $filename <: r"(?:(?:.*/)?app/(?:.*/)?[^/]*\.(?:tsx|jsx)$|(?:.*/)?src/(?:.*/)?[^/]*\.(?:tsx|jsx)$)",
   // documented exception: **/*.stories.{tsx,jsx}
   not $filename <: r"(?:.*/)?[^/]*\.stories\.(?:tsx|jsx)$",
   // documented exception: **/*.examples.{tsx,jsx}

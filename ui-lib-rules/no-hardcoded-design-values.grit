@@ -7,16 +7,18 @@ language js;
 
 or { string(), JsxString() } as $value where {
   $value <: r".*(?:\[#[0-9a-fA-F]{3,8}\]|\[[0-9]+(?:px|rem|em)\]|\b(?:bg|text|border|ring|fill|stroke|from|via|to)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-[0-9]{2,3}\b).*",
+  // applies to: app/**/*.{tsx,jsx,css}, src/**/*.{tsx,jsx,css}
+  $filename <: r"(?:(?:.*/)?app/(?:.*/)?[^/]*\.(?:tsx|jsx|css)$|(?:.*/)?src/(?:.*/)?[^/]*\.(?:tsx|jsx|css)$)",
   // documented exception: components/ui/**
-  not $filename <: r".*components/ui/.*",
+  not $filename <: r"(?:.*/)?components/ui/.*",
   // documented exception: src/components/**
-  not $filename <: r".*src/components/.*",
+  not $filename <: r"(?:.*/)?src/components/.*",
   // documented exception: src/components/energy-class-badge.tsx
-  not $filename <: r".*src/components/energy-class-badge\.tsx$",
+  not $filename <: r"(?:.*/)?src/components/energy-class-badge\.tsx$",
   // documented exception: components/ui/energy-class-badge.tsx
-  not $filename <: r".*components/ui/energy-class-badge\.tsx$",
+  not $filename <: r"(?:.*/)?components/ui/energy-class-badge\.tsx$",
   // local scope: src/registry/*.examples.tsx — An example shows one component in isolation, so it has to hand-build the scaffolding around it — the fixed-height box a ScrollArea scrolls inside, the bordered chip a ColorThumb sits on, the status colours a Tracker renders as data. None of that is an app reimplementing a Card, which is what these two rules are about; and the tier-2 check is a class-string match, so it also fires on a ui-lib component's own className prop. Tier 1 and tier 4 stay on here — an example is copied verbatim, so a raw <button> in one propagates into every app that copies it.
-  not $filename <: r".*src/registry/[^/]*\.examples\.tsx$",
+  not $filename <: r"(?:.*/)?src/registry/[^/]*\.examples\.tsx$",
   register_diagnostic(
     span = $value,
     message = "Hardcoded design value. Use a quebi token: colours -> bg-quebi-*/text-quebi-*/border-quebi-line, radii -> rounded-quebi-{sm,md,lg}, elevation -> shadow-quebi-glow. Raw palette scales (text-gray-500) are hardcoded values too — they do not follow the theme. See https://ui-lib.quebi.de/rules/no-hardcoded-design-values",
