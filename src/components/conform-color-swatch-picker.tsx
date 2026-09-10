@@ -2,10 +2,11 @@
 
 import type { FieldMetadata } from "@conform-to/react"
 import { useState } from "react"
-import { ColorSwatch } from "react-aria-components"
+import type { Selection } from "react-aria-components"
+import { ListBox, ListBoxItem } from "react-aria-components"
 import type { ListData } from "react-stately"
 import { cn } from "@/lib/utils"
-import { ColorSwatchPicker, ColorSwatchPickerItem } from "@/components/color-swatch-picker"
+import { ColorSwatch } from "@/components/color-swatch"
 import { describedBy, Description, Field, FieldError, Label } from "@/components/field"
 
 /** A selectable color: a stable `key` submitted to the form plus its `hex` swatch. */
@@ -49,8 +50,17 @@ export interface ConformColorSwatchPickerProps {
  * ConformColorSwatchPicker — multi-select color picker wired to Conform.
  *
  * A wrapping grid of named color swatches that submits an array of color keys.
- * Built on the quebi ColorSwatchPicker for layout and tokens; toggling is
- * handled per-swatch since the underlying picker is single-select.
+ *
+ * The grid is a multi-select `ListBox` rather than the quebi ColorSwatchPicker,
+ * and that is the whole point of the component. react-aria's ColorSwatchPicker
+ * hardcodes `selectionMode: "single"` and derives its selection from a single
+ * color *value*, so a multi-select grid cannot be built on it: every swatch
+ * renders `role="option" aria-selected="false"`, including the selected ones,
+ * and a ring drawn by hand is the only thing that says otherwise. Here the
+ * selection is real — `aria-selected`, `data-[selected]`, `aria-multiselectable`
+ * and keyboard multi-select (arrow keys across the grid, Space/Enter to toggle)
+ * all come from the listbox. The single-select quebi ColorSwatchPicker stays the
+ * right component for picking one color.
  *
  * Unlike the other variants this one does not own its value: the selection
  * lives in the `list` the caller passes, because a Conform list binding is what
@@ -71,18 +81,6 @@ export function ConformColorSwatchPicker({
 
   const hasErrors = !field.valid && !!field.errors
 
-  const toggleColor = (key: string) => {
-    if (selectedKeys.includes(key)) {
-      const item = list.items.find((i) => i.name === key)
-      if (item) list.remove(item.id)
-      setSelectedKeys(selectedKeys.filter((k) => k !== key))
-    } else {
-      const maxId = list.items.length > 0 ? Math.max(...list.items.map((i) => i.id)) : 0
-      list.append({ id: maxId + 1, name: key })
-      setSelectedKeys([...selectedKeys, key])
-    }
-  }
-
   // Sync local state when the list changes externally (e.g. a tag removed elsewhere).
   const currentKeys = list.items.map((item) => item.name)
   if (
@@ -92,7 +90,31 @@ export function ConformColorSwatchPicker({
     setSelectedKeys(currentKeys)
   }
 
-  const selectedSet = new Set(selectedKeys)
+  /**
+   * Apply the listbox's selection to the list and the mirror below it.
+   *
+   * `"all"` reaches here from Ctrl+A, which react-aria reports as the whole
+   * collection rather than as a set of keys.
+   */
+  const applySelection = (selection: Selection) => {
+    const next =
+      selection === "all" ? colors.map((color) => color.key) : [...selection].map(String)
+    const nextSet = new Set(next)
+
+    for (const item of list.items) {
+      if (!nextSet.has(item.name)) list.remove(item.id)
+    }
+
+    const present = new Set(currentKeys)
+    let nextId = list.items.length > 0 ? Math.max(...list.items.map((i) => i.id)) : 0
+    for (const key of next) {
+      if (present.has(key)) continue
+      nextId += 1
+      list.append({ id: nextId, name: key })
+    }
+
+    setSelectedKeys(next)
+  }
 
   return (
     <Field className={cn("space-y-1.5", className)}>
@@ -107,39 +129,57 @@ export function ConformColorSwatchPicker({
           reference. */}
       {description && <Description id={field.descriptionId}>{description}</Description>}
 
-      {/* The picker provides quebi layout/tokens; multi-select is driven by `list`. */}
-      <ColorSwatchPicker
+      {/* `data-invalid` rather than `aria-invalid`: react-aria's ListBox filters
+          its incoming DOM props down to `id`, the labelable set and `data-*`, so
+          an aria-invalid here would be dropped without a word. The error text is
+          still announced — aria-describedby is in the labelable set and survives. */}
+      <ListBox
+        data-slot="control"
         aria-label={label ?? "Colors"}
-        aria-invalid={hasErrors || undefined}
+        data-invalid={hasErrors || undefined}
         aria-describedby={describedBy(
           hasErrors && field.errorId,
           description && field.descriptionId,
         )}
+        layout="grid"
+        selectionMode="multiple"
+        selectionBehavior="toggle"
+        selectedKeys={selectedKeys}
+        onSelectionChange={applySelection}
+        className="flex flex-wrap gap-2 outline-hidden"
       >
-        {colors.map((color) => {
-          const isSelected = selectedSet.has(color.key)
-          return (
-            <ColorSwatchPickerItem
-              key={color.key}
-              color={color.hex}
-              aria-label={color.label ?? color.key}
-              onPress={() => toggleColor(color.key)}
-              className={cn(
-                isSelected &&
-                  "ring-2 ring-quebi-brand ring-offset-2 ring-offset-quebi-bg",
-              )}
-            >
-              <ColorSwatch className="size-8" />
-              {isSelected && (
-                <span
-                  aria-hidden="true"
-                  className="pointer-events-none absolute bottom-1 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-white/80 shadow-quebi-glow"
-                />
-              )}
-            </ColorSwatchPickerItem>
-          )
-        })}
-      </ColorSwatchPicker>
+        {colors.map((color) => (
+          <ListBoxItem
+            key={color.key}
+            id={color.key}
+            textValue={color.label ?? color.key}
+            aria-label={color.label ?? color.key}
+            // The quebi ColorSwatchPickerItem's look, on a listbox option: the
+            // ring is keyed off `data-[selected]`, which react-aria now sets,
+            // rather than off a className the component computes for itself.
+            className={cn(
+              "relative rounded-quebi-sm outline-hidden",
+              "*:rounded-quebi-sm",
+              "transition-opacity duration-150",
+              "data-[selected]:ring-2 data-[selected]:ring-quebi-brand data-[selected]:ring-offset-2 data-[selected]:ring-offset-quebi-bg",
+              "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand/50 data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
+              "hover:opacity-90",
+            )}
+          >
+            {({ isSelected }) => (
+              <>
+                <ColorSwatch color={color.hex} className="size-8" />
+                {isSelected && (
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute bottom-1 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-white/80 shadow-quebi-glow"
+                  />
+                )}
+              </>
+            )}
+          </ListBoxItem>
+        ))}
+      </ListBox>
 
       {/* Mirror the selection into the form as a comma-joined list of keys. */}
       <input type="hidden" name={field.name} form={field.formId} value={currentKeys.join(",")} />

@@ -22,7 +22,7 @@
  * hand-off between Conform and react-aria, which is easier to read as explicit
  * mount / act steps.
  */
-import { describe, expect, test } from "bun:test"
+import { afterEach, describe, expect, test } from "bun:test"
 import { type FieldMetadata, getInputProps, useForm } from "@conform-to/react"
 import { BaseControl, useControl } from "@conform-to/react/future"
 import { parseWithValibot } from "@conform-to/valibot"
@@ -34,14 +34,33 @@ import { ConformField } from "../src/components/conform-field"
 import { ConformSwitch } from "../src/components/conform-switch"
 import { Switch } from "../src/components/switch"
 
+// Mounting by hand means unmounting by hand: React Testing Library's automatic
+// cleanup (tests/dom.ts) only knows about containers *it* created, and the DOM
+// is one global shared by every file in the run. Left in place, the forms below
+// stay in document.body for whatever file happens to run next, where a
+// `document.querySelector("form")` finds this file's form and a `user.tab()`
+// walks into this file's inputs.
+const mounted: Array<{ container: HTMLElement; unmount: () => void }> = []
+
 async function mount(element: React.ReactElement) {
   const container = document.createElement("div")
   document.body.appendChild(container)
+  const root = createRoot(container)
   await act(async () => {
-    createRoot(container).render(element)
+    root.render(element)
   })
+  mounted.push({ container, unmount: () => root.unmount() })
   return container
 }
+
+afterEach(() => {
+  for (const { container, unmount } of mounted.splice(0)) {
+    act(() => {
+      unmount()
+    })
+    container.remove()
+  }
+})
 
 const formOf = (container: HTMLElement) => container.querySelector("form") as HTMLFormElement
 const click = async (container: HTMLElement, testId: string) => {
