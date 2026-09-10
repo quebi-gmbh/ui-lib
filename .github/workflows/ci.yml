@@ -6,6 +6,63 @@ on:
     branches: [main]
 
 jobs:
+  # A squash-merged branch stays on the remote looking exactly like a live one:
+  # same name, same tip, nothing about it says its content is already on `main`
+  # under a different sha. It stays selectable as a PR base, and a PR that
+  # targets it merges green into a branch nobody will ever merge again — the
+  # fix disappears, GitHub says "Merged", and no one is told. That happened to
+  # PRs #45 and #47 and took a session to unpick weeks later.
+  #
+  # The `.worktrees/` workflow makes it easy to hit: a follow-up worked in a
+  # worktree branched from a task branch will offer that task branch as the
+  # base. So this job says the base is `main`, every time. It is deliberately
+  # the simplest form of the rule — stacked PRs are not a pattern this repo
+  # uses, and "is the base's content already on main under another sha" is a
+  # question this repo has no reason to need answered.
+  #
+  # The repo's other guard is `delete_branch_on_merge: true`, which removes the
+  # base entirely and so makes the mistake unrepresentable rather than merely
+  # visible. That one is a repo setting, invisible to a reader of the tree,
+  # which is exactly why this job is here as well.
+  base-branch:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: The base branch is main
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [ "$BASE_REF" = "main" ]; then
+            echo "Base branch is main."
+            exit 0
+          fi
+          cat <<EOF
+          This PR targets '$BASE_REF', not 'main'.
+
+          A branch that is still on the remote is not evidence that it is live:
+          this repo squash-merges, so a merged branch keeps its name and its tip
+          while its content sits on main under a different sha. Merging into one
+          lands your work nowhere — the PR shows as merged and main never sees it.
+
+          Retarget it:
+
+            gh pr edit <number> --base main
+
+          If the commits underneath were branched from '$BASE_REF' rather than
+          from main, rebase them across first, so the PR carries your change and
+          nothing else:
+
+            git fetch origin
+            git rebase --onto origin/main origin/$BASE_REF
+            git push --force-with-lease
+
+          If you genuinely meant to stack this PR on another one, say so on the
+          task thread and get a human to merge it by hand — this check has no
+          opt-out on purpose.
+          EOF
+          echo "::error title=PR base is not main::This PR targets '$BASE_REF'. Retarget it with: gh pr edit <number> --base main"
+          exit 1
+
   check:
     runs-on: ubuntu-latest
     steps:
