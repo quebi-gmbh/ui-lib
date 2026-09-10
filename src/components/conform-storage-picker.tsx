@@ -2,11 +2,19 @@
 
 import type { FieldMetadata } from "@conform-to/react"
 import { BaseControl } from "@conform-to/react/future"
+import { useRef } from "react"
 import { Button } from "react-aria-components"
 import type { ListData } from "react-stately"
 import { type ConformListItem, useConformListControl } from "@/lib/conform-list-control"
 import { cn } from "@/lib/utils"
-import { describedBy, Description, Field, FieldError, Label } from "@/components/field"
+import {
+  describedBy,
+  Description,
+  Field,
+  FieldError,
+  focusFirstControl,
+  Label,
+} from "@/components/field"
 
 /**
  * Device storage helpers (inlined to keep this component self-contained).
@@ -82,15 +90,21 @@ export function ConformStoragePicker({
   description,
   className,
 }: ConformStoragePickerProps) {
+  const fieldRef = useRef<HTMLDivElement>(null)
   const selection = useConformListControl({
     initialValue: field.initialValue,
     list,
     canonicalize: canonicalStorageLabel,
+    // Conform focuses the first errored field after a failed submit; that is
+    // the registered control, which nobody can see — hand it to the visible one.
+    onFocus() {
+      focusFirstControl(fieldRef.current)
+    },
   })
   const hasErrors = !field.valid && !!field.errors
 
   return (
-    <Field className={cn("space-y-2", className)}>
+    <Field ref={fieldRef} className={cn("space-y-2", className)}>
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>
           {label}
@@ -108,6 +122,9 @@ export function ConformStoragePicker({
         form={field.formId}
         ref={selection.register}
         defaultValue={selection.defaultValue}
+        hidden={false}
+        tabIndex={-1}
+        className="sr-only"
       />
 
       <div

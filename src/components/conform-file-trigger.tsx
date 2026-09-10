@@ -2,9 +2,17 @@
 
 import type { FieldMetadata } from "@conform-to/react"
 import { BaseControl, useControl } from "@conform-to/react/future"
+import { useRef } from "react"
 import { cn } from "@/lib/utils"
 import { DropZone } from "@/components/drop-zone"
-import { describedBy, Description, Field, FieldError, Label } from "@/components/field"
+import {
+  describedBy,
+  Description,
+  Field,
+  FieldError,
+  focusFirstControl,
+  Label,
+} from "@/components/field"
 import { FileTrigger, type FileTriggerProps } from "@/components/file-trigger"
 
 export interface ConformFileTriggerProps
@@ -37,8 +45,9 @@ export interface ConformFileTriggerProps
  * is an implementation detail with no form value of its own. Same for DropZone,
  * which is a drop target, not a form control.
  *
- * `BaseControl` renders that input with the `hidden` attribute and no React
- * `value` prop, both of which are load-bearing — see `conform-time-field`.
+ * That input is hidden by CSS rather than by the `hidden` attribute, and
+ * carries no React `value` prop; both are load-bearing and both fail silently
+ * — see `conform-time-field`.
  */
 export function ConformFileTrigger({
   field,
@@ -49,7 +58,14 @@ export function ConformFileTrigger({
   className,
   ...props
 }: ConformFileTriggerProps) {
-  const control = useControl<File[]>({})
+  const fieldRef = useRef<HTMLDivElement>(null)
+  const control = useControl<File[]>({
+    // Conform focuses the first errored field after a failed submit; that is
+    // the registered control, which nobody can see — hand it to the visible one.
+    onFocus() {
+      focusFirstControl(fieldRef.current)
+    },
+  })
   const hasErrors = !field.valid && !!field.errors
   const isRequired = field.required ?? false
   const files = control.files ?? []
@@ -57,7 +73,7 @@ export function ConformFileTrigger({
   const select = (list: FileList | null) => control.change(list ? Array.from(list) : [])
 
   return (
-    <Field className={cn("flex flex-col gap-1.5", className)}>
+    <Field ref={fieldRef} className={cn("flex flex-col gap-1.5", className)}>
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>
           {label}
@@ -75,6 +91,9 @@ export function ConformFileTrigger({
           hasErrors && field.errorId,
           description && field.descriptionId,
         )}
+        hidden={false}
+        tabIndex={-1}
+        className="sr-only"
       />
 
       {hasDropZone ? (

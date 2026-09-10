@@ -161,10 +161,16 @@ const isRequired = field.required ?? false
 - **Required marker:** `{isRequired && <span className="ml-1 text-quebi-brand">*</span>}` in the
   label, and `cn(hasErrors && "text-red-500")` on the label itself.
 - **A control with no native form value** (TimeField, DateRangePicker, FileTrigger, ChoiceBox,
-  Calendar, DaySchedule, ColorPicker) uses `useControl` + `BaseControl` from
-  `@conform-to/react/future`, never `useState` + a hand-written hidden input. `BaseControl` renders
-  the input with the `hidden` **attribute** and no React `value` prop; both are load-bearing and
-  both fail silently when broken — see the comment in `src/components/conform-time-field.tsx`.
+  Calendar, RangeCalendar, DaySchedule, ColorPicker) uses `useControl` + `BaseControl` from
+  `@conform-to/react/future`, never `useState` + a hand-written hidden input. Three things about
+  that registered control are load-bearing and all three fail silently — see the comment in
+  `src/components/conform-time-field.tsx`:
+  1. never `type="hidden"` (`register()` strips the type, React re-applies it, changes are lost);
+  2. no React `value` prop (React reverts what `control.change()` wrote);
+  3. hidden by CSS, not by the `hidden` **attribute** — pass `hidden={false} tabIndex={-1}
+     className="sr-only"`. A real browser no-ops `.focus()` on a `hidden` element, so Conform's
+     focus-on-error lands nowhere. Pair it with an `onFocus` on `useControl` that calls
+     `focusFirstControl` from `@/components/field` with the container holding the visible control.
 - **Import order:** conform → npm → `@/lib/utils` → `@/components/*` (alphabetical).
 - **JSDoc goes above the function**, not above the interface.
 

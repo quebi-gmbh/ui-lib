@@ -6,7 +6,7 @@ import { parseTime, type Time } from "@internationalized/date"
 import { useRef } from "react"
 import type { TimeFieldProps, TimeValue } from "react-aria-components"
 import { cn } from "@/lib/utils"
-import { Description, FieldError, Label } from "@/components/field"
+import { Description, FieldError, focusFirstControl, Label } from "@/components/field"
 import { TimeField, TimeInput } from "@/components/time-field"
 
 export interface ConformTimeFieldProps
@@ -41,16 +41,25 @@ function toTime(value: string | undefined): Time | null {
  * TimeField, but react-aria renders a hidden date input for DateField only:
  * a named TimeField submits nothing at all.
  *
- * Two rules govern the registered input, both silent when broken:
+ * Three rules govern the registered input, all silent when broken:
  *
- * 1. It uses the `hidden` **attribute**, never `type="hidden"`. `register()`
- *    strips the type once; React re-applies it on the next commit and then
- *    keeps forcing the value back to `defaultValue`, so every change is lost.
+ * 1. It is never `type="hidden"`. `register()` strips the type once; React
+ *    re-applies it on the next commit and then keeps forcing the value back to
+ *    `defaultValue`, so every change is lost.
  * 2. It never takes a React `value` prop. `control.change()` writes the DOM
  *    value and React would revert it on the next commit, leaving FormData with
  *    the React-owned value.
+ * 3. It is hidden by CSS (`sr-only` + `tabIndex={-1}`), never by the `hidden`
+ *    attribute — which is what `BaseControl` renders by default, so every one
+ *    of these variants passes `hidden={false}`. After a failed submit Conform's
+ *    v1 `useForm` focuses the first errored field with a bare
+ *    `element.focus()`, and a real browser no-ops that on a `hidden` element:
+ *    the focus lands nowhere, `useControl` never sees a `focusin`, and
+ *    `onFocus` below never runs. jsdom and happy-dom both focus hidden
+ *    elements happily, so a DOM test agrees with whatever you wrote — this one
+ *    was settled in Chrome (task #11).
  *
- * `BaseControl` is what enforces both, which is why the input is rendered
+ * `BaseControl` is what enforces 1 and 2, which is why the input is rendered
  * through it rather than by hand.
  */
 export function ConformTimeField({
@@ -63,10 +72,10 @@ export function ConformTimeField({
   const inputRef = useRef<HTMLDivElement>(null)
   const control = useControl({
     defaultValue: (field.initialValue as string) ?? "",
-    // Conform focuses the first errored field after a failed submit; the
-    // registered input is hidden, so forward it to the visible segments.
+    // Conform focuses the first errored field after a failed submit; that is
+    // the registered input, which nobody can see — hand it to the segments.
     onFocus() {
-      inputRef.current?.querySelector<HTMLElement>("[role='spinbutton']")?.focus()
+      focusFirstControl(inputRef.current)
     },
   })
 
@@ -88,6 +97,9 @@ export function ConformTimeField({
         form={field.formId}
         ref={control.register}
         defaultValue={control.defaultValue ?? ""}
+        hidden={false}
+        tabIndex={-1}
+        className="sr-only"
       />
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>

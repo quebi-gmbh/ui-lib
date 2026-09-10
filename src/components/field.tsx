@@ -128,7 +128,53 @@ export function describedBy(...ids: Array<string | false | null | undefined>) {
   return joined === "" ? undefined : joined
 }
 
-export function Field({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
+/**
+ * Every element inside `container` that a user could put keyboard focus on,
+ * in document order. `[tabindex]` is in the list for the ones that are only
+ * focusable because react-aria said so — a date segment, the focusable day of
+ * a calendar grid, the row of a GridList.
+ */
+const focusableSelector = "a[href], button, input, select, textarea, [tabindex]"
+
+/**
+ * Moves focus to the first control a user can actually reach inside
+ * `container`, and reports whether it found one.
+ *
+ * This exists for the conform-* variants whose control has no native form
+ * value (TimeField, DateRangePicker, FileTrigger, ChoiceBox, Calendar,
+ * RangeCalendar, DaySchedule, ColorPicker). Conform focuses the first errored
+ * field after a failed submit by calling `element.focus()` on it, and for those
+ * variants that field is the registered `BaseControl` — an element nobody can
+ * see. Each one forwards the focus here from `useControl`'s `onFocus`, and this
+ * hands it to the date segment, the calendar cell, the Browse button: whatever
+ * the visible control puts first.
+ *
+ * The registered control carries `tabIndex={-1}`, and `hidden` elements are
+ * skipped, so passing the container that holds both it and the visible control
+ * is safe — unless it is a `type="fieldset"` control, whose nested inputs are
+ * ordinary focusable inputs and would answer first. The two variants built on
+ * one (DateRangePicker, RangeCalendar) pass a container holding only the
+ * visible control.
+ */
+export function focusFirstControl(container: HTMLElement | null | undefined): boolean {
+  const candidates = container ? container.querySelectorAll<HTMLElement>(focusableSelector) : []
+  for (const element of Array.from(candidates)) {
+    if (element.tabIndex < 0 || element.hidden) continue
+    if ((element as { disabled?: boolean }).disabled) continue
+    // Rendered, not merely present. react-aria hides its own plumbing behind
+    // `display: none` — FileTrigger's picker input, a DatePicker's native date
+    // inputs — and those are focusable-looking but unfocusable, so the loop
+    // would stop on one and put focus nowhere. `checkVisibility` is what tells
+    // them apart from the clipped-but-rendered control above; a DOM
+    // implementation without it (jsdom, happy-dom) simply skips the question.
+    if (typeof element.checkVisibility === "function" && !element.checkVisibility()) continue
+    element.focus()
+    return true
+  }
+  return false
+}
+
+export function Field({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       {...props}

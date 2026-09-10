@@ -3,6 +3,7 @@
 import type { FieldMetadata } from "@conform-to/react"
 import { BaseControl, useControl } from "@conform-to/react/future"
 import { type CalendarDate, parseDate } from "@internationalized/date"
+import { useRef } from "react"
 import type { DateValue, RangeValue } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import {
@@ -10,7 +11,7 @@ import {
   type DateRangePickerProps,
   DateRangePickerTrigger,
 } from "@/components/date-range-picker"
-import { Description, FieldError, Label } from "@/components/field"
+import { Description, FieldError, focusFirstControl, Label } from "@/components/field"
 
 /** The wire shape: two ISO `YYYY-MM-DD` strings, submitted as `<name>.start` / `<name>.end`. */
 export interface ConformDateRange {
@@ -62,9 +63,15 @@ function toRangeValue(payload: ConformDateRange | null | undefined): RangeValue<
  * on its own. The `startName`/`endName` in the stately types are not wired up
  * either.
  *
- * The registered fieldset uses the `hidden` attribute and carries no React
- * `value` prop; `BaseControl` is what guarantees both, and both are silent when
- * broken — see `conform-time-field` for what each failure looks like.
+ * The registered fieldset is hidden by CSS rather than by the `hidden`
+ * attribute, and carries no React `value` prop; both are silent when broken —
+ * see `conform-time-field` for what each failure looks like.
+ *
+ * One gap stays: Conform v1 only focuses `input`/`select`/`textarea`, so an
+ * error reported against `<name>` itself ("the end date has to come after the
+ * start") reaches no element at all, while an error against `<name>.start` or
+ * `<name>.end` reaches the matching hidden input inside the fieldset and is
+ * forwarded from there.
  */
 export function ConformDateRangePicker({
   field,
@@ -73,6 +80,7 @@ export function ConformDateRangePicker({
   className,
   ...props
 }: ConformDateRangePickerProps) {
+  const triggerRef = useRef<HTMLDivElement>(null)
   const control = useControl<ConformDateRange, ConformDateRange>({
     defaultValue: (field.initialValue as ConformDateRange | undefined) ?? undefined,
     parse: (payload) => {
@@ -82,6 +90,11 @@ export function ConformDateRangePicker({
         start: typeof start === "string" ? start : "",
         end: typeof end === "string" ? end : "",
       }
+    },
+    // Conform focuses the first errored field after a failed submit; that is
+    // the registered fieldset, which nobody can see — hand it to the segments.
+    onFocus() {
+      focusFirstControl(triggerRef.current)
     },
   })
 
@@ -108,6 +121,9 @@ export function ConformDateRangePicker({
         form={field.formId}
         ref={control.register}
         defaultValue={control.defaultValue}
+        hidden={false}
+        tabIndex={-1}
+        className="sr-only"
       />
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>
@@ -115,7 +131,9 @@ export function ConformDateRangePicker({
           {isRequired && <span className="ml-1 text-quebi-brand">*</span>}
         </Label>
       )}
-      <DateRangePickerTrigger />
+      <div ref={triggerRef}>
+        <DateRangePickerTrigger />
+      </div>
       {/* No ids on these two, and no aria-describedby above: the react-aria
           field generates its own ids for the description and error slots and
           already points the control at them. Setting id={field.errorId} here
