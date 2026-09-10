@@ -97,9 +97,10 @@ export function ConformSlider({
           <SliderThumb {...thumbProps} />
         )}
       </SliderTrack>
-      {/* These ids are ours to set: the control below is not a react-aria
-          field, so nothing generates them and nothing else points at them.
-          The aria-describedby above is the only reference they get. */}
+      {/* These ids are ours to set: react-aria's Slider provides no
+          description or error slot wiring (see above), so rendering these
+          inside it generates nothing — the thumbs' aria-describedby is their
+          only reference. */}
       {description && <Description id={field.descriptionId}>{description}</Description>}
       {hasErrors && <FieldError id={field.errorId}>{field.errors?.join(", ")}</FieldError>}
     </Slider>

@@ -73,6 +73,11 @@ const fieldErrorClasses = (className?: string) =>
  *
  *     {hasErrors && <FieldError id={field.errorId}>{field.errors?.join(", ")}</FieldError>}
  *
+ * The `id` is the only part that moves. Outside a react-aria field it is the
+ * only reference the control gets, paired with `describedBy` on the control
+ * itself. Inside one, drop it: the field has already generated an id for its
+ * error slot and pointed the control at it. See `describedBy` below.
+ *
  * Render props (a function `className` or `children`) only make sense with a
  * ValidationResult behind them, so the fallback branch ignores them — there is
  * nothing to compute them from.
@@ -116,12 +121,22 @@ export function FieldError({ className, children, elementType, style, ...props }
  * than none at all: assistive technology announces nothing and there is no
  * attribute missing to notice.
  *
- * Only reach for this when the control is **not** a react-aria field. Inside a
- * TextField, NumberField, RadioGroup, ComboBox, Select, DateField, TimeField,
- * Calendar (…) the field generates its own ids for the description and error
- * slots and already points the control at them — give those children an id of
- * your own and the control keeps referencing the generated one, so the message
- * silently stops being announced. Whoever owns the ids does the wiring.
+ * Only reach for this when the control is **not** a react-aria field, or when
+ * the message is rendered outside one. Inside a TextField, NumberField,
+ * RadioGroup, ComboBox, Select, DateField, TimeField (…) the field generates
+ * the ids for its own description and error slots and already points the
+ * control at them, so there is nothing left to wire: render Description and
+ * FieldError with no ids and no aria-describedby at all.
+ *
+ * Passing `id={field.errorId}` in there is not a break — on mount react-aria
+ * re-points the control at whatever id the element actually carries, so the
+ * message is still announced — it is redundant wiring that reads as if it were
+ * load-bearing, and the next reader has to work out which half is real.
+ *
+ * The line is the field's subtree, not the component name: ConformCalendar and
+ * ConformRangeCalendar render their message as a sibling of the calendar, so
+ * nothing generates those ids and they are set here by hand like everywhere
+ * else. Whoever owns the ids does the wiring.
  */
 export function describedBy(...ids: Array<string | false | null | undefined>) {
   const joined = ids.filter(Boolean).join(" ")
