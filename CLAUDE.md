@@ -16,6 +16,28 @@ the file list, along with the root config files. It is fast (well under a second
 same check the pre-commit hook and CI run, so a clean run here means the commit will go through.
 `bun run lint:fix` applies Biome's safe fixes. `bun run typecheck` covers `scripts/` too.
 
+## Your PR targets `main`. Always.
+
+This repo squash-merges. A branch that has already landed keeps its name and its tip on the remote,
+its content on `main` under a different sha, and nothing about it looks spent — it stays selectable
+as a PR base, and a PR merged into it is green, silent and reaches `main` never. It has happened
+here (PRs #45 and #47) and cost a session to unpick weeks later. The `.worktrees/` workflow is what
+makes it easy to hit: a follow-up worked in a worktree cut from a task branch will offer that task
+branch as the base.
+
+Two guards, either of which catches it:
+
+- `delete_branch_on_merge` is on for the repo, so a merged branch stops existing and the mistake is
+  unrepresentable rather than merely detectable. It is a repo setting, so nothing in the tree shows
+  you it is there — which is the whole reason for the second one.
+- The `base-branch` job in `.github/workflows/ci.yml` fails any PR whose base is not `main`, and
+  its message says how to retarget and rebase. It is a plain "base must be main" rule on purpose;
+  stacked PRs are not a pattern here, and there is no opt-out.
+
+So: branch from `main`, and pass `--base main` when the tool lets you. If your commits sit on top of
+a task branch, `git rebase --onto origin/main origin/<that-branch>` before you open the PR — a
+retarget alone would carry that branch's commits into the diff.
+
 ## The rules are not advice, they are lint
 
 `/rules` publishes fourteen rules about using this library. They are enforced here too, so the same

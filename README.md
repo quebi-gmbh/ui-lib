@@ -116,6 +116,15 @@ a rule attached to its markup, does.
 
 The site is a Vite + React Router SPA that auto-deploys to GitHub Pages on merge to `main`.
 
+### Pull requests
+
+Every PR targets `main`, and CI fails the ones that do not. The repo squash-merges, so a branch that
+has already landed keeps its name and its tip on the remote while its content sits on `main` under a
+different sha — merging into one is green, silent and lands the work nowhere. Two guards close that:
+the repo has `delete_branch_on_merge` on, so a merged branch stops existing as a base at all, and the
+`base-branch` job in `.github/workflows/ci.yml` states the rule where a reader can see it. If you
+branched a follow-up from a task branch, rebase it onto `main` before opening the PR.
+
 ### Project layout
 
 ```
