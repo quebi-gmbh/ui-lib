@@ -5,7 +5,9 @@ import { Link as UiLink } from "@/components/link"
 export function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-quebi-line/10 bg-quebi-bg/80 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
+      {/* The bar spans the viewport (sticky background + bottom hairline); its
+          contents sit in the shell, so the logo lines up with the page under it. */}
+      <div className="quebi-shell flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2 text-quebi-fg" aria-label="quebi ui-lib home">
           <img src="/quebi-logo.svg" alt="quebi" className="h-5 w-auto" />
           <span className="text-sm font-medium text-quebi-fg-muted">ui-lib</span>

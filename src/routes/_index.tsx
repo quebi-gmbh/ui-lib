@@ -68,6 +68,20 @@ function Hero() {
   )
 }
 
+/**
+ * A landing-page section.
+ *
+ * Deliberately narrower than the app shell (`quebi-shell`, 90rem — see
+ * quebi-theme.css): the gallery wants every pixel for code blocks and props
+ * tables, but centred marketing copy set that wide reads badly, and the headings
+ * inside each section are narrower still (`max-w-quebi-content`). So the home
+ * page opts out of the shell on purpose rather than by omission — this is the
+ * one place that decides how wide it is.
+ */
+function HomeSection({ children }: { children: React.ReactNode }) {
+  return <section className="mx-auto w-full max-w-5xl px-6 py-24">{children}</section>
+}
+
 const features = [
   {
     icon: Copy,
@@ -91,7 +105,7 @@ const features = [
 
 function Features() {
   return (
-    <section className="mx-auto w-full max-w-5xl px-6 py-24">
+    <HomeSection>
       <div className="mx-auto max-w-quebi-content text-center">
         <span className="quebi-eyebrow">What you get</span>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
@@ -108,7 +122,7 @@ function Features() {
           </Card>
         ))}
       </div>
-    </section>
+    </HomeSection>
   )
 }
 
@@ -120,7 +134,7 @@ function ForAgents() {
     { url: "/r/<name>.json", desc: "shadcn-compatible registry item" },
   ]
   return (
-    <section className="mx-auto w-full max-w-5xl px-6 py-24">
+    <HomeSection>
       <div className="mx-auto max-w-quebi-content text-center">
         <span className="quebi-eyebrow">For AI agents</span>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
@@ -161,13 +175,13 @@ function ForAgents() {
           — it documents the whole workflow for agents.
         </p>
       </div>
-    </section>
+    </HomeSection>
   )
 }
 
 function ClaudeSkill() {
   return (
-    <section className="mx-auto w-full max-w-5xl px-6 py-24">
+    <HomeSection>
       <div className="mx-auto max-w-quebi-content text-center">
         <span className="quebi-eyebrow">Claude skill</span>
         <h2 className="mt-3 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
@@ -203,7 +217,7 @@ function ClaudeSkill() {
 
         <CodeBlock html={skillHighlighted} code={skillSource} />
       </div>
-    </section>
+    </HomeSection>
   )
 }
 

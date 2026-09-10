@@ -14,7 +14,7 @@ export default function RulesLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-6 py-12">
+    <div className="quebi-shell py-12">
       <div className="lg:grid lg:grid-cols-[16rem_1fr] lg:gap-10">
         <Button
           intent="outline"

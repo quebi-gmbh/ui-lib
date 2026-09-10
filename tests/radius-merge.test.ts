@@ -26,6 +26,7 @@ describe("cn merges the quebi token scales", () => {
     ["rounded-t-quebi-md rounded-t-full", "rounded-t-full"],
     ["shadow-quebi-glow shadow-none", "shadow-none"],
     ["max-w-quebi-content max-w-4xl", "max-w-4xl"],
+    ["max-w-quebi-shell max-w-quebi-content", "max-w-quebi-content"],
   ])("%s -> %s", (input, expected) => {
     expect(cn(input)).toBe(expected)
   })

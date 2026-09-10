@@ -68,6 +68,13 @@ export default function App() {
     <I18nProvider locale={SITE_LOCALE}>
       <div className="flex min-h-screen flex-col bg-quebi-bg text-quebi-fg">
         <Header />
+        {/* <main> is deliberately full-width: it is the flow slot, not the
+            shell. A route decides where its own background stops — the home
+            hero bleeds its grid and glows to the viewport edge, which a
+            max-width here would cut off mid-screen — and puts `quebi-shell` on
+            the container that holds its *content*. That one utility (see
+            quebi-theme.css) is where the app's width is decided; the header and
+            footer use the same one, so all three line up. */}
         <main className="flex-1">
           <Outlet />
         </main>
