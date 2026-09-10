@@ -2,7 +2,7 @@ import { Link, data, useParams } from "react-router"
 import { Check, ChevronRight, X } from "lucide-react"
 import { Badge } from "@/components/badge"
 import { Card, CardTitle } from "@/components/card"
-import { CodeBlock } from "@/components/code-block"
+import { CodeBlock } from "@/site/code-block"
 import {
   DescriptionDetails,
   DescriptionList,

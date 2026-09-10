@@ -2,7 +2,7 @@ import { Link } from "react-router"
 import { FileCode } from "lucide-react"
 import { Badge } from "@/components/badge"
 import { Card, CardDescription, CardTitle } from "@/components/card"
-import { CodeBlock } from "@/components/code-block"
+import { CodeBlock } from "@/site/code-block"
 import {
   DescriptionDetails,
   DescriptionList,

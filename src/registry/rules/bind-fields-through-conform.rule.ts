@@ -8,7 +8,7 @@ export const bindFieldsThroughConformRule: RuleMeta = {
   title: "Bind fields through Conform, never by hand",
   navTitle: "Field binding",
   summary:
-    "Take the binding off the field metadata: the conform-* variant where one exists, getInputProps (or useInputControl) where it doesn't, and getFormProps on the form element. Per-field useState and a hand-passed name are the failure mode.",
+    "Take the binding off the field metadata: the conform-* variant, which every submittable control now has, getInputProps (or useControl) for anything else, and getFormProps on the form element. Per-field useState and a hand-passed name are the failure mode.",
   severity: "error",
   category: "forms",
   tier: 1,
@@ -18,7 +18,8 @@ export const bindFieldsThroughConformRule: RuleMeta = {
     "Field metadata carries more than a name. getInputProps derives the name, the id, the form id, required, the default value, aria-invalid, and the aria-describedby that points at the error message. Passing name=\"email\" by hand gets you one of those seven and drops the rest — and because the field still submits, nothing looks broken. What breaks is invisible: the control no longer announces its error, no longer repopulates after a failed submit, and no longer resets with the form.",
     "Per-field useState is the other half of the same mistake. The form already tracks every value, its dirty state, and its errors; a second copy in component state disagrees with the first the moment anything non-trivial happens — a server-side rejection that should refill the form, a reset, a default arriving from a loader. The bug always surfaces later than the code that caused it.",
     "Conform itself permits the manual form — its docs read fields.email.name and fields.email.initialValue off the metadata directly, and the tutorial only reaches for the helpers at the end, to \"minimize the boilerplate\" for native inputs. That is the honest status of this rule: manual access is legal Conform, and it is fine as long as you also wire aria-invalid and aria-describedby yourself. This rule exists because that last part is the part everyone skips, and because ui-lib ships components where the wiring is already done.",
-    "Thirteen of the library's components ship a Conform-bound variant, chosen because their binding is subtle enough to be worth wrapping (a Select that has to submit through a hidden input, a DatePicker that has to serialise a calendar value). Everything else you bind yourself with getInputProps, or with useInputControl when the control has no native form value. That is not a worse path — it is the same metadata, read explicitly.",
+    "Twenty-nine of the library's components ship a Conform-bound variant — every control that produces a submittable value. That is deliberate: this rule used to send you to \"bind it by hand\" for most of the library, which is the path the rule itself calls the failure mode. What is left without a variant is a sub-part of another control (a ColorArea channel, a ListBox, a TagGroup) rather than a field of its own; bind those yourself with getInputProps, or with useControl when the control has no native form value. That is not a worse path — it is the same metadata, read explicitly.",
+    "Reading the metadata explicitly does not mean spreading getInputProps onto a react-aria control. The helper returns the DOM names — required, defaultChecked, min, max — and react-aria takes isRequired, defaultSelected, minValue, maxValue. A JSX spread skips excess-property checking, so the mismatched half is dropped by filterDOMProps with no type error, no React warning, and no attribute left in the DOM: a Switch renders off after a failed submit, a NumberField silently forgets the schema's bounds. Spread getInputProps onto a real <input>; onto a component, name the props.",
   ],
   appliesTo: ["app/**/*.{tsx,jsx}", "src/**/*.{tsx,jsx}"],
   replacements: [
@@ -66,6 +67,69 @@ export const bindFieldsThroughConformRule: RuleMeta = {
       use: [{ name: "ConformStoragePicker", from: "@/components/conform-storage-picker", slug: "conform-storage-picker" }],
     },
     {
+      element: "Switch",
+      use: [{ name: "ConformSwitch", from: "@/components/conform-switch", slug: "conform-switch" }],
+    },
+    {
+      element: "RadioGroup",
+      use: [{ name: "ConformRadioGroup", from: "@/components/conform-radio-group", slug: "conform-radio-group" }],
+    },
+    {
+      element: "Textarea",
+      use: [{ name: "ConformTextarea", from: "@/components/conform-textarea", slug: "conform-textarea" }],
+    },
+    {
+      element: "CheckboxGroup",
+      use: [{ name: "ConformCheckboxGroup", from: "@/components/conform-checkbox-group", slug: "conform-checkbox-group", when: "a set of values under one name — ConformCheckbox binds a single boolean" }],
+    },
+    {
+      element: "ComboBox",
+      use: [{ name: "ConformComboBox", from: "@/components/conform-combo-box", slug: "conform-combo-box" }],
+    },
+    {
+      element: "Slider",
+      use: [{ name: "ConformSlider", from: "@/components/conform-slider", slug: "conform-slider", when: "single and range values alike — the name goes on the thumb" }],
+    },
+    {
+      element: "SearchField",
+      use: [{ name: "ConformSearchField", from: "@/components/conform-search-field", slug: "conform-search-field", when: "the query is part of a submitted form, not a client-side filter" }],
+    },
+    {
+      element: "TimeField",
+      use: [{ name: "ConformTimeField", from: "@/components/conform-time-field", slug: "conform-time-field", when: "always — react-aria renders no form control for a TimeField, so a bare name submits nothing" }],
+    },
+    {
+      element: "DateRangePicker / RangeCalendar",
+      use: [
+        { name: "ConformDateRangePicker", from: "@/components/conform-date-range-picker", slug: "conform-date-range-picker", when: "a calendar popover" },
+        { name: "ConformRangeCalendar", from: "@/components/conform-range-calendar", slug: "conform-range-calendar", when: "the calendar stays on screen" },
+      ],
+    },
+    {
+      element: "Calendar",
+      use: [{ name: "ConformCalendar", from: "@/components/conform-calendar", slug: "conform-calendar", when: "an always-visible calendar — ConformDatePicker covers the popover case" }],
+    },
+    {
+      element: "ColorField",
+      use: [{ name: "ConformColorField", from: "@/components/conform-color-field", slug: "conform-color-field" }],
+    },
+    {
+      element: "TagField",
+      use: [{ name: "ConformTagField", from: "@/components/conform-tag-field", slug: "conform-tag-field" }],
+    },
+    {
+      element: "InputOTP",
+      use: [{ name: "ConformInputOTP", from: "@/components/conform-input-otp", slug: "conform-input-otp" }],
+    },
+    {
+      element: "ChoiceBox",
+      use: [{ name: "ConformChoiceBox", from: "@/components/conform-choice-box", slug: "conform-choice-box" }],
+    },
+    {
+      element: "FileTrigger / DropZone",
+      use: [{ name: "ConformFileTrigger", from: "@/components/conform-file-trigger", slug: "conform-file-trigger", when: "always — FileTrigger has no name and filterDOMProps drops one silently" }],
+    },
+    {
       element: "form",
       use: [
         { name: "getFormProps", from: "@conform-to/react", when: "always — it supplies id, onSubmit, noValidate, and the aria-describedby for form-level errors" },
@@ -73,12 +137,12 @@ export const bindFieldsThroughConformRule: RuleMeta = {
       ],
     },
     {
-      element: "Everything else (Slider, TagField, InputOTP, ColorField, DropZone, …)",
+      element: "Anything with no conform-* variant (a control you built, a sub-part like ColorArea or ListBox)",
       use: [
-        { name: "getInputProps", from: "@conform-to/react", when: "the control renders a real input" },
-        { name: "useInputControl", from: "@conform-to/react", when: "the control has no native form value — it returns value/change/focus/blur and is what Conform documents for custom inputs" },
+        { name: "getInputProps", from: "@conform-to/react", when: "you are rendering a real <input> — spread it there, not onto a react-aria component, whose prop names differ" },
+        { name: "useControl", from: "@conform-to/react/future", when: "the control has no native form value — it returns value/checked/options/files/change/focus/blur and pairs with BaseControl, which renders the hidden input the control needs" },
       ],
-      note: "Twenty-one of the library's form controls have no conform-* variant. Binding them explicitly is expected; reaching for useState instead is not.",
+      note: "Every library control that produces a submittable value now has a variant, so this is the path for your own components and for sub-parts of a control (a ColorArea binds two channels, a ListBox renders another control's options). Binding them explicitly is expected; reaching for useState instead is not.",
     },
   ],
   examples: [
@@ -110,17 +174,25 @@ import { Form } from "react-router"
       note: "getFormProps adds the aria-describedby for form-level errors that the hand-written trio leaves off, and React Router's Form posts to the route action — which is where the schema gets parsed by something the user cannot edit.",
     },
     {
-      title: "A control with no conform-* variant",
+      title: "A slider wired by hand",
       wrong: `const [volume, setVolume] = useState(50)
 
 <Slider value={volume} onChange={setVolume} />
 <input type="hidden" name="volume" value={volume} />`,
-      right: `import { useInputControl } from "@conform-to/react"
+      right: `import { ConformSlider } from "@/components/conform-slider"
 
-const volume = useInputControl(fields.volume)
+<ConformSlider field={fields.volume} label="Volume" maxValue={100} />`,
+      note: "The hidden-input trick is the tell: the value lives in component state, so it does not come back after a failed submit and does not reset with the form. The variant also knows the thing the hand-written version gets wrong — the name belongs on the SliderThumb, which is where react-aria renders the real range input; a name on the Slider goes nowhere.",
+    },
+    {
+      title: "getInputProps spread onto a react-aria control",
+      wrong: `<Switch {...getInputProps(fields.notify, { type: "checkbox" })}>
+  Email notifications
+</Switch>`,
+      right: `import { ConformSwitch } from "@/components/conform-switch"
 
-<Slider value={Number(volume.value ?? 0)} onChange={(next) => volume.change(String(next))} />`,
-      note: "The hidden-input trick is the tell. useInputControl is the supported way to bind a control that has no native form value, and it keeps the value inside the form's state where reset and lastResult can reach it.",
+<ConformSwitch field={fields.notify} label="Email notifications" />`,
+      note: "This one type-checks, renders, and is wrong. getInputProps returns defaultChecked and required — the DOM names — and react-aria's Switch takes neither, so filterDOMProps drops both: no TS error (JSX spread skips excess-property checking), no React warning, no stray attribute, and a switch that renders off after every failed submit. Spread getInputProps onto a real <input>. Onto a component, name the props — or use the variant that already has.",
     },
   ],
   exceptions: [
@@ -128,7 +200,7 @@ const volume = useInputControl(fields.volume)
       scope: "Your copy of the ui-lib component source (components/ui/**)",
       paths: ["components/ui/**", "src/components/**"],
       reason:
-        "The conform-* variants are where getInputProps is called and the metadata is spread onto a control. That is the wrapping this rule asks you to use, not a violation of it.",
+        "The conform-* variants are where the metadata is read off the field and put onto a control. That is the wrapping this rule asks you to use, not a violation of it.",
     },
     {
       scope: "A control whose value never leaves the browser",
@@ -148,13 +220,13 @@ const volume = useInputControl(fields.volume)
   JsxOpeningElement(name = $el, attributes = $attrs),
   JsxSelfClosingElement(name = $el, attributes = $attrs)
 } as $control where {
-  $el <: r"^(?:Checkbox|Select|MultipleSelect|AsyncSelect|AsyncMultipleSelect|NumberField|DateField|DatePicker|ColorPicker|ColorSwatchPicker|DaySchedule|StoragePicker|TextField)$",
+  $el <: r"^(?:Calendar|Checkbox|CheckboxGroup|ChoiceBox|ColorField|ColorPicker|ColorSwatchPicker|ComboBox|DateField|DatePicker|DateRangePicker|DaySchedule|InputOTP|MultipleSelect|AsyncMultipleSelect|AsyncSelect|NumberField|RadioGroup|RangeCalendar|SearchField|Select|Slider|StoragePicker|Switch|TagField|Textarea|TextField|TimeField)$",
   $attrs <: contains or { \`$meta.name\`, \`$meta.errors\`, \`$meta.initialValue\`, \`$meta.errorId\`, \`$meta.formId\` }`,
     },
     message:
-      "This control is being wired to a Conform field by hand. Use the conform-* variant and pass field={fields.x}: Checkbox -> ConformCheckbox, Select -> ConformSelect, NumberField -> ConformNumberField, DatePicker -> ConformDatePicker, TextField/Input -> ConformField. For controls with no variant, spread getInputProps(field) rather than picking metadata off one property at a time. See https://ui-lib.quebi.de/rules/bind-fields-through-conform",
+      "This control is being wired to a Conform field by hand. Use the conform-* variant and pass field={fields.x}: every control that submits a value has one — Checkbox -> ConformCheckbox, Switch -> ConformSwitch, Select -> ConformSelect, RadioGroup -> ConformRadioGroup, Textarea -> ConformTextarea, Slider -> ConformSlider, TimeField -> ConformTimeField, FileTrigger -> ConformFileTrigger, TextField/Input -> ConformField. For a control you built yourself, spread getInputProps(field) onto its real <input>, or use useControl from @conform-to/react/future when it has none — do not pick metadata off one property at a time. See https://ui-lib.quebi.de/rules/bind-fields-through-conform",
     grep: "name=\\{[a-zA-Z]+\\.[a-zA-Z]+\\.name\\}",
-    note: "This is a ui-lib convention, not a Conform requirement — Conform's own examples pick metadata off property by property, which is exactly the shape the check looks for. It fires only on ui-lib control names, so Conform's native-input examples do not trip it. It cannot see a field bound entirely through useState with a literal name; that shape needs review, and it is the common one in code written before the conform-* variants existed.",
+    note: "FileTrigger and DropZone are deliberately absent from the element list even though they have a variant: neither takes a `name`, so the hand-bound shape is a hidden input beside them, which this check cannot see — and the `$meta.name` half of the pattern matches any `x.name` member access, so listing DropZone fires on `item.name` inside an onDrop handler. This is a ui-lib convention, not a Conform requirement — Conform's own examples pick metadata off property by property, which is exactly the shape the check looks for. It fires only on ui-lib control names, so Conform's native-input examples do not trip it. It cannot see a field bound entirely through useState with a literal name; that shape needs review, and it is the common one in code written before the conform-* variants existed.",
   },
   tags: ["forms", "conform", "accessibility", "tier-1"],
 }

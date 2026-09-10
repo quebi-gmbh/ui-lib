@@ -57,11 +57,15 @@ export interface LocalScope {
 }
 
 /**
- * The three kinds of code in `src/`, and how much of the rule set each gets.
+ * The kinds of code in `src/`, and how much of the rule set each gets.
  *
- * `src/routes/**` is missing from this table on purpose: the gallery is a real
- * React Router app built out of these components, so it gets every rule at full
- * strength and is the standing proof that the rules are livable.
+ * `src/routes/**` and `src/site/**` are missing from this table on purpose: the
+ * gallery is a real React Router app built out of these components, so it gets
+ * every rule at full strength and is the standing proof that the rules are
+ * livable. `src/site/**` exists so that the app's chrome — header, footer,
+ * sidebars, theme toggle, code block — is filed as app code rather than sitting
+ * in `src/components/` and inheriting the library-source carve-out below, which
+ * is an argument about a layer and not about an address.
  */
 export const localScopes: LocalScope[] = [
   {
@@ -86,8 +90,11 @@ function fileIncludes(): string[] {
     // outside what its check can see.
     "src/**/*.tsx",
     "src/**/*.jsx",
-    // The library primitives. The records already except them from six of the
-    // eight rules (they are the layer that owns appearance, imports the
+    // The library primitives — and, since the docs-site chrome moved to
+    // `src/site/`, nothing but the library primitives: every file left here has
+    // a `slug` in src/registry/meta.ts and is published. The records already
+    // except them from six of the eight rules (they are the layer that owns
+    // appearance, imports the
     // primitives, and is not the reader's to split), and what is left — the
     // tier-1 element ban minus <input> — is asserted directly in
     // tests/repo-lint.test.ts instead. It cannot be asserted here: these files

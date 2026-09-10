@@ -1,6 +1,6 @@
 "use client"
 
-import type { ColorFieldProps } from "react-aria-components"
+import type { ColorFieldProps, InputProps } from "react-aria-components"
 import {
   ColorField as ColorFieldPrimitive,
   Input as InputPrimitive,
@@ -15,8 +15,10 @@ import { cn } from "@/lib/utils"
  * field with a cyan-tinted border that lifts to brand teal on focus, red when
  * invalid, dimmed when disabled.
  *
- * Pass children to compose your own control; otherwise a styled hex `Input` is
- * rendered automatically so the field works standalone.
+ * Pass children to compose your own control; otherwise a styled hex
+ * {@link ColorInput} is rendered automatically so the field works standalone.
+ * The Conform color-field variant composes it explicitly, alongside a label and
+ * an error message.
  */
 export function ColorField({ className, children, ...props }: ColorFieldProps) {
   return (
@@ -36,23 +38,30 @@ export function ColorField({ className, children, ...props }: ColorFieldProps) {
         className,
       )}
     >
-      {children ?? (
-        <InputPrimitive
-          data-slot="control"
-          className={cn(
-            "relative block w-full appearance-none text-sm text-quebi-fg tabular-nums uppercase",
-            "placeholder:text-quebi-fg-subtle placeholder:normal-case",
-            "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
-            "transition-[border-color,box-shadow] duration-200",
-            "enabled:hover:border-quebi-line/40",
-            "outline-none focus:outline-none focus:border-quebi-brand focus:ring-2 focus:ring-quebi-brand/50",
-            "invalid:border-red-500 focus:invalid:ring-red-500/50",
-            "disabled:cursor-not-allowed disabled:opacity-50 in-disabled:opacity-50",
-            "scheme-dark",
-          )}
-        />
-      )}
+      {children ?? <ColorInput />}
     </ColorFieldPrimitive>
+  )
+}
+
+/** The hex text input inside a {@link ColorField}. */
+export function ColorInput({ className, ...props }: InputProps) {
+  return (
+    <InputPrimitive
+      {...props}
+      data-slot="control"
+      className={cn(
+        "relative block w-full appearance-none text-sm text-quebi-fg tabular-nums uppercase",
+        "placeholder:text-quebi-fg-subtle placeholder:normal-case",
+        "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
+        "transition-[border-color,box-shadow] duration-200",
+        "enabled:hover:border-quebi-line/40",
+        "outline-none focus:outline-none focus:border-quebi-brand focus:ring-2 focus:ring-quebi-brand/50",
+        "invalid:border-red-500 focus:invalid:ring-red-500/50",
+        "disabled:cursor-not-allowed disabled:opacity-50 in-disabled:opacity-50",
+        "scheme-dark",
+        className,
+      )}
+    />
   )
 }
 

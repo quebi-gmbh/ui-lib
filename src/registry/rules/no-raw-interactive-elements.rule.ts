@@ -144,7 +144,7 @@ export const noRawInteractiveElementsRule: RuleMeta = {
     },
     {
       title: "A raw search box where a SearchField belongs",
-      source: "src/components/component-sidebar.tsx (the docs-site sidebar, not a library primitive)",
+      source: "src/site/component-sidebar.tsx (the docs-site sidebar, not a library primitive)",
       sourceFixed: true,
       wrong: `<div className="relative">
   <Search className="-translate-y-1/2 pointer-events-none absolute top-1/2 left-3 h-4 w-4 text-quebi-fg-subtle" />
@@ -162,7 +162,7 @@ export const noRawInteractiveElementsRule: RuleMeta = {
 <SearchField aria-label="Search components" value={query} onChange={setQuery}>
   <SearchInput placeholder="Search components" />
 </SearchField>`,
-      note: "Eleven lines become three, and the field gains what the raw input never had: a clear button, Escape-to-clear, and an icon the component positions instead of an absolutely-positioned sibling that has to be kept in sync with the padding. onChange hands you the value rather than an event. The <input> carve-out below is about the layer that owns a control's value, not about a directory name — a sidebar that happens to sit next to the library source is still app code.",
+      note: "Eleven lines become three, and the field gains what the raw input never had: a clear button, Escape-to-clear, and an icon the component positions instead of an absolutely-positioned sibling that has to be kept in sync with the padding. onChange hands you the value rather than an event. The <input> carve-out below is about the layer that owns a control's value, not about a directory name — a sidebar that happens to sit next to the library source is still app code. This one used to sit in src/components/ and was excused by that address until it was moved out; if your app keeps its own chrome next to the vendored library, keep the two apart the same way.",
     },
     {
       title: "An unstyled button is not the safe case",

@@ -1,9 +1,8 @@
 {
-  // Solution-style config: `tsc -b` builds the three projects below. The
-  // `paths` entry is not for tsc (each project declares its own) — it is what
-  // Bun's runtime resolver reads, so `@/…` imports inside `src/components/**`
-  // work when a test loads them. Without it `bun test` cannot import any
-  // component.
+  // The solution file does not compile anything itself, but `bun test` reads
+  // path aliases from the root tsconfig — and every test that renders a
+  // component pulls in `@/lib/utils` and `@/components/*` through it. The
+  // per-project configs repeat this; it is not inherited from here.
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {

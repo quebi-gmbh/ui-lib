@@ -1,64 +1,78 @@
 "use client"
 
-import { useState } from "react"
 import type { FieldMetadata } from "@conform-to/react"
+import { BaseControl, useControl } from "@conform-to/react/future"
 import { cn } from "@/lib/utils"
-import { DaySchedule, type DaySpan, type DayScheduleProps } from "@/components/day-schedule"
-import { Label } from "@/components/field"
+import { DaySchedule, type DayScheduleProps, type DaySpan } from "@/components/day-schedule"
+import { describedBy, Description, Field, FieldError, Label } from "@/components/field"
 
-/**
- * ConformDaySchedule — DaySchedule wired to Conform.
- *
- * The schedule's value is an array of spans, so it is submitted as a JSON
- * string through a hidden input named after the field. Validate it with a
- * valibot schema that parses the JSON (see the example), and the usual
- * name/default/required/errors are read off the field metadata.
- */
-
-interface ConformDayScheduleProps
+export interface ConformDayScheduleProps
   extends Omit<DayScheduleProps, "spans" | "defaultSpans" | "onSpansChange"> {
-  // Only name/initialValue/required/errors are read off the metadata; the
-  // serialized value is a JSON string regardless of the schema's output type.
-  field: FieldMetadata<any, any, string[]>
+  /**
+   * A weekly schedule bound to a form value. The spans are an array, so they
+   * are submitted as a JSON string through a registered hidden input and the
+   * schema parses that JSON back into spans — hence the wire-or-parsed union,
+   * the same shape `conform-date-field` and `conform-number-field` use.
+   */
+  field: FieldMetadata<string | DaySpan[]>
   label?: string
+  description?: string
   /** Used when the field has no initial value. */
   defaultSpans?: DaySpan[]
 }
 
-/** Parse the field's initial value, tolerating an absent or malformed payload. */
-function parseInitialSpans(initialValue: unknown, fallback: DaySpan[]): DaySpan[] {
-  if (typeof initialValue !== "string" || initialValue.length === 0) return fallback
+/** Parse a serialized span list, tolerating an absent or malformed payload. */
+function parseSpans(value: string | undefined, fallback: DaySpan[]): DaySpan[] {
+  if (typeof value !== "string" || value.length === 0) return fallback
   try {
-    const parsed = JSON.parse(initialValue)
+    const parsed = JSON.parse(value)
     return Array.isArray(parsed) ? (parsed as DaySpan[]) : fallback
   } catch {
     return fallback
   }
 }
 
+/**
+ * ConformDaySchedule — DaySchedule wired to Conform.
+ *
+ * Binds a Conform field to the quebi DaySchedule through a registered hidden
+ * input carrying the spans as JSON. DaySchedule is a drag-to-select grid with
+ * no native form value of its own, so that input is the whole submitted value.
+ *
+ * The spans live in Conform's state rather than in `useState`, which is what
+ * makes them survive a failed submit and snap back on a form reset — a second
+ * copy in component state disagrees with the form the moment either happens.
+ */
 export function ConformDaySchedule({
   field,
   label,
+  description,
   defaultSpans = [],
   className,
   ...props
 }: ConformDayScheduleProps) {
-  const [spans, setSpans] = useState<DaySpan[]>(() =>
-    parseInitialSpans(field.initialValue, defaultSpans),
-  )
+  const control = useControl({
+    defaultValue: JSON.stringify(parseSpans(field.initialValue as string | undefined, defaultSpans)),
+  })
   const hasErrors = !field.valid && !!field.errors
+  const isRequired = field.required ?? false
+  const spans = parseSpans(control.value, defaultSpans)
 
   return (
-    <div className="flex flex-col gap-2">
+    <Field className={cn("flex flex-col gap-2", className)}>
       {label && (
-        <Label htmlFor={field.id} className="text-sm text-quebi-fg">
+        <Label className={cn("text-sm", hasErrors && "text-red-500")}>
           {label}
-          {field.required && <span className="ml-0.5 text-quebi-brand">*</span>}
+          {isRequired && <span className="ml-1 text-quebi-brand">*</span>}
         </Label>
       )}
 
-      {/* The submitted value. Kept in sync with the interactive schedule below. */}
-      <input type="hidden" id={field.id} name={field.name} value={JSON.stringify(spans)} />
+      <BaseControl
+        name={field.name}
+        form={field.formId}
+        ref={control.register}
+        defaultValue={control.defaultValue ?? ""}
+      />
 
       <div
         className={cn(
@@ -69,18 +83,20 @@ export function ConformDaySchedule({
         <DaySchedule
           {...props}
           spans={spans}
-          onSpansChange={setSpans}
+          onSpansChange={(next) => control.change(JSON.stringify(next))}
           aria-invalid={hasErrors || undefined}
-          aria-describedby={hasErrors ? field.errorId : undefined}
-          className={className}
+          aria-describedby={describedBy(
+            hasErrors && field.errorId,
+            description && field.descriptionId,
+          )}
         />
       </div>
 
-      {hasErrors && (
-        <p id={field.errorId} className="text-sm text-red-500">
-          {field.errors?.join(", ")}
-        </p>
-      )}
-    </div>
+      {/* These ids are ours to set: DaySchedule is not a react-aria field, so
+          nothing generates them and the aria-describedby above is their only
+          reference. */}
+      {description && <Description id={field.descriptionId}>{description}</Description>}
+      {hasErrors && <FieldError id={field.errorId}>{field.errors?.join(", ")}</FieldError>}
+    </Field>
   )
 }
