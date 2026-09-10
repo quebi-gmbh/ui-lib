@@ -1,5 +1,5 @@
 import { Line } from "recharts"
-import { type ChartConfig } from "@/components/chart"
+import type { ChartConfig } from "@/components/chart"
 import { LineChart } from "@/components/line-chart"
 import type { ComponentExample } from "./types"
 

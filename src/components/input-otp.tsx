@@ -79,13 +79,17 @@ export function InputOTPSlot({
 
 export function InputOTPSeparator({ className, ...props }: React.ComponentProps<"div">) {
   return (
+    // The dash between two groups of slots is decorative: the slots either
+    // side already carry the accessible structure, and a `separator` role here
+    // announced a divider that means nothing to someone typing a code. Hidden
+    // from the accessibility tree it is what it looks like — a visual gap.
     <div
       data-slot="input-otp-separator"
-      role="separator"
+      aria-hidden="true"
       className={cn("text-quebi-fg-subtle", className)}
       {...props}
     >
-      <Minus className="size-4" aria-hidden="true" />
+      <Minus className="size-4" />
     </div>
   )
 }

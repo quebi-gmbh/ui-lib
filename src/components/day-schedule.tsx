@@ -211,7 +211,13 @@ export function DaySchedule({
     }
   }
 
-  const ticks = Math.floor(DAY_MINUTES / tickInterval)
+  // The minute each gridline marks. It is also each gridline's identity — two
+  // ticks can never share a minute — so the rows below key on it rather than on
+  // their position in the array.
+  const tickMinutes = Array.from(
+    { length: Math.floor(DAY_MINUTES / tickInterval) + 1 },
+    (_, i) => i * tickInterval,
+  )
   // Push the name column clear of the widest lane so labels never overlap bars.
   const labelOffset = laneOffset + Math.max(0, spans.length - 1) * laneGap + 28
 
@@ -230,25 +236,25 @@ export function DaySchedule({
         style={{ height }}
         aria-hidden="true"
       >
-        {Array.from({ length: ticks + 1 }, (_, i) => (
+        {tickMinutes.map((minute) => (
           <div
-            key={i}
+            key={minute}
             className="absolute left-0 -translate-y-1/2 text-[9.5px] text-quebi-fg-subtle tabular-nums"
-            style={{ top: toPercent(i * tickInterval) }}
+            style={{ top: toPercent(minute) }}
           >
-            {i === ticks ? "24:00" : formatTime(i * tickInterval)}
+            {minute === DAY_MINUTES ? "24:00" : formatTime(minute)}
           </div>
         ))}
       </div>
 
       {/* Span track */}
       <div ref={trackRef} className="relative flex-1" style={{ height }}>
-        {Array.from({ length: ticks + 1 }, (_, i) => (
+        {tickMinutes.map((minute) => (
           <div
-            key={i}
+            key={minute}
             aria-hidden="true"
             className="absolute inset-x-0 h-px bg-quebi-line/[0.06]"
-            style={{ top: toPercent(i * tickInterval) }}
+            style={{ top: toPercent(minute) }}
           />
         ))}
 
@@ -258,6 +264,7 @@ export function DaySchedule({
           const valueText = `${span.label}, ${formatTime(span.start)} to ${formatTime(span.end)}`
 
           return (
+            // biome-ignore lint/a11y/useSemanticElements: <fieldset> is the element for this role, but this wrapper only exists to name the three sliders below it and has no box of its own — a fieldset brings a UA border, padding and `min-inline-size: min-content` into a track whose children are absolutely positioned against it.
             <div key={span.id} role="group" aria-label={span.label}>
               {/* Body — drag to move the whole span */}
               <div

@@ -52,11 +52,7 @@ export function CodeBlock({ html, code, className }: CodeBlockProps) {
         options={{ scrollbars: { theme: "os-theme-quebi", autoHide: "leave", autoHideDelay: 600 } }}
         className="code-block max-h-150 p-5 text-sm leading-relaxed [&_pre]:bg-transparent! [&_pre]:outline-none"
       >
-        {/* dangerouslySetInnerHTML is safe here: `html` is Shiki output produced
-            at build time by scripts/generate-api.ts from source in this repo,
-            never from user input. (A plain comment, not a biome-ignore: this
-            repo's config is the published rules and nothing else, so there is no
-            noDangerouslySetInnerHtml rule enabled to suppress.) */}
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: `html` is Shiki output produced at build time by scripts/generate-api.ts from source in this repo — there is no path by which user input reaches it. */}
         <div dangerouslySetInnerHTML={{ __html: html }} />
       </OverlayScrollbarsComponent>
     </Card>

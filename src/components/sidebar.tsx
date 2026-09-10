@@ -120,6 +120,7 @@ const SidebarProvider = ({
         setInternalOpenState(openState)
       }
 
+      // biome-ignore lint/suspicious/noDocumentCookie: the Cookie Store API the rule points at is unavailable in Safari and Firefox, and this cookie is read by the server on the next request to render the sidebar open or closed without a flash — so it has to be a real document cookie, written synchronously.
       document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
     },
     [setOpenProp, open],

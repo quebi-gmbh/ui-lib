@@ -24,9 +24,9 @@ export const scrollAreaExamples: ComponentExample[] = [
       <div className="h-56 w-full max-w-sm rounded-quebi-md border border-quebi-line/10">
         <ScrollArea orientation="vertical" className="p-4">
           <div className="flex flex-col gap-3">
-            {Array.from({ length: 20 }, (_, i) => (
-              <p key={i} className="text-sm text-quebi-fg">
-                Row {i + 1} — quebi keeps long lists tidy inside a bounded viewport.
+            {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
+              <p key={n} className="text-sm text-quebi-fg">
+                Row {n} — quebi keeps long lists tidy inside a bounded viewport.
               </p>
             ))}
           </div>
@@ -61,9 +61,9 @@ export const scrollAreaExamples: ComponentExample[] = [
       <div className="h-56 w-full max-w-sm rounded-quebi-md border border-quebi-line/10">
         <ScrollArea orientation="vertical" scrollFade className="p-4">
           <div className="flex flex-col gap-3">
-            {Array.from({ length: 20 }, (_, i) => (
-              <p key={i} className="text-sm text-quebi-fg">
-                Item {i + 1} — the fade hints there is more above and below.
+            {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
+              <p key={n} className="text-sm text-quebi-fg">
+                Item {n} — the fade hints there is more above and below.
               </p>
             ))}
           </div>
@@ -78,9 +78,9 @@ export const scrollAreaExamples: ComponentExample[] = [
       <div className="h-56 w-full max-w-sm rounded-quebi-md border border-quebi-line/10">
         <ScrollArea orientation="vertical" scrollbarGutter className="p-4">
           <div className="flex flex-col gap-3">
-            {Array.from({ length: 16 }, (_, i) => (
-              <p key={i} className="text-sm text-quebi-fg">
-                Line {i + 1} — the gutter keeps the right edge aligned.
+            {Array.from({ length: 16 }, (_, i) => i + 1).map((n) => (
+              <p key={n} className="text-sm text-quebi-fg">
+                Line {n} — the gutter keeps the right edge aligned.
               </p>
             ))}
           </div>

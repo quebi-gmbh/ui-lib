@@ -57,15 +57,18 @@ register, plus the quebi styling and self-contained-dependency conventions.
 
 ## Things that will bite you
 
-- `src/components/**` is outside `biome.jsonc`'s file list. The library source is excepted from
-  most rules by the records themselves, and it carries `biome-ignore lint/a11y/...` comments meant
-  for a consumer's fuller Biome setup, which a rules-only config reports as unused suppressions.
-  What still holds there — the library hand-rolls none of the controls it forbids — is asserted in
-  `tests/repo-lint.test.ts` instead.
+- `bun run lint` is Biome's recommended set *plus* the eight rules this repo publishes, over
+  `src/**/*.{tsx,jsx}` — including `src/components/**`. The library source is excepted from most
+  of the eight by the records themselves; what still applies there is the element ban minus
+  `<input>`, so a raw `<button>` in a library component fails the pre-commit hook like anywhere
+  else. Its `biome-ignore lint/a11y/...` comments now land on rules that actually run, which is
+  what let the directory back into the file list.
 - That exception is an argument about a *layer*, not about a directory, so only published
   components may live there: a test fails if a file in `src/components/` has no `slug` in
   `src/registry/meta.ts`. The site's own chrome lives in `src/site/` (header, footer, sidebars,
   theme toggle, code block) and is linted at full strength, exactly like `src/routes/`. Put new
   app-side UI there; do not park it next to the library source.
+- CSS is still outside the file list: Biome cannot parse Tailwind v4's at-rules. The
+  `no-hardcoded-design-values` record documents that gap.
 - `src/registry/*.examples.tsx` is copied verbatim by agents through
   `/api/components/<slug>.json`. A shortcut taken in an example propagates.

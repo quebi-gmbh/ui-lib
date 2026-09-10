@@ -15,8 +15,7 @@
   "files": {
     "includes": [
       "src/**/*.tsx",
-      "src/**/*.jsx",
-      "!src/components/**"
+      "src/**/*.jsx"
     ]
   },
   "formatter": {
@@ -40,7 +39,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "none",
+      "preset": "recommended",
       "correctness": {
         "noRestrictedElements": {
           "level": "error",

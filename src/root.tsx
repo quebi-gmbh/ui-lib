@@ -18,6 +18,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {/* No-flash theme init: runs before paint so the saved theme is applied
             before first render. quebi is dark-first, so dark is the default. */}
         <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: the only way to run a script before first paint, and the payload is this string literal — no interpolation, so there is no input for an injection to arrive through.
           dangerouslySetInnerHTML={{
             __html:
               "(function(){try{var t=localStorage.getItem('quebi-theme');" +

@@ -15,7 +15,7 @@
  * merges it into its own Biome setup. This one is a *complete* config for this
  * repo, which means it also has to answer questions the published fragment
  * deliberately leaves open — which paths to lint, and what to do about Biome's
- * own rules (nothing: see `recommended` below).
+ * own rules (run them: see `preset` below).
  *
  * The rules themselves are identical. What differs is scope, and the scope
  * decisions are the table below rather than edits to the published records:
@@ -64,8 +64,15 @@ export interface LocalScope {
  * every rule at full strength and is the standing proof that the rules are
  * livable. `src/site/**` exists so that the app's chrome — header, footer,
  * sidebars, theme toggle, code block — is filed as app code rather than sitting
- * in `src/components/` and inheriting the library-source carve-out below, which
- * is an argument about a layer and not about an address.
+ * in `src/components/` and inheriting the library-source carve-out, which is an
+ * argument about a layer and not about an address.
+ *
+ * Nothing in this table relaxes a rule from Biome's recommended set, and that is
+ * deliberate. `src/registry/*.examples.tsx` is the case worth stating: an example
+ * is copied verbatim into a consumer's app through `/api/components/<slug>.json`,
+ * so a `noArrayIndexKey` in a demo list is copied along with it. Exempting the
+ * examples would put the one kind of file we hand to other people outside the
+ * checks we tell them to run.
  */
 export const localScopes: LocalScope[] = [
   {
@@ -79,31 +86,28 @@ export const localScopes: LocalScope[] = [
 /**
  * Files this repo lints, derived from the rules' own `appliesTo` globs.
  *
- * Every rule declares `src/**\/*.{tsx,jsx}`, so that is the base. The
- * subtractions are all cases where a file is in that set but linting it says
- * nothing true.
+ * Every rule declares `src/**\/*.{tsx,jsx}`, so that is the whole list — no
+ * subtractions. `src/components/**` used to be one: the library primitives carry
+ * `biome-ignore lint/a11y/...` comments for a consumer's fuller Biome setup, and
+ * a rules-only config reported every one of them as an unused suppression, so
+ * the choice was seventeen lines of noise on every run or no linting there at
+ * all. With Biome's recommended set on those suppressions land on rules that
+ * actually run, and the directory is linted like everything else — the records
+ * already except it from six of the eight ui-lib rules, and the seventh, the
+ * tier-1 element ban minus <input>, is the guarantee that had to live in
+ * tests/repo-lint.test.ts until now.
+ *
+ * Note what that leaves standing: the carve-out is now the records' business
+ * alone, and it reaches only files that are actually the library. Every file in
+ * `src/components/` has a `slug` in src/registry/meta.ts — a test fails if one
+ * does not — so nothing can be excused by its address any more.
+ *
+ * The `css` half of tier 3's `appliesTo` stays out: Biome cannot parse Tailwind
+ * v4's at-rules, and that rule already documents CSS as outside what its check
+ * can see.
  */
 function fileIncludes(): string[] {
-  return [
-    // The rules' `appliesTo`, minus the `css` half of tier 3's: Biome cannot
-    // parse Tailwind v4's at-rules, and that rule already documents CSS as
-    // outside what its check can see.
-    "src/**/*.tsx",
-    "src/**/*.jsx",
-    // The library primitives — and, since the docs-site chrome moved to
-    // `src/site/`, nothing but the library primitives: every file left here has
-    // a `slug` in src/registry/meta.ts and is published. The records already
-    // except them from six of the eight rules (they are the layer that owns
-    // appearance, imports the
-    // primitives, and is not the reader's to split), and what is left — the
-    // tier-1 element ban minus <input> — is asserted directly in
-    // tests/repo-lint.test.ts instead. It cannot be asserted here: these files
-    // carry `biome-ignore lint/a11y/...` comments for the consumer's fuller
-    // Biome setup, and a rules-only config reports every one of them as an
-    // unused suppression. Seventeen lines of noise on every run is how a lint
-    // command stops being read.
-    "!src/components/**",
-  ]
+  return ["src/**/*.tsx", "src/**/*.jsx"]
 }
 
 /** The Biome rule ids a rule record maps to, for the local-scope overrides. */
@@ -167,10 +171,14 @@ export async function buildRepoConfig() {
     linter: {
       enabled: true,
       rules: {
-        // `bun run lint` answers one question: does this repo follow the rules it
-        // publishes? Biome's own recommended set is a separate decision with its
-        // own backlog of findings.
-        preset: "none" as const,
+        // Biome's recommended set, on top of the rules this repo publishes.
+        // The two answer different questions — "does this repo follow its own
+        // rules" and "is this ordinary React sound" — but they answer them about
+        // the same files, and a consumer runs both. Running only ours here meant
+        // src/components' `biome-ignore lint/a11y/...` comments, written for a
+        // consumer's setup, suppressed rules nothing ran, which is why that
+        // directory used to sit outside `files.includes` entirely.
+        preset: "recommended" as const,
         ...generated.linter.rules,
       },
     },

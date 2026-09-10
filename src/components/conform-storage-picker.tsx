@@ -133,9 +133,12 @@ export function ConformStoragePicker({
           reference. */}
       {description && <Description id={field.descriptionId}>{description}</Description>}
 
-      <div
-        className="flex flex-wrap gap-2"
-        role="group"
+      {/* A <fieldset> rather than a div wearing role="group": these chips are a
+          group of form controls, which is the one thing the element is for.
+          `min-w-0` undoes the UA `min-inline-size: min-content` Tailwind's
+          preflight leaves in place, so the group wraps exactly as the div did. */}
+      <fieldset
+        className="flex min-w-0 flex-wrap gap-2"
         aria-label={label ?? "Storage"}
         aria-invalid={hasErrors || undefined}
         aria-describedby={describedBy(
@@ -161,7 +164,7 @@ export function ConformStoragePicker({
             </Button>
           )
         })}
-      </div>
+      </fieldset>
 
       {/* Hidden input to sync selection with the form. */}
       <input
