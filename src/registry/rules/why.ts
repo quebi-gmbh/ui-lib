@@ -17,7 +17,7 @@ export interface FailureMode {
 }
 
 export const RULES_LEDE =
-  "These rules are written for the code an agent writes. Not because agents are careless — because they optimise for the shortest path to something that looks right, and three specific detours are the predictable result."
+  "These rules are written for the code an agent writes. Not because agents are careless — because they optimise for the shortest path to something that looks right, and four specific detours are the predictable result."
 
 export const failureModes: FailureMode[] = [
   {
@@ -44,6 +44,12 @@ export const failureModes: FailureMode[] = [
       "gate-last-result-on-idle-navigation",
       "intent-buttons-must-not-be-type-button",
     ],
+  },
+  {
+    id: "takes-the-platform-shortcut",
+    title: "It takes the shortcut the runtime offers",
+    body: "A global needs no import, no provider and no discovery. alert() is there; Array.prototype.sort is there; both produce something that works on the first click, in the one tab the agent can see. Neither is wrong as JavaScript, which is what makes them hard to catch in review. But alert() draws a dialog the design system does not own, cannot theme and cannot render in a test, and sorting the rows already in memory reorders the answer the server just gave rather than asking it a different question — so the table and the query behind it quietly stop agreeing. The shape that would have been right in both cases — a toast under a provider, a modal whose button does the work, a re-query through the callback the component already exposes — costs an import and a round trip. The shortcut costs neither, and that is the whole of its appeal.",
+    ruleIds: ["no-browser-dialogs", "no-client-sorting-on-a-server-driven-table"],
   },
   {
     id: "writes-oversized-files",

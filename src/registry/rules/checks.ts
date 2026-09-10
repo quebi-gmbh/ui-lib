@@ -21,7 +21,18 @@
  * rule: a check that cannot be derived from a record is a check that can drift
  * away from the rule it claims to enforce.
  */
+import {
+  appliesToFilenameRegex,
+  exceptionPaths,
+  firstSentence,
+  globToFilenameRegex,
+  grepGlob,
+} from "./scope"
 import type { RuleCheck, RuleMeta } from "./types"
+
+// Path-scope translation lives in ./scope, and is re-exported here so that the
+// generators and the tests keep one import for the whole of a rule's checks.
+export { appliesToFilenameRegex, exceptionPaths, firstSentence, globToFilenameRegex, grepGlob }
 
 const DEFAULT_BASE_URL = "https://ui-lib.quebi.de"
 
@@ -41,83 +52,6 @@ export function builtInRules(rules: RuleMeta[]): RuleMeta[] {
 
 export function pluginRules(rules: RuleMeta[]): RuleMeta[] {
   return lintRules(rules).filter((r) => r.enforcement.biome?.via === "plugin")
-}
-
-/** Path globs a rule's exceptions carve out (the ones expressible as paths). */
-export function exceptionPaths(rule: RuleMeta): string[] {
-  return [...new Set(rule.exceptions.flatMap((e) => e.paths ?? []))]
-}
-
-/** First sentence of a justification, for a one-line comment. */
-export function firstSentence(text: string) {
-  const match = text.match(/^.*?[.;](?=\s|$)/)
-  return (match ? match[0] : text).trim()
-}
-
-/**
- * A path glob as a regex fragment for a GritQL `$filename` guard.
- *
- * `$filename` is the file's *absolute* path and GritQL matches a regex against
- * the whole of it, while a rule record's globs are project-relative. The
- * translation therefore lets any prefix stand in front — `components/ui/**` has
- * to match whatever directory the project is checked out into — but only a whole
- * one: the leading wildcard is `(?:.*\/)?` rather than `.*`, so a glob starting
- * `app/` matches `<root>/app/x.tsx` and not `<root>/myapp/x.tsx`. That mattered
- * little while these guards only ever subtracted paths; it decides where a rule
- * fires now that `appliesTo` is compiled in the same way.
- */
-export function globToFilenameRegex(glob: string): string {
-  let out = ""
-  let i = 0
-  while (i < glob.length) {
-    if (glob.startsWith("**/", i)) {
-      // Any number of directories, including none, so a file at the project
-      // root is covered by the same glob as one nested five deep.
-      out += "(?:.*/)?"
-      i += 3
-    } else if (glob.startsWith("**", i)) {
-      out += ".*"
-      i += 2
-    } else if (glob[i] === "*") {
-      out += "[^/]*"
-      i += 1
-    } else if (glob[i] === "{") {
-      const close = glob.indexOf("}", i)
-      if (close === -1) throw new Error(`Unclosed brace in exception glob "${glob}"`)
-      out += `(?:${glob.slice(i + 1, close).split(",").join("|")})`
-      i = close + 1
-    } else {
-      out += glob[i].replace(/[.+^$()|[\]\\]/, "\\$&")
-      i += 1
-    }
-  }
-  // A glob ending in ** already covers the tail; anything else names a file, so
-  // anchoring stops `components/ui/**` being satisfied by a lookalike path.
-  const anchored = glob.endsWith("**") ? out : `${out}$`
-  return glob.startsWith("**") ? anchored : `(?:.*/)?${anchored}`
-}
-
-/**
- * The `$filename` guard that holds a plugin to its record's `appliesTo`.
- *
- * A built-in Biome rule is scoped by the config that switches it on, so
- * `appliesTo` is answered there. A GritQL plugin is loaded globally — `overrides`
- * does not scope plugins — so without this guard the pattern is run against every
- * file the project lints, including the ones the record never claimed. Every one
- * of these rules is about JSX; asked about a `.ts` file it answers anyway, and
- * the answer is a diagnostic about a file the rule is not about. (This repo's own
- * `scripts/` and `tests/` are the case that found it.)
- *
- * Derived, never written per rule: widening a record's `appliesTo` widens its
- * plugin, and nothing else has to be remembered.
- */
-export function appliesToFilenameRegex(rule: RuleMeta): string {
-  if (rule.appliesTo.length === 0) {
-    throw new Error(
-      `Rule "${rule.id}" declares no appliesTo, so its plugin would have no scope to compile`,
-    )
-  }
-  return `(?:${rule.appliesTo.map(globToFilenameRegex).join("|")})`
 }
 
 /**
@@ -329,8 +263,18 @@ function ruleOptions(rule: RuleMeta, primitives: string[]): { options?: BiomeRul
       },
     }
   }
-  const elements = restrictedElements(rule)
-  return Object.keys(elements).length ? { options: { elements } } : {}
+  // The element ban, and only the element ban. This used to be the fall-through
+  // for every other built-in, which was fine while `correctness/noRestrictedElements`
+  // was the only one — and a trap the moment it was not: a rule with a
+  // `replacements` table and any other Biome rule behind it would have been
+  // configured with an `elements` option that rule has never heard of.
+  if (biome.rule === "correctness/noRestrictedElements") {
+    const elements = restrictedElements(rule)
+    return Object.keys(elements).length ? { options: { elements } } : {}
+  }
+  // Everything else is configured by its level alone — `suspicious/noAlert` has
+  // nothing to configure, and the message it prints is Biome's own.
+  return {}
 }
 
 export function buildBiomeConfig(
@@ -518,7 +462,7 @@ export function buildRuleChecks(
       language: "bash",
       code: [
         `# ${rule.id} — candidates for review`,
-        "rg -n -g '*.{tsx,jsx}' \\",
+        `rg -n -g '${grepGlob(rule)}' \\`,
         ...ignores.map((path) => `  -g '!${path}' \\`),
         `  ${JSON.stringify(rule.enforcement.grep)}`,
         "",
@@ -534,12 +478,20 @@ export function buildRuleChecks(
       title: "Claiming an exception that is not a path",
       description: `${judgementCalls.length === 1 ? "One exception on this rule is" : `${judgementCalls.length} exceptions on this rule are`} a judgement call, so ${judgementCalls.length === 1 ? "it" : "they"} cannot be a path. Biome's suppression syntax has a slot for the reason — fill it, because that note is what makes the carve-out reviewable instead of invisible.`,
       language: "tsx",
-      code: judgementCalls
-        .map(
+      // The line form, because it is the one that works everywhere a violation
+      // can be: above a call, an import, or a JSX attribute. Only directly
+      // between JSX children does a comment have to be an expression, and this
+      // rule set has as many non-JSX violations as JSX ones, so the wrapping is
+      // stated rather than assumed.
+      code: [
+        ...judgementCalls.map(
           (exception) =>
-            `{/* biome-ignore ${target}: ${exception.scope} — ${firstSentence(exception.reason)} */}`,
-        )
-        .join("\n\n"),
+            `// biome-ignore ${target}: ${exception.scope} — ${firstSentence(exception.reason)}`,
+        ),
+        "",
+        "// Between JSX children, where a comment has to be an expression, the same",
+        "// line is written {/* biome-ignore … */}.",
+      ].join("\n"),
     })
   }
 
