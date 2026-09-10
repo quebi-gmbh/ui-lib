@@ -1,50 +1,69 @@
 "use client"
 
-import { type FieldMetadata, getInputProps } from "@conform-to/react"
+import type { FieldMetadata } from "@conform-to/react"
 import type { CheckboxProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { Checkbox } from "@/components/checkbox"
+import { describedBy, Description, Field, FieldError } from "@/components/field"
 
-interface ConformCheckboxProps extends Omit<CheckboxProps, "name" | "defaultSelected"> {
-  // A checkbox bound to a boolean form value. Only
-  // name/defaultChecked/required/errors are read off the metadata.
+export interface ConformCheckboxProps
+  extends Omit<
+    CheckboxProps,
+    "name" | "form" | "value" | "defaultSelected" | "isSelected" | "isRequired" | "isInvalid"
+  > {
+  /** A checkbox bound to a boolean form value. */
   field: FieldMetadata<boolean>
   label?: string
+  description?: string
 }
 
 /**
  * ConformCheckbox — Checkbox wired to Conform.
  *
- * Binds a boolean Conform field to the quebi Checkbox: derives name, required,
- * default, and validity from the field metadata and renders inline errors.
+ * Binds a boolean Conform field to the quebi Checkbox: derives name, form,
+ * required, default, and validity from the field metadata and renders inline
+ * errors.
+ *
+ * `getInputProps(field, { type: "checkbox" })` must not be spread onto this
+ * control. Conform returns the DOM names, `defaultChecked` and `required`, and
+ * react-aria's Checkbox takes `defaultSelected` and `isRequired`: the spread
+ * type-checks (JSX skips excess-property checking) and then `filterDOMProps`
+ * drops both, so the box renders unchecked after a failed submit with nothing
+ * in the DOM to show for it.
  */
-export function ConformCheckbox({ field, label, className, ...props }: ConformCheckboxProps) {
+export function ConformCheckbox({
+  field,
+  label,
+  description,
+  className,
+  ...props
+}: ConformCheckboxProps) {
   const hasErrors = !field.valid && !!field.errors
-  const inputProps = getInputProps(field, { type: "checkbox" })
+  const isRequired = field.required ?? false
 
   return (
-    <div className="flex flex-col gap-2">
+    <Field className={cn("flex flex-col gap-2", className)}>
       <Checkbox
         {...props}
-        {...inputProps}
+        name={field.name}
+        form={field.formId}
+        value="on"
         defaultSelected={field.defaultChecked}
-        isRequired={field.required ?? false}
+        isRequired={isRequired}
         isInvalid={hasErrors}
-        className={cn(className)}
+        aria-describedby={describedBy(
+          hasErrors && field.errorId,
+          description && field.descriptionId,
+        )}
       >
         {label}
+        {isRequired && <span className="ml-1 text-quebi-brand">*</span>}
       </Checkbox>
-      {/* getInputProps() puts aria-describedby={field.errorId} on the control
-          whenever the field is invalid, so the message has to carry that id —
-          without it the attribute points at nothing and the error is never
-          announced. RAC's <FieldError> is not usable here: it renders null
-          unless a FieldErrorContext supplies isInvalid, and a bare Checkbox
-          (unlike TextField or CheckboxGroup) provides none. */}
-      {hasErrors && (
-        <p id={field.errorId} className="block text-[12px] text-red-500">
-          {field.errors?.join(", ")}
-        </p>
-      )}
-    </div>
+      {/* These ids are ours to set: a bare Checkbox is not a react-aria field
+          (unlike CheckboxGroup, which supplies a FieldErrorContext), so nothing
+          generates them and the aria-describedby above is their only reference. */}
+      {description && <Description id={field.descriptionId}>{description}</Description>}
+      {hasErrors && <FieldError id={field.errorId}>{field.errors?.join(", ")}</FieldError>}
+    </Field>
   )
 }

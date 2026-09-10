@@ -3,20 +3,22 @@
 import type { FieldMetadata } from "@conform-to/react"
 import { type CalendarDate, parseDate } from "@internationalized/date"
 import type { DateValue } from "react-aria-components"
-import { DatePicker, type DatePickerProps, DatePickerTrigger } from "@/components/date-picker"
-import { FieldError, Label } from "@/components/field"
 import { cn } from "@/lib/utils"
+import { DatePicker, type DatePickerProps, DatePickerTrigger } from "@/components/date-picker"
+import { Description, FieldError, Label } from "@/components/field"
 
-interface ConformDatePickerProps
+export interface ConformDatePickerProps
   extends Omit<
     DatePickerProps<DateValue>,
-    "children" | "name" | "defaultValue" | "isRequired" | "isInvalid"
+    "children" | "name" | "form" | "value" | "defaultValue" | "isRequired" | "isInvalid"
   > {
-  // A date field: the wire value is an ISO string that Conform coerces to a Date,
-  // so the metadata carries `Date | string`. Only
-  // name/initialValue/required/errors are read off the metadata.
+  /**
+   * A date field: the wire value is an ISO `YYYY-MM-DD` string that Conform
+   * coerces to a Date, so the metadata carries `Date | string`.
+   */
   field: FieldMetadata<Date | string>
   label?: string
+  description?: string
 }
 
 /** Parse a Conform field's string default (ISO `YYYY-MM-DD`) into a CalendarDate.
@@ -33,18 +35,27 @@ function toDefaultValue(value: unknown): CalendarDate | undefined {
 /**
  * ConformDatePicker — DatePicker wired to Conform.
  *
- * Binds a date Conform field to the quebi DatePicker: derives name, required,
- * default, and validity from the field metadata and renders inline errors. The
- * control submits an ISO `YYYY-MM-DD` string via its hidden input.
+ * Binds a date Conform field to the quebi DatePicker: derives name, id, form,
+ * required, default, and validity from the field metadata and renders inline
+ * errors. The control submits an ISO `YYYY-MM-DD` string via the hidden input
+ * react-aria renders for it.
  */
-export function ConformDatePicker({ field, label, className, ...props }: ConformDatePickerProps) {
+export function ConformDatePicker({
+  field,
+  label,
+  description,
+  className,
+  ...props
+}: ConformDatePickerProps) {
   const hasErrors = !field.valid && !!field.errors
   const isRequired = field.required ?? false
 
   return (
     <DatePicker
       {...props}
+      id={field.id}
       name={field.name}
+      form={field.formId}
       defaultValue={toDefaultValue(field.initialValue)}
       isRequired={isRequired}
       isInvalid={hasErrors}
@@ -57,6 +68,9 @@ export function ConformDatePicker({ field, label, className, ...props }: Conform
         </Label>
       )}
       <DatePickerTrigger />
+      {/* No ids on these two: the react-aria field generates its own for the
+          description and error slots and already points the control at them. */}
+      {description && <Description>{description}</Description>}
       {hasErrors && <FieldError>{field.errors?.join(", ")}</FieldError>}
     </DatePicker>
   )
