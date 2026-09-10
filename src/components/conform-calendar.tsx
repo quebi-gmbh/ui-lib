@@ -3,10 +3,18 @@
 import type { FieldMetadata } from "@conform-to/react"
 import { BaseControl, useControl } from "@conform-to/react/future"
 import { type CalendarDate, parseDate } from "@internationalized/date"
+import { useRef } from "react"
 import type { CalendarProps, DateValue } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { Calendar } from "@/components/calendar"
-import { describedBy, Description, Field, FieldError, Label } from "@/components/field"
+import {
+  describedBy,
+  Description,
+  Field,
+  FieldError,
+  focusFirstControl,
+  Label,
+} from "@/components/field"
 
 export interface ConformCalendarProps
   extends Omit<
@@ -41,8 +49,10 @@ function toCalendarDate(value: string | undefined): CalendarDate | null {
  * Reach for `conform-date-picker` unless the calendar has to stay on screen;
  * the popover variant is the common case and needs no custom control.
  *
- * `BaseControl` renders the input with the `hidden` attribute and no React
- * `value` prop; both matter, see `conform-time-field`.
+ * `BaseControl` renders the input with no React `value` prop and no
+ * `type="hidden"`, and this passes `hidden={false}` so the input stays
+ * focusable for Conform's focus-on-error; all three matter and all three fail
+ * silently — see `conform-time-field`.
  */
 export function ConformCalendar({
   field,
@@ -51,12 +61,20 @@ export function ConformCalendar({
   className,
   ...props
 }: ConformCalendarProps) {
-  const control = useControl({ defaultValue: (field.initialValue as string) ?? "" })
+  const fieldRef = useRef<HTMLDivElement>(null)
+  const control = useControl({
+    defaultValue: (field.initialValue as string) ?? "",
+    // Conform focuses the first errored field after a failed submit; that is
+    // the registered control, which nobody can see — hand it to the visible one.
+    onFocus() {
+      focusFirstControl(fieldRef.current)
+    },
+  })
   const hasErrors = !field.valid && !!field.errors
   const isRequired = field.required ?? false
 
   return (
-    <Field className={cn("flex w-fit flex-col gap-1.5", className)}>
+    <Field ref={fieldRef} className={cn("flex w-fit flex-col gap-1.5", className)}>
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>
           {label}
@@ -69,6 +87,9 @@ export function ConformCalendar({
         form={field.formId}
         ref={control.register}
         defaultValue={control.defaultValue ?? ""}
+        hidden={false}
+        tabIndex={-1}
+        className="sr-only"
       />
 
       <Calendar

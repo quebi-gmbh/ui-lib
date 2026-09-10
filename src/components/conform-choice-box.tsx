@@ -2,9 +2,17 @@
 
 import type { FieldMetadata } from "@conform-to/react"
 import { BaseControl, useControl } from "@conform-to/react/future"
+import { useRef } from "react"
 import { cn } from "@/lib/utils"
 import { ChoiceBox, type ChoiceBoxProps } from "@/components/choice-box"
-import { describedBy, Description, Field, FieldError, Label } from "@/components/field"
+import {
+  describedBy,
+  Description,
+  Field,
+  FieldError,
+  focusFirstControl,
+  Label,
+} from "@/components/field"
 
 export interface ConformChoiceBoxProps<T extends object>
   extends Omit<
@@ -43,8 +51,9 @@ function toDefaultKeys(initialValue: unknown): string[] {
  *
  * ChoiceBox is a react-aria GridList: it has no `name`, renders no native form
  * control, and its value is a `Set<Key>` rather than a string — so without the
- * hidden control it submits nothing. `BaseControl` renders it with the `hidden`
- * attribute and no React `value` prop; both matter, see `conform-time-field`.
+ * hidden control it submits nothing. It is hidden by CSS rather than by the
+ * `hidden` attribute, and carries no React `value` prop; both matter and both
+ * fail silently — see `conform-time-field`.
  *
  * The registered control mirrors the selection mode, because that is what
  * decides whether an *empty* selection still submits the field:
@@ -73,8 +82,14 @@ export function ConformChoiceBox<T extends object>({
 }: ConformChoiceBoxProps<T>) {
   const isMultiple = selectionMode === "multiple"
   const defaultKeys = toDefaultKeys(field.initialValue)
+  const fieldRef = useRef<HTMLDivElement>(null)
   const control = useControl<string | string[]>({
     defaultValue: isMultiple ? defaultKeys : (defaultKeys[0] ?? ""),
+    // Conform focuses the first errored field after a failed submit; that is
+    // the registered control, which nobody can see — hand it to the visible one.
+    onFocus() {
+      focusFirstControl(fieldRef.current)
+    },
   })
   const hasErrors = !field.valid && !!field.errors
   const isRequired = field.required ?? false
@@ -85,7 +100,7 @@ export function ConformChoiceBox<T extends object>({
       : []
 
   return (
-    <Field className={cn("flex flex-col gap-1.5", className)}>
+    <Field ref={fieldRef} className={cn("flex flex-col gap-1.5", className)}>
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>
           {label}
@@ -100,6 +115,9 @@ export function ConformChoiceBox<T extends object>({
         form={field.formId}
         ref={control.register}
         defaultValue={control.defaultValue ?? (isMultiple ? [] : "")}
+        hidden={false}
+        tabIndex={-1}
+        className="sr-only"
       />
 
       <ChoiceBox<T>

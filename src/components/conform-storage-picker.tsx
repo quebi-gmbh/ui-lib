@@ -1,11 +1,20 @@
 "use client"
 
 import type { FieldMetadata } from "@conform-to/react"
-import { useEffect, useState } from "react"
+import { BaseControl } from "@conform-to/react/future"
+import { useRef } from "react"
 import { Button } from "react-aria-components"
 import type { ListData } from "react-stately"
+import { type ConformListItem, useConformListControl } from "@/lib/conform-list-control"
 import { cn } from "@/lib/utils"
-import { describedBy, Description, Field, FieldError, Label } from "@/components/field"
+import {
+  describedBy,
+  Description,
+  Field,
+  FieldError,
+  focusFirstControl,
+  Label,
+} from "@/components/field"
 
 /**
  * Device storage helpers (inlined to keep this component self-contained).
@@ -39,13 +48,23 @@ export function normalizeStorageValue(value: string | number): number {
   return unit === "tb" ? Math.round(amount * 1024) : Math.round(amount)
 }
 
+/** The label a free-form storage value is stored and submitted under. */
+const canonicalStorageLabel = (name: string) =>
+  formatStorageDisplay(normalizeStorageValue(name))
+
 export interface ConformStoragePickerProps {
   // A list-backed field: the storage labels surface as a comma-joined string on
   // the wire (`string`) or an array after parsing (`string[]`); only
   // name/default/required/errors/valid are read off the metadata.
   field: FieldMetadata<string | string[]>
   label?: string
-  list: ListData<{ id: number; name: string }>
+  /**
+   * Optional react-stately list mirroring the selection, so the same sizes can
+   * be rendered and removed as tags elsewhere on the page. The picker owns the
+   * value either way: removing an item pushes into the field, and a reset or a
+   * `form.update()` re-seeds the list.
+   */
+  list?: ListData<ConformListItem>
   description?: string
   className?: string
 }
@@ -54,15 +73,15 @@ export interface ConformStoragePickerProps {
  * ConformStoragePicker — a multi-select chip group of device storage sizes,
  * wired to Conform.
  *
- * Selected sizes are kept in a react-stately list (so they can be surfaced as
- * removable tags elsewhere) and mirrored into a hidden input as a comma-joined
- * string for form submission. Validity is derived from the Conform field.
+ * The selected sizes are submitted as one comma-joined string (e.g.
+ * `"128GB,1TB"`) through a registered hidden control, so they repopulate after
+ * a failed submit and reset with the form like every other variant. Validity
+ * and the error message come from the field.
  *
- * Unlike the other variants this one does not own its value: the selection
- * lives in the `list` the caller passes, which is what lets the same sizes be
- * rendered and removed elsewhere on the page. Repopulation after a failed
- * submit therefore comes from re-seeding that list from `field.initialValue` —
- * Conform cannot reset a list it does not own.
+ * `list` is optional and is a projection of that value rather than its home —
+ * see `@/lib/conform-list-control` for why. The default selection is the
+ * field's, not the list's: seed `useForm({ defaultValue: { storage: "128GB" } })`
+ * and the list follows, which is also what a reset goes back to.
  */
 export function ConformStoragePicker({
   field,
@@ -71,56 +90,21 @@ export function ConformStoragePicker({
   description,
   className,
 }: ConformStoragePickerProps) {
-  // Normalize existing storage values on mount (convert to "128GB" / "1TB" form).
-  useEffect(() => {
-    for (const item of list.items) {
-      const normalized = normalizeStorageValue(item.name)
-      const formatted = formatStorageDisplay(normalized)
-      if (formatted !== item.name) {
-        list.update(item.id, { ...item, name: formatted })
-      }
-    }
-  }, [list])
-
-  const [selectedStorage, setSelectedStorage] = useState<Set<number>>(
-    new Set(list.items.map((item) => normalizeStorageValue(item.name))),
-  )
-
+  const fieldRef = useRef<HTMLDivElement>(null)
+  const selection = useConformListControl({
+    initialValue: field.initialValue,
+    list,
+    canonicalize: canonicalStorageLabel,
+    // Conform focuses the first errored field after a failed submit; that is
+    // the registered control, which nobody can see — hand it to the visible one.
+    onFocus() {
+      focusFirstControl(fieldRef.current)
+    },
+  })
   const hasErrors = !field.valid && !!field.errors
 
-  const handleStorageToggle = (storageGb: number) => {
-    const newSelection = new Set(selectedStorage)
-
-    if (newSelection.has(storageGb)) {
-      // Remove storage
-      newSelection.delete(storageGb)
-      const formatted = formatStorageDisplay(storageGb)
-      const item = list.items.find((i) => i.name === formatted)
-      if (item) {
-        list.remove(item.id)
-      }
-    } else {
-      // Add storage
-      newSelection.add(storageGb)
-      const maxId = list.items.length > 0 ? Math.max(...list.items.map((i) => i.id)) : 0
-      const formatted = formatStorageDisplay(storageGb)
-      list.append({ id: maxId + 1, name: formatted })
-    }
-
-    setSelectedStorage(newSelection)
-  }
-
-  // Sync state when the list changes externally (e.g. a tag is removed elsewhere).
-  const currentStorageValues = new Set(list.items.map((item) => normalizeStorageValue(item.name)))
-  if (
-    selectedStorage.size !== currentStorageValues.size ||
-    !Array.from(selectedStorage).every((s) => currentStorageValues.has(s))
-  ) {
-    setSelectedStorage(currentStorageValues)
-  }
-
   return (
-    <Field className={cn("space-y-2", className)}>
+    <Field ref={fieldRef} className={cn("space-y-2", className)}>
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>
           {label}
@@ -132,6 +116,16 @@ export function ConformStoragePicker({
           nothing generates them and the aria-describedby below is their only
           reference. */}
       {description && <Description id={field.descriptionId}>{description}</Description>}
+
+      <BaseControl
+        name={field.name}
+        form={field.formId}
+        ref={selection.register}
+        defaultValue={selection.defaultValue}
+        hidden={false}
+        tabIndex={-1}
+        className="sr-only"
+      />
 
       {/* A <fieldset> rather than a div wearing role="group": these chips are a
           group of form controls, which is the one thing the element is for.
@@ -147,11 +141,13 @@ export function ConformStoragePicker({
         )}
       >
         {DEVICE_STORAGE_OPTIONS.map((storageGb) => {
-          const isSelected = selectedStorage.has(storageGb)
+          const value = formatStorageDisplay(storageGb)
+          const isSelected = selection.isSelected(value)
           return (
             <Button
               key={storageGb}
-              onPress={() => handleStorageToggle(storageGb)}
+              aria-pressed={isSelected}
+              onPress={() => selection.toggle(value)}
               className={cn(
                 "rounded-quebi-sm px-3 py-1.5 font-medium text-sm transition-all duration-150",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
@@ -160,19 +156,11 @@ export function ConformStoragePicker({
                   : "border border-quebi-line/20 bg-transparent text-quebi-fg-muted hover:-translate-y-0.5 hover:text-quebi-fg",
               )}
             >
-              {formatStorageDisplay(storageGb)}
+              {value}
             </Button>
           )
         })}
       </fieldset>
-
-      {/* Hidden input to sync selection with the form. */}
-      <input
-        type="hidden"
-        name={field.name}
-        form={field.formId}
-        value={list.items.map((item) => item.name).join(",")}
-      />
 
       {hasErrors && <FieldError id={field.errorId}>{field.errors?.join(", ")}</FieldError>}
     </Field>

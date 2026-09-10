@@ -29,9 +29,28 @@ import { parseWithValibot } from "@conform-to/valibot"
 import { act } from "react"
 import { createRoot } from "react-dom/client"
 import { FieldError, Input, Label, TextField } from "react-aria-components"
+import { useListData } from "react-stately"
 import * as v from "valibot"
+import { ChoiceBoxItem, ChoiceBoxLabel } from "../src/components/choice-box"
+import { ConformCalendar } from "../src/components/conform-calendar"
+import { ConformChoiceBox } from "../src/components/conform-choice-box"
+import { ConformColorPicker } from "../src/components/conform-color-picker"
+import { ConformColorSwatchPicker } from "../src/components/conform-color-swatch-picker"
+import {
+  type ConformDateRange,
+  ConformDateRangePicker,
+} from "../src/components/conform-date-range-picker"
+import { ConformDaySchedule } from "../src/components/conform-day-schedule"
 import { ConformField } from "../src/components/conform-field"
+import { ConformFileTrigger } from "../src/components/conform-file-trigger"
+import {
+  type ConformCalendarRange,
+  ConformRangeCalendar,
+} from "../src/components/conform-range-calendar"
+import { ConformStoragePicker } from "../src/components/conform-storage-picker"
 import { ConformSwitch } from "../src/components/conform-switch"
+import { ConformTimeField } from "../src/components/conform-time-field"
+import type { DaySpan } from "../src/components/day-schedule"
 import { Switch } from "../src/components/switch"
 
 // Mounting by hand means unmounting by hand: React Testing Library's automatic
@@ -264,5 +283,319 @@ describe("react-aria owns the ids inside its own fields", () => {
     expect(message.id).not.toBe("")
     expect(input.getAttribute("aria-describedby")?.split(" ")).toContain(message.id)
     expect(input).toHaveAccessibleDescription("Turn maintenance off before saving")
+  })
+})
+
+describe("the list-backed pickers own their value", () => {
+  // ConformStoragePicker and ConformColorSwatchPicker used to keep the
+  // selection in a react-stately list the caller passed and mirror it into
+  // `<input type="hidden" value={…} />`. That submits, and nothing else: a
+  // reset writes the elements Conform has registered, and a React-controlled
+  // mirror is not one of them, so the chips stayed where the user left them
+  // while the rest of the form snapped back. The value now lives in a
+  // registered control and the list is a projection of it — which is only
+  // observable through a reset, an update, and a change made from the list.
+  const chip = (container: HTMLElement, text: string) =>
+    Array.from(container.querySelectorAll("button")).find((b) => b.textContent === text)
+
+  const press = async (container: HTMLElement, text: string) => {
+    await act(async () => {
+      chip(container, text)?.click()
+    })
+  }
+
+  const tags = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll('[data-testid="tags"] li')).map((li) => li.textContent)
+
+  describe("without a list, the picker is the only owner", () => {
+    function App() {
+      const [form, fields] = useForm({ defaultValue: { storage: "128GB" } })
+      return (
+        <form id={form.id} onSubmit={form.onSubmit} noValidate>
+          <ConformStoragePicker field={fields.storage} label="Storage" />
+        </form>
+      )
+    }
+
+    test("the field's default is the selection, in FormData and in the chips", async () => {
+      const container = await mount(<App />)
+      expect(new FormData(formOf(container)).get("storage")).toBe("128GB")
+      expect(chip(container, "128GB")?.getAttribute("aria-pressed")).toBe("true")
+      expect(chip(container, "1TB")?.getAttribute("aria-pressed")).toBe("false")
+    })
+
+    test("toggling a chip reaches FormData", async () => {
+      const container = await mount(<App />)
+      await press(container, "1TB")
+      expect(new FormData(formOf(container)).get("storage")).toBe("128GB,1TB")
+      await press(container, "128GB")
+      expect(new FormData(formOf(container)).get("storage")).toBe("1TB")
+    })
+
+    test("a form reset snaps the selection back to the field's default", async () => {
+      const container = await mount(<App />)
+      await press(container, "1TB")
+      const form = formOf(container)
+      await act(async () => {
+        form.reset()
+      })
+      expect(new FormData(form).get("storage")).toBe("128GB")
+      expect(chip(container, "1TB")?.getAttribute("aria-pressed")).toBe("false")
+    })
+
+    // `form.update({ name, value })` is deliberately not asserted here: it
+    // reaches the picker by the same route a reset does — Conform writing the
+    // registered element — but its intent is dispatched through
+    // `form.requestSubmit(submitter)`, and happy-dom's requestSubmit fires no
+    // submit event, so the intent never runs. It does not run for a plain
+    // <input> in this environment either. Reset is the assertion that covers
+    // the route.
+  })
+
+  describe("with a list, the list follows the value", () => {
+    function App() {
+      const list = useListData<{ id: number; name: string }>({ initialItems: [] })
+      const [form, fields] = useForm({ defaultValue: { storage: "256GB,1TB" } })
+      return (
+        <form id={form.id} onSubmit={form.onSubmit} noValidate>
+          <ConformStoragePicker field={fields.storage} label="Storage" list={list} />
+          <ul data-testid="tags">
+            {list.items.map((item) => (
+              <li key={item.id}>{item.name}</li>
+            ))}
+          </ul>
+          <button
+            type="button"
+            data-testid="drop"
+            onClick={() => {
+              const first = list.items[0]
+              if (first) list.remove(first.id)
+            }}
+          >
+            drop
+          </button>
+        </form>
+      )
+    }
+
+    test("the list is seeded from the field, not the other way round", async () => {
+      const container = await mount(<App />)
+      expect(tags(container)).toEqual(["256GB", "1TB"])
+      expect(new FormData(formOf(container)).get("storage")).toBe("256GB,1TB")
+    })
+
+    test("a toggle here shows up in the list", async () => {
+      const container = await mount(<App />)
+      await press(container, "512GB")
+      expect(tags(container)).toEqual(["256GB", "1TB", "512GB"])
+    })
+
+    test("removing an item elsewhere writes the field", async () => {
+      const container = await mount(<App />)
+      await click(container, "drop")
+      expect(new FormData(formOf(container)).get("storage")).toBe("1TB")
+      expect(chip(container, "256GB")?.getAttribute("aria-pressed")).toBe("false")
+    })
+
+    test("a form reset re-seeds the list as well as the field", async () => {
+      const container = await mount(<App />)
+      await click(container, "drop")
+      await press(container, "32GB")
+      const form = formOf(container)
+      await act(async () => {
+        form.reset()
+      })
+      expect(new FormData(form).get("storage")).toBe("256GB,1TB")
+      expect(tags(container)).toEqual(["256GB", "1TB"])
+    })
+  })
+
+  describe("a caller-seeded list is the fallback default, and is canonicalized", () => {
+    function App() {
+      const list = useListData<{ id: number; name: string }>({
+        initialItems: [{ id: 1, name: "512 gb" }],
+      })
+      const [form, fields] = useForm<{ storage: string }>({})
+      return (
+        <form id={form.id} onSubmit={form.onSubmit} noValidate>
+          <ConformStoragePicker field={fields.storage} label="Storage" list={list} />
+          <ul data-testid="tags">
+            {list.items.map((item) => (
+              <li key={item.id}>{item.name}</li>
+            ))}
+          </ul>
+        </form>
+      )
+    }
+
+    test("a field with no default falls back to what the caller seeded", async () => {
+      const container = await mount(<App />)
+      expect(new FormData(formOf(container)).get("storage")).toBe("512GB")
+      // The free-form label is rewritten in the caller's list too, so the keys
+      // on the wire are the ones the picker offers.
+      expect(tags(container)).toEqual(["512GB"])
+      expect(chip(container, "512GB")?.getAttribute("aria-pressed")).toBe("true")
+    })
+  })
+
+  describe("the colour swatch picker is bound the same way", () => {
+    function App() {
+      const list = useListData<{ id: number; name: string }>({ initialItems: [] })
+      const [form, fields] = useForm({ defaultValue: { colors: ["teal"] } })
+      return (
+        <form id={form.id} onSubmit={form.onSubmit} noValidate>
+          <ConformColorSwatchPicker field={fields.colors} label="Colors" list={list} />
+          <ul data-testid="tags">
+            {list.items.map((item) => (
+              <li key={item.id}>{item.name}</li>
+            ))}
+          </ul>
+        </form>
+      )
+    }
+
+    const swatch = (container: HTMLElement, key: string) =>
+      container.querySelector<HTMLElement>(`[aria-label="${key}"]`)
+
+    test("the field's default selects a swatch and seeds the list", async () => {
+      const container = await mount(<App />)
+      expect(new FormData(formOf(container)).get("colors")).toBe("teal")
+      expect(tags(container)).toEqual(["teal"])
+    })
+
+    test("a form reset snaps the selection and the list back", async () => {
+      const container = await mount(<App />)
+      await act(async () => {
+        swatch(container, "red")?.click()
+      })
+      expect(new FormData(formOf(container)).get("colors")).toBe("teal,red")
+      expect(tags(container)).toEqual(["teal", "red"])
+
+      const form = formOf(container)
+      await act(async () => {
+        form.reset()
+      })
+      expect(new FormData(form).get("colors")).toBe("teal")
+      expect(tags(container)).toEqual(["teal"])
+    })
+  })
+})
+
+describe("the registered control stays focusable for Conform's focus-on-error", () => {
+  // After a failed submit, Conform v1 focuses the first errored field with a
+  // bare `element.focus()`. For a control with no native form value that field
+  // is the registered `BaseControl`, and a real browser no-ops `.focus()` on an
+  // element carrying the `hidden` attribute: the focus lands nowhere, no
+  // `focusin` fires, and `useControl`'s `onFocus` never gets to forward it to
+  // the control the user can see. Checked in Chrome — task #11.
+  //
+  // Neither jsdom nor happy-dom models that. Both focus hidden elements and
+  // fire `focusin`, so an end-to-end assertion here would pass either way and
+  // prove nothing. What is pinned instead is the shape the browser needs:
+  // hidden by CSS, `tabIndex={-1}`, and no `hidden` attribute — which is
+  // exactly what was wrong.
+  /** One form, one field named `value`, whatever type the variant binds. */
+  function bound<Value>(render: (field: FieldMetadata<Value>) => React.ReactNode) {
+    return function App() {
+      const [form, fields] = useForm<{ value: Value }>({})
+      return (
+        <form id={form.id} onSubmit={form.onSubmit} noValidate>
+          {render(fields.value)}
+        </form>
+      )
+    }
+  }
+
+  const variants: Array<[string, () => React.ReactElement]> = [
+    ["conform-time-field", bound<string>((f) => <ConformTimeField field={f} label="Opens at" />)],
+    [
+      "conform-calendar",
+      bound<Date | string>((f) => <ConformCalendar field={f} label="Visit on" />),
+    ],
+    ["conform-color-picker", bound<string>((f) => <ConformColorPicker field={f} label="Brand" />)],
+    [
+      "conform-day-schedule",
+      bound<string | DaySpan[]>((f) => <ConformDaySchedule field={f} label="Agenda" />),
+    ],
+    [
+      "conform-choice-box",
+      bound<string | string[]>((f) => (
+        <ConformChoiceBox field={f} label="Plan" items={[{ id: "a", name: "A" }]}>
+          {(item: { id: string; name: string }) => (
+            <ChoiceBoxItem id={item.id} textValue={item.name}>
+              <ChoiceBoxLabel>{item.name}</ChoiceBoxLabel>
+            </ChoiceBoxItem>
+          )}
+        </ConformChoiceBox>
+      )),
+    ],
+    ["conform-file-trigger", bound<File>((f) => <ConformFileTrigger field={f} label="Avatar" />)],
+    [
+      "conform-date-range-picker",
+      bound<ConformDateRange>((f) => <ConformDateRangePicker field={f} label="Stay" />),
+    ],
+    [
+      "conform-range-calendar",
+      bound<ConformCalendarRange>((f) => <ConformRangeCalendar field={f} label="Trip" />),
+    ],
+    // The two list-backed pickers reach `useControl` through
+    // `useConformListControl`, so they need the same shape and the same forward.
+    [
+      "conform-storage-picker",
+      bound<string | string[]>((f) => <ConformStoragePicker field={f} label="Storage" />),
+    ],
+    [
+      "conform-color-swatch-picker",
+      bound<string | string[]>((f) => <ConformColorSwatchPicker field={f} label="Colors" />),
+    ],
+  ]
+
+  for (const [slug, App] of variants) {
+    test(`${slug} hides its registered control with CSS, not with the attribute`, async () => {
+      const container = await mount(<App />)
+      const registered = container.querySelector('[name="value"]') as HTMLElement
+      expect(registered).not.toBeNull()
+      // The three things a real browser reads before it agrees to focus it.
+      expect(registered.hasAttribute("hidden")).toBe(false)
+      expect(registered.getAttribute("tabindex")).toBe("-1")
+      expect(registered.className).toContain("sr-only")
+      // And the one that keeps it a working form value — see conform-time-field.
+      expect(registered.getAttribute("type")).not.toBe("hidden")
+    })
+  }
+
+  test("the forward lands on the visible control, not back on the registered one", async () => {
+    const App = bound<File>((f) => <ConformFileTrigger field={f} label="Avatar" />)
+    const container = await mount(<App />)
+    const registered = container.querySelector('[name="value"]') as HTMLElement
+    // Exactly what @conform-to/dom v1 does to the first errored field.
+    await act(async () => {
+      registered.focus()
+    })
+    const active = document.activeElement as HTMLElement
+    expect(active).not.toBe(registered)
+    expect(active?.tagName).toBe("BUTTON")
+    expect(active?.textContent).toContain("Browse")
+  })
+
+  test("the swatch grid's forward lands on a swatch option", async () => {
+    // Task #11 verified this forward in Chrome against a ColorSwatchPicker; the
+    // grid is a multi-select ListBox now (task #15), so the element the forward
+    // lands on is a different one. `focusFirstControl` walks `[tabindex]` and
+    // skips anything negative, which is what makes the listbox's own roving
+    // tabindex — -1 on the container, 0 on the current option — resolve to the
+    // option rather than to the wrapper.
+    const App = bound<string | string[]>((f) => (
+      <ConformColorSwatchPicker field={f} label="Colors" />
+    ))
+    const container = await mount(<App />)
+    const registered = container.querySelector('[name="value"]') as HTMLElement
+    await act(async () => {
+      registered.focus()
+    })
+    const active = document.activeElement as HTMLElement
+    expect(active).not.toBe(registered)
+    expect(active?.getAttribute("role")).toBe("option")
+    expect(active?.getAttribute("aria-label")).toBe("black")
   })
 })

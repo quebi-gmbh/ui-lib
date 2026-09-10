@@ -2,6 +2,7 @@
 
 import type { FieldMetadata } from "@conform-to/react"
 import { BaseControl, useControl } from "@conform-to/react/future"
+import { useRef } from "react"
 import type { Color } from "react-aria-components"
 import { ColorPicker as ColorPickerPrimitive, parseColor } from "react-aria-components"
 import { cn } from "@/lib/utils"
@@ -11,7 +12,14 @@ import { EyeDropper } from "@/components/color-picker"
 import { ColorSlider, ColorSliderThumb, ColorSliderTrack } from "@/components/color-slider"
 import { ColorSwatch } from "@/components/color-swatch"
 import { Dialog } from "@/components/dialog"
-import { describedBy, Description, Field, FieldError, Label } from "@/components/field"
+import {
+  describedBy,
+  Description,
+  Field,
+  FieldError,
+  focusFirstControl,
+  Label,
+} from "@/components/field"
 import { Popover, PopoverBody, PopoverContent, PopoverTrigger } from "@/components/popover"
 
 export interface ConformColorPickerProps {
@@ -41,9 +49,9 @@ function tryParseColor(hex: string): Color | null {
  * eyedropper, submitted through a registered hidden input.
  *
  * The hex string lives in Conform's state rather than in `useState`, so it
- * survives a failed submit and snaps back on a form reset. `BaseControl`
- * renders the input with the `hidden` attribute and no React `value` prop; both
- * matter, see `conform-time-field`.
+ * survives a failed submit and snaps back on a form reset. The registered input
+ * is hidden by CSS rather than by the `hidden` attribute, and carries no React
+ * `value` prop; both matter and both fail silently — see `conform-time-field`.
  */
 export function ConformColorPicker({
   field,
@@ -53,7 +61,15 @@ export function ConformColorPicker({
   className,
   onValueChange,
 }: ConformColorPickerProps) {
-  const control = useControl({ defaultValue: (field.initialValue as string) ?? "" })
+  const fieldRef = useRef<HTMLDivElement>(null)
+  const control = useControl({
+    defaultValue: (field.initialValue as string) ?? "",
+    // Conform focuses the first errored field after a failed submit; that is
+    // the registered control, which nobody can see — hand it to the visible one.
+    onFocus() {
+      focusFirstControl(fieldRef.current)
+    },
+  })
   const hasErrors = !field.valid && !!field.errors
   const isRequired = field.required ?? false
 
@@ -70,7 +86,7 @@ export function ConformColorPicker({
   }
 
   return (
-    <Field className={cn(className)}>
+    <Field ref={fieldRef} className={cn(className)}>
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>
           {label}
@@ -83,6 +99,9 @@ export function ConformColorPicker({
         form={field.formId}
         ref={control.register}
         defaultValue={control.defaultValue ?? ""}
+        hidden={false}
+        tabIndex={-1}
+        className="sr-only"
       />
 
       <ColorPickerPrimitive value={color} onChange={handleColorChange}>

@@ -1,13 +1,22 @@
 "use client"
 
 import type { FieldMetadata } from "@conform-to/react"
-import { useState } from "react"
+import { BaseControl } from "@conform-to/react/future"
+import { useRef } from "react"
 import type { Selection } from "react-aria-components"
 import { ListBox, ListBoxItem } from "react-aria-components"
 import type { ListData } from "react-stately"
+import { type ConformListItem, useConformListControl } from "@/lib/conform-list-control"
 import { cn } from "@/lib/utils"
 import { ColorSwatch } from "@/components/color-swatch"
-import { describedBy, Description, Field, FieldError, Label } from "@/components/field"
+import {
+  describedBy,
+  Description,
+  Field,
+  FieldError,
+  focusFirstControl,
+  Label,
+} from "@/components/field"
 
 /** A selectable color: a stable `key` submitted to the form plus its `hex` swatch. */
 export interface SwatchColor {
@@ -39,8 +48,13 @@ export interface ConformColorSwatchPickerProps {
   field: FieldMetadata<string | string[]>
   label?: string
   description?: string
-  /** Conform list-data binding. Each item's `name` is a color key. */
-  list: ListData<{ id: number; name: string }>
+  /**
+   * Optional react-stately list mirroring the selection, so the same colors can
+   * be rendered and removed as tags elsewhere on the page. The picker owns the
+   * value either way: removing an item pushes into the field, and a reset or a
+   * `form.update()` re-seeds the list.
+   */
+  list?: ListData<ConformListItem>
   /** Selectable colors. Defaults to {@link DEFAULT_SWATCH_COLORS}. */
   colors?: SwatchColor[]
   className?: string
@@ -49,7 +63,10 @@ export interface ConformColorSwatchPickerProps {
 /**
  * ConformColorSwatchPicker — multi-select color picker wired to Conform.
  *
- * A wrapping grid of named color swatches that submits an array of color keys.
+ * A wrapping grid of named color swatches whose selected keys are submitted as
+ * one comma-joined string through a registered hidden control, so they
+ * repopulate after a failed submit and reset with the form like every other
+ * variant.
  *
  * The grid is a multi-select `ListBox` rather than the quebi ColorSwatchPicker,
  * and that is the whole point of the component. react-aria's ColorSwatchPicker
@@ -62,12 +79,13 @@ export interface ConformColorSwatchPickerProps {
  * all come from the listbox. The single-select quebi ColorSwatchPicker stays the
  * right component for picking one color.
  *
- * Unlike the other variants this one does not own its value: the selection
- * lives in the `list` the caller passes, because a Conform list binding is what
- * lets the same tags be rendered and removed elsewhere on the page. The hidden
- * input below mirrors that list, so repopulation after a failed submit comes
- * from re-seeding the list from `field.initialValue` — it is the caller's state
- * that has to survive, and Conform cannot reset a list it does not own.
+ * The listbox is the *view* of that selection, not its home: `selectedKeys`
+ * comes off the registered control, and `onSelectionChange` writes back to it.
+ *
+ * `list` is optional and is a projection of that value rather than its home —
+ * see `@/lib/conform-list-control` for why. The default selection is the
+ * field's, not the list's: seed `useForm({ defaultValue: { colors: ["teal"] } })`
+ * and the list follows, which is also what a reset goes back to.
  */
 export function ConformColorSwatchPicker({
   field,
@@ -77,47 +95,30 @@ export function ConformColorSwatchPicker({
   colors = DEFAULT_SWATCH_COLORS,
   className,
 }: ConformColorSwatchPickerProps) {
-  const [selectedKeys, setSelectedKeys] = useState<string[]>(list.items.map((item) => item.name))
-
+  const fieldRef = useRef<HTMLDivElement>(null)
+  const selection = useConformListControl({
+    initialValue: field.initialValue,
+    list,
+    // Conform focuses the first errored field after a failed submit; that is
+    // the registered control, which nobody can see — hand it to the visible one.
+    onFocus() {
+      focusFirstControl(fieldRef.current)
+    },
+  })
   const hasErrors = !field.valid && !!field.errors
 
-  // Sync local state when the list changes externally (e.g. a tag removed elsewhere).
-  const currentKeys = list.items.map((item) => item.name)
-  if (
-    selectedKeys.length !== currentKeys.length ||
-    !selectedKeys.every((c, i) => c === currentKeys[i])
-  ) {
-    setSelectedKeys(currentKeys)
-  }
-
   /**
-   * Apply the listbox's selection to the list and the mirror below it.
+   * Apply the listbox's selection to the control (and through it, to any list).
    *
    * `"all"` reaches here from Ctrl+A, which react-aria reports as the whole
    * collection rather than as a set of keys.
    */
-  const applySelection = (selection: Selection) => {
-    const next =
-      selection === "all" ? colors.map((color) => color.key) : [...selection].map(String)
-    const nextSet = new Set(next)
-
-    for (const item of list.items) {
-      if (!nextSet.has(item.name)) list.remove(item.id)
-    }
-
-    const present = new Set(currentKeys)
-    let nextId = list.items.length > 0 ? Math.max(...list.items.map((i) => i.id)) : 0
-    for (const key of next) {
-      if (present.has(key)) continue
-      nextId += 1
-      list.append({ id: nextId, name: key })
-    }
-
-    setSelectedKeys(next)
+  const applySelection = (next: Selection) => {
+    selection.select(next === "all" ? colors.map((color) => color.key) : [...next].map(String))
   }
 
   return (
-    <Field className={cn("space-y-1.5", className)}>
+    <Field ref={fieldRef} className={cn("space-y-1.5", className)}>
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>
           {label}
@@ -128,6 +129,16 @@ export function ConformColorSwatchPicker({
           so nothing generates them and the aria-describedby below is their only
           reference. */}
       {description && <Description id={field.descriptionId}>{description}</Description>}
+
+      <BaseControl
+        name={field.name}
+        form={field.formId}
+        ref={selection.register}
+        defaultValue={selection.defaultValue}
+        hidden={false}
+        tabIndex={-1}
+        className="sr-only"
+      />
 
       {/* `data-invalid` rather than `aria-invalid`: react-aria's ListBox filters
           its incoming DOM props down to `id`, the labelable set and `data-*`, so
@@ -144,7 +155,7 @@ export function ConformColorSwatchPicker({
         layout="grid"
         selectionMode="multiple"
         selectionBehavior="toggle"
-        selectedKeys={selectedKeys}
+        selectedKeys={selection.keys}
         onSelectionChange={applySelection}
         className="flex flex-wrap gap-2 outline-hidden"
       >
@@ -180,9 +191,6 @@ export function ConformColorSwatchPicker({
           </ListBoxItem>
         ))}
       </ListBox>
-
-      {/* Mirror the selection into the form as a comma-joined list of keys. */}
-      <input type="hidden" name={field.name} form={field.formId} value={currentKeys.join(",")} />
 
       {hasErrors && <FieldError id={field.errorId}>{field.errors?.join(", ")}</FieldError>}
     </Field>

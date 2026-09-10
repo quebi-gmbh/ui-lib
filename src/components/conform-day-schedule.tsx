@@ -2,9 +2,17 @@
 
 import type { FieldMetadata } from "@conform-to/react"
 import { BaseControl, useControl } from "@conform-to/react/future"
+import { useRef } from "react"
 import { cn } from "@/lib/utils"
 import { DaySchedule, type DayScheduleProps, type DaySpan } from "@/components/day-schedule"
-import { describedBy, Description, Field, FieldError, Label } from "@/components/field"
+import {
+  describedBy,
+  Description,
+  Field,
+  FieldError,
+  focusFirstControl,
+  Label,
+} from "@/components/field"
 
 export interface ConformDayScheduleProps
   extends Omit<DayScheduleProps, "spans" | "defaultSpans" | "onSpansChange"> {
@@ -51,15 +59,21 @@ export function ConformDaySchedule({
   className,
   ...props
 }: ConformDayScheduleProps) {
+  const fieldRef = useRef<HTMLDivElement>(null)
   const control = useControl({
     defaultValue: JSON.stringify(parseSpans(field.initialValue as string | undefined, defaultSpans)),
+    // Conform focuses the first errored field after a failed submit; that is
+    // the registered control, which nobody can see — hand it to the visible one.
+    onFocus() {
+      focusFirstControl(fieldRef.current)
+    },
   })
   const hasErrors = !field.valid && !!field.errors
   const isRequired = field.required ?? false
   const spans = parseSpans(control.value, defaultSpans)
 
   return (
-    <Field className={cn("flex flex-col gap-2", className)}>
+    <Field ref={fieldRef} className={cn("flex flex-col gap-2", className)}>
       {label && (
         <Label className={cn("text-sm", hasErrors && "text-red-500")}>
           {label}
@@ -72,6 +86,9 @@ export function ConformDaySchedule({
         form={field.formId}
         ref={control.register}
         defaultValue={control.defaultValue ?? ""}
+        hidden={false}
+        tabIndex={-1}
+        className="sr-only"
       />
 
       <div
