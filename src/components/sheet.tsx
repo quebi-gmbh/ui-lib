@@ -26,6 +26,12 @@ import {
  * Dialog surface inside a react-aria Modal/ModalOverlay. Use for filters,
  * detail editing, navigation drawers, and other off-canvas content.
  *
+ * Two shapes, as with Modal: `Sheet` is react-aria's `DialogTrigger` and takes
+ * a trigger plus a `SheetContent`; when state decides instead — a drawer a
+ * route opens, say — render `SheetContent` on its own with
+ * `isOpen`/`onOpenChange` and leave `Sheet` out. A `Sheet` with a single child
+ * puts that child in its trigger slot, which warns on every render.
+ *
  * Surface tokens: bg-quebi-bg, border-quebi-line/10. Depth via glow, not shadow.
  */
 const Sheet = DialogTriggerPrimitive
@@ -57,6 +63,10 @@ const SheetContent = ({
   isFloat = true,
   overlay,
   children,
+  // Held back from the overlay's props: the label describes the dialog, not the
+  // scrim. Same reasoning as ModalContent.
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledby,
   ...props
 }: SheetContentProps) => {
   const isDismissable = isDismissableInternal ?? role !== "alertdialog"
@@ -79,7 +89,12 @@ const SheetContent = ({
           className,
         )}
       >
-        <Dialog className="sm:[--gutter:--spacing(6)]" aria-label={props["aria-label"]} role={role}>
+        <Dialog
+          className="sm:[--gutter:--spacing(6)]"
+          aria-label={ariaLabel}
+          aria-labelledby={ariaLabelledby}
+          role={role}
+        >
           {(values) => (
             <>
               {typeof children === "function" ? children(values) : children}

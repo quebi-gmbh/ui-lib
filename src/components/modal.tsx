@@ -25,6 +25,36 @@ import {
  * Presents the Dialog surface inside a dark, blurred overlay. Foundational:
  * date-picker and gallery compose this. Overlay: bg-black/60 + backdrop-blur.
  * Panel: bg-quebi-bg, border-quebi-line/10, rounded-quebi-md.
+ *
+ * There are two shapes, and which one you want is decided by what opens the
+ * modal:
+ *
+ * - **An element opens it.** Wrap the pairing in `Modal`, whose two children
+ *   are the trigger and the overlay. `Modal` *is* react-aria's `DialogTrigger`:
+ *   it owns the open state and restores focus to the trigger on close.
+ *
+ *   ```tsx
+ *   <Modal>
+ *     <ModalTrigger>Open</ModalTrigger>
+ *     <ModalContent>…</ModalContent>
+ *   </Modal>
+ *   ```
+ *
+ * - **State opens it** — a lightbox, a confirm raised from a menu item, an
+ *   overlay a route decides to show. Render `ModalContent` on its own with
+ *   `isOpen`/`onOpenChange`; there is no trigger element to pair with, so there
+ *   is nothing for `Modal` to do.
+ *
+ *   ```tsx
+ *   <ModalContent isOpen={isOpen} onOpenChange={setOpen}>…</ModalContent>
+ *   ```
+ *
+ *   Focus still returns to whatever was focused when it opened — that comes
+ *   from the overlay's focus scope, not from the trigger.
+ *
+ * Do not reach for the first shape to get the second: `Modal` given a single
+ * child puts that child in the *trigger* slot, where react-aria wraps it in a
+ * `PressResponder` that finds nothing pressable and warns on every render.
  */
 const Modal = (props: DialogTriggerProps) => {
   return <DialogTriggerPrimitive {...props} />
@@ -52,6 +82,15 @@ interface ModalContentProps
   overlay?: Pick<ModalOverlayProps, "className">
 }
 
+/**
+ * The overlay and panel: everything the modal paints, minus the trigger.
+ *
+ * Takes its open state from the enclosing `Modal` (or any other react-aria
+ * trigger it is nested in, as `DatePicker` does on mobile) — *unless* it is
+ * given `isOpen`/`defaultOpen`, in which case it owns the state itself and
+ * needs no wrapper. `onOpenChange` belongs on whichever of the two holds the
+ * state: on `Modal` in the trigger shape, here in the controlled one.
+ */
 const ModalContent = ({
   className,
   isDismissable: isDismissableInternal,
@@ -60,6 +99,12 @@ const ModalContent = ({
   size = "md",
   role = "dialog",
   closeButton = true,
+  // The label describes the dialog, not the scrim around it, so these are held
+  // back from the overlay's props and handed to Dialog below. In the trigger
+  // shape react-aria labels the dialog from the trigger's own text, which is
+  // what hid this; standing on its own, an unlabelled dialog is a real defect.
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledby,
   ...props
 }: ModalContentProps) => {
   const isDismissable = isDismissableInternal ?? role !== "alertdialog"
@@ -96,7 +141,7 @@ const ModalContent = ({
           className,
         )}
       >
-        <Dialog role={role}>
+        <Dialog role={role} aria-label={ariaLabel} aria-labelledby={ariaLabelledby}>
           {(values) => (
             <>
               {typeof children === "function" ? children(values) : children}

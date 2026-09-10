@@ -12,8 +12,9 @@
  * `[data-slot="gallery-empty"]` box.
  */
 import { describe, expect, test } from "bun:test"
-import { render, screen, within } from "@testing-library/react"
+import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { captureConsole } from "../console"
 import { Gallery } from "../../src/components/gallery"
 
 const ITEMS = [
@@ -67,6 +68,49 @@ describe("Gallery", () => {
 
     const dialog = await screen.findByRole("dialog")
     expect(within(dialog).getByText("1 / 3")).toBeInTheDocument()
+  })
+
+  test("returns focus to the hero when the lightbox is dismissed", async () => {
+    const user = userEvent.setup()
+    render(<Gallery items={ITEMS} />)
+    const hero = screen.getByRole("button", { name: "Enlarge image" })
+
+    await user.click(hero)
+    await screen.findByRole("dialog")
+    await user.keyboard("{Escape}")
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+    expect(hero).toHaveFocus()
+  })
+
+  test("drives the lightbox without tripping a react-aria warning", async () => {
+    // The lightbox is opened by state, not by a trigger element, so it renders
+    // ModalContent directly. Wrapping it in `Modal` also works — and warns on
+    // every render about a PressResponder with no pressable child, in every
+    // consumer's console (task #13). Nothing but the console shows it, so the
+    // console is what this asserts on.
+    const user = userEvent.setup()
+    const captured = captureConsole()
+    try {
+      render(<Gallery items={ITEMS} />)
+      await user.click(screen.getByRole("button", { name: "Enlarge image" }))
+      const dialog = await screen.findByRole("dialog")
+      await user.click(within(dialog).getByRole("button", { name: "Next image" }))
+      await user.keyboard("{Escape}")
+      await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
+    } finally {
+      captured.restore()
+    }
+    expect(captured.messages).toEqual([])
+  })
+
+  test("names the lightbox dialog after the image it is showing", async () => {
+    const user = userEvent.setup()
+    render(<Gallery items={ITEMS} />)
+
+    await user.click(screen.getByRole("button", { name: "Enlarge image" }))
+
+    expect(await screen.findByRole("dialog", { name: "Front" })).toBeInTheDocument()
   })
 
   test("pages through the lightbox, wrapping 1 → 3 backwards", async () => {
