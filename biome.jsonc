@@ -19,6 +19,7 @@
       "src/**/*.ts",
       "scripts/**/*.ts",
       "tests/**/*.ts",
+      "tests/**/*.tsx",
       "*.ts"
     ]
   },
@@ -213,7 +214,7 @@
       },
       "suspicious": {
         "noAlert": {
-          "level": "warn"
+          "level": "error"
         }
       }
     }
@@ -277,6 +278,34 @@
         "rules": {
           "style": {
             "noExcessiveLinesPerFile": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        // local scope, no-raw-interactive-elements — The <form> element, and nothing else on the tier-1 list.
+        // local scope, validate-on-the-server-with-the-same-schema — A fixture has no server to validate on.
+        "tests/**/*.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noRestrictedElements": {
+              "level": "error",
+              "options": {
+                "elements": {
+                  "button": "Use <Button> from @/components/button (performs an action in place), or <LinkButton> from @/components/link-button (navigates — a control that changes the URL must be an anchor), or <Toggle> from @/components/toggle (has an on/off pressed state).",
+                  "a": "Use <Link> from @/components/link (an inline text link (it renders a plain anchor for http(s)/mailto/tel hrefs, so external links keep working outside a router)), or <LinkButton> from @/components/link-button (a link that should look like a button).",
+                  "input": "Use <TextField> from @/components/text-field (a labelled field with description and error text), or <Input> from @/components/input (the bare control, inside a Field you compose yourself), or <SearchField> from @/components/search-field (type=search), or <NumberField> from @/components/number-field (type=number — adds steppers and locale-aware parsing), or <Checkbox> from @/components/checkbox (type=checkbox), or <RadioGroup> from @/components/radio (type=radio), or <Switch> from @/components/switch (a boolean rendered as a switch).",
+                  "select": "Use <Select> from @/components/select (a single choice from a known list), or <ComboBox> from @/components/combo-box (the list is long enough to need typeahead), or <MultipleSelect> from @/components/multiple-select (multiple).",
+                  "textarea": "Use <Textarea> from @/components/textarea.",
+                  "label": "Use <Label> from @/components/field (composing a field by hand).",
+                  "dialog": "Use <Modal> from @/components/modal (a centered overlay), or <Drawer> from @/components/drawer (an edge-anchored panel), or <Sheet> from @/components/sheet (a side sheet), or <Dialog> from @/components/dialog (the dialog content itself (title, body, footer)).",
+                  "table": "Use <Table> from @/components/table (a static table (with TableHeader, TableBody, TableColumn, TableRow, TableCell)), or <DataTable> from @/components/data-table (every row is already in the browser and the table has to sort, filter, page or group them), or <AsyncTable> from @/components/async-table (the rows are a page of a larger answer — sorting, filtering and paging are queries)."
+                }
+              }
+            }
           }
         }
       }

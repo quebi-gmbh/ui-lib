@@ -19,6 +19,7 @@ import { getValibotConstraint, parseWithValibot } from "@conform-to/valibot"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import * as v from "valibot"
+import { Button } from "../../src/components/button"
 import { ConformField } from "../../src/components/conform-field"
 
 const schema = v.object({
@@ -38,12 +39,14 @@ function TestForm({ defaultName = "", defaultIconUrl = "" }) {
   return (
     // A raw <form> is what `getFormProps` is for; the library's own rule points
     // callers at react-router's <Form>, which would need a router around every
-    // test in this file to prove nothing about ConformField. tests/ is outside
-    // biome.jsonc's file list, so this is not a suppressed diagnostic.
+    // test in this file to prove nothing about the component. That is the rule's
+    // own published exception, and in this repo it is a `localScopes` entry
+    // naming <form> alone — so every other element on the tier-1 list is still
+    // checked in this file.
     <form {...getFormProps(form)}>
       <ConformField label="Name" field={fields.name} type="text" description="Shown to buyers" />
       <ConformField label="Icon URL" field={fields.iconUrl} type="text" />
-      <button type="submit">Save</button>
+      <Button type="submit">Save</Button>
     </form>
   )
 }

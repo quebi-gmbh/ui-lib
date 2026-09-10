@@ -1,4 +1,5 @@
 import type { ComponentMeta } from "./types"
+import { alertDialogMeta } from "./alert-dialog.meta"
 import { areaChartMeta } from "./area-chart.meta"
 import { asyncMultipleSelectMeta } from "./async-multiple-select.meta"
 import { asyncSelectMeta } from "./async-select.meta"
@@ -130,6 +131,7 @@ import { trackerMeta } from "./tracker.meta"
 import { treeMeta } from "./tree.meta"
 
 export const metaRegistry: ComponentMeta[] = [
+  alertDialogMeta,
   areaChartMeta,
   asyncMultipleSelectMeta,
   asyncSelectMeta,

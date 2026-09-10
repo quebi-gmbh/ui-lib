@@ -1,5 +1,6 @@
 import type { ComponentEntry } from "./types"
 import { metaRegistry } from "./meta"
+import { alertDialogExamples } from "./alert-dialog.examples"
 import { areaChartExamples } from "./area-chart.examples"
 import { asyncMultipleSelectExamples } from "./async-multiple-select.examples"
 import { asyncSelectExamples } from "./async-select.examples"
@@ -131,6 +132,7 @@ import { trackerExamples } from "./tracker.examples"
 import { treeExamples } from "./tree.examples"
 
 const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
+  "alert-dialog": alertDialogExamples,
   "area-chart": areaChartExamples,
   "async-multiple-select": asyncMultipleSelectExamples,
   "async-select": asyncSelectExamples,

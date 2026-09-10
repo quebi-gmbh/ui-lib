@@ -18,6 +18,8 @@ or {
   not $filename <: r"(?:.*/)?src/components/.*",
   // documented exception: components/ui/**
   not $filename <: r"(?:.*/)?components/ui/.*",
+  // local scope: tests/conform-binding.test.tsx — One file, one rule, because that file renders the banned shape on purpose: <Switch {...getInputProps(field, { type: "checkbox" })}> is the spread this rule exists to stop, and the two tests around it measure what it costs — the switch renders off, and nothing in the DOM records the loss. A rule firing on its own counter-example is the rule working, and there is nowhere to say so in the file: Biome has no suppression comment for a GritQL plugin diagnostic, which is why this is a table entry rather than a biome-ignore. Scoped to the one path so that a real spread in any other fixture is still reported.
+  not $filename <: r"(?:.*/)?tests/conform-binding\.test\.tsx$",
   register_diagnostic(
     span = $control,
     message = "react-aria's Checkbox and Switch do not read the defaultChecked and required that getInputProps emits — filterDOMProps drops both silently, so the control renders unchecked after a failed submit. Use <ConformCheckbox field={fields.x} /> or <ConformSwitch field={fields.x} />; inside a wrapper of your own, name the props instead of spreading (defaultSelected={field.defaultChecked}). See https://ui-lib.quebi.de/rules/seed-toggles-with-default-selected",

@@ -206,4 +206,30 @@ describe("the repo obeys the rules it publishes", () => {
     // well if the exception had quietly been dropped.
     expect(restricted.map(describeDiagnostic)).toHaveLength(1)
   })
+
+  test("a raw <button> in a test fixture is reported, and a raw <form> is not", () => {
+    // The same negative control for `tests/**\/*.tsx`, which is in the file list
+    // as of task #20. The local scope there names one element — <form>, because
+    // a Conform fixture binds to a real one and react-router's <Form> would need
+    // a router mounted around every test — and the value of naming it is only
+    // real if the rest of the tier-1 list is still checked. A blanket "the rule
+    // is off in tests/" would satisfy "`bun run lint` is clean" just as well,
+    // and this is the assertion that tells the two apart.
+    const probe = "tests/__lint_probe__.test.tsx"
+    let diagnostics: Diagnostic[]
+    try {
+      writeFileSync(
+        join(ROOT, probe),
+        'export const Probe = () => (\n  <form>\n    <button type="submit">Save</button>\n  </form>\n)\n',
+      )
+      diagnostics = lint([probe])
+    } finally {
+      rmSync(join(ROOT, probe), { force: true })
+    }
+    const restricted = diagnostics.filter(
+      (d) => d.category === "lint/correctness/noRestrictedElements",
+    )
+    expect(restricted.map(textOf).join("\n")).toContain("@/components/button")
+    expect(restricted.map(describeDiagnostic)).toHaveLength(1)
+  })
 })
