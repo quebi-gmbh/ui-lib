@@ -17,20 +17,30 @@
  *
  * The DOM comes from `tests/dom.ts`, preloaded for every test file (see
  * `bunfig.toml`); happy-dom refuses a second global registration, so this file
- * no longer registers its own. It keeps mounting through `createRoot` by hand
- * rather than through React Testing Library because what it asserts is the
- * hand-off between Conform and react-aria, which is easier to read as explicit
- * mount / act steps.
+ * no longer registers its own. It mounts by hand (`tests/mount.ts`) rather than
+ * through React Testing Library because what it asserts is the hand-off between
+ * Conform and react-aria, which is easier to read as explicit mount / act steps.
+ *
+ * What the two list-backed pickers do on top of all this — projecting a
+ * react-stately list off the registered value — lives in
+ * `conform-list-pickers.test.tsx`, which shares the same mount helper.
  */
 import { afterEach, describe, expect, test } from "bun:test"
 import { type FieldMetadata, getInputProps, useForm } from "@conform-to/react"
 import { BaseControl, useControl } from "@conform-to/react/future"
 import { parseWithValibot } from "@conform-to/valibot"
 import { act } from "react"
-import { createRoot } from "react-dom/client"
+// The third block below asserts what react-aria itself does with an id inside
+// its own field, and that is the fact every conform-* variant's id handling is
+// built on. Going through ui-lib's TextField would move the assertion onto the
+// wrapper: whether the wrapper forwards, not whether react-aria follows. The
+// rule stands everywhere else in tests/ — a fixture reaching for react-aria's
+// Button instead of ours is the ordinary defect the rule describes, which is
+// why this is one line's exemption rather than a localScopes entry.
+// biome-ignore lint/style/noRestrictedImports: this file pins react-aria's own id ownership, so the primitives are the subject of the assertion rather than a shortcut around ui-lib's wrappers.
 import { FieldError, Input, Label, TextField } from "react-aria-components"
-import { useListData } from "react-stately"
 import * as v from "valibot"
+import { Button } from "../src/components/button"
 import { ChoiceBoxItem, ChoiceBoxLabel } from "../src/components/choice-box"
 import { ConformCalendar } from "../src/components/conform-calendar"
 import { ConformChoiceBox } from "../src/components/conform-choice-box"
@@ -52,41 +62,11 @@ import { ConformSwitch } from "../src/components/conform-switch"
 import { ConformTimeField } from "../src/components/conform-time-field"
 import type { DaySpan } from "../src/components/day-schedule"
 import { Switch } from "../src/components/switch"
+import { click, formOf, mount, unmountAll } from "./mount"
 
-// Mounting by hand means unmounting by hand: React Testing Library's automatic
-// cleanup (tests/dom.ts) only knows about containers *it* created, and the DOM
-// is one global shared by every file in the run. Left in place, the forms below
-// stay in document.body for whatever file happens to run next, where a
-// `document.querySelector("form")` finds this file's form and a `user.tab()`
-// walks into this file's inputs.
-const mounted: Array<{ container: HTMLElement; unmount: () => void }> = []
-
-async function mount(element: React.ReactElement) {
-  const container = document.createElement("div")
-  document.body.appendChild(container)
-  const root = createRoot(container)
-  await act(async () => {
-    root.render(element)
-  })
-  mounted.push({ container, unmount: () => root.unmount() })
-  return container
-}
-
-afterEach(() => {
-  for (const { container, unmount } of mounted.splice(0)) {
-    act(() => {
-      unmount()
-    })
-    container.remove()
-  }
-})
-
-const formOf = (container: HTMLElement) => container.querySelector("form") as HTMLFormElement
-const click = async (container: HTMLElement, testId: string) => {
-  await act(async () => {
-    container.querySelector<HTMLElement>(`[data-testid="${testId}"]`)?.click()
-  })
-}
+// Mounting by hand means unmounting by hand — see tests/mount.ts for why the
+// cleanup is registered per file rather than by the helper module.
+afterEach(unmountAll)
 
 describe("the v1 useForm <-> future useControl bridge", () => {
   function Custom({ field }: { field: FieldMetadata<string> }) {
@@ -99,9 +79,9 @@ describe("the v1 useForm <-> future useControl bridge", () => {
           ref={control.register}
           defaultValue={control.defaultValue ?? ""}
         />
-        <button type="button" data-testid="set" onClick={() => control.change("banana")}>
+        <Button type="button" data-testid="set" onPress={() => control.change("banana")}>
           set
-        </button>
+        </Button>
         <span data-testid="value">{control.value ?? ""}</span>
       </>
     )
@@ -149,6 +129,11 @@ describe("getInputProps is not spreadable onto a react-aria control", () => {
     // The shape this rule set used to recommend for "a control that renders a
     // real input". It type-checks, because JSX spread skips excess-property
     // checking, and it is wrong.
+    // The rule set bans this shape (seed-toggles-with-default-selected), and it
+    // is rendered here on purpose: the two tests below measure what it costs.
+    // Biome cannot suppress a GritQL plugin diagnostic in place, so the argument
+    // is a `localScopes` entry naming this file and that one rule — see
+    // scripts/generate-lint-config.ts.
     return <Switch {...getInputProps(field, { type: "checkbox" })}>Notify me</Switch>
   }
 
@@ -227,9 +212,9 @@ describe("react-aria owns the ids inside its own fields", () => {
       return (
         <form id={form.id} onSubmit={form.onSubmit} noValidate>
           <ConformField field={fields.email} label="Email" />
-          <button type="submit" data-testid="submit">
+          <Button type="submit" data-testid="submit">
             go
-          </button>
+          </Button>
         </form>
       )
     }
@@ -269,9 +254,9 @@ describe("react-aria owns the ids inside its own fields", () => {
       return (
         <form id={form.id} onSubmit={form.onSubmit} noValidate>
           <ConformSwitch field={fields.maintenance} label="Maintenance mode" />
-          <button type="submit" data-testid="submit">
+          <Button type="submit" data-testid="submit">
             go
-          </button>
+          </Button>
         </form>
       )
     }
@@ -283,201 +268,6 @@ describe("react-aria owns the ids inside its own fields", () => {
     expect(message.id).not.toBe("")
     expect(input.getAttribute("aria-describedby")?.split(" ")).toContain(message.id)
     expect(input).toHaveAccessibleDescription("Turn maintenance off before saving")
-  })
-})
-
-describe("the list-backed pickers own their value", () => {
-  // ConformStoragePicker and ConformColorSwatchPicker used to keep the
-  // selection in a react-stately list the caller passed and mirror it into
-  // `<input type="hidden" value={…} />`. That submits, and nothing else: a
-  // reset writes the elements Conform has registered, and a React-controlled
-  // mirror is not one of them, so the chips stayed where the user left them
-  // while the rest of the form snapped back. The value now lives in a
-  // registered control and the list is a projection of it — which is only
-  // observable through a reset, an update, and a change made from the list.
-  const chip = (container: HTMLElement, text: string) =>
-    Array.from(container.querySelectorAll("button")).find((b) => b.textContent === text)
-
-  const press = async (container: HTMLElement, text: string) => {
-    await act(async () => {
-      chip(container, text)?.click()
-    })
-  }
-
-  const tags = (container: HTMLElement) =>
-    Array.from(container.querySelectorAll('[data-testid="tags"] li')).map((li) => li.textContent)
-
-  describe("without a list, the picker is the only owner", () => {
-    function App() {
-      const [form, fields] = useForm({ defaultValue: { storage: "128GB" } })
-      return (
-        <form id={form.id} onSubmit={form.onSubmit} noValidate>
-          <ConformStoragePicker field={fields.storage} label="Storage" />
-        </form>
-      )
-    }
-
-    test("the field's default is the selection, in FormData and in the chips", async () => {
-      const container = await mount(<App />)
-      expect(new FormData(formOf(container)).get("storage")).toBe("128GB")
-      expect(chip(container, "128GB")?.getAttribute("aria-pressed")).toBe("true")
-      expect(chip(container, "1TB")?.getAttribute("aria-pressed")).toBe("false")
-    })
-
-    test("toggling a chip reaches FormData", async () => {
-      const container = await mount(<App />)
-      await press(container, "1TB")
-      expect(new FormData(formOf(container)).get("storage")).toBe("128GB,1TB")
-      await press(container, "128GB")
-      expect(new FormData(formOf(container)).get("storage")).toBe("1TB")
-    })
-
-    test("a form reset snaps the selection back to the field's default", async () => {
-      const container = await mount(<App />)
-      await press(container, "1TB")
-      const form = formOf(container)
-      await act(async () => {
-        form.reset()
-      })
-      expect(new FormData(form).get("storage")).toBe("128GB")
-      expect(chip(container, "1TB")?.getAttribute("aria-pressed")).toBe("false")
-    })
-
-    // `form.update({ name, value })` is deliberately not asserted here: it
-    // reaches the picker by the same route a reset does — Conform writing the
-    // registered element — but its intent is dispatched through
-    // `form.requestSubmit(submitter)`, and happy-dom's requestSubmit fires no
-    // submit event, so the intent never runs. It does not run for a plain
-    // <input> in this environment either. Reset is the assertion that covers
-    // the route.
-  })
-
-  describe("with a list, the list follows the value", () => {
-    function App() {
-      const list = useListData<{ id: number; name: string }>({ initialItems: [] })
-      const [form, fields] = useForm({ defaultValue: { storage: "256GB,1TB" } })
-      return (
-        <form id={form.id} onSubmit={form.onSubmit} noValidate>
-          <ConformStoragePicker field={fields.storage} label="Storage" list={list} />
-          <ul data-testid="tags">
-            {list.items.map((item) => (
-              <li key={item.id}>{item.name}</li>
-            ))}
-          </ul>
-          <button
-            type="button"
-            data-testid="drop"
-            onClick={() => {
-              const first = list.items[0]
-              if (first) list.remove(first.id)
-            }}
-          >
-            drop
-          </button>
-        </form>
-      )
-    }
-
-    test("the list is seeded from the field, not the other way round", async () => {
-      const container = await mount(<App />)
-      expect(tags(container)).toEqual(["256GB", "1TB"])
-      expect(new FormData(formOf(container)).get("storage")).toBe("256GB,1TB")
-    })
-
-    test("a toggle here shows up in the list", async () => {
-      const container = await mount(<App />)
-      await press(container, "512GB")
-      expect(tags(container)).toEqual(["256GB", "1TB", "512GB"])
-    })
-
-    test("removing an item elsewhere writes the field", async () => {
-      const container = await mount(<App />)
-      await click(container, "drop")
-      expect(new FormData(formOf(container)).get("storage")).toBe("1TB")
-      expect(chip(container, "256GB")?.getAttribute("aria-pressed")).toBe("false")
-    })
-
-    test("a form reset re-seeds the list as well as the field", async () => {
-      const container = await mount(<App />)
-      await click(container, "drop")
-      await press(container, "32GB")
-      const form = formOf(container)
-      await act(async () => {
-        form.reset()
-      })
-      expect(new FormData(form).get("storage")).toBe("256GB,1TB")
-      expect(tags(container)).toEqual(["256GB", "1TB"])
-    })
-  })
-
-  describe("a caller-seeded list is the fallback default, and is canonicalized", () => {
-    function App() {
-      const list = useListData<{ id: number; name: string }>({
-        initialItems: [{ id: 1, name: "512 gb" }],
-      })
-      const [form, fields] = useForm<{ storage: string }>({})
-      return (
-        <form id={form.id} onSubmit={form.onSubmit} noValidate>
-          <ConformStoragePicker field={fields.storage} label="Storage" list={list} />
-          <ul data-testid="tags">
-            {list.items.map((item) => (
-              <li key={item.id}>{item.name}</li>
-            ))}
-          </ul>
-        </form>
-      )
-    }
-
-    test("a field with no default falls back to what the caller seeded", async () => {
-      const container = await mount(<App />)
-      expect(new FormData(formOf(container)).get("storage")).toBe("512GB")
-      // The free-form label is rewritten in the caller's list too, so the keys
-      // on the wire are the ones the picker offers.
-      expect(tags(container)).toEqual(["512GB"])
-      expect(chip(container, "512GB")?.getAttribute("aria-pressed")).toBe("true")
-    })
-  })
-
-  describe("the colour swatch picker is bound the same way", () => {
-    function App() {
-      const list = useListData<{ id: number; name: string }>({ initialItems: [] })
-      const [form, fields] = useForm({ defaultValue: { colors: ["teal"] } })
-      return (
-        <form id={form.id} onSubmit={form.onSubmit} noValidate>
-          <ConformColorSwatchPicker field={fields.colors} label="Colors" list={list} />
-          <ul data-testid="tags">
-            {list.items.map((item) => (
-              <li key={item.id}>{item.name}</li>
-            ))}
-          </ul>
-        </form>
-      )
-    }
-
-    const swatch = (container: HTMLElement, key: string) =>
-      container.querySelector<HTMLElement>(`[aria-label="${key}"]`)
-
-    test("the field's default selects a swatch and seeds the list", async () => {
-      const container = await mount(<App />)
-      expect(new FormData(formOf(container)).get("colors")).toBe("teal")
-      expect(tags(container)).toEqual(["teal"])
-    })
-
-    test("a form reset snaps the selection and the list back", async () => {
-      const container = await mount(<App />)
-      await act(async () => {
-        swatch(container, "red")?.click()
-      })
-      expect(new FormData(formOf(container)).get("colors")).toBe("teal,red")
-      expect(tags(container)).toEqual(["teal", "red"])
-
-      const form = formOf(container)
-      await act(async () => {
-        form.reset()
-      })
-      expect(new FormData(form).get("colors")).toBe("teal")
-      expect(tags(container)).toEqual(["teal"])
-    })
   })
 })
 

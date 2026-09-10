@@ -37,7 +37,7 @@ export { appliesToFilenameRegex, exceptionPaths, firstSentence, globToFilenameRe
 const DEFAULT_BASE_URL = "https://ui-lib.quebi.de"
 
 /** Biome severities. A rule's declared severity is used verbatim — no clamping. */
-function severityOf(rule: RuleMeta): "error" | "warn" {
+export function severityOf(rule: RuleMeta): "error" | "warn" {
   return rule.severity === "error" ? "error" : "warn"
 }
 

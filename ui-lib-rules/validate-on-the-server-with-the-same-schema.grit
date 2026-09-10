@@ -14,6 +14,8 @@ language js;
   not $filename <: r"(?:.*/)?[^/]*\.stories\.(?:tsx|jsx)$",
   // documented exception: **/*.examples.{tsx,jsx}
   not $filename <: r"(?:.*/)?[^/]*\.examples\.(?:tsx|jsx)$",
+  // local scope: tests/**/*.tsx — A fixture has no server to validate on. The rule reads a useForm call with no `lastResult` as "nothing on the server parses this schema", which is the right reading of an app and a false one of a test: the value it asks for is what a route action returned, and a test that mounts a component has no route. Quieting it by passing a hand-built lastResult would be the worse outcome — the fixture would then assert a server round-trip it never made. Its companion, gate-last-result-on-idle-navigation, needs no entry and does not get one: that rule fires on a lastResult that is present and ungated, so a fixture without one never reaches it, and a fixture that grows one still has to gate it.
+  not $filename <: r"(?:.*/)?tests/(?:.*/)?[^/]*\.tsx$",
   register_diagnostic(
     span = $call,
     message = "useForm without lastResult: this form cannot display anything the server says, which in practice means the server is not validating. Parse the same schema in your route action, return submission.reply(), and pass it here as lastResult. See https://ui-lib.quebi.de/rules/validate-on-the-server-with-the-same-schema",

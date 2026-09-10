@@ -21,6 +21,7 @@ import { render, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { useListData } from "react-stately"
 import * as v from "valibot"
+import { Button } from "../../src/components/button"
 import { ConformColorSwatchPicker } from "../../src/components/conform-color-swatch-picker"
 
 const schema = v.object({
@@ -47,8 +48,10 @@ function TestForm({ initial = ["teal"] as string[] }) {
   return (
     // A raw <form> is what `getFormProps` is for; the library's own rule points
     // callers at react-router's <Form>, which would need a router around every
-    // test in this file to prove nothing about the picker. tests/ is outside
-    // biome.jsonc's file list, so this is not a suppressed diagnostic.
+    // test in this file to prove nothing about the component. That is the rule's
+    // own published exception, and in this repo it is a `localScopes` entry
+    // naming <form> alone — so every other element on the tier-1 list is still
+    // checked in this file.
     <form {...getFormProps(form)}>
       <ConformColorSwatchPicker
         field={fields.colors}
@@ -57,10 +60,10 @@ function TestForm({ initial = ["teal"] as string[] }) {
         description="Pick the colors this device ships in"
       />
       {/* Removing a tag elsewhere on the page is the case `list` exists for. */}
-      <button type="button" onClick={() => list.remove(1)}>
+      <Button type="button" onPress={() => list.remove(1)}>
         Remove the first tag
-      </button>
-      <button type="submit">Save</button>
+      </Button>
+      <Button type="submit">Save</Button>
     </form>
   )
 }

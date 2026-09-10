@@ -33,6 +33,8 @@ import {
   firstSentence,
   pluginRules,
   renderGritPlugin,
+  restrictedElements,
+  severityOf,
 } from "../src/registry/rules/checks"
 import { rulesRegistry } from "../src/registry/rules"
 
@@ -53,6 +55,15 @@ export interface LocalScope {
   includes: string[]
   /** Rule ids relaxed for those paths. */
   rules: string[]
+  /**
+   * For the element ban only: relax it for these intrinsics and leave the rest
+   * of the list standing. Same knob a published exception has (`elements` on a
+   * `RuleException`), and for the same reason — "a <form> is allowed here" and
+   * "raw HTML is allowed here" are different concessions, and a table that can
+   * only express the second turns every narrow argument into a broad one.
+   * Omitted means the whole rule is off for those paths.
+   */
+  elements?: string[]
   reason: string
 }
 
@@ -73,6 +84,16 @@ export interface LocalScope {
  * so a `noArrayIndexKey` in a demo list is copied along with it. Exempting the
  * examples would put the one kind of file we hand to other people outside the
  * checks we tell them to run.
+ *
+ * `tests/**\/*.tsx` is the other case, and it is deliberately three narrow
+ * entries rather than one "tests are different" line: a rendering fixture is app
+ * code that happens to assert instead of ship, so what it genuinely cannot do is
+ * named one item at a time — the <form> element alone out of the tier-1 list,
+ * the server-validation rule for fixtures that have no route action, and one
+ * rule in one file that renders a banned shape on purpose — and everything else
+ * is left switched on. What that buys is the property the whole file list is
+ * for: a raw `<button>`, a `toLocaleString()` or a `confirm()` in a fixture is
+ * reported there exactly as it would be in `src/routes/`.
  */
 export const localScopes: LocalScope[] = [
   {
@@ -80,6 +101,25 @@ export const localScopes: LocalScope[] = [
     rules: ["no-appearance-classes-on-layout-elements", "no-hardcoded-design-values"],
     reason:
       "An example shows one component in isolation, so it has to hand-build the scaffolding around it — the fixed-height box a ScrollArea scrolls inside, the bordered chip a ColorThumb sits on, the status colours a Tracker renders as data. None of that is an app reimplementing a Card, which is what these two rules are about; and the tier-2 check is a class-string match, so it also fires on a ui-lib component's own className prop. Tier 1 and tier 4 stay on here — an example is copied verbatim, so a raw <button> in one propagates into every app that copies it.",
+  },
+  {
+    includes: ["tests/**/*.tsx"],
+    rules: ["no-raw-interactive-elements"],
+    elements: ["form"],
+    reason:
+      "The <form> element, and nothing else on the tier-1 list. This is the rule's own published exception — a <form> that submits on the client only, with no route action behind it — arriving at the place in this repo where it is unavoidable: a Conform fixture asserts what getFormProps(form) and form.onSubmit put in the DOM, and react-router's <Form> would need a router mounted around every test to prove nothing about the binding. Naming the one element is the whole point of the entry. The fixtures' buttons are ui-lib's Button (they were raw <button>s until this scope was written, and converting them changed no assertion), so a raw <button>, <input>, <select> or <table> in a test is reported here exactly as it is in src/routes.",
+  },
+  {
+    includes: ["tests/**/*.tsx"],
+    rules: ["validate-on-the-server-with-the-same-schema"],
+    reason:
+      "A fixture has no server to validate on. The rule reads a useForm call with no `lastResult` as \"nothing on the server parses this schema\", which is the right reading of an app and a false one of a test: the value it asks for is what a route action returned, and a test that mounts a component has no route. Quieting it by passing a hand-built lastResult would be the worse outcome — the fixture would then assert a server round-trip it never made. Its companion, gate-last-result-on-idle-navigation, needs no entry and does not get one: that rule fires on a lastResult that is present and ungated, so a fixture without one never reaches it, and a fixture that grows one still has to gate it.",
+  },
+  {
+    includes: ["tests/conform-binding.test.tsx"],
+    rules: ["seed-toggles-with-default-selected"],
+    reason:
+      "One file, one rule, because that file renders the banned shape on purpose: <Switch {...getInputProps(field, { type: \"checkbox\" })}> is the spread this rule exists to stop, and the two tests around it measure what it costs — the switch renders off, and nothing in the DOM records the loss. A rule firing on its own counter-example is the rule working, and there is nowhere to say so in the file: Biome has no suppression comment for a GritQL plugin diagnostic, which is why this is a table entry rather than a biome-ignore. Scoped to the one path so that a real spread in any other fixture is still reported.",
   },
 ]
 
@@ -116,6 +156,18 @@ export const localScopes: LocalScope[] = [
  * `src/components/` has a `slug` in src/registry/meta.ts — a test fails if one
  * does not — so nothing can be excused by its address any more.
  *
+ * `tests/**\/*.tsx` was the last hole, and it was left open on purpose rather
+ * than by oversight: every diagnostic it reported was *plausibly* a legitimate
+ * fixture — a Conform test needs a real <form>, a test about react-aria's id
+ * ownership has to name react-aria — and the previous stance ("tests/ is outside
+ * the file list, say why in a comment") meant a genuine mistake in a fixture
+ * looked exactly like a deliberate one. Reading them one at a time settled it:
+ * the raw <button>s were shortcuts and are ui-lib's Button now, a class
+ * assertion naming `bg-red-500/10` is a token assertion now, and what is left is
+ * three narrow entries in `localScopes` plus one `biome-ignore` whose reason
+ * says what forces it. The fixtures are code this repo ships nothing of and
+ * relies on entirely; they get the same reading as everything else.
+ *
  * CSS stays out, and that is still a gap rather than a decision: Biome cannot
  * parse Tailwind v4's at-rules, and the `no-hardcoded-design-values` record
  * documents CSS as outside what its check can see.
@@ -127,6 +179,7 @@ function fileIncludes(): string[] {
     "src/**/*.ts",
     "scripts/**/*.ts",
     "tests/**/*.ts",
+    "tests/**/*.tsx",
     // The build's own configuration — react-router.config.ts, vite.config.ts.
     // A single `*` does not cross a directory separator, so this is the repo
     // root and nowhere else.
@@ -142,6 +195,39 @@ function biomeRuleKey(ruleId: string): { group: string; name: string } | null {
   if (biome?.via !== "rule") return null
   const [group, name] = biome.rule.split("/")
   return { group, name }
+}
+
+/** What an override entry may say about a built-in rule: off, or on with fewer elements. */
+type BuiltInOverride = "off" | { level: "error" | "warn"; options: { elements: Record<string, string> } }
+
+/**
+ * The override value for one rule in one local scope.
+ *
+ * `"off"` unless the scope narrowed itself to particular elements, in which case
+ * the rule stays on with those removed from its map — and the map, messages and
+ * severity all still come from the record, so a new replacement in the record
+ * shows up inside the carve-out too.
+ */
+function elementScopedOverride(ruleId: string, elements: string[] | undefined): BuiltInOverride {
+  if (!elements?.length) return "off"
+  const rule = rulesRegistry.find((r) => r.id === ruleId)
+  if (!rule) throw new Error(`Local scope names "${ruleId}", which is not a rule in the registry`)
+  const all = restrictedElements(rule)
+  for (const element of elements) {
+    if (!(element in all)) {
+      throw new Error(
+        `Local scope excuses <${element}> from "${ruleId}", which does not restrict that element`,
+      )
+    }
+  }
+  const remaining = Object.fromEntries(
+    Object.entries(all).filter(([element]) => !elements.includes(element)),
+  )
+  // Excusing every element it restricts is the same thing as switching it off,
+  // said less clearly — so say it the clear way.
+  return Object.keys(remaining).length
+    ? { level: severityOf(rule), options: { elements: remaining } }
+    : "off"
 }
 
 /** Repo-local guards for one plugin rule, pulled out of the scope table. */
@@ -167,12 +253,15 @@ export async function buildRepoConfig() {
   // rule it cannot: Biome's overrides do not scope plugins, so those guards are
   // compiled into the plugin by `localIgnoresFor` instead.
   const localOverrides = localScopes.flatMap((scope) => {
-    const rules: Record<string, Record<string, "off">> = {}
+    const rules: Record<string, Record<string, BuiltInOverride>> = {}
     for (const ruleId of scope.rules) {
       const key = biomeRuleKey(ruleId)
       if (!key) continue
       rules[key.group] ??= {}
-      rules[key.group][key.name] = "off"
+      // A scope naming `elements` leaves the rule on and removes just those,
+      // the same way a record's own exception does — so "a fixture may render
+      // <form>" does not also license a hand-rolled <button> beside it.
+      rules[key.group][key.name] = elementScopedOverride(ruleId, scope.elements)
     }
     return Object.keys(rules).length
       ? [{ includes: scope.includes, linter: { rules } }]
@@ -245,13 +334,21 @@ function annotate(json: string, config: Awaited<ReturnType<typeof buildRepoConfi
       ),
   ]
 
+  // Only inside `overrides`. The same glob can appear in `files.includes` too —
+  // `tests/**\/*.tsx` does — and "this rule is relaxed here" written above a
+  // file-list entry reads as if the file list were what relaxed it. It is not:
+  // the file list says which files are linted, the override says with what.
+  let inOverrides = false
+
   return json
     .split("\n")
     .map((line) => {
       const indent = line.match(/^\s*/)?.[0] ?? ""
+      if (/^\s*"overrides":/.test(line)) inOverrides = true
       const plugin = plugins.find((rule) => line.includes(`/${rule.id}.grit`))
       if (plugin) return `${indent}// ${plugin.title}\n${line}`
       const path = line.match(/^\s*"([^"]+)",?$/)?.[1]
+      if (!inOverrides) return line
       if (!path || !config.overrides.some((o) => o.includes.includes(path))) return line
       return [...reasonsFor(path).map((reason) => `${indent}// ${reason}`), line].join("\n")
     })

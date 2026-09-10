@@ -68,7 +68,11 @@ describe("Note", () => {
 
     const root = screen.getByTestId("note")
     expect(root).toHaveClass("mb-6")
-    expect(root).toHaveClass("bg-red-500/10")
+    // The intent class asserted is the token one. `danger` also carries
+    // `bg-red-500/10`, but naming a raw palette class here would put a
+    // hardcoded design value in a test — and pin the assertion to the half of
+    // the intent that is most likely to be re-tokenised later.
+    expect(root).toHaveClass("text-quebi-danger")
     expect(root).toHaveAttribute("role", "alert")
     expect(root).toHaveAttribute("data-slot", "note")
   })
