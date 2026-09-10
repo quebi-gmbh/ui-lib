@@ -29,6 +29,7 @@ import {
   emptyQuery,
   emptySelection,
   nextSorting,
+  qualifiedLabel,
   sortingToSorts,
   sortsToSorting,
   toColumnDefs,
@@ -398,7 +399,7 @@ export function AsyncTable<T extends RowData>({
               <DataTableColumnChooser
                 columns={table.getAllLeafColumns().map((column) => ({
                   id: column.id,
-                  label: column.columnDef.meta?.label ?? column.id,
+                  label: qualifiedLabel(column.columnDef.meta, column.id),
                   isVisible: column.getIsVisible(),
                   canHide: column.getCanHide(),
                 }))}

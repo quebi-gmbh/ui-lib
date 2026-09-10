@@ -74,7 +74,13 @@ export interface DataTableColumnMeta {
   priority?: number
   filterVariant?: DataTableFilterVariant
   filterOptions?: DataTableFilterOption[]
-  /** The multi-level header band this column sits under. */
+  /**
+   * The multi-level header band this column sits under.
+   *
+   * The band itself is rendered from the header groups — this is the name as
+   * data, for the places that list a column outside the table and would
+   * otherwise offer two columns called "Net".
+   */
   group?: string
   /** Left out of a CSV export — an action column, a checkbox gutter. */
   noExport?: boolean
@@ -102,6 +108,15 @@ export type DataTableInstance<T extends RowData> = Table<DataTableFeatures, T>
 export type DataTableRow<T extends RowData> = Row<DataTableFeatures, T>
 export type DataTableColumnDef<T extends RowData> = ColumnDef<DataTableFeatures, T, unknown>
 
+/**
+ * One cell of a header group: a leaf column, or a band spanning several.
+ *
+ * TanStack names the type `Header`, which would read as "the header" beside
+ * `DataTableRow` when it is one cell of one header row.
+ */
+export type DataTableHeader<T extends RowData> =
+  ReturnType<DataTableInstance<T>["getHeaderGroups"]>[number]["headers"][number]
+
 /** The context a cell renderer is called with. */
 export interface DataTableCellContext<T> {
   row: T
@@ -123,7 +138,17 @@ export interface DataTableColumn<T> {
   header: string
   accessorKey?: string
   accessorFn?: (row: T) => unknown
-  /** Child columns — rendered as a multi-level header band. */
+  /**
+   * Child columns — rendered as a multi-level header band: one header cell
+   * spanning them, in a row of its own above theirs.
+   *
+   * The spanned cell needs the client. react-stately builds the band row by
+   * rewriting the sibling links of the column nodes it chains, which react-aria's
+   * server-rendering path cannot survive, so a server render puts the band name
+   * above each column's label instead and the real row arrives with hydration.
+   * The two are the same height, so nothing moves. `TableColumnGroup` in
+   * `@/components/table` has the detail.
+   */
   columns?: DataTableColumn<T>[]
   cell?: (ctx: DataTableCellContext<T>) => ReactNode
   /** Footer aggregate, e.g. a column total. */
@@ -152,6 +177,16 @@ export interface DataTableColumn<T> {
   /** Custom predicate; overrides the one implied by `filterVariant`. */
   filterFn?: (value: unknown, filter: unknown, row: T) => boolean
   noExport?: boolean
+}
+
+/**
+ * A column's name for a list that has no header row to sit under — the column
+ * chooser, a filter summary. Qualified by its band where it has one, because
+ * "Net" and "Gross" only mean something under "Totals".
+ */
+export function qualifiedLabel(meta: DataTableColumnMeta | undefined, fallback: string): string {
+  const label = meta?.label ?? fallback
+  return meta?.group ? `${meta.group} · ${label}` : label
 }
 
 /** The one predicate both modes share, so a client filter and a server query

@@ -12,6 +12,7 @@ import { describe, expect, test } from "bun:test"
 import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { useState } from "react"
+import { renderToString } from "react-dom/server"
 import { AsyncTable } from "../../src/components/async-table"
 import { DataTable } from "../../src/components/data-table"
 import type { DataTableColumn, DataTableQuery } from "../../src/lib/data-table"
@@ -35,6 +36,20 @@ const columns: DataTableColumn<Order>[] = [
   { id: "reference", header: "Reference", accessorKey: "reference" },
   { id: "status", header: "Status", accessorKey: "status", filterVariant: "enum" },
   { id: "amount", header: "Amount", accessorKey: "amount", align: "end" },
+]
+
+/**
+ * The same columns with the first two under a band, and Amount left outside it.
+ * A band over some but not all of the columns is the shape that has to stay
+ * rectangular; see the assertions in the banded-header test.
+ */
+const bandedColumns: DataTableColumn<Order>[] = [
+  {
+    id: "order",
+    header: "Order",
+    columns: [columns[0], columns[1]],
+  },
+  columns[2],
 ]
 
 /** Text anywhere in the document, for messages assembled from several nodes. */
@@ -212,6 +227,144 @@ describe("DataTable", () => {
     const detailRow = detail.closest("tr")
     expect(detailRow).not.toBeNull()
     expect(within(detailRow as HTMLElement).queryByRole("checkbox")).toBeNull()
+  })
+
+  test("a grouped column renders one band spanning its leaves, not a label per leaf", () => {
+    render(
+      <DataTable<Order>
+        aria-label="Banded orders"
+        columns={bandedColumns}
+        data={ORDERS}
+        getRowId={(order) => String(order.id)}
+        defaultPageSize={5}
+        selectionMode="multiple"
+      />,
+    )
+    // Two header rows, because a band is a row of the collection and not an
+    // extra line of text inside each leaf header.
+    const headerRows = document.querySelectorAll<HTMLTableRowElement>("thead tr")
+    expect(headerRows).toHaveLength(2)
+
+    // Once, and spanning both of its leaves — the bug this replaces drew
+    // "Order" above Reference and again above Status.
+    const bands = screen.getAllByRole("columnheader", { name: "Order" })
+    expect(bands).toHaveLength(1)
+    expect(bands[0].getAttribute("colspan")).toBe("2")
+    expect(bands[0].getAttribute("aria-colspan")).toBe("2")
+    expect(bands[0].closest("tr")).toBe(headerRows[0])
+
+    // The leaf row is still the leaf row: every column, each once.
+    for (const name of ["Reference", "Status", "Amount"]) {
+      const leaf = screen.getByRole("columnheader", { name: new RegExp(name) })
+      expect(leaf.closest("tr")).toBe(headerRows[1])
+    }
+
+    // A rectangular header is not cosmetic: react-stately fills a short header
+    // row with `placeholder` nodes that react-aria-components cannot render, so
+    // the ungrouped Amount column and the selection gutter each need a cell of
+    // their own above them. Three bands across, spanning four columns.
+    const bandCells = headerRows[0].querySelectorAll("th")
+    expect(bandCells).toHaveLength(3)
+    const spanned = Array.from(bandCells).reduce((total, cell) => total + (cell.colSpan || 1), 0)
+    expect(spanned).toBe(4)
+    expect(headerRows[1].querySelectorAll("th")).toHaveLength(4)
+  })
+
+  test("a band does not take the sort, and the leaf under it still does", async () => {
+    render(
+      <DataTable<Order>
+        aria-label="Sortable banded orders"
+        columns={bandedColumns}
+        data={ORDERS}
+        getRowId={(order) => String(order.id)}
+        defaultPageSize={5}
+      />,
+    )
+    const user = userEvent.setup()
+    const band = screen.getByRole("columnheader", { name: "Order" })
+    expect(band.getAttribute("aria-sort")).toBeNull()
+    await user.click(band)
+    expect(references()[0]).toBe("ORD-1000")
+
+    await user.click(screen.getByText("Reference"))
+    expect(
+      screen.getByRole("columnheader", { name: /Reference/ }).getAttribute("aria-sort"),
+    ).toBe("ascending")
+  })
+
+  test("bands nest as deep as the columns do", () => {
+    render(
+      <DataTable<Order>
+        aria-label="Deeply banded orders"
+        columns={[{ id: "all", header: "All", columns: bandedColumns }]}
+        data={ORDERS}
+        getRowId={(order) => String(order.id)}
+        defaultPageSize={5}
+        selectionMode="multiple"
+      />,
+    )
+    // Three header rows, and each band spans what is actually under it — the
+    // span comes from the collection, so there is no depth the renderer knows
+    // about and the model does not.
+    expect(document.querySelectorAll("thead tr")).toHaveLength(3)
+    expect(screen.getByRole("columnheader", { name: "All" }).getAttribute("colspan")).toBe("3")
+    expect(screen.getByRole("columnheader", { name: "Order" }).getAttribute("colspan")).toBe("2")
+  })
+
+  test("a band survives resize and virtualization, which measure it themselves", () => {
+    const { unmount } = render(
+      <DataTable<Order>
+        aria-label="Resizable banded orders"
+        columns={bandedColumns}
+        data={ORDERS}
+        getRowId={(order) => String(order.id)}
+        allowResize
+        defaultPageSize={5}
+      />,
+    )
+    expect(screen.getByRole("columnheader", { name: "Order" }).getAttribute("colspan")).toBe("2")
+    unmount()
+
+    // Virtualized, the table is divs rather than a real <table>: the Virtualizer
+    // positions every cell from TableLayout, which sums the leaf widths a
+    // spanned cell covers. So the band is still one cell, with no colspan to
+    // put on a div.
+    render(
+      <DataTable<Order>
+        aria-label="Virtualized banded orders"
+        columns={bandedColumns}
+        data={ORDERS}
+        getRowId={(order) => String(order.id)}
+        virtualize
+        height={300}
+        enablePagination={false}
+      />,
+    )
+    expect(screen.getAllByRole("columnheader", { name: "Order" })).toHaveLength(1)
+  })
+
+  test("a server render has one header row, and the band name above each label", () => {
+    // Not a style choice: react-stately's buildHeaderRows rewrites the sibling
+    // links of the column nodes it chains, and react-aria's SSR path re-commits
+    // the collection after every appended column — so the second commit walks a
+    // corrupted tree and never finishes. This test is the reason the band row is
+    // gated on useIsSSR; if it ever hangs, the gate has been removed too early.
+    const html = renderToString(
+      <DataTable<Order>
+        aria-label="Server-rendered banded orders"
+        columns={bandedColumns}
+        data={ORDERS.slice(0, 2)}
+        getRowId={(order) => String(order.id)}
+        selectionMode="multiple"
+      />,
+    )
+    const thead = html.slice(html.indexOf("<thead"), html.indexOf("</thead>"))
+    expect(thead.match(/<tr/g) ?? []).toHaveLength(1)
+    expect(thead).not.toContain("colspan=\"2\"")
+    // The band still says which columns it covers, so the gate opening adds a
+    // row rather than information.
+    expect(thead).toContain("Order")
+    expect(thead).toContain("Reference")
   })
 })
 

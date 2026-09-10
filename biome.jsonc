@@ -182,6 +182,7 @@
                   "TableHeader",
                   "TableLayout",
                   "TableLoadMoreItem",
+                  "TableStateContext",
                   "Tabs",
                   "Tag",
                   "TagGroup",
