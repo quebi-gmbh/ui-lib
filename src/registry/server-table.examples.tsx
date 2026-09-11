@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react"
+import * as v from "valibot"
 import { ServerTable, type ServerTableLoadFilterParams } from "@/components/server-table"
 import { Button } from "@/components/button"
 import { FormattedDate } from "@/components/formatted-date"
 import { FormattedNumber } from "@/components/formatted-number"
+import { ConformField } from "@/components/conform-field"
+import { ConformNumberField } from "@/components/conform-number-field"
+import { ConformSelect } from "@/components/conform-select"
 import { Note } from "@/components/note"
+import { SelectItem } from "@/components/select"
 import {
   type DataTableColumn,
   type DataTableQuery,
@@ -13,7 +18,14 @@ import {
   queryToSearchParams,
   selectionCount,
 } from "@/lib/data-table"
-import { Money, ORDERS, type Order, StatusBadge, compareOrders } from "./table-fixtures.examples"
+import {
+  Money,
+  ORDERS,
+  type Order,
+  STATUSES,
+  StatusBadge,
+  compareOrders,
+} from "./table-fixtures.examples"
 import type { ComponentExample } from "./types"
 
 /* -------------------------------------------------------------------------- */
@@ -368,6 +380,91 @@ const Optimistic = () => {
   )
 }
 
+/* ------------------------- a cell edit is a mutation ---------------------- */
+
+const orderSchema = v.object({
+  customer: v.pipe(v.string(), v.minLength(3, "At least three characters")),
+  status: v.picklist(STATUSES, "Pick a status"),
+  amount: v.pipe(v.number("Enter an amount"), v.minValue(1, "At least €1")),
+})
+
+/** Three of the six columns become editable; the rest have no `editor`. */
+const editors: Record<string, DataTableColumn<Order>["editor"]> = {
+  customer: ({ field, label }) => <ConformField field={field} label={label} />,
+  amount: ({ field, label }) => <ConformNumberField field={field} label={label} />,
+  status: ({ field, label }) => (
+    <ConformSelect field={field} label={label}>
+      {STATUSES.map((status) => (
+        <SelectItem key={status} id={status}>
+          {status}
+        </SelectItem>
+      ))}
+    </ConformSelect>
+  ),
+}
+const editableColumns = columns.map((c) => ({ ...c, editor: editors[c.id] }))
+
+/**
+ * Editing a cell server-side is the optimistic-update problem again, one field
+ * smaller. The override lives beside the query result rather than in it, just as
+ * it does for "mark paid" above: the rows prop is the answer to the last query,
+ * so an edit is a patch over it until the next replaces both. What is new is
+ * that a commit can be refused twice — by the schema, in the cell, under the
+ * control; and by the server, which is a rollback and a sentence.
+ */
+const EditableCells = () => {
+  const { query, setQuery, result, state } = useOrderQuery({ pageSize: 6 })
+  const [overrides, setOverrides] = useState<Record<number, Partial<Order>>>({})
+  const [saving, setSaving] = useState(false)
+  const [failed, setFailed] = useState<string | null>(null)
+  const rows = result.rows.map((order) => ({ ...order, ...overrides[order.id] }))
+
+  const save = async (order: Order, patch: Partial<Order>) => {
+    setFailed(null)
+    setOverrides((current) => ({ ...current, [order.id]: { ...current[order.id], ...patch } }))
+    setSaving(true)
+    await delay(600)
+    setSaving(false)
+    // Every third reference fails, so the rollback is visible rather than theoretical.
+    if (order.id % 3 !== 0) return
+    setOverrides((current) => {
+      const next = { ...current }
+      delete next[order.id]
+      return next
+    })
+    setFailed(`${order.reference} was refused by the server — the change was rolled back.`)
+  }
+
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <ServerTable<Order>
+        aria-label="Orders with editable cells"
+        columns={editableColumns}
+        rows={rows}
+        getRowId={(order) => String(order.id)}
+        query={query}
+        onQueryChange={setQuery}
+        total={result.total}
+        tiebreakColumn="reference"
+        loadFilterValues={loadFilterValues}
+        enableColumnChooser={false}
+        isLoading={state === "initial"}
+        isRefreshing={state === "refreshing"}
+        cellEditSchema={orderSchema}
+        isCellSaving={saving}
+        onCellEdit={({ row, value }) => void save(row, value as Partial<Order>)}
+      />
+      {failed && <Note intent="danger">{failed}</Note>}
+      <Note intent="info">
+        Customer, Status and Amount edit in place; the other three have no{" "}
+        <code>editor</code> and Tab skips over them. Sort by Amount and then edit
+        one: the row moves under the cursor as the new value re-sorts it, and
+        focus follows the cell rather than falling to the body.
+      </Note>
+    </div>
+  )
+}
+
 export const serverTableExamples: ComponentExample[] = [
   {
     title: "Server-driven orders",
@@ -392,5 +489,11 @@ export const serverTableExamples: ComponentExample[] = [
     description:
       "Mark an order paid and the row updates immediately. One in three fails on the server and rolls back with an explanation — the case a spinner-free optimistic update has to get right.",
     render: () => <Optimistic />,
+  },
+  {
+    title: "Editing a cell, against a server",
+    description:
+      "A cell commit is a mutation: the value changes before the server answers, the cell shows that it is in flight, and one in three is refused and rolled back with an explanation. The schema is checked in the browser first, so a bad amount never becomes a request at all.",
+    render: () => <EditableCells />,
   },
 ]

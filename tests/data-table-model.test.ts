@@ -8,15 +8,19 @@
  * rather than in a rendering test for one of them.
  */
 import { describe, expect, test } from "bun:test"
-import type { DataTableSelection } from "../src/lib/data-table"
+import type { DataTableColumn, DataTableSelection } from "../src/lib/data-table"
 import {
   applySelection,
   clampPage,
   csvCell,
+  editValuesFor,
+  editableCells,
   emptyQuery,
   emptySelection,
   isRowSelected,
+  leafColumns,
   matchesFilter,
+  nextEditableCell,
   nextSorting,
   pageRange,
   queryFromSearchParams,
@@ -302,5 +306,86 @@ describe("the saved view", () => {
 
   test("a key that was never written is undefined", () => {
     expect(readView("ui-lib.test.absent")).toBeUndefined()
+  })
+})
+
+/**
+ * The order Tab walks, and the row a form is over.
+ *
+ * Both are decidable without a DOM, which is the point of them living here: the
+ * rendering test next door asserts that Tab *lands* where this says it should,
+ * and this asserts what it should say — including the two cases a keyboard test
+ * would take a full table to reach, a wrap past the end and a cell that is no
+ * longer in the list because the commit filtered its row away.
+ */
+describe("walking the editable cells", () => {
+  const cells = editableCells(["r1", "r2"], ["name", "price"])
+
+  test("the order is reading order: a row's columns, then the next row's", () => {
+    expect(cells).toEqual([
+      { rowId: "r1", columnId: "name" },
+      { rowId: "r1", columnId: "price" },
+      { rowId: "r2", columnId: "name" },
+      { rowId: "r2", columnId: "price" },
+    ])
+  })
+
+  test("Tab at the end of a row goes to the start of the next", () => {
+    expect(nextEditableCell(cells, { rowId: "r1", columnId: "price" }, 1)).toEqual({
+      rowId: "r2",
+      columnId: "name",
+    })
+  })
+
+  test("the last cell wraps to the first, and the first back to the last", () => {
+    // Wrapping rather than leaving the table is the whole distinction between a
+    // data table and a page of inputs.
+    expect(nextEditableCell(cells, { rowId: "r2", columnId: "price" }, 1)).toEqual({
+      rowId: "r1",
+      columnId: "name",
+    })
+    expect(nextEditableCell(cells, { rowId: "r1", columnId: "name" }, -1)).toEqual({
+      rowId: "r2",
+      columnId: "price",
+    })
+  })
+
+  test("a cell that is no longer on screen has no neighbour to offer", () => {
+    // The commit that just landed re-filtered the rows out from under it. The
+    // caller closes rather than guessing at a cell.
+    expect(nextEditableCell(cells, { rowId: "gone", columnId: "name" }, 1)).toBeUndefined()
+    expect(nextEditableCell([], { rowId: "r1", columnId: "name" }, 1)).toBeUndefined()
+  })
+})
+
+describe("the row an edit form is over", () => {
+  interface Product {
+    sku: string
+    net: number
+    tax: number
+  }
+  const columns: DataTableColumn<Product>[] = [
+    { id: "sku", header: "SKU", accessorKey: "sku" },
+    // A column whose id is not the field it edits.
+    { id: "netAmount", header: "Net", accessorKey: "net", editField: "net" },
+    // A derived column: read through the accessor, so the form edits the value
+    // the cell displays rather than a key the row does not have.
+    { id: "gross", header: "Gross", accessorFn: (row) => row.net + row.tax },
+  ]
+
+  test("every editable column, under the name its schema field has", () => {
+    expect(editValuesFor(columns, { sku: "SKU-1", net: 100, tax: 19 })).toEqual({
+      sku: "SKU-1",
+      net: 100,
+      gross: 119,
+    })
+  })
+
+  test("a header band contributes its leaves, not itself", () => {
+    const banded: DataTableColumn<Product>[] = [
+      { id: "totals", header: "Totals", columns: [columns[1], columns[2]] },
+      columns[0],
+    ]
+    expect(leafColumns(banded).map((column) => column.id)).toEqual(["netAmount", "gross", "sku"])
   })
 })

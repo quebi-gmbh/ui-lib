@@ -4,6 +4,7 @@ import { useTable } from "@tanstack/react-table"
 import type { RowData } from "@tanstack/react-table"
 import { ArrowDownToLine, RotateCcw } from "lucide-react"
 import { type ReactNode, useMemo, useRef, useState } from "react"
+import type * as v from "valibot"
 import { useAsyncList } from "react-stately"
 import { Button } from "@/components/button"
 import {
@@ -18,9 +19,12 @@ import {
   TableSearch,
   TableToolbar,
   describeFilter,
+  useTableCellEditing,
 } from "@/components/table-controls"
 import { TableShell } from "@/components/table-shell"
 import {
+  type DataTableCellAddress,
+  type DataTableCellEdit,
   type DataTableColumn,
   type DataTableDensity,
   type DataTableFilterOption,
@@ -131,6 +135,24 @@ export interface ServerTableProps<T extends RowData> {
   renderDetail?: (row: T) => ReactNode
   renderRowEditor?: (row: T) => ReactNode
   editingKey?: string | null
+
+  /* editing a cell */
+  /**
+   * The valibot schema a cell edit is validated against — the whole row.
+   * Without it nothing is editable, whatever the columns say.
+   */
+  cellEditSchema?: v.GenericSchema
+  /**
+   * Reported once the schema accepted the row. Server-side this is a mutation:
+   * update optimistically, roll back if the server refuses, and hold
+   * `isCellSaving` while it is in flight — the rows prop is the answer to the
+   * last query, so the edit lives beside it until the next one replaces both.
+   */
+  onCellEdit?: (edit: DataTableCellEdit<T>) => void
+  editingCell?: DataTableCellAddress | null
+  onEditingCellChange?: (cell: DataTableCellAddress | null) => void
+  getEditValues?: (row: T) => Record<string, unknown>
+  isCellSaving?: boolean
   rowActions?: (row: T) => ReactNode
   getRowHref?: (row: T) => string | undefined
   onRowAction?: (row: T) => void
@@ -280,6 +302,12 @@ export function ServerTable<T extends RowData>({
   renderDetail,
   renderRowEditor,
   editingKey,
+  cellEditSchema,
+  onCellEdit,
+  editingCell,
+  onEditingCellChange,
+  getEditValues,
+  isCellSaving,
   rowActions,
   getRowHref,
   onRowAction,
@@ -386,6 +414,16 @@ export function ServerTable<T extends RowData>({
 
   const columnLabel = (columnId: string) =>
     table.getColumn(columnId)?.columnDef.meta?.label ?? columnId
+
+  const cellEditing = useTableCellEditing<T>({
+    columns,
+    schema: cellEditSchema,
+    getEditValues,
+    onCellEdit,
+    editingCell,
+    onEditingCellChange,
+    isSaving: isCellSaving,
+  })
 
   return (
     <div className={"flex w-full flex-col gap-2"}>
@@ -521,6 +559,10 @@ export function ServerTable<T extends RowData>({
         renderDetail={renderDetail}
         renderRowEditor={renderRowEditor}
         editingKey={editingKey}
+        editingCell={cellEditing.editingCell}
+        onEditingCellChange={cellEditing.setEditingCell}
+        editableColumns={cellEditing.editableColumns}
+        renderCellEditor={cellEditing.renderCellEditor}
         rowClassName={rowClassName}
         showFooter={showFooter}
         hasQuery={activeFilters.length > 0 || query.search !== ""}

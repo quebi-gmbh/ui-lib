@@ -3,6 +3,7 @@ import { FormattedDate } from "@/components/formatted-date"
 import { FormattedCurrency, FormattedNumber } from "@/components/formatted-number"
 import { Meter } from "@/components/meter"
 import type { DataTableColumn } from "@/lib/data-table"
+import { dataTableCellExamples } from "./data-table-cells.examples"
 import { dataTableEditingExamples } from "./data-table-editing.examples"
 import { dataTableFilteringExamples } from "./data-table-filtering.examples"
 import {
@@ -179,7 +180,7 @@ const SortingShowcase = () => (
 /* -------------------------------------------------------------------------- */
 
 /**
- * The gallery is assembled from four files so each stays inside the
+ * The gallery is assembled from five files so each stays inside the
  * 500-line limit the library publishes for everyone else. One slug, one array.
  */
 export const dataTableExamples: ComponentExample[] = [
@@ -198,6 +199,7 @@ export const dataTableExamples: ComponentExample[] = [
   ...dataTableFilteringExamples,
   ...dataTableRowExamples,
   ...dataTableEditingExamples,
+  ...dataTableCellExamples,
 ]
 
 export { compareOrders }
