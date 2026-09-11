@@ -119,6 +119,17 @@ describe("Table", () => {
    * `react-aria-components/dist/private/Table.js` — and that function is where
    * the writes to `prevKey`/`nextKey` happen. Nothing in the report has been
    * refuted, but nothing will move upstream until someone says so there.
+   *
+   * The reply that says so — and a standalone repro of all three shapes that
+   * needs none of this repo — is in `upstream/react-spectrum-10598/`, together
+   * with two things this test cannot show. Three bands over one leaf each make
+   * `buildHeaderRows` execute `item.nextKey = item.key`, so the `nextKey` walk
+   * has a one-node cycle and `renderToString` never returns. And deleting only
+   * the `prevKey`/`nextKey` writes from `buildHeaderRows` fixes both of those
+   * shapes while leaving react-stately's own `TableCollection` byte-identical,
+   * because `GridCollection` re-chains every child from `childNodes` order after
+   * `buildHeaderRows` has run — so those particular writes are already dead for
+   * the only other caller. Posting the reply is a human step; see that README.
    */
   test("a band is still corrupted by react-stately on the server", () => {
     const html = renderToString(
@@ -175,6 +186,14 @@ describe("Table", () => {
    * Upstream status, checked 2026-09-11: still present. react-stately 3.50.0's
    * `buildHeaderRows` is byte-identical to the 3.48.0 in this lockfile, and the
    * placeholder literal it constructs still has no `render`.
+   *
+   * This half needs a fix on the react-aria-components side rather than the
+   * react-stately one — `Collection.tsx` calls `node.render!(node)` with no case
+   * for a placeholder — so it is separate from the mutation bug above and will
+   * probably land separately. `upstream/react-spectrum-10598/placeholder.tsx` is
+   * this same shape written against plain react-aria-components, for the upstream
+   * thread; it is worth knowing that this one is not SSR-specific, which is what
+   * makes it the cleanest of the three to hand someone.
    */
   test("a header row shorter than the table is still unrenderable", () => {
     expect(() =>

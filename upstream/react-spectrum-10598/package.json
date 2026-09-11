@@ -1,0 +1,25 @@
+{
+  "name": "rac-ssr-header-rows-repro",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Standalone repro for adobe/react-spectrum#10598 \u2014 buildHeaderRows writes to react-aria-components' collection nodes, which corrupts the header on the SSR path.",
+  "scripts": {
+    "repro": "tsx repro.tsx",
+    "hang": "tsx hang.tsx",
+    "placeholder": "tsx placeholder.tsx"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-aria": "3.52.1",
+    "react-aria-components": "1.21.1",
+    "react-dom": "19.3.0",
+    "react-stately": "3.50.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "tsx": "4.23.13"
+  }
+}
