@@ -235,7 +235,7 @@ interface TableColumnGroupProps {
  * links now cross band boundaries: `updateColumns` reaches a column twice, the
  * duplicate makes `buildHeaderRows` link a node to itself, and the next walk
  * never ends. So a banded header is rendered only where react-aria is not using
- * that path — see `useIsSSR` in data-table.tsx — and the gate goes away when
+ * that path — see `useIsSSR` in table-shell.tsx — and the gate goes away when
  * react-stately stops mutating shared nodes.
  *
  * That is reported upstream as
