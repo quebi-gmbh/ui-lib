@@ -28,6 +28,10 @@
  *   `depth`, and a detail panel is an extra row with one spanning cell.
  * - **Selection is react-aria's UX over a model this file owns**, because
  *   "every row matching the query" is not a `Set<Key>`. See `DataTableSelection`.
+ * - **Editing is Conform's, one form per row.** The control in a cell is a
+ *   `conform-*` variant bound by naming its props, and the form behind it
+ *   carries the whole row — see `DataTableColumn.editor` and
+ *   `DataTableCellEdit` for why the boundary is the row rather than the cell.
  */
 import {
   aggregationFns,
@@ -45,6 +49,7 @@ import {
   tableFeatures,
 } from "@tanstack/react-table"
 import type { ColumnDef, Row, RowData, SortingState, Table } from "@tanstack/react-table"
+import type { FieldMetadata } from "@conform-to/react"
 import type { ReactNode } from "react"
 
 export type DataTableAlign = "start" | "center" | "end"
@@ -178,6 +183,164 @@ export interface DataTableColumn<T> {
   /** Custom predicate; overrides the one implied by `filterVariant`. */
   filterFn?: (value: unknown, filter: unknown, row: T) => boolean
   noExport?: boolean
+  /**
+   * The control shown in this cell while it is being edited — and the reason
+   * editing is not a list of five kinds.
+   *
+   * `field` is Conform metadata, so the body is a `conform-*` variant bound by
+   * naming its props: `editor: ({ field, label }) => <ConformColorPicker field={field}
+   * label={label} />`. Every variant the library publishes works here, and so
+   * does the next one, because the table never learns their names. A cell
+   * without an `editor` cannot be edited and Tab skips over it.
+   *
+   * The label is visually hidden in the cell — the column header is already
+   * the accessible name in a grid — but it has to be passed for the control to
+   * have a name at all when a screen reader reads the cell on its own.
+   */
+  editor?: (ctx: DataTableEditorContext<T>) => ReactNode
+  /**
+   * The schema field this column edits. Defaults to the column id, which is
+   * what it is whenever the two agree — name it when they do not, e.g. a
+   * `customerName` column over a `customer` field.
+   */
+  editField?: string
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              editing a cell                                */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Where the form boundary is, decided once here rather than per call site.
+ *
+ * **One Conform form per row, with one field visible.** The alternative — a
+ * form per cell — is smaller and cannot express the rule that made anyone want
+ * a schema in the first place: "discount ≤ price" needs both values in the same
+ * submission, and a form holding one field has one value. So the editor mounts
+ * a form over the whole row, renders the edited column's control, and carries
+ * every other editable field as a hidden input. The submission is therefore the
+ * whole row, validated whole, and `DataTableCellEdit.value` hands it back that
+ * way — which is also what makes the cell editor and `TableRowEditor` the same
+ * shape over the same schema instead of two dialects of one idea.
+ *
+ * The cost is stated rather than hidden: a cross-field rule can mark the *other*
+ * field invalid, and that field is not on screen. The editor reports its message
+ * against the cell being edited, so the commit is refused with a reason rather
+ * than refused silently.
+ */
+export interface DataTableCellAddress {
+  rowId: string
+  columnId: string
+}
+
+/** The context a column's `editor` is called with. */
+export interface DataTableEditorContext<T> extends DataTableFieldContext {
+  row: T
+}
+
+/** Conform metadata plus the label a control in a cell would otherwise lack. */
+export interface DataTableFieldContext {
+  /**
+   * Conform field metadata. Bind it by naming props — `field={field}` on a
+   * `conform-*` variant — never by spreading `getInputProps`.
+   */
+  field: FieldMetadata<never>
+  label: string
+}
+
+/** One committed cell edit, reported once the row validated. */
+export interface DataTableCellEdit<T> {
+  row: T
+  rowId: string
+  columnId: string
+  /** The schema field the column edits — its `editField`, or its id. */
+  field: string
+  /** The whole validated row, not just this cell. See `DataTableCellAddress`. */
+  value: Record<string, unknown>
+}
+
+/**
+ * What the render half asks the control half for when a cell is being edited.
+ *
+ * It is declared here, in the vocabulary both halves speak, because neither may
+ * import the other: `table-shell` calls this, `table-controls` supplies it, and
+ * a shared type is the only thing that can sit between them without closing the
+ * loop.
+ */
+export interface DataTableCellEditContext<T> {
+  row: T
+  rowId: string
+  columnId: string
+  /** The character that started the edit, when the user started it by typing. */
+  seed?: string
+  /** Leave the cell without moving — a commit that stays put, or a cancel. */
+  close: () => void
+  /** The commit landed: move to the next (1) or previous (-1) editable cell. */
+  move: (delta: 1 | -1) => void
+}
+
+export type DataTableCellEditRenderer<T> = (ctx: DataTableCellEditContext<T>) => ReactNode
+
+/** Every leaf column, with the header bands flattened away. */
+export function leafColumns<T>(columns: DataTableColumn<T>[]): DataTableColumn<T>[] {
+  return columns.flatMap((column) => (column.columns ? leafColumns(column.columns) : [column]))
+}
+
+/**
+ * Every editable cell, in reading order: each row's editable columns, then the
+ * next row's. Tab walks this list, which is why it is built row-major — the
+ * wrap at the end of a row is the next row rather than the next element in the
+ * document.
+ */
+export function editableCells(rowIds: string[], columnIds: string[]): DataTableCellAddress[] {
+  return rowIds.flatMap((rowId) => columnIds.map((columnId) => ({ rowId, columnId })))
+}
+
+export function isSameCell(
+  a: DataTableCellAddress | null | undefined,
+  b: DataTableCellAddress | null | undefined,
+): boolean {
+  return a != null && b != null && a.rowId === b.rowId && a.columnId === b.columnId
+}
+
+/**
+ * The cell Tab moves to, wrapping past the last one back to the first.
+ *
+ * Wrapping rather than stopping is the point: a grid of inputs where Tab falls
+ * out of the table at the end of a row is the behaviour this exists to replace.
+ * A cell that is no longer in the list — its row filtered away by the commit
+ * that just landed — has no neighbour to offer, and the caller closes instead.
+ */
+export function nextEditableCell(
+  cells: DataTableCellAddress[],
+  current: DataTableCellAddress,
+  delta: 1 | -1,
+): DataTableCellAddress | undefined {
+  const index = cells.findIndex((cell) => isSameCell(cell, current))
+  if (index < 0 || cells.length === 0) return undefined
+  return cells[(index + delta + cells.length) % cells.length]
+}
+
+/**
+ * The row as the edit form's default values: every editable column, under the
+ * name its schema field has.
+ *
+ * A column with an `accessorFn` is read through it, so a derived column edits
+ * the value it displays; everything else is read off the row by `accessorKey`
+ * or, failing that, by the field name.
+ */
+export function editValuesFor<T>(
+  columns: DataTableColumn<T>[],
+  row: T,
+): Record<string, unknown> {
+  const values: Record<string, unknown> = {}
+  for (const column of columns) {
+    const name = column.editField ?? column.id
+    values[name] = column.accessorFn
+      ? column.accessorFn(row)
+      : (row as Record<string, unknown>)[column.accessorKey ?? name]
+  }
+  return values
 }
 
 /**

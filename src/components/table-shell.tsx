@@ -9,7 +9,7 @@ import {
   PinOff,
   RotateCcw,
 } from "lucide-react"
-import { type ReactNode, useMemo, useRef } from "react"
+import { type ReactNode, use, useEffect, useMemo, useRef, useState } from "react"
 import { useIsSSR } from "react-aria"
 import type { Selection } from "react-aria-components"
 import {
@@ -18,6 +18,7 @@ import {
   Row,
   TableLayout,
   TableLoadMoreItem,
+  TableStateContext,
   Virtualizer,
   useDragAndDrop,
 } from "react-aria-components"
@@ -39,13 +40,18 @@ import {
 } from "@/components/table"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip"
 import {
+  type DataTableCellAddress,
+  type DataTableCellEditRenderer,
   type DataTableDensity,
   type DataTableHeader,
   type DataTableInstance,
   type DataTableRow,
   type DataTableSelection,
   applySelection,
+  editableCells,
   emptySelection,
+  isSameCell,
+  nextEditableCell,
   selectedKeysFor,
   sortPriority,
   toSortDescriptor,
@@ -82,6 +88,11 @@ import { cn } from "@/lib/utils"
  * header cell through `TableColumnGroup`, so the band is part of the grid rather
  * than a line of text repeated above each leaf. What makes that possible, and
  * why every leaf ends up with a band above it, is in that component's doc.
+ *
+ * The one keyboard model it does *not* leave to react-aria is the one that makes
+ * an editable table a data table rather than a page of inputs — see
+ * `useCellEditKeyboard` below for which half of it is react-aria's and which
+ * half had to be built, and why the seam falls where it does.
  */
 
 /*
@@ -137,6 +148,186 @@ const priorityClass = (priority: number | undefined) =>
         ? "hidden lg:table-cell"
         : "hidden xl:table-cell"
 
+/**
+ * The cell element for an address, found by its data attributes rather than
+ * held in a ref.
+ *
+ * A commit can re-sort the row out from under the cursor, which is exactly the
+ * case a ref captured before the commit gets wrong: the node is still in the
+ * document, at a different index, and a stale ref points at whichever row took
+ * its place. Attribute matching rather than a CSS selector because a row id is
+ * arbitrary text and `CSS.escape` is not everywhere this renders.
+ */
+function findCell(
+  container: HTMLElement | null,
+  cell: DataTableCellAddress,
+): HTMLElement | null {
+  if (!container) return null
+  const nodes = container.querySelectorAll<HTMLElement>("[data-row-key][data-column-id]")
+  for (let index = 0; index < nodes.length; index++) {
+    const node = nodes[index]
+    if (node.dataset.rowKey === cell.rowId && node.dataset.columnId === cell.columnId) return node
+  }
+  return null
+}
+
+/**
+ * A character that should start an edit, rather than a key the grid owns.
+ *
+ * Space is left to react-aria: it toggles the row's selection, and a table that
+ * started editing on it would have no keyboard way to select a row. Every
+ * modifier combination is left alone too — `Ctrl+C` on a cell is a copy.
+ */
+function isTypingKey(event: React.KeyboardEvent): boolean {
+  return (
+    event.key.length === 1 &&
+    event.key !== " " &&
+    !event.ctrlKey &&
+    !event.metaKey &&
+    !event.altKey
+  )
+}
+
+/**
+ * Arrow keys belong to the caret while a cell is being edited.
+ *
+ * react-aria's `useGridCell` intercepts ArrowLeft/ArrowRight in the capture
+ * phase and turns them into "move to the next focusable thing, then the next
+ * cell" — correct for a cell holding buttons, and fatal for one holding a text
+ * field, where it means the caret can never move. The hook checks one flag
+ * before it does any of that, `isKeyboardNavigationDisabled`, which react-stately
+ * puts on the table state with a setter beside it; column resizing already uses
+ * it for the same reason. So the flag is held down for exactly as long as an
+ * editor is mounted, and the grid's own arrow navigation comes back the instant
+ * it is not.
+ *
+ * It is a component rather than a hook call in the shell because the state is
+ * published by react-aria's Table, which only its own descendants can reach —
+ * and the editing cell is one.
+ */
+function GridKeyboardOff() {
+  // The raw useState setter from react-stately's useTableState: stable across
+  // renders, which is what keeps this effect from thrashing the flag.
+  const setDisabled = use(TableStateContext)?.setKeyboardNavigationDisabled
+  useEffect(() => {
+    setDisabled?.(true)
+    return () => setDisabled?.(false)
+  }, [setDisabled])
+  return null
+}
+
+/**
+ * The half of the editing keyboard model react-aria does not already own.
+ *
+ * What it does own, and what is therefore not here: arrow keys between cells,
+ * Home/End, page keys, typeahead, the roving tab stop that makes the whole
+ * table one Tab away from the rest of the page, and the ARIA grid semantics
+ * underneath all of it. What is here is the part that only exists once a cell
+ * can become a control:
+ *
+ * - **Starting an edit is the grid's key being taken away**, so it is handled in
+ *   the *capture* phase, before react-aria sees it: Enter and F2 open the
+ *   editor, and any printable character opens it with that character as the
+ *   value — which has to beat typeahead, since typing "P" on an editable cell
+ *   cannot both jump to a row starting with P and start typing "P" into it.
+ *   Only cells that actually have an editor take the key; every other cell
+ *   keeps react-aria's behaviour exactly.
+ * - **Finishing an edit belongs to the editor**, not here: Escape, Enter and Tab
+ *   are `TableCellEditor`'s in `table-controls`, which is the half that knows
+ *   whether the schema accepted the row and therefore whether there is anything
+ *   to move on from. It reads them on the way down too, and for a reason worth
+ *   reading there — react-aria's formatted fields stop Enter before it could
+ *   ever bubble.
+ * - **Tab commits and moves to the next editable cell**, wrapping to the next
+ *   row rather than leaving for the next focusable element in the document; the
+ *   order it walks is `editableCells`, which is the rows on screen crossed with
+ *   the editable columns, in the order they are drawn.
+ * - **Focus comes back to the cell**, never to the body — including when the
+ *   commit re-sorted the row somewhere else, because the cell is found again by
+ *   its address rather than remembered as a node.
+ */
+function useCellEditKeyboard({
+  editingCell,
+  onEditingCellChange,
+  order,
+  enabled,
+}: {
+  editingCell: DataTableCellAddress | null
+  onEditingCellChange: ((cell: DataTableCellAddress | null) => void) | undefined
+  order: DataTableCellAddress[]
+  enabled: boolean
+}) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [seed, setSeed] = useState<(DataTableCellAddress & { text: string }) | null>(null)
+  const rowId = editingCell?.rowId
+  const columnId = editingCell?.columnId
+  // The address the last render was editing, so a close knows which cell to
+  // give focus back to. A ref rather than state: nothing renders from it.
+  const previous = useRef<DataTableCellAddress | null>(null)
+  // Read only when an editor closes, and it changes on every commit — a ref
+  // keeps it out of the effect's dependencies without lying about them.
+  const orderRef = useRef(order)
+  orderRef.current = order
+
+  const start = (cell: DataTableCellAddress, text?: string) => {
+    setSeed(text == null ? null : { ...cell, text })
+    onEditingCellChange?.(cell)
+  }
+
+  useEffect(() => {
+    const container = containerRef.current
+    const was = previous.current
+    previous.current = rowId != null && columnId != null ? { rowId, columnId } : null
+    if (!container) return
+    if (rowId != null && columnId != null) {
+      // Putting focus *into* the control is the editor's own job: react-aria
+      // renders a cell's children through its collection, so at this point the
+      // cell is here and what goes in it is one commit away.
+      return
+    }
+    if (!was) return
+    // The editor has gone; something has to hold the focus it had. The cell it
+    // was in first, then any cell left in the same column — the row may have
+    // been filtered away by the very edit that just committed — and the grid
+    // itself last, so focus never lands on the body.
+    const sameColumn = orderRef.current.find((candidate) => candidate.columnId === was.columnId)
+    const cell = findCell(container, was) ?? (sameColumn ? findCell(container, sameColumn) : null)
+    if (cell) cell.focus()
+    else container.querySelector<HTMLElement>('[role="grid"]')?.focus()
+  }, [rowId, columnId])
+
+  const onKeyDownCapture = (event: React.KeyboardEvent) => {
+    if (!enabled) return
+    const target = event.target as HTMLElement | null
+    const cell = target?.closest?.<HTMLElement>("[data-editable-cell]")
+    // Only when the cell itself has focus. Once an editor is open the target is
+    // a control inside it, and those keys are the editor's to answer.
+    if (!cell || cell !== target) return
+    const address = { rowId: cell.dataset.rowKey ?? "", columnId: cell.dataset.columnId ?? "" }
+    if (event.key === "Enter" || event.key === "F2") {
+      event.preventDefault()
+      event.stopPropagation()
+      start(address)
+      return
+    }
+    if (isTypingKey(event)) {
+      event.preventDefault()
+      event.stopPropagation()
+      start(address, event.key)
+    }
+  }
+
+  return {
+    containerRef,
+    onKeyDownCapture,
+    start,
+    close: () => onEditingCellChange?.(null),
+    move: (from: DataTableCellAddress, delta: 1 | -1) =>
+      onEditingCellChange?.(nextEditableCell(order, from, delta) ?? null),
+    seedFor: (cell: DataTableCellAddress) => (isSameCell(seed, cell) ? seed?.text : undefined),
+  }
+}
+
 export interface TableShellProps<T extends RowData> {
   "aria-label": string
   /** The TanStack instance. Client-side it owns the model; server-side it is manual. */
@@ -178,6 +369,20 @@ export interface TableShellProps<T extends RowData> {
   /** Replaces the row entirely while it is being edited. */
   renderRowEditor?: (row: T) => ReactNode
   editingKey?: string | null
+  /**
+   * The cell being edited, or null. Controlled, and deliberately one cell: two
+   * open editors would be two forms over the same row disagreeing about it.
+   */
+  editingCell?: DataTableCellAddress | null
+  onEditingCellChange?: (cell: DataTableCellAddress | null) => void
+  /**
+   * Column ids whose cells can be edited. Plain data because the shell needs it
+   * before it renders anything — to draw the affordance, to decide what Enter
+   * means on a focused cell, and to know where Tab goes next.
+   */
+  editableColumns?: string[]
+  /** The control for the editing cell, rendered inside the same `<td>`. */
+  renderCellEditor?: DataTableCellEditRenderer<T>
   /** Extra classes for a row — conditional formatting lives here. */
   rowClassName?: (row: T) => string | undefined
   /** Per-column filter popover content. Return null for an unfilterable column. */
@@ -282,6 +487,10 @@ export function TableShell<T extends RowData>({
   renderDetail,
   renderRowEditor,
   editingKey,
+  editingCell = null,
+  onEditingCellChange,
+  editableColumns,
+  renderCellEditor,
   rowClassName,
   renderFilter,
   activeFilters = [],
@@ -318,6 +527,55 @@ export function TableShell<T extends RowData>({
     () => rows.map((row) => (row.getIsGrouped?.() ? row.id : getRowKey(row.original))),
     [rows, getRowKey],
   )
+
+  /**
+   * The editable columns, in the order they are drawn. A column the chooser has
+   * hidden is not editable — Tab cannot move to a cell nobody can see.
+   */
+  const editableColumnIds = useMemo(
+    () =>
+      renderCellEditor && editableColumns
+        ? leafHeaders
+            .map((header) => header.column.id)
+            .filter((id) => editableColumns.includes(id))
+        : [],
+    [renderCellEditor, editableColumns, leafHeaders],
+  )
+  /**
+   * Every editable cell on screen, row-major — the list Tab walks.
+   *
+   * Three kinds of row are left out, each because it has no cell to land on: a
+   * grouped row shows an aggregate of the rows underneath and there is no single
+   * row for a form to be over; a disabled row is not the user's to change; and
+   * the row a *row* editor has taken over has been replaced by one spanning
+   * cell, so Tab would aim at a `<td>` that is not drawn.
+   */
+  const editableRowKeys = useMemo(
+    () =>
+      editableColumnIds.length === 0
+        ? new Set<string>()
+        : new Set(
+            rows
+              .filter(
+                (row) =>
+                  !row.getIsGrouped?.() &&
+                  !isRowDisabled?.(row.original) &&
+                  getRowKey(row.original) !== editingKey,
+              )
+              .map((row) => getRowKey(row.original)),
+          ),
+    [rows, getRowKey, editableColumnIds, isRowDisabled, editingKey],
+  )
+  const editOrder = useMemo(
+    () => editableCells([...editableRowKeys], editableColumnIds),
+    [editableRowKeys, editableColumnIds],
+  )
+  const cellEdit = useCellEditKeyboard({
+    editingCell,
+    onEditingCellChange,
+    order: editOrder,
+    enabled: editableColumnIds.length > 0,
+  })
 
   const { dragAndDropHooks } = useDragAndDrop({
     getItems: (keys) => [...keys].map((key) => ({ "text/plain": String(key) })),
@@ -381,6 +639,9 @@ export function TableShell<T extends RowData>({
           const isFirst = index === 0
           const value = cell?.getValue()
           const isEmpty = value == null || value === ""
+          const address = { rowId: key, columnId: header.column.id }
+          const canEdit = editableRowKeys.has(key) && editableColumnIds.includes(header.column.id)
+          const isEditingThisCell = canEdit && isSameCell(editingCell, address)
           const content = row.getIsGrouped?.()
             ? cell?.getIsGrouped?.()
               ? groupedCellContent(row, String(value))
@@ -397,48 +658,77 @@ export function TableShell<T extends RowData>({
           return (
             <TableCell
               key={header.column.id}
+              data-row-key={key}
+              data-column-id={header.column.id}
+              data-editable-cell={canEdit || undefined}
+              onDoubleClick={canEdit ? () => cellEdit.start(address) : undefined}
               className={cn(
                 cellPadding,
                 alignClass(meta?.align),
                 priorityClass(meta?.priority),
-                meta?.truncate && "max-w-0 truncate",
+                // An editing cell is the control's, at the column's width: it
+                // keeps the padding and loses the truncation, because a message
+                // under a field is the one thing in a cell that has to wrap.
+                meta?.truncate && !isEditingThisCell && "max-w-0 truncate",
+                canEdit &&
+                  !isEditingThisCell &&
+                  "cursor-text decoration-quebi-line/40 decoration-dotted underline-offset-4 hover:underline",
+                isEditingThisCell && "bg-quebi-brand/5 align-top whitespace-normal",
                 table.getColumn(header.column.id)?.getIsPinned?.() && "bg-quebi-bg",
               )}
               style={pinStyle(header.column.id)}
             >
-              <span
-                className={cn("flex items-center gap-2", meta?.align === "end" && "justify-end")}
-                style={isFirst && row.depth > 0 ? { paddingInlineStart: row.depth * 16 } : undefined}
-              >
-                {isFirst && (row.getCanExpand?.() || (renderDetail && !row.getIsGrouped?.())) && (
-                  <Button
-                    intent="ghost"
-                    size="sq-xs"
-                    aria-label={row.getIsExpanded?.() ? "Collapse row" : "Expand row"}
-                    onPress={() => row.toggleExpanded?.()}
-                    className="-my-1 shrink-0"
-                  >
-                    <ChevronRightIcon
-                      data-slot="icon"
-                      aria-hidden="true"
-                      className={cn("transition-transform", row.getIsExpanded?.() && "rotate-90")}
-                    />
-                  </Button>
-                )}
-                {meta?.truncate ? (
-                  <Tooltip>
-                    <TooltipTrigger className="truncate text-start">
-                      <span className="truncate">{content}</span>
-                    </TooltipTrigger>
-                    <TooltipContent>{isEmpty ? (meta?.emptyValue ?? "—") : String(value)}</TooltipContent>
-                  </Tooltip>
-                ) : (
-                  content
-                )}
-                {isFirst && rowActions && (
-                  <span className="ms-auto ps-2">{rowActions(row.original)}</span>
-                )}
-              </span>
+              {isEditingThisCell && renderCellEditor ? (
+                // The label a `conform-*` variant renders is the control's
+                // accessible name and the column header is already the visible
+                // one, so it is hidden here rather than left off there — a
+                // control in a cell with no name at all is the worse trade.
+                <span className="flex flex-col gap-1 text-start [&_label]:sr-only">
+                  <GridKeyboardOff />
+                  {renderCellEditor({
+                    row: row.original,
+                    rowId: key,
+                    columnId: header.column.id,
+                    seed: cellEdit.seedFor(address),
+                    close: cellEdit.close,
+                    move: (delta) => cellEdit.move(address, delta),
+                  })}
+                </span>
+              ) : (
+                <span
+                  className={cn("flex items-center gap-2", meta?.align === "end" && "justify-end")}
+                  style={isFirst && row.depth > 0 ? { paddingInlineStart: row.depth * 16 } : undefined}
+                >
+                  {isFirst && (row.getCanExpand?.() || (renderDetail && !row.getIsGrouped?.())) && (
+                    <Button
+                      intent="ghost"
+                      size="sq-xs"
+                      aria-label={row.getIsExpanded?.() ? "Collapse row" : "Expand row"}
+                      onPress={() => row.toggleExpanded?.()}
+                      className="-my-1 shrink-0"
+                    >
+                      <ChevronRightIcon
+                        data-slot="icon"
+                        aria-hidden="true"
+                        className={cn("transition-transform", row.getIsExpanded?.() && "rotate-90")}
+                      />
+                    </Button>
+                  )}
+                  {meta?.truncate ? (
+                    <Tooltip>
+                      <TooltipTrigger className="truncate text-start">
+                        <span className="truncate">{content}</span>
+                      </TooltipTrigger>
+                      <TooltipContent>{isEmpty ? (meta?.emptyValue ?? "—") : String(value)}</TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    content
+                  )}
+                  {isFirst && rowActions && (
+                    <span className="ms-auto ps-2">{rowActions(row.original)}</span>
+                  )}
+                </span>
+              )}
             </TableCell>
           )
         })}
@@ -674,8 +964,12 @@ export function TableShell<T extends RowData>({
   return (
     <div
       className="relative"
+      ref={cellEdit.containerRef}
       onPointerDownCapture={handlers.onPointerDownCapture}
-      onKeyDownCapture={handlers.onKeyDownCapture}
+      onKeyDownCapture={(event) => {
+        handlers.onKeyDownCapture(event)
+        cellEdit.onKeyDownCapture(event)
+      }}
     >
       {virtualize ? (
         <Virtualizer layout={TableLayout} layoutOptions={{ rowHeight, headingHeight: 40 }}>

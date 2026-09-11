@@ -1,7 +1,7 @@
 "use client"
 
 import { useForm } from "@conform-to/react"
-import type { Submission } from "@conform-to/react"
+import type { FieldMetadata, Submission } from "@conform-to/react"
 import { parseWithValibot } from "@conform-to/valibot"
 import {
   AlignJustify,
@@ -16,7 +16,7 @@ import {
   Rows3,
   X,
 } from "lucide-react"
-import { type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react"
+import { Fragment, type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react"
 import * as v from "valibot"
 import { Badge } from "@/components/badge"
 import { Button, buttonStyles } from "@/components/button"
@@ -33,10 +33,17 @@ import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/menu"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/popover"
 import { SelectItem } from "@/components/select"
 import {
+  type DataTableCellAddress,
+  type DataTableCellEdit,
+  type DataTableCellEditRenderer,
+  type DataTableColumn,
   type DataTableDensity,
+  type DataTableFieldContext,
   type DataTableFilterOption,
   type DataTableFilterVariant,
   type DataTableSelection,
+  editValuesFor,
+  leafColumns,
   pageRange,
   selectionCount,
 } from "@/lib/data-table"
@@ -47,7 +54,8 @@ import { cn } from "@/lib/utils"
  *
  * Everything that sits *around* a table and is not the table: the toolbar, the
  * search box, the column chooser, the density menu, the filter chips, the
- * per-column filter panel, the pager, the bulk-action bar and the row editor.
+ * per-column filter panel, the pager, the bulk-action bar, the unsaved-changes
+ * bar, and the two editors — a row's and a cell's.
  *
  * It is one of the two halves DataTable and ServerTable are assembled from, and
  * it is a sibling of the other: **`table-shell` renders rows, `table-controls`
@@ -121,19 +129,92 @@ function useExternalReset(signature: string) {
 function ChromeForm({
   id,
   onSubmit,
+  onKeyDownCapture,
+  onBlur,
+  ref,
   className,
   children,
 }: {
   id: string
   onSubmit: React.FormEventHandler<HTMLFormElement>
+  onKeyDownCapture?: React.KeyboardEventHandler<HTMLFormElement>
+  onBlur?: React.FocusEventHandler<HTMLFormElement>
+  ref?: React.Ref<HTMLFormElement>
   className?: string
   children: ReactNode
 }) {
   return (
     // biome-ignore lint/correctness/noRestrictedElements: documented exception — a form with no route action behind it. Table chrome (filters, page size, page jump, column chooser, inline edit) applies in the browser and posts nowhere; React Router's <Form> would need an action that does not exist. https://ui-lib.quebi.de/rules/no-raw-interactive-elements
-    <form id={id} onSubmit={onSubmit} className={className} noValidate>
+    <form
+      id={id}
+      ref={ref}
+      onSubmit={onSubmit}
+      onKeyDownCapture={onKeyDownCapture}
+      onBlur={onBlur}
+      className={className}
+      noValidate
+    >
       {children}
     </form>
+  )
+}
+
+/**
+ * Ask a form to submit itself, for the forms here that have no submit button to
+ * press — a cell whose only control is the field being edited.
+ *
+ * A dispatched `submit` event rather than `requestSubmit()`, and deliberately:
+ * the difference between the two is constraint validation and a `submitter`,
+ * and these forms have neither. They carry `noValidate` because the schema is
+ * what validates them, and they have no button to be the submitter — which is
+ * the case `requestSubmit` is least careful about (happy-dom names the *form*
+ * as the submitter, and `new FormData(form, form)` is a DOMException). Conform
+ * reads the values off the form either way, so this is the same hand-off
+ * without the part neither side wants.
+ */
+function submitForm(form: HTMLFormElement) {
+  form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
+}
+
+/**
+ * Everything in an open editor that can take focus, minus the hidden inputs the
+ * rest of the row rides in. A cell becomes a control, and the control is what
+ * the user was reaching for — so focus goes into it rather than staying on the
+ * cell that used to hold text.
+ */
+/**
+ * The cell an editor sits in. Two roles rather than one: react-aria gives every
+ * row its row-header cell, and that one is a `rowheader` — the first column of
+ * a table is exactly the column an editor is most likely to be in.
+ */
+const CELL_ROLE = '[role="gridcell"],[role="rowheader"]'
+
+const FOCUSABLE_IN_EDITOR = [
+  'input:not([type="hidden"]):not([disabled])',
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "button:not([disabled])",
+  '[tabindex]:not([tabindex="-1"])',
+].join(",")
+
+/**
+ * A row as Conform default values, which are the strings a form submits.
+ *
+ * A boolean is `"on"` or nothing, and that is not a style choice: Conform's
+ * valibot coercion turns exactly `"on"` into `true` and hands anything else
+ * through unchanged, so a checkbox field seeded with `"true"` fails its own type
+ * check — and `field.defaultChecked`, which is what `ConformSwitch` reads, is
+ * derived from the same comparison. An array is comma-joined, which is the wire
+ * shape `TagField` submits and a schema splits back.
+ */
+function toFormValues(value: Record<string, unknown>): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(value).map(([key, entry]) => {
+      if (entry == null) return [key, ""]
+      if (typeof entry === "boolean") return [key, entry ? "on" : ""]
+      if (Array.isArray(entry)) return [key, entry.join(",")]
+      return [key, String(entry)]
+    }),
   )
 }
 
@@ -929,9 +1010,22 @@ export function TableBulkBar({
 export interface TableEditField {
   name: string
   label: string
-  kind: "text" | "number" | "date" | "boolean" | "select"
+  /**
+   * The shorthand for the common cases — and no longer the ceiling. Five kinds
+   * against twenty-nine `conform-*` variants was an enum that would have had to
+   * grow by one entry per variant forever; `render` below is the vocabulary,
+   * this is the abbreviation of it.
+   */
+  kind?: "text" | "number" | "date" | "boolean" | "select"
   options?: { id: string; label: string }[]
   placeholder?: string
+  /**
+   * Any `conform-*` variant, bound by naming its props. Takes precedence over
+   * `kind`, and is the same escape hatch `DataTableColumn.editor` opens for a
+   * cell — so a row editor and a cell editor over the same schema can be
+   * written with the same control.
+   */
+  render?: (ctx: DataTableFieldContext) => ReactNode
 }
 
 export interface TableRowEditorProps {
@@ -943,6 +1037,33 @@ export interface TableRowEditorProps {
   onCancel: () => void
   isSaving?: boolean
   title?: string
+  /** "Save" by default. A bulk edit says what it is about to do instead. */
+  submitLabel?: string
+}
+
+/** One field of a row editor: the escape hatch first, then the shorthand. */
+function editControl(field: TableEditField, meta: FieldMetadata<never>): ReactNode {
+  if (field.render) return field.render({ field: meta, label: field.label })
+  switch (field.kind) {
+    case "number":
+      return <ConformNumberField field={meta} label={field.label} />
+    case "date":
+      return <ConformDateField field={meta} label={field.label} />
+    case "boolean":
+      return <ConformSwitch field={meta} label={field.label} />
+    case "select":
+      return (
+        <ConformSelect field={meta} label={field.label}>
+          {(field.options ?? []).map((option) => (
+            <SelectItem key={option.id} id={option.id}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </ConformSelect>
+      )
+    default:
+      return <ConformField field={meta} label={field.label} placeholder={field.placeholder} />
+  }
 }
 
 /**
@@ -951,8 +1072,14 @@ export interface TableRowEditorProps {
  * This is where the library's Conform story and its table story meet: the
  * editor is a real form with a real schema, so a bad edit is a field error
  * beside the field rather than a rejected save the user has to reconstruct.
+ *
  * The same component backs both the inline row editor and a bulk edit inside a
- * Modal — the difference is only which rows the caller writes the result to.
+ * Modal — the difference is only which rows the caller writes the result to,
+ * and the schema it hands over: a bulk edit is the same component over the one
+ * or two fields being applied to every selected row, which is why its schema is
+ * a smaller object rather than the row's with holes in it. Both are in the
+ * gallery, because a claim in published source that nothing demonstrates is
+ * worse than no claim.
  */
 export function TableRowEditor({
   schema,
@@ -962,19 +1089,11 @@ export function TableRowEditor({
   onCancel,
   isSaving,
   title,
+  submitLabel = "Save",
 }: TableRowEditorProps) {
   // Conform's defaults are form values, which are strings; the schema is what
   // turns them back into numbers, dates and booleans on the way out.
-  const defaults = useMemo(
-    () =>
-      Object.fromEntries(
-        Object.entries(defaultValue).map(([key, value]) => [
-          key,
-          value == null ? "" : String(value),
-        ]),
-      ),
-    [defaultValue],
-  )
+  const defaults = useMemo(() => toFormValues(defaultValue), [defaultValue])
   const [form, fields] = useForm<Record<string, string>>({
     id: `${useId()}-row-editor`,
     defaultValue: defaults,
@@ -994,54 +1113,369 @@ export function TableRowEditor({
         {editFields.map((field) => {
           const meta = fields[field.name]
           if (!meta) return null
-          switch (field.kind) {
-            case "number":
-              return (
-                <ConformNumberField
-                  key={field.name}
-                  field={meta as never}
-                  label={field.label}
-                />
-              )
-            case "date":
-              return (
-                <ConformDateField key={field.name} field={meta as never} label={field.label} />
-              )
-            case "boolean":
-              return (
-                <ConformSwitch key={field.name} field={meta as never} label={field.label} />
-              )
-            case "select":
-              return (
-                <ConformSelect key={field.name} field={meta as never} label={field.label}>
-                  {(field.options ?? []).map((option) => (
-                    <SelectItem key={option.id} id={option.id}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </ConformSelect>
-              )
-            default:
-              return (
-                <ConformField
-                  key={field.name}
-                  field={meta as never}
-                  label={field.label}
-                  placeholder={field.placeholder}
-                />
-              )
-          }
+          return <Fragment key={field.name}>{editControl(field, meta as never)}</Fragment>
         })}
       </div>
       <div className="flex items-center gap-2">
         <Button type="submit" intent="primary" size="xs" isPending={isSaving}>
-          Save
+          {submitLabel}
         </Button>
         <Button intent="ghost" size="xs" onPress={onCancel}>
           Cancel
         </Button>
       </div>
     </ChromeForm>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              the cell editor                               */
+/* -------------------------------------------------------------------------- */
+
+export interface TableCellEditorProps {
+  /** The valibot schema the whole row is validated against. */
+  schema: v.GenericSchema
+  /** The schema field this cell edits — the one field that is visible. */
+  name: string
+  /**
+   * Every editable field of the row. The one named above is rendered; the rest
+   * ride as hidden inputs, which is what makes "discount ≤ price" a rule this
+   * form can actually fail. See `DataTableCellAddress` for the argument.
+   */
+  defaultValue: Record<string, unknown>
+  /** The control. Bind it by naming props — never a `getInputProps` spread. */
+  children: (field: FieldMetadata<never>) => ReactNode
+  /** The whole validated row, once the schema accepted it. */
+  onCommit: (value: Record<string, unknown>) => void
+  /** Leave the cell. `move` is Tab (1) or Shift+Tab (-1); absent means stay. */
+  onDone: (move?: 1 | -1) => void
+  /** Escape: the edit is off and the cell goes back to showing its value. */
+  onCancel: () => void
+  isSaving?: boolean
+}
+
+/**
+ * One cell, being edited — a Conform form over the whole row with one field on
+ * screen.
+ *
+ * **What commits, and what does not.** Enter commits and stays; Tab commits and
+ * moves; Escape cancels. Moving focus to another cell of the same table commits
+ * too, because that is unambiguous. Clicking somewhere else entirely does not:
+ * a combo box's popover, a date picker's calendar and a colour picker's swatch
+ * grid are all portalled out of the table, so "focus left the cell" and "the
+ * user is done" are not the same event, and a blur that guessed would commit
+ * half an edit every time someone opened a menu. An edit left open is visible
+ * and recoverable; a commit nobody asked for is neither.
+ *
+ * **Where the error goes.** Under the control, inside the cell, rendered by the
+ * `conform-*` variant from the field metadata — which is also what wires
+ * `aria-describedby` from the control to the message, so it is reachable from
+ * the cell that caused it rather than summarised somewhere else on the page.
+ * The cell stops truncating and grows while it is being edited; a message that
+ * does not fit in 120px is the reason, and the row was going to change height
+ * for the control anyway.
+ *
+ * **Which keys the cell takes.** Escape, Enter and Tab, on the way *down*, so
+ * they reach the cell whatever the control would otherwise do with them — and
+ * react-aria's formatted fields do stop Enter, which is why the bubble phase is
+ * not an option here. The one exemption is an open overlay: a trigger inside
+ * this form carrying `aria-expanded` means a popover is up and Escape and Enter
+ * are its, to close itself or choose an option with. Press the key again once
+ * it has and the cell answers.
+ *
+ * The cost is named rather than hidden: a control that reads Enter as "add this
+ * one and keep going" — `ConformTagField` — reads it as "done with this cell"
+ * here instead, and its comma and semicolon still add a tag.
+ *
+ * Opening a cell is the mirror of this and belongs to `table-shell`, which takes
+ * Enter, F2 and any printable character from the grid before react-aria's
+ * typeahead sees them. Between the two, every key that means something to a cell
+ * is answered by whichever half owns the cell at the time.
+ */
+export function TableCellEditor({
+  schema,
+  name,
+  defaultValue,
+  children,
+  onCommit,
+  onDone,
+  onCancel,
+  isSaving,
+}: TableCellEditorProps) {
+  const defaults = useMemo(() => toFormValues(defaultValue), [defaultValue])
+  // A callback ref rather than `useRef`, because "the form is in the document"
+  // is a render apart from "this component mounted": react-aria renders a
+  // cell's children through its collection, and Conform has no field metadata
+  // to render until its own form is registered. Setting state when the node
+  // attaches is what makes the effect below run at the moment there is
+  // something to focus.
+  const [formElement, setFormElement] = useState<HTMLFormElement | null>(null)
+  // Where to go once the submission succeeds. Set immediately before asking the
+  // form to submit, read inside the handler — a commit that fails validation
+  // never reaches it, which is what keeps Tab from moving off a bad value.
+  const move = useRef<1 | -1 | undefined>(undefined)
+  // Whether this editor has already said its piece. Leaving takes focus with
+  // it, and focus landing on the cell is indistinguishable from the user
+  // clicking that cell — so the blur rule below has to know the difference
+  // between "moved on" and "moving on", or a cancel commits and a commit
+  // commits twice.
+  const isLeaving = useRef(false)
+  const [form, fields] = useForm<Record<string, string>>({
+    id: `${useId()}-cell-editor`,
+    defaultValue: defaults,
+    onValidate: ({ formData }) =>
+      parseWithValibot(formData, { schema }) as unknown as Submission<Record<string, string>>,
+    onSubmit: (event, { submission }) => {
+      event.preventDefault()
+      if (submission?.status !== "success") return
+      isLeaving.current = true
+      onCommit(submission.value as unknown as Record<string, unknown>)
+      onDone(move.current)
+    },
+  })
+
+  /**
+   * Focus the control, through the cell rather than past it.
+   *
+   * Focusing the control on its own is not enough when the edit arrived by Tab:
+   * react-aria's grid still believes the *previous* cell is the focused one, and
+   * its selectable-item effect puts focus back there — a keyboard move is
+   * exactly the case where it declines to infer a new focused key from a child
+   * taking focus. Touching the gridcell first is how it is told, and the control
+   * then takes focus from it with the grid agreeing.
+   */
+  useEffect(() => {
+    if (!formElement || formElement.contains(document.activeElement)) return
+    const cell = formElement.closest<HTMLElement>(CELL_ROLE)
+    if (cell && document.activeElement !== cell) cell.focus()
+    formElement.querySelector<HTMLElement>(FOCUSABLE_IN_EDITOR)?.focus()
+  }, [formElement])
+
+  const field = fields[name]
+
+  /**
+   * Commit what is in the control, which first means making the control say so.
+   *
+   * react-aria's formatted fields — NumberField most visibly — keep the value
+   * the form submits in a hidden input that is only rewritten when the field
+   * *commits*: on blur, on Enter, on a stepper press. Reading the form without
+   * that having happened submits the value the cell opened with. Blurring the
+   * focused control is the one instruction every such field understands, and it
+   * is a discrete event, so React has flushed the new hidden value by the time
+   * it returns.
+   */
+  const commit = (element: HTMLFormElement, direction?: 1 | -1) => {
+    move.current = direction
+    const active = document.activeElement
+    if (active instanceof HTMLElement && element.contains(active)) active.blur()
+    submitForm(element)
+  }
+
+  const cancel = () => {
+    isLeaving.current = true
+    onCancel()
+  }
+
+  return (
+    <ChromeForm
+      id={form.id}
+      ref={setFormElement}
+      onSubmit={form.onSubmit}
+      className="flex min-w-0 flex-col gap-1"
+      onKeyDownCapture={(event) => {
+        const element = event.currentTarget
+        if (event.key !== "Escape" && event.key !== "Enter" && event.key !== "Tab") return
+        // An open overlay owns Escape and Enter — closing itself, choosing an
+        // option — and says so the way react-aria says it everywhere: the
+        // trigger inside this form carries aria-expanded while its popover is
+        // up. Press again once it is closed and the cell answers.
+        if (event.key !== "Tab" && element.querySelector('[aria-expanded="true"]')) return
+        event.preventDefault()
+        event.stopPropagation()
+        if (event.key === "Escape") cancel()
+        else if (event.key === "Enter") commit(element)
+        else commit(element, event.shiftKey ? -1 : 1)
+      }}
+      onBlur={(event) => {
+        const next = event.relatedTarget as HTMLElement | null
+        const element = event.currentTarget
+        if (isLeaving.current || !next) return
+        // A *different* cell of the same table, and nothing else. Not this one:
+        // focus moves around inside a cell constantly — react-aria hands it
+        // back to the gridcell, a control hands it to its own button — and none
+        // of that is the user being finished. And not a portalled popover,
+        // which is "outside" by this test too, which is exactly why the test is
+        // this one rather than "focus left the form".
+        const cell = element.closest(CELL_ROLE)
+        const target = next.closest?.(CELL_ROLE)
+        if (!target || target === cell) return
+        if (cell?.closest('[role="grid"]') === target.closest('[role="grid"]')) commit(element)
+      }}
+    >
+      <div className="relative flex min-w-0 flex-col">
+        {field ? children(field as never) : null}
+        {isSaving && (
+          <span className="pointer-events-none absolute end-1.5 top-1.5 text-quebi-fg-subtle">
+            <Loader2 aria-hidden="true" className="size-3.5 animate-spin" />
+            <span className="sr-only">Saving…</span>
+          </span>
+        )}
+      </div>
+      {Object.keys(defaults)
+        .filter((key) => key !== name)
+        .map((key) => (
+          // The rest of the row, so the schema validates a row rather than a
+          // field. A hidden input is not an interactive control, which is the
+          // whole of this element's carve-out from the ban.
+          <input
+            key={key}
+            type="hidden"
+            name={fields[key]?.name ?? key}
+            form={form.id}
+            value={defaults[key]}
+          />
+        ))}
+    </ChromeForm>
+  )
+}
+
+export interface TableCellEditingOptions<T> {
+  /** The same columns the table was given — bands and all. */
+  columns: DataTableColumn<T>[]
+  /** The schema every edit is validated against. Without it nothing is editable. */
+  schema?: v.GenericSchema
+  /**
+   * The row as form values. Defaults to the editable columns read off the row,
+   * which is the set the schema has to cover — name it when the schema needs a
+   * field no column edits.
+   */
+  getEditValues?: (row: T) => Record<string, unknown>
+  onCellEdit?: (edit: DataTableCellEdit<T>) => void
+  /** Controlled. Leave it out and the table holds the open cell itself. */
+  editingCell?: DataTableCellAddress | null
+  onEditingCellChange?: (cell: DataTableCellAddress | null) => void
+  /** A commit in flight: the open cell shows it rather than pretending. */
+  isSaving?: boolean
+}
+
+export interface TableCellEditing<T> {
+  editingCell: DataTableCellAddress | null
+  setEditingCell: (cell: DataTableCellAddress | null) => void
+  editableColumns: string[]
+  renderCellEditor?: DataTableCellEditRenderer<T>
+}
+
+/**
+ * The wiring between a column's `editor` and the shell's editing cell, written
+ * once for both modes.
+ *
+ * `DataTable` and `ServerTable` differ in where their rows come from and in
+ * nothing else here, so the glue that turns `columns[].editor` into a Conform
+ * form lives beside the form rather than twice beside the tables. It is a hook
+ * in `table-controls` and not in `table-shell` because it *renders a control*,
+ * and the shell renders no chrome — the seam between the two halves is a shared
+ * type in `@/lib/data-table`, not an import either way.
+ */
+export function useTableCellEditing<T>({
+  columns,
+  schema,
+  getEditValues,
+  onCellEdit,
+  editingCell: controlledCell,
+  onEditingCellChange,
+  isSaving,
+}: TableCellEditingOptions<T>): TableCellEditing<T> {
+  const [internalCell, setInternalCell] = useState<DataTableCellAddress | null>(null)
+  const editable = useMemo(
+    () => leafColumns(columns).filter((column) => column.editor),
+    [columns],
+  )
+  const editingCell = controlledCell !== undefined ? controlledCell : internalCell
+  const setEditingCell = (cell: DataTableCellAddress | null) => {
+    if (controlledCell === undefined) setInternalCell(cell)
+    onEditingCellChange?.(cell)
+  }
+
+  if (!schema || editable.length === 0) {
+    return { editingCell: null, setEditingCell, editableColumns: [] }
+  }
+
+  return {
+    editingCell,
+    setEditingCell,
+    editableColumns: editable.map((column) => column.id),
+    renderCellEditor: ({ row, rowId, columnId, seed, close, move }) => {
+      const column = editable.find((candidate) => candidate.id === columnId)
+      if (!column?.editor) return null
+      const name = column.editField ?? column.id
+      const values = getEditValues ? getEditValues(row) : editValuesFor(editable, row)
+      return (
+        <TableCellEditor
+          schema={schema}
+          name={name}
+          // Typing starts the edit *with that character*, which is what a
+          // spreadsheet does and what makes the keystroke worth intercepting.
+          // A control that cannot read it as a value simply opens empty, and
+          // the schema refuses the commit rather than the table guessing.
+          defaultValue={seed == null ? values : { ...values, [name]: seed }}
+          isSaving={isSaving}
+          onCancel={close}
+          onCommit={(value) => onCellEdit?.({ row, rowId, columnId, field: name, value })}
+          onDone={(delta) => (delta ? move(delta) : close())}
+        >
+          {(field) => column.editor?.({ row, field, label: column.header })}
+        </TableCellEditor>
+      )
+    },
+  }
+}
+
+export interface TableUnsavedBarProps {
+  /** How many rows have an uncommitted change. Zero renders nothing. */
+  count: number
+  onSave: () => void
+  onDiscard: () => void
+  isSaving?: boolean
+  className?: string
+}
+
+/**
+ * "N unsaved changes — Save / Discard", for a table that batches.
+ *
+ * A cell commit is reported the moment the schema accepts it, which is the only
+ * primitive that can be built on: batching is a draft the caller keeps and
+ * flushes, and it is expressible over per-cell commits, while per-cell commits
+ * are not expressible over a batch. This is the other half of that decision,
+ * published so the batched mode is a control rather than an exercise.
+ */
+export function TableUnsavedBar({
+  count,
+  onSave,
+  onDiscard,
+  isSaving,
+  className,
+}: TableUnsavedBarProps) {
+  if (count === 0) return null
+  return (
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-2 rounded-quebi-md border border-quebi-warn/30 bg-quebi-warn/5 px-3 py-2 print:hidden",
+        className,
+      )}
+    >
+      <p className="font-medium text-quebi-fg text-sm" aria-live="polite">
+        <FormattedNumber value={count} />
+        {count === 1 ? " unsaved change" : " unsaved changes"}
+      </p>
+      <div className="ms-auto flex items-center gap-1.5">
+        <Button intent="primary" size="xs" isPending={isSaving} onPress={onSave}>
+          Save
+        </Button>
+        <Button intent="ghost" size="xs" onPress={onDiscard}>
+          Discard
+        </Button>
+      </div>
+    </div>
   )
 }
 

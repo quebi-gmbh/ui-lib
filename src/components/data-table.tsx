@@ -4,6 +4,7 @@ import { useTable } from "@tanstack/react-table"
 import type { RowData, SortingState } from "@tanstack/react-table"
 import { ArrowDownToLine, Copy, RotateCcw } from "lucide-react"
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react"
+import type * as v from "valibot"
 import { Button, buttonStyles } from "@/components/button"
 import { Card, CardContent } from "@/components/card"
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/menu"
@@ -19,9 +20,12 @@ import {
   TableSearch,
   TableToolbar,
   describeFilter,
+  useTableCellEditing,
 } from "@/components/table-controls"
 import { TableShell } from "@/components/table-shell"
 import {
+  type DataTableCellAddress,
+  type DataTableCellEdit,
   type DataTableColumn,
   type DataTableDensity,
   type DataTableFilterOption,
@@ -112,6 +116,23 @@ export interface DataTableProps<T extends RowData> {
   renderDetail?: (row: T) => ReactNode
   renderRowEditor?: (row: T) => ReactNode
   editingKey?: string | null
+
+  /* editing a cell */
+  /**
+   * The valibot schema a cell edit is validated against — the whole row, not
+   * the one field, because that is what a cross-field rule needs. Without it
+   * nothing is editable, whatever the columns say.
+   */
+  cellEditSchema?: v.GenericSchema
+  /** Reported once the schema accepted the row. Write it back yourself. */
+  onCellEdit?: (edit: DataTableCellEdit<T>) => void
+  /** Controlled. Leave it out and the table holds the open cell itself. */
+  editingCell?: DataTableCellAddress | null
+  onEditingCellChange?: (cell: DataTableCellAddress | null) => void
+  /** The row as form values. Defaults to the editable columns read off the row. */
+  getEditValues?: (row: T) => Record<string, unknown>
+  /** A commit in flight: the open cell says so instead of pretending. */
+  isCellSaving?: boolean
   rowActions?: (row: T) => ReactNode
   getRowHref?: (row: T) => string | undefined
   onRowAction?: (row: T) => void
@@ -195,6 +216,12 @@ export function DataTable<T extends RowData>({
   renderDetail,
   renderRowEditor,
   editingKey,
+  cellEditSchema,
+  onCellEdit,
+  editingCell,
+  onEditingCellChange,
+  getEditValues,
+  isCellSaving,
   rowActions,
   getRowHref,
   onRowAction,
@@ -379,6 +406,16 @@ export function DataTable<T extends RowData>({
     )
   }
 
+  const cellEditing = useTableCellEditing<T>({
+    columns,
+    schema: cellEditSchema,
+    getEditValues,
+    onCellEdit,
+    editingCell,
+    onEditingCellChange,
+    isSaving: isCellSaving,
+  })
+
   const chips = columnFilters.map((filter) => {
     const column = table.getColumn(filter.id)
     return {
@@ -421,6 +458,10 @@ export function DataTable<T extends RowData>({
       renderDetail={renderDetail}
       renderRowEditor={renderRowEditor}
       editingKey={editingKey}
+      editingCell={cellEditing.editingCell}
+      onEditingCellChange={cellEditing.setEditingCell}
+      editableColumns={cellEditing.editableColumns}
+      renderCellEditor={cellEditing.renderCellEditor}
       rowClassName={rowClassName}
       onRowReorder={onRowReorder}
       showFooter={showFooter}

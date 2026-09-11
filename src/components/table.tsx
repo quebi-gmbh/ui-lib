@@ -456,6 +456,17 @@ const TableRow = <T extends object>({
 
 interface TableCellProps extends CellProps {
   ref?: React.Ref<HTMLTableCellElement>
+  /**
+   * Data attributes, passed through to the `<td>`.
+   *
+   * react-aria's `filterDOMProps` already forwards every `data-*` prop; what is
+   * missing is a type that says so, and the reason to want one is the editable
+   * table: `table-shell` addresses a cell by `data-row-key` / `data-column-id`
+   * so that focus can be handed back to it after a commit re-sorted the row
+   * somewhere else. A ref taken before the commit points at whichever row took
+   * its place.
+   */
+  [dataAttribute: `data-${string}`]: unknown
 }
 const TableCell = ({ className, ref, ...props }: TableCellProps) => {
   const { allowResize, grid, striped } = useTableContext()
