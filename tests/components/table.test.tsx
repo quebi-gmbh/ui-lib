@@ -104,10 +104,21 @@ describe("Table", () => {
    * asserted rather than timed out.
    *
    * **When this test fails, the upstream fix has shipped.** Then: drop the
-   * `useIsSSR` gate and the band-name fallback block in `data-table.tsx`, drop
+   * `useIsSSR` gate and the band-name fallback block in `table-shell.tsx`, drop
    * `TABLE_BAND_HEIGHT` (nothing else needs a hard-coded row height), turn the
    * server-render test in `data-table.test.tsx` into one that asserts two header
    * rows in the server HTML, and delete this test.
+   *
+   * Upstream status, checked 2026-09-11: the issue is open and the bug is still
+   * in the newest released stack — this test passes unchanged against
+   * react-stately 3.50.0 / react-aria 3.52.1 / react-aria-components 1.21.1, so
+   * a version bump is not what is missing. The one reply it has says the report
+   * is about a class react-aria-components "doesn't even use". It does use it:
+   * RAC's own `TableCollection.updateColumns` calls `buildHeaderRows` imported
+   * from `react-stately/private/table/TableCollection` — one import line in
+   * `react-aria-components/dist/private/Table.js` — and that function is where
+   * the writes to `prevKey`/`nextKey` happen. Nothing in the report has been
+   * refuted, but nothing will move upstream until someone says so there.
    */
   test("a band is still corrupted by react-stately on the server", () => {
     const html = renderToString(
