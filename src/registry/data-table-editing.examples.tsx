@@ -3,14 +3,18 @@ import { useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "react-router"
 import * as v from "valibot"
 import { Button } from "@/components/button"
+import { ConformField } from "@/components/conform-field"
+import { ConformNumberField } from "@/components/conform-number-field"
+import { ConformSelect } from "@/components/conform-select"
 import { DataTable } from "@/components/data-table"
-import { TableRowEditor } from "@/components/table-controls"
 import { FormattedDate } from "@/components/formatted-date"
 import { FormattedNumber } from "@/components/formatted-number"
 import { Note } from "@/components/note"
+import { SelectItem } from "@/components/select"
 import { Skeleton } from "@/components/skeleton"
 import { ToastProvider, useToast } from "@/components/toast"
 import {
+  type DataTableCellAddress,
   type DataTableColumn,
   type DataTableFilterValue,
   type DataTableQuery,
@@ -64,22 +68,34 @@ const rowSchema = v.object({
   amount: v.pipe(v.number("Enter an amount"), v.minValue(0, "Cannot be negative")),
 })
 
-const editFields = [
-  { name: "reference", label: "Reference", kind: "text" as const },
-  { name: "customer", label: "Customer", kind: "text" as const },
-  {
-    name: "status",
-    label: "Status",
-    kind: "select" as const,
-    options: STATUSES.map((status) => ({ id: status, label: status })),
-  },
-  { name: "amount", label: "Amount", kind: "number" as const },
-]
+/**
+ * The same four fields, one control each — which is the whole of the editing
+ * API. A column with no `editor` cannot be edited and Tab skips it, which is why
+ * Date is read-only here without a flag saying so.
+ */
+const editors: Record<string, DataTableColumn<Order>["editor"]> = {
+  reference: ({ field, label }) => <ConformField field={field} label={label} />,
+  customer: ({ field, label }) => <ConformField field={field} label={label} />,
+  status: ({ field, label }) => (
+    <ConformSelect field={field} label={label}>
+      {STATUSES.map((status) => (
+        <SelectItem key={status} id={status}>
+          {status}
+        </SelectItem>
+      ))}
+    </ConformSelect>
+  ),
+  amount: ({ field, label }) => <ConformNumberField field={field} label={label} />,
+}
+
+const editableColumns = columns.map((column) => ({ ...column, editor: editors[column.id] }))
 
 function EditableOrders() {
   const toast = useToast()
   const [rows, setRows] = useState<Order[]>(() => SMALL_ORDERS.slice(0, 8))
-  const [editingKey, setEditingKey] = useState<string | null>(null)
+  // Controlled, because "Add row" has something to say about which cell is
+  // open: a new row arrives with its first editable cell already waiting.
+  const [editingCell, setEditingCell] = useState<DataTableCellAddress | null>(null)
   const [history, setHistory] = useState<Order[][]>([])
 
   const commit = (next: Order[]) => {
@@ -99,48 +115,30 @@ function EditableOrders() {
     <div className="flex w-full flex-col gap-3">
       <DataTable<Order>
         aria-label="Editable orders"
-        columns={columns}
+        columns={editableColumns}
         data={rows}
         getRowId={(order) => String(order.id)}
         enablePagination={false}
-        editingKey={editingKey}
-        renderRowEditor={(order) => (
-          <TableRowEditor
-            title={`Editing ${order.reference}`}
-            schema={rowSchema}
-            fields={editFields}
-            defaultValue={{
-              reference: order.reference,
-              customer: order.customer,
-              status: order.status,
-              amount: order.amount,
-            }}
-            onCancel={() => setEditingKey(null)}
-            onSave={(value) => {
-              commit(
-                rows.map((candidate) =>
-                  candidate.id === order.id ? { ...candidate, ...(value as Partial<Order>) } : candidate,
-                ),
-              )
-              setEditingKey(null)
-              toast.success(`Saved ${String(value.reference)}`)
-            }}
-          />
-        )}
+        cellEditSchema={rowSchema}
+        editingCell={editingCell}
+        onEditingCellChange={setEditingCell}
+        onCellEdit={({ row, value }) => {
+          commit(
+            rows.map((candidate) =>
+              candidate.id === row.id ? { ...candidate, ...(value as Partial<Order>) } : candidate,
+            ),
+          )
+          toast.success(`Saved ${String(value.reference)}`)
+        }}
         rowActions={(order) => (
-          <span className="inline-flex items-center gap-1">
-            <Button intent="ghost" size="xs" onPress={() => setEditingKey(String(order.id))}>
-              Edit
-            </Button>
-            <Button
-              intent="ghost"
-              size="sq-xs"
-              aria-label={`Delete ${order.reference}`}
-              onPress={() => commit(rows.filter((candidate) => candidate.id !== order.id))}
-            >
-              <Trash2 data-slot="icon" aria-hidden="true" />
-            </Button>
-          </span>
+          <Button
+            intent="ghost"
+            size="sq-xs"
+            aria-label={`Delete ${order.reference}`}
+            onPress={() => commit(rows.filter((candidate) => candidate.id !== order.id))}
+          >
+            <Trash2 data-slot="icon" aria-hidden="true" />
+          </Button>
         )}
         toolbarActions={
           <>
@@ -153,7 +151,7 @@ function EditableOrders() {
                   { ...SMALL_ORDERS[0], id, reference: `ORD-${4900 + id}`, customer: "New customer" },
                   ...rows,
                 ])
-                setEditingKey(String(id))
+                setEditingCell({ rowId: String(id), columnId: "reference" })
               }}
             >
               <Plus data-slot="icon" aria-hidden="true" />
@@ -165,11 +163,15 @@ function EditableOrders() {
             </Button>
           </>
         }
+        caption="Click a cell to edit it. A value you pick commits itself; a value you type commits on Enter, Tab or when you leave the cell. Escape puts it back."
       />
       <Note intent="info">
-        The editor is a real Conform form over a valibot schema, so a reference
-        that does not match <code>ORD-1234</code> is an error beside the field
-        rather than a rejected save you have to reconstruct.
+        Every cell is a real Conform form over a valibot schema, so a reference
+        that does not match <code>ORD-1234</code> is an error under the control
+        rather than a rejected save you have to reconstruct — and because the
+        form is the whole row, a rule that compares two fields has both. Nothing
+        here is batched: <code>onCellEdit</code> fires the moment the schema
+        accepts the row, and Undo is a history stack built on top of it.
       </Note>
     </div>
   )
@@ -344,9 +346,9 @@ const StatesShowcase = () => {
 
 export const dataTableEditingExamples: ComponentExample[] = [
   {
-    title: "Inline row editing, add, delete and undo",
+    title: "Editing cells, add, delete and undo",
     description:
-      "Press Edit and the row becomes a Conform form over a valibot schema, spanning the table. Save writes it back, Add prepends a row already in edit mode, and every change is undoable — dirty state is a history stack, not a flag.",
+      "One click opens a cell as a Conform form over a valibot schema. Add prepends a row with its first cell already open, Delete is a row action, and every commit is undoable — dirty state is a history stack, not a flag. Editing a table is editing its cells; there is no row mode to enter.",
     render: () => <EditingShowcase />,
   },
   {

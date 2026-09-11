@@ -11,129 +11,25 @@
  * cell after a commit — including when the commit re-sorted the row somewhere
  * else, which is the case a remembered DOM node gets wrong.
  *
- * Cells are addressed the way the component addresses them, by `data-row-key`
- * and `data-column-id`: a role query would find the `<td>` only while it holds
- * text and the control only while it holds one, and the point of these tests is
- * the transition between the two.
+ * What a *press* does, and when a value is reported, is the other half and has
+ * its own file: `data-table-cell-commit.test.tsx`. The table both drive is in
+ * `tests/editable-products.tsx`, along with the note on how a cell is addressed.
  */
 import { describe, expect, test } from "bun:test"
 import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { act, useState } from "react"
-import * as v from "valibot"
-import { ConformField } from "../../src/components/conform-field"
-import { ConformNumberField } from "../../src/components/conform-number-field"
-import { ConformSelect } from "../../src/components/conform-select"
+import type { DataTableCellEdit } from "../../src/lib/data-table"
 import { DataTable } from "../../src/components/data-table"
-import { SelectItem } from "../../src/components/select"
-import type { DataTableCellEdit, DataTableColumn } from "../../src/lib/data-table"
-
-interface Product {
-  id: number
-  name: string
-  stock: number
-  status: string
-}
-
-const PRODUCTS: Product[] = [
-  { id: 1, name: "Halo", stock: 4, status: "Live" },
-  { id: 2, name: "Cove", stock: 9, status: "Draft" },
-  { id: 3, name: "Ridge", stock: 1, status: "Live" },
-]
-
-const schema = v.object({
-  name: v.pipe(v.string(), v.minLength(3, "At least three characters")),
-  stock: v.pipe(v.number("Enter a count"), v.minValue(0, "Cannot be negative")),
-  status: v.picklist(["Live", "Draft"], "Pick a status"),
-})
-
-const columns: DataTableColumn<Product>[] = [
-  {
-    id: "name",
-    header: "Name",
-    accessorKey: "name",
-    editor: ({ field, label }) => <ConformField field={field} label={label} />,
-  },
-  // No editor: the column Tab has to skip over.
-  { id: "id", header: "Id", accessorKey: "id" },
-  {
-    id: "stock",
-    header: "Stock",
-    accessorKey: "stock",
-    editor: ({ field, label }) => <ConformNumberField field={field} label={label} />,
-  },
-  {
-    id: "status",
-    header: "Status",
-    accessorKey: "status",
-    editor: ({ field, label }) => (
-      <ConformSelect field={field} label={label}>
-        <SelectItem id="Live">Live</SelectItem>
-        <SelectItem id="Draft">Draft</SelectItem>
-      </ConformSelect>
-    ),
-  },
-]
-
-/** Put focus on a cell the way arrowing to it would, inside `act`. */
-async function focusCell(rowId: string, columnId: string) {
-  await act(async () => {
-    cell(rowId, columnId).focus()
-  })
-}
-
-/** The `<td>` for one cell, by the address the component gives it. */
-function cell(rowId: string, columnId: string): HTMLElement {
-  const found = document.querySelector<HTMLElement>(
-    `[data-row-key="${rowId}"][data-column-id="${columnId}"]`,
-  )
-  if (!found) throw new Error(`No cell ${rowId}/${columnId} is rendered`)
-  return found
-}
-
-/** Which cell holds the element that currently has focus, if any. */
-function focusedCell(): string | null {
-  const owner = (document.activeElement as HTMLElement | null)?.closest<HTMLElement>(
-    "[data-row-key][data-column-id]",
-  )
-  return owner ? `${owner.dataset.rowKey}/${owner.dataset.columnId}` : null
-}
-
-const isEditing = (rowId: string, columnId: string) =>
-  cell(rowId, columnId).querySelector("form") != null
-
-interface TableProps {
-  onCellEdit?: (edit: DataTableCellEdit<Product>) => void
-  defaultSorting?: { id: string; desc: boolean }[]
-}
-
-/** The table under test, holding its own rows so a commit is visible. */
-function EditableProducts({ onCellEdit, defaultSorting }: TableProps) {
-  const [rows, setRows] = useState(PRODUCTS)
-  return (
-    <DataTable<Product>
-      aria-label="Products"
-      columns={columns}
-      data={rows}
-      getRowId={(product) => String(product.id)}
-      enablePagination={false}
-      enableGlobalSearch={false}
-      enableColumnChooser={false}
-      defaultSorting={defaultSorting}
-      cellEditSchema={schema}
-      onCellEdit={(edit) => {
-        onCellEdit?.(edit)
-        setRows((current) =>
-          current.map((product) =>
-            product.id === edit.row.id
-              ? { ...product, ...(edit.value as unknown as Omit<Product, "id">) }
-              : product,
-          ),
-        )
-      }}
-    />
-  )
-}
+import {
+  cell,
+  columns,
+  EditableProducts,
+  focusCell,
+  focusedCell,
+  isEditing,
+  type Product,
+  PRODUCTS,
+} from "../editable-products"
 
 describe("opening a cell", () => {
   test("Enter on a focused cell replaces its content with the control", async () => {
@@ -174,11 +70,22 @@ describe("opening a cell", () => {
     expect(within(cell("1", "name")).getByRole("textbox")).toHaveValue("Z")
   })
 
-  test("a double-click opens it for a pointer", async () => {
+  test("a single click opens it for a pointer", async () => {
+    render(<EditableProducts />)
+    const user = userEvent.setup()
+    await user.click(cell("3", "name"))
+    expect(isEditing("3", "name")).toBe(true)
+    expect(within(cell("3", "name")).getByRole("textbox")).toHaveValue("Ridge")
+  })
+
+  test("a double-click is the click that already opened it, twice", async () => {
+    // Nothing extra is needed to keep it working, and nothing may break it:
+    // the second press lands inside a control that is already there.
     render(<EditableProducts />)
     const user = userEvent.setup()
     await user.dblClick(cell("3", "name"))
     expect(isEditing("3", "name")).toBe(true)
+    expect(within(cell("3", "name")).getByRole("textbox")).toHaveValue("Ridge")
   })
 })
 

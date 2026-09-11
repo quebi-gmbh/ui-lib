@@ -268,7 +268,7 @@ const PagerAndSelection = () => {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                 row editor                                 */
+/*                               the bulk editor                              */
 /* -------------------------------------------------------------------------- */
 
 const editSchema = v.object({
@@ -340,10 +340,10 @@ const RowEditor = () => {
       <Note intent="info">
         Clear the customer, or put a letter in the amount, and the error is
         beside the field rather than a rejected save you have to reconstruct.
-        Inside a table this replaces the row and spans every column; it is the
-        same component either way, because it takes a schema, a field list and a
-        default value and knows nothing about where it is drawn — which is also
-        what lets it back a bulk edit inside a Modal.
+        It takes a schema, a field list and a default value and knows nothing
+        about where it is drawn, which is what lets it back a bulk edit inside a
+        Modal — the one job it has beside a table, now that a table's rows are
+        edited a cell at a time.
       </Note>
     </div>
   )
@@ -371,7 +371,7 @@ export const tableControlsExamples: ComponentExample[] = [
   {
     title: "The row editor on its own",
     description:
-      "TableRowEditor takes a valibot schema, a field list and a default value, and gives back a parsed object. This is where the library's Conform story and its table story meet: a row edit is a form, so a bad edit is a field error beside the field. The same component backs the inline editor inside DataTable and a bulk edit inside a Modal.",
+      "TableRowEditor takes a valibot schema, a field list and a default value, and gives back a parsed object. This is where the library's Conform story and its table story meet: a row edit is a form, so a bad edit is a field error beside the field. Beside a table it backs a bulk edit inside a Modal — several rows, a few fields — because a single row of a table is edited one cell at a time.",
     render: () => <RowEditor />,
   },
 ]

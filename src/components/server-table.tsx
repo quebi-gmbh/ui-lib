@@ -133,8 +133,6 @@ export interface ServerTableProps<T extends RowData> {
 
   /* rows */
   renderDetail?: (row: T) => ReactNode
-  renderRowEditor?: (row: T) => ReactNode
-  editingKey?: string | null
 
   /* editing a cell */
   /**
@@ -144,15 +142,22 @@ export interface ServerTableProps<T extends RowData> {
   cellEditSchema?: v.GenericSchema
   /**
    * Reported once the schema accepted the row. Server-side this is a mutation:
-   * update optimistically, roll back if the server refuses, and hold
-   * `isCellSaving` while it is in flight — the rows prop is the answer to the
+   * update optimistically, roll back if the server refuses, and name the cell
+   * in `savingCell` while it is in flight — the rows prop is the answer to the
    * last query, so the edit lives beside it until the next one replaces both.
    */
   onCellEdit?: (edit: DataTableCellEdit<T>) => void
   editingCell?: DataTableCellAddress | null
   onEditingCellChange?: (cell: DataTableCellAddress | null) => void
   getEditValues?: (row: T) => Record<string, unknown>
-  isCellSaving?: boolean
+  /**
+   * The cell whose commit is in flight, if one is. An address rather than a
+   * boolean, because commits no longer wait for the cell to be left: a control
+   * commits when its value settles, so by the time the save is running the open
+   * cell is routinely a different one, and one flag for the whole table draws
+   * the spinner wherever the user happens to be rather than where the edit was.
+   */
+  savingCell?: DataTableCellAddress | null
   rowActions?: (row: T) => ReactNode
   getRowHref?: (row: T) => string | undefined
   onRowAction?: (row: T) => void
@@ -300,14 +305,12 @@ export function ServerTable<T extends RowData>({
   onSelectionChange,
   bulkActions,
   renderDetail,
-  renderRowEditor,
-  editingKey,
   cellEditSchema,
   onCellEdit,
   editingCell,
   onEditingCellChange,
   getEditValues,
-  isCellSaving,
+  savingCell,
   rowActions,
   getRowHref,
   onRowAction,
@@ -422,7 +425,7 @@ export function ServerTable<T extends RowData>({
     onCellEdit,
     editingCell,
     onEditingCellChange,
-    isSaving: isCellSaving,
+    savingCell,
   })
 
   return (
@@ -557,8 +560,6 @@ export function ServerTable<T extends RowData>({
         onRowAction={onRowAction}
         rowActions={rowActions}
         renderDetail={renderDetail}
-        renderRowEditor={renderRowEditor}
-        editingKey={editingKey}
         editingCell={cellEditing.editingCell}
         onEditingCellChange={cellEditing.setEditingCell}
         editableColumns={cellEditing.editableColumns}

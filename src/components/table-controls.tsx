@@ -43,6 +43,7 @@ import {
   type DataTableFilterVariant,
   type DataTableSelection,
   editValuesFor,
+  isSameCell,
   leafColumns,
   pageRange,
   selectionCount,
@@ -131,6 +132,7 @@ function ChromeForm({
   onSubmit,
   onKeyDownCapture,
   onBlur,
+  onSettle,
   ref,
   className,
   children,
@@ -139,6 +141,13 @@ function ChromeForm({
   onSubmit: React.FormEventHandler<HTMLFormElement>
   onKeyDownCapture?: React.KeyboardEventHandler<HTMLFormElement>
   onBlur?: React.FocusEventHandler<HTMLFormElement>
+  /**
+   * Every interaction that could have left a control holding a new value, on
+   * one prop because the cell editor treats them identically — see `settle` in
+   * `TableCellEditor` for why there are four of them and why none of them is
+   * enough on its own.
+   */
+  onSettle?: (event: React.SyntheticEvent<HTMLFormElement>) => void
   ref?: React.Ref<HTMLFormElement>
   className?: string
   children: ReactNode
@@ -151,6 +160,10 @@ function ChromeForm({
       onSubmit={onSubmit}
       onKeyDownCapture={onKeyDownCapture}
       onBlur={onBlur}
+      onClick={onSettle}
+      onPointerUp={onSettle}
+      onKeyUp={onSettle}
+      onChange={onSettle}
       className={className}
       noValidate
     >
@@ -216,6 +229,48 @@ function toFormValues(value: Record<string, unknown>): Record<string, string> {
       return [key, String(entry)]
     }),
   )
+}
+
+/**
+ * What the form would submit, as one comparable string.
+ *
+ * Read off the DOM rather than out of Conform's state, because the DOM is the
+ * only place the answer is: react-aria's Select, ComboBox, DatePicker and
+ * ColorPicker each keep the value they submit in a hidden control rewritten
+ * from React state, without dispatching an event any listener could have heard.
+ * Conform hears the same nothing, so a value change has to be *read*.
+ *
+ * Only the row's own fields are read, and a multi-valued one is joined, so the
+ * reading has the same shape `toFormValues` produces: an unchecked checkbox
+ * submits no entry at all and has to compare equal to the empty string it
+ * opened with, or every cell with a checkbox in it would commit on sight.
+ */
+function formSignature(form: HTMLFormElement, names: string[]): string {
+  const data = new FormData(form)
+  return JSON.stringify(names.map((name) => data.getAll(name).map(String).join(",")))
+}
+
+const TYPED_INTO = new Set(["text", "search", "url", "tel", "email", "password", "number"])
+
+/**
+ * Whether this is something a value is typed into, character by character.
+ *
+ * It is the one distinction the commit rule needs. A control you *pick* from
+ * has settled the moment its value changes — that is what picking is. A control
+ * you *type* into changes its value on every keystroke and has settled at none
+ * of them, so it commits when you leave it, or on Enter or Tab.
+ *
+ * The test is the element, not a list of component names: the table never
+ * learns the name of a single `conform-*` variant, and this is the same promise
+ * one layer down. A react-aria date segment is a `spinbutton` you type digits
+ * into and is caught by the last clause; a checkbox, a radio and a colour swatch
+ * are inputs you cannot type into and are not.
+ */
+function isTextEntry(node: EventTarget | null): boolean {
+  if (!(node instanceof HTMLElement)) return false
+  if (node instanceof HTMLTextAreaElement) return true
+  if (node instanceof HTMLInputElement) return TYPED_INTO.has(node.type)
+  return node.isContentEditable || node.getAttribute("role") === "spinbutton"
 }
 
 export interface TableToolbarProps {
@@ -1073,13 +1128,14 @@ function editControl(field: TableEditField, meta: FieldMetadata<never>): ReactNo
  * editor is a real form with a real schema, so a bad edit is a field error
  * beside the field rather than a rejected save the user has to reconstruct.
  *
- * The same component backs both the inline row editor and a bulk edit inside a
- * Modal — the difference is only which rows the caller writes the result to,
- * and the schema it hands over: a bulk edit is the same component over the one
- * or two fields being applied to every selected row, which is why its schema is
- * a smaller object rather than the row's with holes in it. Both are in the
- * gallery, because a claim in published source that nothing demonstrates is
- * worse than no claim.
+ * **It is not how you edit a row of a table.** A table's cells are editable —
+ * `TableCellEditor` and the `editor` on a column — and putting a row into an
+ * edit mode with a button is the model that replaced. What is left is the job
+ * only this shape can do: applying a few fields to *several* rows at once,
+ * inside a Modal raised from the selection bar. Its schema is then the one or
+ * two fields being applied rather than the row's with holes in it, because a
+ * bulk edit must not require the fields it is not touching. That is the example
+ * in the gallery, and it is the whole of what this is for.
  */
 export function TableRowEditor({
   schema,
@@ -1138,14 +1194,24 @@ export interface TableCellEditorProps {
   /** The schema field this cell edits — the one field that is visible. */
   name: string
   /**
-   * Every editable field of the row. The one named above is rendered; the rest
-   * ride as hidden inputs, which is what makes "discount ≤ price" a rule this
-   * form can actually fail. See `DataTableCellAddress` for the argument.
+   * Every editable field of the row, as it was last committed. The one named
+   * above is rendered; the rest ride as hidden inputs, which is what makes
+   * "discount ≤ price" a rule this form can actually fail. See
+   * `DataTableCellAddress` for the argument.
    */
   defaultValue: Record<string, unknown>
+  /**
+   * The character the edit began with, when it began by typing.
+   *
+   * Separate from `defaultValue` rather than folded into it, because the two
+   * answer different questions: `defaultValue` is what this cell has already
+   * reported and a commit equal to it is not reported again, while the seed is
+   * a change that has already happened and must not be mistaken for one.
+   */
+  seed?: string
   /** The control. Bind it by naming props — never a `getInputProps` spread. */
   children: (field: FieldMetadata<never>) => ReactNode
-  /** The whole validated row, once the schema accepted it. */
+  /** The whole validated row, once the schema accepted it and something changed. */
   onCommit: (value: Record<string, unknown>) => void
   /** Leave the cell. `move` is Tab (1) or Shift+Tab (-1); absent means stay. */
   onDone: (move?: 1 | -1) => void
@@ -1158,14 +1224,31 @@ export interface TableCellEditorProps {
  * One cell, being edited — a Conform form over the whole row with one field on
  * screen.
  *
- * **What commits, and what does not.** Enter commits and stays; Tab commits and
- * moves; Escape cancels. Moving focus to another cell of the same table commits
- * too, because that is unambiguous. Clicking somewhere else entirely does not:
- * a combo box's popover, a date picker's calendar and a colour picker's swatch
- * grid are all portalled out of the table, so "focus left the cell" and "the
- * user is done" are not the same event, and a blur that guessed would commit
- * half an edit every time someone opened a menu. An edit left open is visible
- * and recoverable; a commit nobody asked for is neither.
+ * **What commits.** The control's own value settling, and one of three keys.
+ * Which of the two applies is decided by the control rather than by the table,
+ * and the whole of the distinction is `isTextEntry`: a control you *pick* from —
+ * a Select, a date, a switch, a colour swatch — has settled the moment its value
+ * changes, because picking the option is the user being done. A control you
+ * *type* into has settled at none of its keystrokes, so it commits when you
+ * leave it, or on Enter or Tab. Escape cancels either.
+ *
+ * That is what dissolves the problem a blur rule could only work around. A combo
+ * box's popover, a date picker's calendar and a colour picker's swatch grid are
+ * all portalled out of the table, so "focus left the cell" and "the user is
+ * done" were never the same event — but a popover opening changes no value and
+ * fires no change, and where focus went is no longer a question anyone asks.
+ *
+ * **A commit is not a departure.** Settling on a value leaves the cell open:
+ * a control that collects several values before it is finished — a checkbox
+ * group, a multiple select — would otherwise close under the first click. Enter,
+ * Tab and leaving a text field are the gestures that say "and I am done here",
+ * and they are the ones that close.
+ *
+ * **What is not reported twice.** Change-then-Enter and change-then-Tab would
+ * each commit the same row twice, so every commit is measured against the last
+ * one — `formSignature`, read off the DOM — and a submission that says nothing
+ * new still closes the cell and still moves, it just does not ask the caller to
+ * write the same row again.
  *
  * **Where the error goes.** Under the control, inside the cell, rendered by the
  * `conform-*` variant from the field metadata — which is also what wires
@@ -1188,21 +1271,30 @@ export interface TableCellEditorProps {
  * here instead, and its comma and semicolon still add a tag.
  *
  * Opening a cell is the mirror of this and belongs to `table-shell`, which takes
- * Enter, F2 and any printable character from the grid before react-aria's
- * typeahead sees them. Between the two, every key that means something to a cell
- * is answered by whichever half owns the cell at the time.
+ * a press, Enter, F2 and any printable character from the grid before react-aria
+ * sees them. Between the two, every gesture that means something to a cell is
+ * answered by whichever half owns the cell at the time.
  */
 export function TableCellEditor({
   schema,
   name,
   defaultValue,
+  seed,
   children,
   onCommit,
   onDone,
   onCancel,
   isSaving,
 }: TableCellEditorProps) {
-  const defaults = useMemo(() => toFormValues(defaultValue), [defaultValue])
+  const defaults = useMemo(() => {
+    const values = toFormValues(defaultValue)
+    // Typing starts the edit *with that character*, which is what a spreadsheet
+    // does and what makes the keystroke worth intercepting. A control that
+    // cannot read it as a value simply opens empty, and the schema refuses the
+    // commit rather than the table guessing.
+    return seed == null ? values : { ...values, [name]: seed }
+  }, [defaultValue, name, seed])
+  const fieldNames = useMemo(() => Object.keys(defaults), [defaults])
   // A callback ref rather than `useRef`, because "the form is in the document"
   // is a render apart from "this component mounted": react-aria renders a
   // cell's children through its collection, and Conform has no field metadata
@@ -1215,11 +1307,22 @@ export function TableCellEditor({
   // never reaches it, which is what keeps Tab from moving off a bad value.
   const move = useRef<1 | -1 | undefined>(undefined)
   // Whether this editor has already said its piece. Leaving takes focus with
-  // it, and focus landing on the cell is indistinguishable from the user
-  // clicking that cell — so the blur rule below has to know the difference
-  // between "moved on" and "moving on", or a cancel commits and a commit
-  // commits twice.
+  // it, and a deferred reading that arrives afterwards would be reading a form
+  // nobody is in any more.
   const isLeaving = useRef(false)
+  // What this cell has already reported, as `formSignature` sees it. Null means
+  // "nothing yet", which is the state a seeded edit opens in: the keystroke that
+  // opened it is a change, and there is no earlier reading to weigh it against.
+  const committed = useRef<string | null>(null)
+  // The three answers `commit` works out and the submit handler needs: whether
+  // this submission says anything new, what the form read as when it was asked,
+  // and whether the cell is being left as well as written.
+  const isChange = useRef(true)
+  const reading = useRef<string | null>(null)
+  const stays = useRef(false)
+  // A commit blurs the focused control, and a blurred text field is one of the
+  // things this component commits on. Without this it would commit twice.
+  const isCommitting = useRef(false)
   const [form, fields] = useForm<Record<string, string>>({
     id: `${useId()}-cell-editor`,
     defaultValue: defaults,
@@ -1228,14 +1331,30 @@ export function TableCellEditor({
     onSubmit: (event, { submission }) => {
       event.preventDefault()
       if (submission?.status !== "success") return
+      committed.current = reading.current
+      if (isChange.current) onCommit(submission.value as unknown as Record<string, unknown>)
+      if (stays.current) return
       isLeaving.current = true
-      onCommit(submission.value as unknown as Record<string, unknown>)
       onDone(move.current)
     },
   })
 
+  // What the cell opened with, read on the way past rather than through the
+  // effect's dependencies: `ref={setFormElement}` has to stay the same function
+  // across renders — a fresh callback ref is detached and re-attached on every
+  // one of them, which here would reset the form's state and re-read its
+  // baseline after every keystroke.
+  const opened = useRef({ seed, fieldNames })
+  opened.current = { seed, fieldNames }
+
   /**
-   * Focus the control, through the cell rather than past it.
+   * Take the reading everything later is compared against, then focus the
+   * control — through the cell rather than past it.
+   *
+   * The reading is what this cell would submit before anyone touched it, off the
+   * DOM for the same reason the comparison is: that is where the controls keep
+   * it. A seeded edit gets none, because the keystroke that opened it is already
+   * the change.
    *
    * Focusing the control on its own is not enough when the edit arrived by Tab:
    * react-aria's grid still believes the *previous* cell is the focused one, and
@@ -1245,7 +1364,11 @@ export function TableCellEditor({
    * then takes focus from it with the grid agreeing.
    */
   useEffect(() => {
-    if (!formElement || formElement.contains(document.activeElement)) return
+    if (!formElement) return
+    if (opened.current.seed == null) {
+      committed.current = formSignature(formElement, opened.current.fieldNames)
+    }
+    if (formElement.contains(document.activeElement)) return
     const cell = formElement.closest<HTMLElement>(CELL_ROLE)
     if (cell && document.activeElement !== cell) cell.focus()
     formElement.querySelector<HTMLElement>(FOCUSABLE_IN_EDITOR)?.focus()
@@ -1262,18 +1385,65 @@ export function TableCellEditor({
    * that having happened submits the value the cell opened with. Blurring the
    * focused control is the one instruction every such field understands, and it
    * is a discrete event, so React has flushed the new hidden value by the time
-   * it returns.
+   * it returns — which is also why the reading that decides whether anything
+   * changed is taken after it and not before.
    */
-  const commit = (element: HTMLFormElement, direction?: 1 | -1) => {
+  const commit = (element: HTMLFormElement, direction?: 1 | -1, stay?: boolean) => {
+    if (isCommitting.current) return
+    isCommitting.current = true
     move.current = direction
+    stays.current = stay === true
     const active = document.activeElement
-    if (active instanceof HTMLElement && element.contains(active)) active.blur()
+    const inside = active instanceof HTMLElement && element.contains(active)
+    if (inside) (active as HTMLElement).blur()
+    const now = formSignature(element, fieldNames)
+    isChange.current = committed.current === null || now !== committed.current
+    reading.current = now
     submitForm(element)
+    // A commit that stays put gives the focus back. The blur above is an
+    // instruction to the control, not the user leaving it, and a cell that
+    // answered a click by dropping focus on the body is one the keyboard has
+    // no way back into.
+    if (stays.current && inside && element.isConnected) (active as HTMLElement).focus()
+    isCommitting.current = false
   }
+
+  const hasChanged = (element: HTMLFormElement) =>
+    committed.current === null || formSignature(element, fieldNames) !== committed.current
 
   const cancel = () => {
     isLeaving.current = true
     onCancel()
+  }
+
+  /**
+   * Ask, after an interaction, whether a control settled on a new value.
+   *
+   * Four events rather than one, because there is no single one to listen for:
+   * a react-aria control writes the value it submits from React state without
+   * dispatching anything, so what is observable is the gesture, not the change.
+   * A press is `click` or — where a drag ends away from where it began —
+   * `pointerup`; a keyboard choice is `keyup`; a plain input is `change`. They
+   * all arrive here through React's own propagation, which follows the element
+   * tree rather than the document's, so a combo box's listbox and a date
+   * picker's calendar report here even though they are portalled out of the
+   * table entirely. That is the whole of what made the old blur rule hard.
+   *
+   * The reading is deferred by a microtask because the value a control submits
+   * is written by the render the interaction causes, and that render has not
+   * happened yet while the handler is running.
+   *
+   * Typing is excluded here and nowhere else: it changes the value on every
+   * keystroke and none of those is the user being finished.
+   */
+  const settle = (event: React.SyntheticEvent) => {
+    if (isCommitting.current || isLeaving.current || isTextEntry(event.target)) return
+    const element = formElement
+    if (!element) return
+    queueMicrotask(() => {
+      if (isCommitting.current || isLeaving.current || !element.isConnected) return
+      if (hasChanged(element)) commit(element, undefined, true)
+    })
   }
 
   return (
@@ -1296,20 +1466,25 @@ export function TableCellEditor({
         else if (event.key === "Enter") commit(element)
         else commit(element, event.shiftKey ? -1 : 1)
       }}
+      onSettle={settle}
       onBlur={(event) => {
-        const next = event.relatedTarget as HTMLElement | null
-        const element = event.currentTarget
-        if (isLeaving.current || !next) return
-        // A *different* cell of the same table, and nothing else. Not this one:
-        // focus moves around inside a cell constantly — react-aria hands it
-        // back to the gridcell, a control hands it to its own button — and none
-        // of that is the user being finished. And not a portalled popover,
-        // which is "outside" by this test too, which is exactly why the test is
-        // this one rather than "focus left the form".
-        const cell = element.closest(CELL_ROLE)
-        const target = next.closest?.(CELL_ROLE)
-        if (!target || target === cell) return
-        if (cell?.closest('[role="grid"]') === target.closest('[role="grid"]')) commit(element)
+        // Free text settles when you stop typing into it, and this is that: the
+        // control the characters were going into no longer has focus, so the
+        // user has left the cell and the value goes with them. Nothing else
+        // commits for losing focus — a portalled popover taking it is exactly
+        // the case that used to have to be argued around, and a combo box keeps
+        // focus in its own input while its list is open, so it never arrives.
+        //
+        // Deferred for the same reason `settle` is, and one more: a react-aria
+        // number field rewrites the value it submits *during* this event, so
+        // reading the form inside the handler reads the value before the edit.
+        if (isCommitting.current || isLeaving.current || !isTextEntry(event.target)) return
+        const element = formElement
+        if (!element) return
+        queueMicrotask(() => {
+          if (isCommitting.current || isLeaving.current || !element.isConnected) return
+          if (hasChanged(element)) commit(element)
+        })
       }}
     >
       <div className="relative flex min-w-0 flex-col">
@@ -1321,7 +1496,7 @@ export function TableCellEditor({
           </span>
         )}
       </div>
-      {Object.keys(defaults)
+      {fieldNames
         .filter((key) => key !== name)
         .map((key) => (
           // The rest of the row, so the schema validates a row rather than a
@@ -1354,8 +1529,12 @@ export interface TableCellEditingOptions<T> {
   /** Controlled. Leave it out and the table holds the open cell itself. */
   editingCell?: DataTableCellAddress | null
   onEditingCellChange?: (cell: DataTableCellAddress | null) => void
-  /** A commit in flight: the open cell shows it rather than pretending. */
-  isSaving?: boolean
+  /**
+   * The cell whose commit is in flight. An address rather than a flag: commits
+   * no longer wait for the cell to be left, so the cell being saved and the cell
+   * on screen are routinely different ones.
+   */
+  savingCell?: DataTableCellAddress | null
 }
 
 export interface TableCellEditing<T> {
@@ -1383,7 +1562,7 @@ export function useTableCellEditing<T>({
   onCellEdit,
   editingCell: controlledCell,
   onEditingCellChange,
-  isSaving,
+  savingCell,
 }: TableCellEditingOptions<T>): TableCellEditing<T> {
   const [internalCell, setInternalCell] = useState<DataTableCellAddress | null>(null)
   const editable = useMemo(
@@ -1413,12 +1592,9 @@ export function useTableCellEditing<T>({
         <TableCellEditor
           schema={schema}
           name={name}
-          // Typing starts the edit *with that character*, which is what a
-          // spreadsheet does and what makes the keystroke worth intercepting.
-          // A control that cannot read it as a value simply opens empty, and
-          // the schema refuses the commit rather than the table guessing.
-          defaultValue={seed == null ? values : { ...values, [name]: seed }}
-          isSaving={isSaving}
+          defaultValue={values}
+          seed={seed}
+          isSaving={isSameCell(savingCell, { rowId, columnId })}
           onCancel={close}
           onCommit={(value) => onCellEdit?.({ row, rowId, columnId, field: name, value })}
           onDone={(delta) => (delta ? move(delta) : close())}
