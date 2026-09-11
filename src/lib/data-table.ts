@@ -144,10 +144,10 @@ export interface DataTableColumn<T> {
    *
    * The spanned cell needs the client. react-stately builds the band row by
    * rewriting the sibling links of the column nodes it chains, which react-aria's
-   * server-rendering path cannot survive, so a server render puts the band name
-   * above each column's label instead and the real row arrives with hydration.
-   * The two are the same height, so nothing moves. `TableColumnGroup` in
-   * `@/components/table` has the detail.
+   * server-rendering path cannot survive (adobe/react-spectrum#10598), so a
+   * server render puts the band name above each column's label instead and the
+   * real row arrives with hydration. The two are the same height, so nothing
+   * moves. `TableColumnGroup` in `@/components/table` has the detail.
    */
   columns?: DataTableColumn<T>[]
   cell?: (ctx: DataTableCellContext<T>) => ReactNode
