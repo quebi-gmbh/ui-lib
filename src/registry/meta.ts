@@ -78,6 +78,7 @@ import { formattedStorageMeta } from "./formatted-storage.meta"
 import { galleryMeta } from "./gallery.meta"
 import { gridListMeta } from "./grid-list.meta"
 import { headingMeta } from "./heading.meta"
+import { iconTileMeta } from "./icon-tile.meta"
 import { inputMeta } from "./input.meta"
 import { inputOtpMeta } from "./input-otp.meta"
 import { keyboardMeta } from "./keyboard.meta"
@@ -218,6 +219,7 @@ export const metaRegistry: ComponentMeta[] = [
   galleryMeta,
   gridListMeta,
   headingMeta,
+  iconTileMeta,
   inputMeta,
   inputOtpMeta,
   keyboardMeta,

@@ -1,6 +1,7 @@
 import { useState } from "react"
 import {
   Toolbar,
+  ToolbarButton,
   ToolbarGroup,
   ToolbarItem,
   ToolbarSeparator,
@@ -110,6 +111,39 @@ const AlignRightIcon = () => (
   </svg>
 )
 
+const UndoIcon = () => (
+  <svg
+    data-slot="icon"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M3 7v6h6" />
+    <path d="M3 13a9 9 0 1 0 3-7.7L3 8" />
+  </svg>
+)
+
+const TrashIcon = () => (
+  <svg
+    data-slot="icon"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M3 6h18" />
+    <path d="M8 6V4h8v2" />
+    <path d="M19 6l-1 14H6L5 6" />
+  </svg>
+)
+
 export const toolbarExamples: ComponentExample[] = [
   {
     title: "Default",
@@ -138,6 +172,34 @@ export const toolbarExamples: ComponentExample[] = [
           <ToolbarItem size="sq-sm" aria-label="Align right">
             <AlignRightIcon />
           </ToolbarItem>
+        </ToolbarGroup>
+      </Toolbar>
+    ),
+  },
+  {
+    title: "Actions and toggles",
+    description:
+      "ToolbarItem is a toggle, so it reports a pressed state; ToolbarButton is a plain action that does not. Both carry the toolbar's size and intent defaults, so a mixed row lines up without hand-sizing anything.",
+    render: () => (
+      <Toolbar aria-label="Document">
+        <ToolbarGroup aria-label="Style">
+          <ToolbarItem size="sq-sm" aria-label="Bold">
+            <BoldIcon />
+          </ToolbarItem>
+          <ToolbarItem size="sq-sm" aria-label="Italic">
+            <ItalicIcon />
+          </ToolbarItem>
+        </ToolbarGroup>
+        <ToolbarSeparator />
+        <ToolbarGroup aria-label="Document actions">
+          <ToolbarButton size="sq-sm" aria-label="Undo">
+            <UndoIcon />
+          </ToolbarButton>
+          <ToolbarButton>Save</ToolbarButton>
+          <ToolbarButton intent="danger">
+            <TrashIcon />
+            Delete
+          </ToolbarButton>
         </ToolbarGroup>
       </Toolbar>
     ),

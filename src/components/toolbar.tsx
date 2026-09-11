@@ -9,6 +9,7 @@ import {
   Toolbar as ToolbarPrimitive,
   type ToolbarProps as ToolbarPrimitiveProps,
 } from "react-aria-components"
+import { Button, type ButtonProps } from "@/components/button"
 import { Separator } from "@/components/separator"
 import { Toggle, type ToggleProps } from "@/components/toggle"
 import { cn } from "@/lib/utils"
@@ -16,13 +17,24 @@ import { cn } from "@/lib/utils"
 /**
  * Toolbar — quebi design system
  *
- * A horizontal or vertical container that groups related actions (toggle
- * buttons, separators) into a single keyboard-navigable surface. Built on
+ * A horizontal or vertical container that groups related controls — actions,
+ * toggles and separators — into a single keyboard-navigable surface. Built on
  * react-aria-components for roving-focus and arrow-key navigation.
  *
  * Styled as a quebi surface: a subtle background panel with the signature
- * hairline cyan border and a quebi radius. Items are quebi Toggles, so the
- * active state lights up with brand teal.
+ * hairline cyan border and a quebi radius.
+ *
+ * Two kinds of item, and the choice between them is not cosmetic:
+ * `ToolbarItem` is a Toggle, so it has an on state that lights up with brand
+ * teal and reports `aria-pressed`. `ToolbarButton` is a Button — Save, Export,
+ * Delete — which has no such state, and saying it does would be a lie to a
+ * screen reader. Both carry the same size and intent defaults, so a row of
+ * either or both lines up.
+ *
+ * Anything else can go in directly: `children` is unrestricted and react-aria's
+ * roving focus picks the control up. Ask it for the same 38px the two items
+ * default to — `<SelectTrigger size="sm">`, `<Input size="sm">` — and the row
+ * stays one height.
  */
 
 interface ToolbarProps extends ToolbarPrimitiveProps {
@@ -83,6 +95,10 @@ const ToolbarGroup = ({ isDisabled, className, ...props }: ToolbarGroupProps) =>
 
 interface ToolbarItemProps extends ToggleProps {}
 
+/**
+ * A two-state control in the tray — bold, italic, "show archived". Reach for
+ * `ToolbarButton` when the control fires and forgets.
+ */
 const ToolbarItem = ({
   isDisabled,
   isCircle,
@@ -110,6 +126,44 @@ const ToolbarItem = ({
   )
 }
 
+interface ToolbarButtonProps extends ButtonProps {}
+
+/**
+ * A plain action in the tray — the same defaults as `ToolbarItem`, minus the
+ * pressed state.
+ *
+ * Without it, a Save or Export button in a toolbar is either a `ToolbarItem`
+ * asserting an `aria-pressed` that means nothing, or a bare `Button` hand-sized
+ * to match its neighbours — which is where the heights stop agreeing. The
+ * defaults are deliberately `ToolbarItem`'s, character for character.
+ */
+const ToolbarButton = ({
+  isDisabled,
+  isCircle,
+  size = "sm",
+  intent = "outline",
+  ref,
+  className,
+  ...props
+}: ToolbarButtonProps) => {
+  const context = use(ToolbarGroupContext)
+  const { isCircle: contextCircle } = use(ToolbarContext)
+  const effectiveIsDisabled = isDisabled || context.isDisabled
+  const effectiveIsCircle = isCircle || contextCircle
+  return (
+    <Button
+      intent={intent}
+      size={size}
+      ref={ref}
+      data-slot="toolbar-button"
+      isCircle={effectiveIsCircle}
+      className={className}
+      isDisabled={effectiveIsDisabled}
+      {...props}
+    />
+  )
+}
+
 type ToolbarSeparatorProps = SeparatorProps
 
 const ToolbarSeparator = ({ className, ...props }: ToolbarSeparatorProps) => {
@@ -127,5 +181,11 @@ const ToolbarSeparator = ({ className, ...props }: ToolbarSeparatorProps) => {
   )
 }
 
-export type { ToolbarItemProps, ToolbarGroupProps, ToolbarProps, ToolbarSeparatorProps }
-export { Toolbar, ToolbarGroup, ToolbarItem, ToolbarSeparator }
+export type {
+  ToolbarButtonProps,
+  ToolbarItemProps,
+  ToolbarGroupProps,
+  ToolbarProps,
+  ToolbarSeparatorProps,
+}
+export { Toolbar, ToolbarButton, ToolbarGroup, ToolbarItem, ToolbarSeparator }
