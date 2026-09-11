@@ -227,6 +227,13 @@ interface TableColumnGroupProps {
  * never ends. So a banded header is rendered only where react-aria is not using
  * that path — see `useIsSSR` in data-table.tsx — and the gate goes away when
  * react-stately stops mutating shared nodes.
+ *
+ * That is reported upstream as
+ * [adobe/react-spectrum#10598](https://github.com/adobe/react-spectrum/issues/10598),
+ * with the reproduction and the mechanism. What watches for the fix is a test in
+ * `tests/components/table.test.tsx`, which asserts the corruption on a shape
+ * that comes out wrong without hanging: when it fails, the gate, the fallback
+ * block and `TABLE_BAND_HEIGHT` can all go.
  */
 const TableColumnGroup = createBranchComponent<
   object,
