@@ -306,6 +306,13 @@ interface TableHeaderProps<T extends object> extends HeaderProps<T> {
    * react-aria-components' renderer has no case for one — it calls `render` on
    * a node that has none. So each gutter gets this many empty bands stacked
    * above it and the header stays rectangular.
+   *
+   * That is the second half of
+   * [adobe/react-spectrum#10598](https://github.com/adobe/react-spectrum/issues/10598),
+   * and `tests/components/table.test.tsx` watches it the same way it watches the
+   * first: a test that renders the shape *without* this prop and asserts the
+   * throw. When that test fails, this prop, `banded()` and `bandClassName` can
+   * all go.
    */
   bandDepth?: number
   /** Extra classes for the bands above the gutters — the sticky offset, mostly. */

@@ -153,4 +153,49 @@ describe("Table", () => {
     expect(thead.match(/data-key="storage"/g) ?? []).toHaveLength(2)
     expect(thead).toContain('aria-colindex="4"')
   })
+
+  /**
+   * The second bug reported in the same upstream issue, asserted the same way
+   * and for the same reason: this test fails when the fix ships.
+   *
+   * A header row shorter than the table is what makes react-stately's
+   * `buildHeaderRows` fill the gap with a `placeholder` node. It builds one out
+   * of a literal — `type: 'placeholder'`, `rendered: null`, and no `render`
+   * function — while react-aria-components' renderer calls `node.render(node)`
+   * on every child it walks. So the shape throws rather than rendering a blank
+   * cell, and `TableHeader`'s `bandDepth` exists only to keep it from arising:
+   * the drag and selection gutters get empty bands stacked above them so the
+   * header stays rectangular.
+   *
+   * `bandDepth` is left at its default here, which is precisely the workaround
+   * being withheld. When react-aria-components learns to render a placeholder,
+   * this stops throwing — and then `bandDepth`, `banded()` and `bandClassName`
+   * can go, along with the `bandDepth` argument `table-shell.tsx` computes.
+   *
+   * Upstream status, checked 2026-09-11: still present. react-stately 3.50.0's
+   * `buildHeaderRows` is byte-identical to the 3.48.0 in this lockfile, and the
+   * placeholder literal it constructs still has no `render`.
+   */
+  test("a header row shorter than the table is still unrenderable", () => {
+    expect(() =>
+      render(
+        <Table aria-label="Devices" selectionMode="multiple">
+          <TableHeader>
+            <TableColumnGroup id="identity" label="Identity">
+              <TableColumn id="name" isRowHeader>
+                Name
+              </TableColumn>
+              <TableColumn id="owner">Owner</TableColumn>
+            </TableColumnGroup>
+          </TableHeader>
+          <TableBody>
+            <TableRow id="1">
+              <TableCell>Galaxy S24</TableCell>
+              <TableCell>Ada</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>,
+      ),
+    ).toThrow(/render is not a function/)
+  })
 })
