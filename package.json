@@ -15,6 +15,7 @@
     "start": "react-router-serve ./build/server/index.js",
     "preview": "vite preview",
     "typecheck": "bun run generate:api && react-router typegen && tsc -b",
+    "repo:config": "bun run scripts/repo-config.ts",
     "lint": "biome lint",
     "lint:fix": "biome lint --write",
     "prepare": "lefthook install || echo 'lefthook: git hooks not installed (a global core.hooksPath is set); run `bunx lefthook install --force` if you want them'"

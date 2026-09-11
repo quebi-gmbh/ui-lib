@@ -29,14 +29,44 @@ Two guards, either of which catches it:
 
 - `delete_branch_on_merge` is on for the repo, so a merged branch stops existing and the mistake is
   unrepresentable rather than merely detectable. It is a repo setting, so nothing in the tree shows
-  you it is there — which is the whole reason for the second one.
+  you it is there — except that now it does: it is one of the `desiredRepoSettings` in
+  `scripts/repo-config.ts`, and `bun run repo:config` says whether it is still true.
 - The `base-branch` job in `.github/workflows/ci.yml` fails any PR whose base is not `main`, and
   its message says how to retarget and rebase. It is a plain "base must be main" rule on purpose;
-  stacked PRs are not a pattern here, and there is no opt-out.
+  stacked PRs are not a pattern here, and there is no opt-out. `.github/rulesets/main.json` makes it
+  a *required* check, so once that ruleset is applied the job blocks the merge instead of merely
+  reporting it.
 
 So: branch from `main`, and pass `--base main` when the tool lets you. If your commits sit on top of
 a task branch, `git rebase --onto origin/main origin/<that-branch>` before you open the PR — a
 retarget alone would carry that branch's commits into the diff.
+
+## How a PR lands
+
+`gh pr merge --auto --squash --delete-branch`. Auto-merge *queues* the PR; GitHub lands it when the
+required checks go green. That is the only merge an agent container may ask for — an immediate merge
+is refused by policy, on the premise that the required checks are the gate.
+
+That premise has to be configured on the repo, not in the tree, and for this repo's whole life it was
+not: auto-merge was off, so `gh` quietly downgraded `--auto` to the immediate merge that gets
+refused, and `main` had no ruleset, so `lint`, `test`, `typecheck` and `base-branch` all reported and
+none of them blocked. Both halves are now written down as data — `.github/rulesets/main.json` and
+`desiredRepoSettings` in `scripts/repo-config.ts`, whose header carries the argument for every knob
+in it, including why "require branches to be up to date" is off and what would have to change to turn
+it on.
+
+```sh
+bun run repo:config           # is the live configuration the one in the tree?
+bun run repo:config --apply   # make it so — needs admin, which the agent App does not have
+```
+
+Applying is a human step. Drift and non-application show up as a failing `bun run repo:config`, not
+as a red build: making CI fail on it would leave every open PR red until someone with admin got
+round to it. `tests/repo-config.test.ts` checks the half that *is* in the tree — that the contexts
+the ruleset requires are exactly the jobs `ci.yml` defines, so renaming a CI job cannot silently
+unhook the gate or hang every PR on a check that will never report.
+
+If your PR is green and nothing merges it, run the check before looking for a token problem.
 
 ## The rules are not advice, they are lint
 
