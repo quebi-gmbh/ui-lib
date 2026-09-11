@@ -72,6 +72,33 @@
  * `disabled` — which this script would then report as drift, loudly, which is
  * the behaviour you want from a temporary measure.)
  *
+ * ## What the tree does not declare, and why the check still mentions it
+ *
+ * The ruleset file declares what this repo *requires*. GitHub's answer to a GET
+ * is larger than that in both directions, and the two ways of getting this wrong
+ * are equally bad: declare something GitHub never reports and the check fails
+ * forever over a phantom; ignore everything undeclared and a knob GitHub turns on
+ * by default is never seen by anyone.
+ *
+ * So an undeclared setting that is *on* is printed as a note and is not drift.
+ * There is one today, and it is worth knowing about:
+ * `require_extra_approval_for_unattributed_changes`, which GitHub defaults to
+ * true and which, on its face, is the shape of thing that could put every agent
+ * PR back in front of a reviewer — the symptom this whole file exists to remove.
+ * It does not: PRs #67, #68 and #69 all landed under this ruleset with zero
+ * reviews, #69 auto-merging 28 seconds after its last check went green. It is
+ * left on, undeclared, and visible. If it ever does hold a PR, the note is where
+ * you will see it, and turning it off is then a decision with evidence behind it
+ * rather than a default nobody chose.
+ *
+ * Two keys are deliberately *absent* from the ruleset file for the same reason.
+ * `automatic_copilot_code_review_enabled` is accepted on write and never returned
+ * on read, so declaring it made every check red about something unverifiable.
+ * `bypass_actors` is the reverse — it is returned only to a token that could edit
+ * the ruleset, so from an agent container an empty list and a redacted one look
+ * identical; it stays declared (it is a real decision) and the check says out
+ * loud that it could not confirm it.
+ *
  * ## Permissions
  *
  * Applying needs `administration: write`. Reading needs nothing special — the
@@ -110,9 +137,9 @@ export const desiredRepoSettings = {
   delete_branch_on_merge: true,
 } as const
 
-type Json = string | number | boolean | null | Json[] | { [key: string]: Json }
+export type Json = string | number | boolean | null | Json[] | { [key: string]: Json }
 
-type Ruleset = {
+export type Ruleset = {
   name: string
   target: string
   enforcement: string
@@ -137,38 +164,184 @@ function ghJson(args: string[]): Json {
   return JSON.parse(run.stdout) as Json
 }
 
+export type Difference = { path: string; live: Json | undefined; want: Json }
+export type Extra = { path: string; live: Json }
+export type Comparison = { differences: Difference[]; extras: Extra[] }
+
+function isObject(value: Json | undefined): value is { [key: string]: Json } {
+  return value !== null && value !== undefined && typeof value === "object" && !Array.isArray(value)
+}
+
 /**
- * Is every value we declared present in what GitHub reports?
- *
- * One-directional on purpose. A GET on a ruleset comes back with ids, timestamps,
- * `_links` and every parameter GitHub defaults, none of which the tree declares
- * or wants to. So this asks the only question worth asking — "is what we asked
- * for in effect?" — and says nothing about extra live configuration, which the
- * caller reports separately where it can be judged rather than diffed.
+ * A name for an element of a list, so a path reads `rules.pull_request.…` rather
+ * than `rules[2].…`. GitHub's lists are keyed by a field, never by position, and
+ * a position is the one thing about them that is not stable.
  */
-function contains(desired: Json, live: Json | undefined): boolean {
+function label(value: Json, index: number): string {
+  if (isObject(value)) {
+    for (const key of ["type", "context", "actor_type"]) {
+      const named = value[key]
+      if (typeof named === "string") return named
+    }
+  }
+  return `[${index}]`
+}
+
+function at(path: string, segment: string): string {
+  return path === "" ? segment : `${path}.${segment}`
+}
+
+/**
+ * Live configuration that is switched *on* and that the tree says nothing about.
+ *
+ * GitHub answers a ruleset GET with every parameter it defaults, and it grows new
+ * ones over time — `require_extra_approval_for_unattributed_changes` arrived long
+ * after this file did. A knob that is off or empty is enforcing nothing and is
+ * noise; a knob that is on and undeclared is configuration this repo is subject
+ * to and has never decided, which is precisely what this script exists to
+ * surface. So: report the second, ignore the first, and do not treat either as
+ * drift — the tree declares what it *requires*, not the whole of GitHub.
+ */
+function active(live: Json, path: string): Extra[] {
+  if (Array.isArray(live)) return live.length === 0 ? [] : [{ path, live }]
+  if (isObject(live)) return Object.entries(live).flatMap(([key, v]) => active(v, at(path, key)))
+  if (live === null || live === false || live === 0 || live === "") return []
+  return [{ path, live }]
+}
+
+/**
+ * What in the live configuration fails to match what we declared, and what is in
+ * effect that we never declared.
+ *
+ * The match is one-directional on purpose: a GET comes back with ids, timestamps,
+ * `_links` and defaults the tree has no business restating. Reporting a *path*
+ * for each mismatch rather than a verdict is the point — the first version of
+ * this printed the live and desired rule arrays side by side, which for a
+ * difference anywhere else in the ruleset (`bypass_actors`, `conditions`,
+ * `enforcement`) printed two identical-looking lists and left the reader to hunt.
+ *
+ * Lists are matched by content, not by position, and a desired element is paired
+ * with whichever live element is closest to it, so one wrong field reads as one
+ * wrong field instead of as two unrelated elements.
+ */
+export function compare(desired: Json, live: Json | undefined, path = ""): Comparison {
   if (Array.isArray(desired)) {
-    if (!Array.isArray(live) || live.length !== desired.length) return false
-    const remaining = [...live]
-    for (const want of desired) {
-      const at = remaining.findIndex((got) => contains(want, got))
-      if (at === -1) return false
-      remaining.splice(at, 1)
+    if (!Array.isArray(live)) return { differences: [{ path, live, want: desired }], extras: [] }
+    const remaining = live.map((value, index) => ({ value, index }))
+    const differences: Difference[] = []
+    const extras: Extra[] = []
+    desired.forEach((want, index) => {
+      const name = label(want, index)
+      const where = at(path, name)
+      if (remaining.length === 0) {
+        differences.push({ path: where, live: undefined, want })
+        return
+      }
+      // Pair by the element's own name where it has one, so a rule that is gone
+      // reads as that one rule missing rather than as every rule after it having
+      // shifted along by one — which is the difference between "base-branch is no
+      // longer required" and three lines of apparent nonsense.
+      const named = remaining.findIndex((got) => label(got.value, got.index) === name)
+      if (named === -1 && !name.startsWith("[")) {
+        differences.push({ path: where, live: undefined, want })
+        return
+      }
+      let best = named === -1 ? 0 : named
+      let closest = compare(want, remaining[best].value, where)
+      if (named === -1) {
+        // An unnamed element — a bare value in a list. Nothing identifies it but
+        // its content, so pair it with whatever it is closest to.
+        for (let i = 1; i < remaining.length && closest.differences.length > 0; i++) {
+          const next = compare(want, remaining[i].value, where)
+          if (next.differences.length < closest.differences.length) {
+            best = i
+            closest = next
+          }
+        }
+      }
+      remaining.splice(best, 1)
+      differences.push(...closest.differences)
+      extras.push(...closest.extras)
+    })
+    for (const left of remaining) {
+      extras.push(...active(left.value, at(path, label(left.value, left.index))))
     }
-    return true
+    return { differences, extras }
   }
-  if (desired !== null && typeof desired === "object") {
-    if (live === null || live === undefined || typeof live !== "object" || Array.isArray(live)) {
-      return false
+
+  if (isObject(desired)) {
+    if (!isObject(live)) return { differences: [{ path, live, want: desired }], extras: [] }
+    const differences: Difference[] = []
+    const extras: Extra[] = []
+    for (const [key, want] of Object.entries(desired)) {
+      const below = compare(want, live[key], at(path, key))
+      differences.push(...below.differences)
+      extras.push(...below.extras)
     }
-    const got = live as { [key: string]: Json }
-    return Object.entries(desired).every(([key, value]) => contains(value, got[key]))
+    for (const [key, got] of Object.entries(live)) {
+      if (!(key in desired)) extras.push(...active(got, at(path, key)))
+    }
+    return { differences, extras }
   }
-  return desired === live
+
+  if (desired === live) return { differences: [], extras: [] }
+  return { differences: [{ path, live, want: desired }], extras: [] }
 }
 
 function show(value: Json | undefined): string {
   return JSON.stringify(value ?? null)
+}
+
+/**
+ * Keys a GET adds that describe the *record* rather than the rule: ids, the
+ * source, timestamps, links, and `current_user_can_bypass`, which is an answer
+ * about the caller and not about the branch. Comparing against them, or
+ * reporting them as undeclared configuration, is noise in either direction.
+ */
+const RULESET_ENVELOPE = [
+  "id",
+  "node_id",
+  "source",
+  "source_type",
+  "created_at",
+  "updated_at",
+  "_links",
+  "current_user_can_bypass",
+]
+
+/**
+ * The tree's ruleset against the live one, with the two things GitHub's answer
+ * does not let you compare directly taken out of the comparison and said in
+ * words instead.
+ *
+ * `bypass_actors` comes back only for a token that could edit the ruleset; for
+ * the agent App the key is simply absent, which is indistinguishable from "the
+ * bypass list is empty". Reporting that as drift would make this command fail
+ * forever for every agent — the one reader CLAUDE.md sends here — over something
+ * it cannot see, so it is a note that says whose eyes can settle it.
+ */
+export function compareRuleset(
+  desired: Ruleset,
+  live: { [key: string]: Json },
+): Comparison & { notes: string[] } {
+  const notes: string[] = []
+  const want = { ...desired } as { [key: string]: Json }
+  const got = { ...live }
+  for (const key of RULESET_ENVELOPE) delete got[key]
+
+  if (want.bypass_actors !== undefined && got.bypass_actors === undefined) {
+    delete want.bypass_actors
+    const actors = (desired.bypass_actors ?? [])
+      .map((a) => String((a as { actor_type?: Json }).actor_type))
+      .join(", ")
+    notes.push(
+      `bypass_actors is not in GitHub's answer to this token (it is shown only to a token that` +
+        ` could edit the ruleset), so "${actors}" is unverified from here — check it as a human,` +
+        ` or run --apply, which sets it either way`,
+    )
+  }
+
+  return { ...compare(want, got), notes }
 }
 
 export function readRuleset(): Ruleset {
@@ -239,23 +412,21 @@ function main(): number {
     const full = ghJson(["api", `repos/{owner}/{repo}/rulesets/${String(existing.id)}`]) as {
       [key: string]: Json
     }
-    const matches = contains(desiredRuleset as unknown as Json, full)
-    if (matches) {
+    const { differences, extras, notes } = compareRuleset(desiredRuleset, full)
+    if (differences.length === 0) {
       console.log(`ruleset: ok ("${desiredRuleset.name}", ${String(full.enforcement)})`)
-      const declared = new Set((desiredRuleset.rules ?? []).map((r) => (r as { type: string }).type))
-      const extra = ((full.rules ?? []) as Json[])
-        .map((r) => (r as { type?: Json }).type)
-        .filter((type): type is string => typeof type === "string" && !declared.has(type))
-      if (extra.length > 0) {
-        console.log(
-          `ruleset: note — also enforcing rules the tree does not declare: ${extra.join(", ")}`,
-        )
+      for (const note of notes) console.log(`ruleset: note — ${note}`)
+      for (const { path, live: value } of extras) {
+        console.log(`ruleset: note — in effect but not declared: ${path} = ${show(value)}`)
       }
     } else if (!apply) {
       drift.push(
-        `ruleset: "${desiredRuleset.name}" does not match .github/rulesets/main.json\n` +
-          `           live: ${JSON.stringify(full.rules)}\n` +
-          `           want: ${JSON.stringify(desiredRuleset.rules)}`,
+        [
+          `ruleset: "${desiredRuleset.name}" does not match .github/rulesets/main.json`,
+          ...differences.map(
+            (d) => `           ${d.path}: live ${show(d.live)}, want ${show(d.want)}`,
+          ),
+        ].join("\n"),
       )
     } else {
       const run = gh([

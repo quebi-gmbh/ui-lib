@@ -34,7 +34,7 @@ Two guards, either of which catches it:
 - The `base-branch` job in `.github/workflows/ci.yml` fails any PR whose base is not `main`, and
   its message says how to retarget and rebase. It is a plain "base must be main" rule on purpose;
   stacked PRs are not a pattern here, and there is no opt-out. `.github/rulesets/main.json` makes it
-  a *required* check, so once that ruleset is applied the job blocks the merge instead of merely
+  a *required* check, and that ruleset is live, so the job blocks the merge instead of merely
   reporting it.
 
 So: branch from `main`, and pass `--base main` when the tool lets you. If your commits sit on top of
@@ -47,24 +47,31 @@ retarget alone would carry that branch's commits into the diff.
 required checks go green. That is the only merge an agent container may ask for — an immediate merge
 is refused by policy, on the premise that the required checks are the gate.
 
-That premise has to be configured on the repo, not in the tree, and for this repo's whole life it was
-not: auto-merge was off, so `gh` quietly downgraded `--auto` to the immediate merge that gets
-refused, and `main` had no ruleset, so `lint`, `test`, `typecheck` and `base-branch` all reported and
-none of them blocked. Both halves are now written down as data — `.github/rulesets/main.json` and
-`desiredRepoSettings` in `scripts/repo-config.ts`, whose header carries the argument for every knob
-in it, including why "require branches to be up to date" is off and what would have to change to turn
-it on.
+That premise is now true, and for this repo's whole life before task #30 it was not: auto-merge was
+off, so `gh` quietly downgraded `--auto` to the immediate merge that gets refused, and `main` had no
+ruleset, so `lint`, `test`, `typecheck` and `base-branch` all reported and none of them blocked.
+Today `main` carries a ruleset that requires a PR and requires `check` and `base-branch` to pass, and
+auto-merge is on — so `gh pr merge --auto --squash --delete-branch` queues, CI runs, and GitHub lands
+the PR without anyone touching it. Expect a few minutes between the command and the merge, and
+expect nothing at all to happen if a check is red. That is the gate working.
+
+Both halves are data in the tree — `.github/rulesets/main.json` and `desiredRepoSettings` in
+`scripts/repo-config.ts`, whose header carries the argument for every knob in it, including why
+"require branches to be up to date" is off and what would have to change to turn it on.
 
 ```sh
 bun run repo:config           # is the live configuration the one in the tree?
 bun run repo:config --apply   # make it so — needs admin, which the agent App does not have
 ```
 
-Applying is a human step. Drift and non-application show up as a failing `bun run repo:config`, not
-as a red build: making CI fail on it would leave every open PR red until someone with admin got
-round to it. `tests/repo-config.test.ts` checks the half that *is* in the tree — that the contexts
-the ruleset requires are exactly the jobs `ci.yml` defines, so renaming a CI job cannot silently
-unhook the gate or hang every PR on a check that will never report.
+Applying is a human step. Drift shows up as a failing `bun run repo:config`, not as a red build:
+making CI fail on it would leave every open PR red until someone with admin got round to it. A
+clean run also prints notes — live settings the tree does not declare, and the bypass list, which
+GitHub shows only to a token that could edit the ruleset. Notes are not drift; read them, don't fix
+them. `tests/repo-config.test.ts` checks the halves that *are* in the tree: that the contexts the
+ruleset requires are exactly the jobs `ci.yml` defines, so renaming a CI job cannot silently unhook
+the gate or hang every PR on a check that will never report, and that the comparison itself reports
+a weakened rule by path rather than passing over it.
 
 If your PR is green and nothing merges it, run the check before looking for a token problem.
 

@@ -16,7 +16,7 @@
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { desiredRepoSettings, readRuleset } from "../scripts/repo-config"
+import { compareRuleset, desiredRepoSettings, type Json, readRuleset } from "../scripts/repo-config"
 
 const ruleset = readRuleset()
 
@@ -144,5 +144,127 @@ describe("strictness", () => {
       ?.strict_required_status_checks_policy
     if (strict === true) expect(rule("merge_queue")).toBeDefined()
     else expect(strict).toBe(false)
+  })
+})
+
+/**
+ * The check itself. `bun run repo:config` is the command CLAUDE.md sends you to
+ * when a green PR does not merge, so its two failure modes are both expensive: a
+ * false red teaches the next reader to ignore it, and a silent pass over
+ * something GitHub switched on is the advisory-CI hole reopening from the other
+ * side. Both were live: the first version compared the file to GitHub's answer
+ * key for key, which no ruleset GET has ever matched, and reported the mismatch
+ * by printing the two `rules` arrays — the one part of it that was identical.
+ */
+describe("comparing the tree against GitHub's answer", () => {
+  // What a GET returns: the ruleset we asked for, wrapped in a record about
+  // itself, with every parameter GitHub defaults filled in.
+  function asGitHubAnswers(overrides: Record<string, unknown> = {}) {
+    const rules = JSON.parse(JSON.stringify(ruleset.rules)) as Rule[]
+    const pr = rules.find((r) => r.type === "pull_request")
+    if (pr?.parameters) {
+      pr.parameters.required_reviewers = []
+      pr.parameters.dismissal_restriction = { enabled: false, allowed_actors: [] }
+      pr.parameters.require_extra_approval_for_unattributed_changes = true
+    }
+    return {
+      id: 22890798,
+      name: ruleset.name,
+      target: ruleset.target,
+      source_type: "Repository",
+      source: "quebi-gmbh/ui-lib",
+      enforcement: ruleset.enforcement,
+      conditions: ruleset.conditions,
+      rules,
+      node_id: "RRS_kwDO",
+      created_at: "2026-09-11T08:21:00.950Z",
+      updated_at: "2026-09-11T08:21:01.026Z",
+      current_user_can_bypass: "never",
+      _links: { self: { href: "https://api.github.com/…" } },
+      ...overrides,
+    } as unknown as Record<string, Json>
+  }
+
+  test("the configuration that is actually live reads as a match", () => {
+    // The regression that mattered: every field the tree asks for was in effect
+    // and the command still exited 1, every run, for everyone.
+    expect(compareRuleset(ruleset, asGitHubAnswers()).differences).toEqual([])
+  })
+
+  test("a weakened rule is named by path, not by dumping the rules array", () => {
+    const weakened = asGitHubAnswers()
+    const rules = weakened.rules as unknown as Rule[]
+    const pr = rules.find((r) => r.type === "pull_request")
+    if (pr?.parameters) pr.parameters.required_approving_review_count = 1
+    const { differences } = compareRuleset(ruleset, weakened)
+    expect(differences.map((d) => d.path)).toEqual([
+      "rules.pull_request.parameters.required_approving_review_count",
+    ])
+    expect(differences[0]?.live).toBe(1)
+    expect(differences[0]?.want).toBe(0)
+  })
+
+  test("a required check that has quietly gone missing is drift", () => {
+    const unhooked = asGitHubAnswers()
+    const rules = unhooked.rules as unknown as Rule[]
+    const checks = rules.find((r) => r.type === "required_status_checks")
+    if (checks?.parameters) {
+      checks.parameters.required_status_checks = [{ context: "check", integration_id: 15368 }]
+    }
+    const { differences } = compareRuleset(ruleset, unhooked)
+    expect(differences).toHaveLength(1)
+    expect(differences[0]?.path).toContain("base-branch")
+  })
+
+  test("the record GitHub keeps about a ruleset is neither drift nor news", () => {
+    // ids, timestamps, `_links`, `current_user_can_bypass`: facts about the row
+    // and about the caller, not about the branch.
+    const { differences, extras } = compareRuleset(ruleset, asGitHubAnswers())
+    expect(differences).toEqual([])
+    const noise = ["id", "node_id", "source", "created_at", "updated_at", "_links", "current_user"]
+    for (const extra of extras) {
+      for (const key of noise) expect(extra.path).not.toContain(key)
+    }
+  })
+
+  test("a default GitHub switched on that the tree never decided is reported", () => {
+    // Not drift — the tree declares what it requires, not the whole of GitHub —
+    // but not silence either, or a knob like this one arrives in a release note
+    // nobody read and holds every agent PR in front of a reviewer.
+    const { extras } = compareRuleset(ruleset, asGitHubAnswers())
+    expect(extras.map((e) => e.path)).toContain(
+      "rules.pull_request.parameters.require_extra_approval_for_unattributed_changes",
+    )
+  })
+
+  test("a default that is off is not reported, because it enforces nothing", () => {
+    const { extras } = compareRuleset(ruleset, asGitHubAnswers())
+    expect(extras.map((e) => e.path)).not.toContain(
+      "rules.pull_request.parameters.dismissal_restriction.enabled",
+    )
+    expect(extras.map((e) => e.path)).not.toContain(
+      "rules.pull_request.parameters.required_reviewers",
+    )
+  })
+
+  test("a bypass GitHub will not show this token is a note, not a failure", () => {
+    // GitHub returns `bypass_actors` only to a token that could edit the ruleset.
+    // From an agent container an empty bypass list and a redacted one are the
+    // same bytes, and failing on that would make this command permanently red
+    // for its main reader over something it cannot see.
+    const { differences, notes } = compareRuleset(ruleset, asGitHubAnswers())
+    expect(differences).toEqual([])
+    expect(notes.join(" ")).toContain("bypass_actors")
+  })
+
+  test("a bypass GitHub does show, and that is not the one we asked for, is drift", () => {
+    // The case the note must not swallow: an actor added to the bypass list is
+    // how this entire ruleset becomes decorative for whoever was added.
+    const opened = asGitHubAnswers({
+      bypass_actors: [{ actor_id: 12345, actor_type: "Integration", bypass_mode: "always" }],
+    })
+    const { differences, notes } = compareRuleset(ruleset, opened)
+    expect(notes).toEqual([])
+    expect(differences).not.toEqual([])
   })
 })
