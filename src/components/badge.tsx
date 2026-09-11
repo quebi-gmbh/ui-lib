@@ -2,6 +2,29 @@ import { tv, type VariantProps } from "tailwind-variants"
 import { cn } from "@/lib/utils"
 
 /**
+ * The quebi tint scale: a low-opacity fill, a matching saturated foreground and
+ * a hairline border.
+ *
+ * Named and exported because a second component draws the same tints on a
+ * different geometry — `iconTileIntents` in `icon-tile.tsx` is a verbatim copy,
+ * kept a copy so neither component drags the other into a consumer's project,
+ * and pinned equal by `tests/components/icon-tile.test.tsx`. Editing a value
+ * here without editing it there fails that test; that is the intended way to
+ * find out.
+ */
+export const badgeIntents = {
+  neutral: "bg-quebi-surface/[0.06] border-quebi-surface/10 text-quebi-fg-muted",
+  brand: "bg-quebi-brand/10 border-quebi-brand/20 text-quebi-brand",
+  accent: "bg-purple-500/10 border-purple-500/20 text-quebi-accent",
+  success: "bg-emerald-500/10 border-emerald-500/20 text-quebi-success",
+  warning: "bg-amber-500/10 border-amber-500/20 text-quebi-warn",
+  danger: "bg-red-500/10 border-red-500/20 text-quebi-danger",
+  info: "bg-cyan-500/10 border-quebi-line/20 text-quebi-info",
+  ai: "border-transparent bg-gradient-to-r from-quebi-brand to-purple-500 text-quebi-on-brand shadow-quebi-glow",
+  outline: "bg-transparent border-quebi-line/20 text-quebi-fg-muted",
+}
+
+/**
  * Badge — quebi design system
  *
  * Pill-shaped indicator. Every intent pairs a tinted, low-opacity background
@@ -10,7 +33,7 @@ import { cn } from "@/lib/utils"
  * uses the teal→purple gradient and should stay limited to AI surfaces.
  *
  * Intents: neutral (default), brand, accent, success, warning, danger, info,
- * ai, outline.
+ * ai, outline. A badge with no text, holding only an icon, is an `IconTile`.
  */
 export const badgeStyles = tv({
   base: [
@@ -19,17 +42,7 @@ export const badgeStyles = tv({
     "rounded-full px-2.5 py-1 border",
   ],
   variants: {
-    intent: {
-      neutral: "bg-quebi-surface/[0.06] border-quebi-surface/10 text-quebi-fg-muted",
-      brand: "bg-quebi-brand/10 border-quebi-brand/20 text-quebi-brand",
-      accent: "bg-purple-500/10 border-purple-500/20 text-quebi-accent",
-      success: "bg-emerald-500/10 border-emerald-500/20 text-quebi-success",
-      warning: "bg-amber-500/10 border-amber-500/20 text-quebi-warn",
-      danger: "bg-red-500/10 border-red-500/20 text-quebi-danger",
-      info: "bg-cyan-500/10 border-quebi-line/20 text-quebi-info",
-      ai: "border-transparent bg-gradient-to-r from-quebi-brand to-purple-500 text-quebi-on-brand shadow-quebi-glow",
-      outline: "bg-transparent border-quebi-line/20 text-quebi-fg-muted",
-    },
+    intent: badgeIntents,
   },
   defaultVariants: {
     intent: "neutral",

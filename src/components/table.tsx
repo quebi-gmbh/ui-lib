@@ -31,6 +31,7 @@ import {
   useTableOptions,
 } from "react-aria-components"
 import { Checkbox } from "@/components/checkbox"
+import { IconTile } from "@/components/icon-tile"
 import { cn } from "@/lib/utils"
 
 /**
@@ -166,9 +167,16 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
         <div className="inline-flex items-center gap-2 **:data-[slot=icon]:shrink-0">
           {typeof props.children === "function" ? props.children(values) : props.children}
           {values.allowsSorting && (
-            <span
+            // The sort affordance is a tile: a tinted box holding one icon, at
+            // the inline `2xs` size. It used to be a private span here with the
+            // recipe spelled out — which is the shape IconTile publishes, so
+            // keeping a copy of it would have been the drift the tile exists to
+            // stop. The hover tint is the one thing the tile does not own (it
+            // is not interactive; the *column* is), so it overrides the fill.
+            <IconTile
+              size="2xs"
               className={cn(
-                "grid size-[1.15rem] flex-none shrink-0 place-content-center rounded-quebi-sm bg-quebi-surface/[0.04] text-quebi-fg-muted *:data-[slot=icon]:size-3.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
+                "*:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
                 values.isHovered ? "bg-quebi-surface/[0.08]" : "",
               )}
             >
@@ -176,7 +184,7 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
                 data-slot="icon"
                 className={values.sortDirection === "ascending" ? "rotate-180" : ""}
               />
-            </span>
+            </IconTile>
           )}
           {isResizable && <ColumnResizer />}
         </div>

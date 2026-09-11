@@ -79,6 +79,7 @@ import { formattedStorageExamples } from "./formatted-storage.examples"
 import { galleryExamples } from "./gallery.examples"
 import { gridListExamples } from "./grid-list.examples"
 import { headingExamples } from "./heading.examples"
+import { iconTileExamples } from "./icon-tile.examples"
 import { inputExamples } from "./input.examples"
 import { inputOtpExamples } from "./input-otp.examples"
 import { keyboardExamples } from "./keyboard.examples"
@@ -219,6 +220,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "gallery": galleryExamples,
   "grid-list": gridListExamples,
   "heading": headingExamples,
+  "icon-tile": iconTileExamples,
   "input": inputExamples,
   "input-otp": inputOtpExamples,
   "keyboard": keyboardExamples,
