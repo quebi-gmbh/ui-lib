@@ -79,19 +79,39 @@ const SelectContent = <T extends object>({
   )
 }
 
-interface SelectTriggerProps extends React.ComponentProps<typeof Button> {
+/**
+ * The trigger's size scale — the same three steps `Input` publishes, and for
+ * the same reason: a trigger's height is line-height + padding + the 1px
+ * border on each side, so `xs` (30px) and `sm` (38px) line up exactly with
+ * `Button`'s `xs` and `sm`. `md` is the default and is unchanged.
+ *
+ * Spelled out here rather than imported so `Select` does not gain `Input` as a
+ * registry dependency for three strings.
+ */
+const selectTriggerSizeStyles = {
+  xs: "text-xs px-2.5 py-1.5",
+  sm: "text-sm px-3 py-2",
+  md: "text-sm px-3 py-2.5",
+} as const
+
+type SelectTriggerSize = keyof typeof selectTriggerSizeStyles
+
+interface SelectTriggerProps extends Omit<React.ComponentProps<typeof Button>, "size"> {
   prefix?: React.ReactNode
   className?: string
+  /** Control height. Matches `Input`'s scale and `Button`'s `xs` / `sm`. */
+  size?: SelectTriggerSize
 }
 
-const SelectTrigger = ({ children, className, ...props }: SelectTriggerProps) => {
+const SelectTrigger = ({ children, className, size = "md", ...props }: SelectTriggerProps) => {
   return (
     <span data-slot="control" className="relative block w-full">
       <Button
         className={cn(
           // quebi input style — translucent field, cyan hairline, brand-teal focus.
-          "group/select-trigger flex w-full min-w-0 cursor-default items-center gap-x-2 text-start text-sm text-quebi-fg",
-          "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
+          "group/select-trigger flex w-full min-w-0 cursor-default items-center gap-x-2 text-start text-quebi-fg",
+          "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
+          selectTriggerSizeStyles[size],
           "transition-[border-color,box-shadow] duration-200",
           "enabled:hover:border-quebi-line/40",
           // focus / open → brand-teal border + ring.
@@ -117,7 +137,7 @@ const SelectTrigger = ({ children, className, ...props }: SelectTriggerProps) =>
                 <SelectValue
                   data-slot="select-value"
                   className={cn(
-                    "truncate text-start text-sm data-placeholder:text-quebi-fg-subtle **:[[slot=description]]:hidden",
+                    "truncate text-start data-placeholder:text-quebi-fg-subtle **:[[slot=description]]:hidden",
                     "has-data-[slot=avatar]:grid has-data-[slot=avatar]:grid-cols-[1fr_auto] has-data-[slot=avatar]:items-center has-data-[slot=avatar]:gap-x-2",
                     "has-data-[slot=icon]:grid has-data-[slot=icon]:grid-cols-[1fr_auto] has-data-[slot=icon]:items-center has-data-[slot=icon]:gap-x-2",
                     "*:data-[slot=icon]:size-4",
@@ -143,7 +163,7 @@ const SelectLabel = DropdownLabel
 const SelectDescription = DropdownDescription
 const SelectItem = DropdownItem
 
-export type { SelectProps, SelectTriggerProps }
+export type { SelectProps, SelectTriggerProps, SelectTriggerSize }
 export {
   Select,
   SelectContent,

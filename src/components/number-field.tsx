@@ -37,13 +37,38 @@ function NumberField({ className, ...props }: NumberFieldProps) {
   )
 }
 
-interface NumberInputProps extends Omit<InputProps, "prefix"> {
+/**
+ * The field size scale — the same three steps `Input` publishes, so a number
+ * field and the button beside it are the same height: `xs` is 30px and `sm`
+ * 38px, matching `Button`'s `xs` and `sm`; `md` is the default and unchanged.
+ *
+ * The addons and steppers stretch to the input, so sizing the input sizes the
+ * whole group.
+ */
+const numberInputSizeStyles = {
+  xs: "text-xs px-2.5 py-1.5",
+  sm: "text-sm px-3 py-2",
+  md: "text-sm px-3 py-2.5",
+} as const
+
+type NumberInputSize = keyof typeof numberInputSizeStyles
+
+interface NumberInputProps extends Omit<InputProps, "prefix" | "size"> {
   /** Text / glyph rendered in a tag attached to the left edge (e.g. `£`). */
   prefix?: React.ReactNode
   /** Text / glyph rendered in a tag attached to the right edge (e.g. `GB`). */
   suffix?: React.ReactNode
-  /** Hide the increment / decrement stepper buttons. */
+  /**
+   * Hide the increment / decrement stepper buttons.
+   *
+   * Worth reaching for whenever the field is narrow: the pair costs ~74px of
+   * a fixed width before a digit is drawn, and an input that is `w-full
+   * min-w-0` inside a flex row will give that width up rather than overflow —
+   * so a `w-24` field with steppers renders the buttons and no number.
+   */
   hideStepper?: boolean
+  /** Control height. Matches `Input`'s scale and `Button`'s `xs` / `sm`. */
+  size?: NumberInputSize
 }
 
 const addonStyles = cn(
@@ -74,6 +99,7 @@ function NumberInput({
   prefix,
   suffix,
   hideStepper,
+  size = "md",
   className,
   ...props
 }: NumberInputProps) {
@@ -98,9 +124,10 @@ function NumberInput({
       ) : null}
       <InputPrimitive
         className={cn(
-          "relative block w-full min-w-0 appearance-none text-sm text-quebi-fg tabular-nums",
+          "relative block w-full min-w-0 appearance-none text-quebi-fg tabular-nums",
           "placeholder:text-quebi-fg-subtle",
-          "border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
+          "border border-quebi-line/20 bg-quebi-surface/[0.02]",
+          numberInputSizeStyles[size],
           "transition-[border-color,box-shadow] duration-200",
           "enabled:hover:border-quebi-line/40",
           "outline-none focus:outline-none focus:border-quebi-brand",
@@ -148,5 +175,5 @@ function NumberInput({
   )
 }
 
-export type { NumberFieldProps, NumberInputProps }
+export type { NumberFieldProps, NumberInputProps, NumberInputSize }
 export { NumberField, NumberInput }

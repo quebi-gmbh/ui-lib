@@ -5,7 +5,12 @@ import type { PropsWithChildren } from "react"
 import type { SelectProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { Description, FieldError, Label } from "@/components/field"
-import { Select, SelectContent, SelectTrigger } from "@/components/select"
+import {
+  Select,
+  SelectContent,
+  SelectTrigger,
+  type SelectTriggerSize,
+} from "@/components/select"
 
 export interface ConformSelectProps<T extends object>
   extends Omit<
@@ -22,6 +27,8 @@ export interface ConformSelectProps<T extends object>
   field: FieldMetadata<string>
   label?: string
   description?: string
+  /** Trigger height. Matches `Input`'s scale and `Button`'s `xs` / `sm`. */
+  size?: SelectTriggerSize
 }
 
 /**
@@ -36,6 +43,7 @@ export function ConformSelect<T extends object>({
   label,
   description,
   children,
+  size,
   className,
   ...props
 }: PropsWithChildren<ConformSelectProps<T>>) {
@@ -60,7 +68,7 @@ export function ConformSelect<T extends object>({
           {isRequired && <span className="ml-1 text-quebi-brand">*</span>}
         </Label>
       )}
-      <SelectTrigger />
+      <SelectTrigger size={size} />
       <SelectContent>{children}</SelectContent>
       {/* No ids and no aria-describedby here: this is a react-aria field, so it
           generates the description and error ids and already points the control

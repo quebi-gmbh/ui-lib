@@ -412,13 +412,16 @@ export function AsyncTable<T extends RowData>({
               />
             )}
             {onExport && (
-              <Button intent="outline" size="xs" onPress={() => onExport(query)}>
+              // `sm` / `sq-sm` is the chrome height both tables share — see
+              // CHROME_SIZE in data-table.tsx, which every control the toolbar
+              // borrows from there is already sized to.
+              <Button intent="outline" size="sm" onPress={() => onExport(query)}>
                 <ArrowDownToLine data-slot="icon" aria-hidden="true" />
                 Export
               </Button>
             )}
             {onRefresh && (
-              <Button intent="ghost" size="sq-xs" aria-label="Refresh" onPress={onRefresh}>
+              <Button intent="ghost" size="sq-sm" aria-label="Refresh" onPress={onRefresh}>
                 <RotateCcw data-slot="icon" aria-hidden="true" />
               </Button>
             )}

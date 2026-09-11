@@ -95,10 +95,15 @@ export const toggleGroupItemStyles = tv({
       sm: ["text-sm px-3 py-2", "*:data-[slot=icon]:size-4"],
       md: ["text-base px-5 py-2.5", "*:data-[slot=icon]:size-5"],
       lg: ["text-lg px-6 py-3", "*:data-[slot=icon]:size-5"],
-      "sq-xs": "size-7 p-0 *:data-[slot=icon]:size-3.5",
-      "sq-sm": "size-9 p-0 *:data-[slot=icon]:size-4",
-      "sq-md": "size-11 p-0 *:data-[slot=icon]:size-5",
-      "sq-lg": "size-12 p-0 *:data-[slot=icon]:size-6",
+      // Square / icon-only. `size-*` is border-box, so a square matches its
+      // text-sized sibling only if the number includes the 1px border on each
+      // side: xs is line-height 16 + py-1.5 12 + 2 = 30px, and so on. They used
+      // to be 2px short of the text sizes, which is why an icon-only button
+      // never quite lined up with the button beside it.
+      "sq-xs": "size-7.5 p-0 *:data-[slot=icon]:size-3.5",
+      "sq-sm": "size-9.5 p-0 *:data-[slot=icon]:size-4",
+      "sq-md": "size-11.5 p-0 *:data-[slot=icon]:size-5",
+      "sq-lg": "size-13.5 p-0 *:data-[slot=icon]:size-6",
     },
   },
   defaultVariants: {

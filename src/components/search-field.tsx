@@ -3,7 +3,6 @@
 import { Search, X } from "lucide-react"
 import {
   Button,
-  type InputProps as PrimitiveInputProps,
   SearchField as SearchFieldPrimitive,
   type SearchFieldProps as PrimitiveSearchFieldProps,
 } from "react-aria-components"
@@ -35,7 +34,8 @@ export function SearchField({ className, ref, ...props }: SearchFieldProps) {
   )
 }
 
-export function SearchInput(props: PrimitiveInputProps) {
+/** The input half of a SearchField. Takes `Input`'s props, including `size`. */
+export function SearchInput(props: React.ComponentProps<typeof Input>) {
   return (
     <InputGroup>
       <Search data-slot="icon" />

@@ -4,7 +4,7 @@ import type { FieldMetadata } from "@conform-to/react"
 import type { NumberFieldProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { Description, FieldError, Label } from "@/components/field"
-import { NumberField, NumberInput } from "@/components/number-field"
+import { NumberField, NumberInput, type NumberInputSize } from "@/components/number-field"
 
 export interface ConformNumberFieldProps
   extends Omit<
@@ -26,6 +26,14 @@ export interface ConformNumberFieldProps
   field: FieldMetadata<number | string>
   label?: string
   description?: string
+  /**
+   * Hide the increment / decrement steppers. Forwarded to `NumberInput`,
+   * because a narrow field has no room for them: they are ~74px wide and the
+   * input gives up its own width before they give up theirs.
+   */
+  hideStepper?: boolean
+  /** Control height. Matches `Input`'s scale and `Button`'s `xs` / `sm`. */
+  size?: NumberInputSize
 }
 
 /** Read a Conform constraint, which arrives as a string on the wire, as a number. */
@@ -51,6 +59,8 @@ export function ConformNumberField({
   field,
   label,
   description,
+  hideStepper,
+  size,
   className,
   ...props
 }: ConformNumberFieldProps) {
@@ -77,7 +87,7 @@ export function ConformNumberField({
           {isRequired && <span className="ml-1 text-quebi-brand">*</span>}
         </Label>
       )}
-      <NumberInput />
+      <NumberInput hideStepper={hideStepper} size={size} />
       {/* No ids and no aria-describedby here: this is a react-aria field, so it
           generates the description and error ids and already points the control
           at them. Setting id={field.errorId} would not break that — on mount
