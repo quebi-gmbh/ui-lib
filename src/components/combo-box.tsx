@@ -3,7 +3,6 @@
 import { ChevronsUpDown } from "lucide-react"
 import type {
   ComboBoxProps as ComboboxPrimitiveProps,
-  InputProps as PrimitiveInputProps,
   ListBoxProps,
   PopoverProps,
 } from "react-aria-components"
@@ -80,7 +79,8 @@ const ComboBoxContent = <T extends object>({
   )
 }
 
-const ComboBoxInput = (props: PrimitiveInputProps) => {
+/** Takes `Input`'s props, including `size`. */
+const ComboBoxInput = (props: React.ComponentProps<typeof Input>) => {
   const context = useSlottedContext(ComboBoxContext)
   return (
     <span

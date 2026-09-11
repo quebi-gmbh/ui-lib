@@ -6,8 +6,8 @@ import { parseWithValibot } from "@conform-to/valibot"
 import { useTable } from "@tanstack/react-table"
 import type { RowData, SortingState } from "@tanstack/react-table"
 import {
+  AlignJustify,
   ArrowDownToLine,
-  ChevronDown,
   ChevronFirst,
   ChevronLast,
   ChevronLeft,
@@ -15,10 +15,12 @@ import {
   ChevronRight as ChevronRightIcon,
   Columns3,
   Copy,
+  EllipsisVertical,
   Filter,
   Loader2,
   PinOff,
   RotateCcw,
+  Rows2,
   Rows3,
   X,
 } from "lucide-react"
@@ -70,7 +72,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/table"
-import { ToggleGroup, ToggleGroupItem } from "@/components/toggle-group"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip"
 import {
   type DataTableColumn,
@@ -237,6 +238,19 @@ const priorityClass = (priority: number | undefined) =>
 /* -------------------------------------------------------------------------- */
 
 /**
+ * One height for every control in the toolbar and the pager.
+ *
+ * The row used to hold four of them: a 42px field (`Input` / `SelectTrigger` /
+ * `NumberInput` had no size scale, so they were all the default), a 34px
+ * density group, 30px `xs` buttons and 28px `sq-xs` icon buttons. The three
+ * field primitives now publish the same `xs` / `sm` / `md` scale `Button` has,
+ * and `sm` is 38px on all of them — field, button and icon button alike.
+ */
+const CHROME_SIZE = "sm" as const
+/** The square counterpart of `CHROME_SIZE`, for the icon-only controls. */
+const CHROME_ICON_SIZE = "sq-sm" as const
+
+/**
  * A client-only form, which is what every piece of table chrome is.
  *
  * Conform binds to a form element and this one has no route action behind it —
@@ -342,6 +356,7 @@ export function DataTableSearch({
         label={label}
         aria-label={label ?? "Search"}
         placeholder={placeholder}
+        size={CHROME_SIZE}
         onChange={push}
       />
     </ChromeForm>
@@ -374,7 +389,7 @@ export function DataTableColumnChooser({
 
   return (
     <Popover>
-      <PopoverTrigger intent="outline" size="xs" aria-label="Choose columns">
+      <PopoverTrigger intent="outline" size={CHROME_SIZE} aria-label="Choose columns">
         <Columns3 data-slot="icon" aria-hidden="true" />
         Columns
       </PopoverTrigger>
@@ -421,29 +436,53 @@ export interface DataTableDensityToggleProps {
   onChange: (value: DataTableDensity) => void
 }
 
+/**
+ * The three densities, each with a glyph that survives being 16px wide.
+ *
+ * The control was three `Rows3` at `scale-90` / none / `scale-110` in a
+ * segmented group, which drew three identical icons — a 10% scale on a
+ * 14px glyph is not a difference anyone can see, and nothing named the
+ * setting. A menu names all three and shows which one is on; it also costs one
+ * button of the standard height instead of a group whose own padding and
+ * border made it 6px taller than everything beside it.
+ */
+const densityOptions: { id: DataTableDensity; label: string; Icon: typeof Rows3 }[] = [
+  { id: "compact", label: "Compact", Icon: AlignJustify },
+  { id: "normal", label: "Normal", Icon: Rows3 },
+  { id: "comfortable", label: "Comfortable", Icon: Rows2 },
+]
+
 export function DataTableDensityToggle({ value, onChange }: DataTableDensityToggleProps) {
+  const current = densityOptions.find((option) => option.id === value) ?? densityOptions[1]
+  const CurrentIcon = current.Icon
   return (
-    <ToggleGroup
-      selectionMode="single"
-      disallowEmptySelection
-      selectedKeys={[value]}
-      onSelectionChange={(keys) => {
-        const next = [...keys][0]
-        if (next) onChange(String(next) as DataTableDensity)
-      }}
-      aria-label="Row density"
-      size="sq-xs"
-    >
-      <ToggleGroupItem id="compact" aria-label="Compact rows">
-        <Rows3 data-slot="icon" aria-hidden="true" className="scale-90" />
-      </ToggleGroupItem>
-      <ToggleGroupItem id="normal" aria-label="Normal rows">
-        <Rows3 data-slot="icon" aria-hidden="true" />
-      </ToggleGroupItem>
-      <ToggleGroupItem id="comfortable" aria-label="Comfortable rows">
-        <Rows3 data-slot="icon" aria-hidden="true" className="scale-110" />
-      </ToggleGroupItem>
-    </ToggleGroup>
+    <Menu>
+      <MenuTrigger
+        aria-label={`Density: ${current.label}`}
+        className={buttonStyles({ intent: "outline", size: CHROME_SIZE })}
+      >
+        <CurrentIcon data-slot="icon" aria-hidden="true" />
+        Density
+      </MenuTrigger>
+      <MenuContent
+        placement="bottom end"
+        selectionMode="single"
+        disallowEmptySelection
+        selectedKeys={[value]}
+        onSelectionChange={(keys) => {
+          if (keys === "all") return
+          const next = [...keys][0]
+          if (next) onChange(String(next) as DataTableDensity)
+        }}
+      >
+        {densityOptions.map(({ id, label, Icon }) => (
+          <MenuItem key={id} id={id}>
+            <Icon data-slot="icon" aria-hidden="true" />
+            {label}
+          </MenuItem>
+        ))}
+      </MenuContent>
+    </Menu>
   )
 }
 
@@ -805,13 +844,21 @@ export function DataTablePagination({
 }: DataTablePaginationProps) {
   const range = pageRange(page, pageSize, rowsOnPage, total, hasMore)
   const pageCount = range.pageCount
+  // The size in use is always one of the offered sizes. `defaultPageSize={8}`
+  // against the default `pageSizes` otherwise leaves the select with nothing
+  // selected, which submits an empty `size` and fails the picklist — and
+  // because the size and the page jump are fields of one Conform form, an
+  // invalid size takes `Go` down with it and puts a schema error in the pager.
+  const sizes = pageSizes.includes(pageSize)
+    ? pageSizes
+    : [...pageSizes, pageSize].sort((a, b) => a - b)
   const [form, fields] = useForm<{ size: string; jump: number | string }>({
     id: `${useId()}-pager-${page}-${pageSize}`,
     defaultValue: { size: String(pageSize), jump: String(page + 1) },
     onValidate: ({ formData }) =>
       parseWithValibot(formData, {
         schema: v.object({
-          size: v.picklist(pageSizes.map(String)),
+          size: v.picklist(sizes.map(String)),
           jump: v.pipe(
             v.optional(v.union([v.number(), v.literal("")]), ""),
             v.check(
@@ -858,14 +905,15 @@ export function DataTablePagination({
         )}
       </p>
 
-      <ChromeForm id={form.id} onSubmit={form.onSubmit} className="flex items-end gap-2">
+      <ChromeForm id={form.id} onSubmit={form.onSubmit} className="flex items-center gap-2">
         <ConformSelect
           field={fields.size}
           aria-label="Rows per page"
-          className="w-28"
+          className="w-32"
+          size={CHROME_SIZE}
           onSelectionChange={(key) => onPageSizeChange(Number(key))}
         >
-          {pageSizes.map((size) => (
+          {sizes.map((size) => (
             <SelectItem key={size} id={String(size)}>
               {size} / page
             </SelectItem>
@@ -874,8 +922,21 @@ export function DataTablePagination({
 
         {mode === "offset" && (
           <>
-            <ConformNumberField field={fields.jump} aria-label="Go to page" className="w-24" />
-            <Button type="submit" intent="outline" size="xs">
+            {/*
+              No steppers. They cost ~74px of the field's width, which left
+              nothing for the digits — the number was in the DOM and off the
+              screen. They would also be the wrong affordance: the value here is
+              pending until `Go`, so stepping it navigates nowhere, and the
+              buttons that do navigate are two elements to the right.
+            */}
+            <ConformNumberField
+              field={fields.jump}
+              aria-label="Go to page"
+              className="w-20"
+              size={CHROME_SIZE}
+              hideStepper
+            />
+            <Button type="submit" intent="outline" size={CHROME_SIZE}>
               Go
             </Button>
           </>
@@ -885,7 +946,7 @@ export function DataTablePagination({
           {mode === "offset" && (
             <Button
               intent="ghost"
-              size="sq-xs"
+              size={CHROME_ICON_SIZE}
               aria-label="First page"
               isDisabled={!range.hasPrevious}
               onPress={() => onPageChange(0)}
@@ -895,7 +956,7 @@ export function DataTablePagination({
           )}
           <Button
             intent="ghost"
-            size="sq-xs"
+            size={CHROME_ICON_SIZE}
             aria-label="Previous page"
             isDisabled={!range.hasPrevious}
             onPress={() => onPageChange(page - 1)}
@@ -904,7 +965,7 @@ export function DataTablePagination({
           </Button>
           <Button
             intent="ghost"
-            size="sq-xs"
+            size={CHROME_ICON_SIZE}
             aria-label="Next page"
             isDisabled={!range.hasNext}
             onPress={() => onPageChange(page + 1)}
@@ -914,7 +975,7 @@ export function DataTablePagination({
           {mode === "offset" && (
             <Button
               intent="ghost"
-              size="sq-xs"
+              size={CHROME_ICON_SIZE}
               aria-label="Last page"
               // Without a total there is no last page to go to, and a button
               // that guesses one is worse than a button that is not offered.
@@ -1714,11 +1775,18 @@ function ColumnMenu<T extends RowData>({ column, onSort, allowGrouping }: Column
   if (!canSort && !canGroup && !canPin && !canHide) return null
   return (
     <Menu>
+      {/*
+        Not a chevron. `TableColumn` draws its own chevron as the sort
+        indicator whenever the column sorts, so a second one here read as a
+        duplicate of it — `REFERENCE ⌄ ⌄` — when the two are not the same kind
+        of thing at all: the sort chevron is a passive indicator on a header
+        whose whole surface is the press target, this is a button.
+      */}
       <MenuTrigger
         aria-label={`Options for ${column.columnDef.meta?.label ?? column.id}`}
         className="rounded-quebi-sm p-0.5 text-quebi-fg-subtle hover:text-quebi-fg"
       >
-        <ChevronDown data-slot="icon" aria-hidden="true" className="size-3.5" />
+        <EllipsisVertical data-slot="icon" aria-hidden="true" className="size-3.5" />
       </MenuTrigger>
       <MenuContent
         placement="bottom start"
@@ -2237,7 +2305,7 @@ export function DataTable<T extends RowData>({
                     from buttonStyles is what keeps it from nesting one. */}
                 <MenuTrigger
                   aria-label="Export"
-                  className={buttonStyles({ intent: "outline", size: "xs" })}
+                  className={buttonStyles({ intent: "outline", size: CHROME_SIZE })}
                 >
                   <ArrowDownToLine data-slot="icon" aria-hidden="true" />
                   Export
@@ -2259,7 +2327,12 @@ export function DataTable<T extends RowData>({
               </Menu>
             )}
             {onRefresh && (
-              <Button intent="ghost" size="sq-xs" aria-label="Refresh" onPress={onRefresh}>
+              <Button
+                intent="ghost"
+                size={CHROME_ICON_SIZE}
+                aria-label="Refresh"
+                onPress={onRefresh}
+              >
                 <RotateCcw data-slot="icon" aria-hidden="true" />
               </Button>
             )}

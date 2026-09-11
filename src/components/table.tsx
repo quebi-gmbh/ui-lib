@@ -79,9 +79,19 @@ const Table = ({
   return (
     <TableContext.Provider value={{ allowResize, bleed, grid, striped }}>
       <div className="flow-root">
+        {/*
+          The wrapper scrolls. It used to be `overflow-hidden`, switching to
+          `overflow-auto` only under a resizable container — so a table with
+          more columns than width clipped the last ones with no way to reach
+          them, and a pinned column had no scrollport to be sticky to. Too many
+          columns is not a property of column resizing, so neither is the fix.
+          `overflow-hidden` was already a scroll container (that is what
+          `overflow` other than `visible` means), so this changes what you can
+          reach, not what sticky positioning resolves against.
+        */}
         <div
           className={cn(
-            "relative overflow-hidden whitespace-nowrap rounded-quebi-md border border-quebi-line/10 bg-quebi-bg [--gutter-y:--spacing(3)] has-data-[slot=table-resizable-container]:overflow-auto",
+            "quebi-scrollbar relative overflow-auto whitespace-nowrap rounded-quebi-md border border-quebi-line/10 bg-quebi-bg [--gutter-y:--spacing(3)]",
             className,
           )}
         >

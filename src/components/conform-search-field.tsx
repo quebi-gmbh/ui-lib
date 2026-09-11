@@ -3,6 +3,7 @@
 import type { FieldMetadata } from "@conform-to/react"
 import { cn } from "@/lib/utils"
 import { Description, FieldError, Label } from "@/components/field"
+import type { InputSize } from "@/components/input"
 import { SearchField, type SearchFieldProps, SearchInput } from "@/components/search-field"
 
 export interface ConformSearchFieldProps
@@ -15,6 +16,8 @@ export interface ConformSearchFieldProps
   label?: string
   placeholder?: string
   description?: string
+  /** Control height. Matches `Input`'s scale and `Button`'s `xs` / `sm`. */
+  size?: InputSize
 }
 
 /**
@@ -33,6 +36,7 @@ export function ConformSearchField({
   label,
   placeholder,
   description,
+  size,
   className,
   ...props
 }: ConformSearchFieldProps) {
@@ -56,7 +60,7 @@ export function ConformSearchField({
           {isRequired && <span className="ml-1 text-quebi-brand">*</span>}
         </Label>
       )}
-      <SearchInput placeholder={placeholder} />
+      <SearchInput placeholder={placeholder} size={size} />
       {/* No ids and no aria-describedby here: this is a react-aria field, so it
           generates the description and error ids and already points the control
           at them. Setting id={field.errorId} would not break that — on mount

@@ -39,6 +39,24 @@ export const numberFieldExamples: ComponentExample[] = [
     ),
   },
   {
+    title: "Sizes",
+    description:
+      "xs, sm, and the default md — the same scale Input publishes, so xs (30px) and sm (38px) match Button's xs and sm. Narrow fields want hideStepper: the pair costs ~74px before a digit is drawn.",
+    render: () => (
+      <div className="flex max-w-xs flex-col gap-3">
+        <NumberField defaultValue={1} minValue={0}>
+          <NumberInput size="xs" aria-label="Extra small" hideStepper />
+        </NumberField>
+        <NumberField defaultValue={2} minValue={0}>
+          <NumberInput size="sm" aria-label="Small" hideStepper />
+        </NumberField>
+        <NumberField defaultValue={3} minValue={0}>
+          <NumberInput aria-label="Medium" hideStepper />
+        </NumberField>
+      </div>
+    ),
+  },
+  {
     title: "Without steppers",
     description: "Hide the increment / decrement buttons for free-form entry.",
     render: () => (

@@ -29,6 +29,36 @@ export const selectExamples: ComponentExample[] = [
     ),
   },
   {
+    title: "Sizes",
+    description:
+      "xs, sm, and the default md — the same scale Input publishes, so a trigger lines up with the button beside it.",
+    render: () => (
+      <div className="flex w-64 flex-col gap-3">
+        <Select aria-label="Extra small" defaultSelectedKey="apple">
+          <SelectTrigger size="xs" />
+          <SelectContent>
+            <SelectItem id="apple">Apple</SelectItem>
+            <SelectItem id="banana">Banana</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select aria-label="Small" defaultSelectedKey="apple">
+          <SelectTrigger size="sm" />
+          <SelectContent>
+            <SelectItem id="apple">Apple</SelectItem>
+            <SelectItem id="banana">Banana</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select aria-label="Medium" defaultSelectedKey="apple">
+          <SelectTrigger />
+          <SelectContent>
+            <SelectItem id="apple">Apple</SelectItem>
+            <SelectItem id="banana">Banana</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    ),
+  },
+  {
     title: "With label & description",
     description: "Compose with the field Label and Description primitives.",
     render: () => (

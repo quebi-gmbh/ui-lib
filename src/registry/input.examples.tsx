@@ -37,6 +37,18 @@ export const inputExamples: ComponentExample[] = [
     ),
   },
   {
+    title: "Sizes",
+    description:
+      "xs, sm, and the default md. xs (30px) and sm (38px) are exactly Button's xs and sm, so a field and the button beside it share a height.",
+    render: () => (
+      <Col>
+        <Input size="xs" aria-label="Extra small" placeholder="xs — 30px" />
+        <Input size="sm" aria-label="Small" placeholder="sm — 38px" />
+        <Input aria-label="Medium" placeholder="md — 42px (default)" />
+      </Col>
+    ),
+  },
+  {
     title: "With icon",
     description: "InputGroup with a leading icon adornment.",
     render: () => (
