@@ -63,7 +63,7 @@ import { cn } from "@/lib/utils"
  *
  * The render half of the table family: a TanStack instance and the rows to
  * draw go in, a quebi Table with a banded header, per-column filter popovers,
- * column menus, selection, detail panels, row editors, drag-reorder,
+ * column menus, selection, detail panels, editable cells, drag-reorder,
  * virtualization and the four empty states comes out.
  *
  * It does nothing to the model. The client-side `DataTable` hands it a fully
@@ -216,6 +216,56 @@ function GridKeyboardOff() {
   return null
 }
 
+const stopPress = (event: React.SyntheticEvent) => event.stopPropagation()
+
+/** Anything in a cell that is pressed for its own sake. */
+const INTERACTIVE_IN_CELL =
+  'button,a[href],input,select,textarea,[role="button"],[role="link"],[role="checkbox"]'
+
+/**
+ * A press on a cell that has an editor opens that editor and does nothing else.
+ *
+ * The row is react-aria's: it carries an `href`, an `onAction`, and in a
+ * selectable table a press that changes the selection — and all three run
+ * through `usePress`, which is pointerdown/pointerup and not `click`. An
+ * `onClick` on the cell therefore fires *after* the row has navigated, fired its
+ * action or toggled its selection, and can take none of it back. So the press is
+ * stopped at the cell instead, on the way up: `pointerdown` never reaches the
+ * row, so no press ever starts, and `mousedown` — what `usePress` falls back to
+ * where pointer events are missing, test environments included — is stopped with
+ * it. A press on any other cell is untouched.
+ *
+ * Little is lost by that: `selectionBehavior` is `"toggle"`, so the checkbox
+ * column is the selection affordance and an editable cell was never the way you
+ * selected a row.
+ *
+ * The editor opens on the click rather than on the way down, and that ordering
+ * is the point: opening on `pointerdown` swaps the node under the pointer for a
+ * control while the mouse sequence is still running, and the focus the browser
+ * then hands out goes wherever that leaves it. By the click, the cell has been
+ * focused and the editor can take focus from it.
+ *
+ * Stopping propagation rather than preventing the default is deliberate twice
+ * over: the cell still takes focus the way it always did, and react-aria's
+ * modality detection listens on the document in the capture phase, so neither
+ * notices. What the cell takes for itself is only what the row would have done.
+ */
+function pressOpensEditor(start: (() => void) | null) {
+  return {
+    onPointerDown: stopPress,
+    onMouseDown: stopPress,
+    onClick: (event: React.MouseEvent<HTMLElement>) => {
+      event.stopPropagation()
+      // A control inside the cell is the thing being pressed: a row action, an
+      // expand toggle. react-aria already keeps a nested press to itself, so
+      // this mostly guards the elements that are not one.
+      const control = (event.target as HTMLElement | null)?.closest?.(INTERACTIVE_IN_CELL)
+      if (control && event.currentTarget.contains(control)) return
+      start?.()
+    },
+  }
+}
+
 /**
  * The half of the editing keyboard model react-aria does not already own.
  *
@@ -304,6 +354,22 @@ function useCellEditKeyboard({
     // a control inside it, and those keys are the editor's to answer.
     if (!cell || cell !== target) return
     const address = { rowId: cell.dataset.rowKey ?? "", columnId: cell.dataset.columnId ?? "" }
+    /**
+     * A focused cell whose editor is *already* open, which happens more often
+     * than it sounds: react-aria focuses a cell on any press inside it, so
+     * pressing a select's trigger or a number field's stepper leaves the control
+     * open and the focus on the gridcell. From there Enter cannot mean "open",
+     * and Escape has to mean something — the alternative is an editor the
+     * keyboard cannot get out of. Both mean "done": what the control settled on
+     * has already been committed by the editor itself.
+     */
+    const isOpen = isSameCell(editingCell, address)
+    if (isOpen && (event.key === "Escape" || event.key === "Enter")) {
+      event.preventDefault()
+      event.stopPropagation()
+      onEditingCellChange?.(null)
+      return
+    }
     if (event.key === "Enter" || event.key === "F2") {
       event.preventDefault()
       event.stopPropagation()
@@ -366,9 +432,6 @@ export interface TableShellProps<T extends RowData> {
   rowActions?: (row: T) => ReactNode
   /** A detail panel, rendered as an extra row with one spanning cell. */
   renderDetail?: (row: T) => ReactNode
-  /** Replaces the row entirely while it is being edited. */
-  renderRowEditor?: (row: T) => ReactNode
-  editingKey?: string | null
   /**
    * The cell being edited, or null. Controlled, and deliberately one cell: two
    * open editors would be two forms over the same row disagreeing about it.
@@ -485,8 +548,6 @@ export function TableShell<T extends RowData>({
   onRowAction,
   rowActions,
   renderDetail,
-  renderRowEditor,
-  editingKey,
   editingCell = null,
   onEditingCellChange,
   editableColumns,
@@ -544,11 +605,9 @@ export function TableShell<T extends RowData>({
   /**
    * Every editable cell on screen, row-major — the list Tab walks.
    *
-   * Three kinds of row are left out, each because it has no cell to land on: a
+   * Two kinds of row are left out, each because it has no cell to land on: a
    * grouped row shows an aggregate of the rows underneath and there is no single
-   * row for a form to be over; a disabled row is not the user's to change; and
-   * the row a *row* editor has taken over has been replaced by one spanning
-   * cell, so Tab would aim at a `<td>` that is not drawn.
+   * row for a form to be over, and a disabled row is not the user's to change.
    */
   const editableRowKeys = useMemo(
     () =>
@@ -556,15 +615,10 @@ export function TableShell<T extends RowData>({
         ? new Set<string>()
         : new Set(
             rows
-              .filter(
-                (row) =>
-                  !row.getIsGrouped?.() &&
-                  !isRowDisabled?.(row.original) &&
-                  getRowKey(row.original) !== editingKey,
-              )
+              .filter((row) => !row.getIsGrouped?.() && !isRowDisabled?.(row.original))
               .map((row) => getRowKey(row.original)),
           ),
-    [rows, getRowKey, editableColumnIds, isRowDisabled, editingKey],
+    [rows, getRowKey, editableColumnIds, isRowDisabled],
   )
   const editOrder = useMemo(
     () => editableCells([...editableRowKeys], editableColumnIds),
@@ -608,22 +662,6 @@ export function TableShell<T extends RowData>({
     const key = row.getIsGrouped?.() ? row.id : getRowKey(row.original)
     if (row.getIsGrouped?.()) disabledKeys.push(key)
     if (isRowDisabled?.(row.original)) disabledKeys.push(key)
-    const isEditing = editingKey != null && editingKey === key
-
-    if (isEditing && renderRowEditor) {
-      disabledKeys.push(key)
-      bodyRows.push(
-        <SpanningRow
-          key={key}
-          id={key}
-          columnCount={columnCount}
-          className={cn("bg-quebi-brand/5 px-3.5", cellPadding)}
-        >
-          {renderRowEditor(row.original)}
-        </SpanningRow>,
-      )
-      continue
-    }
 
     bodyRows.push(
       <TableRow
@@ -661,7 +699,9 @@ export function TableShell<T extends RowData>({
               data-row-key={key}
               data-column-id={header.column.id}
               data-editable-cell={canEdit || undefined}
-              onDoubleClick={canEdit ? () => cellEdit.start(address) : undefined}
+              {...(canEdit
+                ? pressOpensEditor(isEditingThisCell ? null : () => cellEdit.start(address))
+                : undefined)}
               className={cn(
                 cellPadding,
                 alignClass(meta?.align),
@@ -670,9 +710,16 @@ export function TableShell<T extends RowData>({
                 // keeps the padding and loses the truncation, because a message
                 // under a field is the one thing in a cell that has to wrap.
                 meta?.truncate && !isEditingThisCell && "max-w-0 truncate",
+                // Editable at rest, not only under the pointer. A hover-only
+                // hint was defensible while the gesture was a double-click
+                // nobody would try by accident; a single click has to say so
+                // before the pointer arrives. A dotted underline rather than an
+                // input border, because twenty rows of input chrome is the
+                // noise a data table exists to avoid — the hover state is what
+                // firms it up, and the cell is the control only once it opens.
                 canEdit &&
                   !isEditingThisCell &&
-                  "cursor-text decoration-quebi-line/40 decoration-dotted underline-offset-4 hover:underline",
+                  "cursor-text underline decoration-quebi-line/50 decoration-dotted underline-offset-4 hover:decoration-quebi-brand/70",
                 isEditingThisCell && "bg-quebi-brand/5 align-top whitespace-normal",
                 table.getColumn(header.column.id)?.getIsPinned?.() && "bg-quebi-bg",
               )}
@@ -715,12 +762,22 @@ export function TableShell<T extends RowData>({
                     </Button>
                   )}
                   {meta?.truncate ? (
-                    <Tooltip>
-                      <TooltipTrigger className="truncate text-start">
-                        <span className="truncate">{content}</span>
-                      </TooltipTrigger>
-                      <TooltipContent>{isEmpty ? (meta?.emptyValue ?? "—") : String(value)}</TooltipContent>
-                    </Tooltip>
+                    canEdit ? (
+                      // A tooltip trigger is a button, and a button in a cell
+                      // keeps the press that lands on it — react-aria stops a
+                      // nested press from propagating, which is right
+                      // everywhere except in front of an editor. An editable
+                      // cell shows the whole value by opening, so where the two
+                      // collide the tooltip is what goes.
+                      <span className="truncate">{content}</span>
+                    ) : (
+                      <Tooltip>
+                        <TooltipTrigger className="truncate text-start">
+                          <span className="truncate">{content}</span>
+                        </TooltipTrigger>
+                        <TooltipContent>{isEmpty ? (meta?.emptyValue ?? "—") : String(value)}</TooltipContent>
+                      </Tooltip>
+                    )
                   ) : (
                     content
                   )}

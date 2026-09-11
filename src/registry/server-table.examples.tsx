@@ -10,6 +10,7 @@ import { ConformSelect } from "@/components/conform-select"
 import { Note } from "@/components/note"
 import { SelectItem } from "@/components/select"
 import {
+  type DataTableCellAddress,
   type DataTableColumn,
   type DataTableQuery,
   type DataTableSelection,
@@ -415,16 +416,19 @@ const editableColumns = columns.map((c) => ({ ...c, editor: editors[c.id] }))
 const EditableCells = () => {
   const { query, setQuery, result, state } = useOrderQuery({ pageSize: 6 })
   const [overrides, setOverrides] = useState<Record<number, Partial<Order>>>({})
-  const [saving, setSaving] = useState(false)
+  // The cell being saved, not a flag: a commit lands the moment the control
+  // settles, so the request is routinely still in flight while the user is
+  // already in a different cell.
+  const [saving, setSaving] = useState<DataTableCellAddress | null>(null)
   const [failed, setFailed] = useState<string | null>(null)
   const rows = result.rows.map((order) => ({ ...order, ...overrides[order.id] }))
 
-  const save = async (order: Order, patch: Partial<Order>) => {
+  const save = async (order: Order, cell: DataTableCellAddress, patch: Partial<Order>) => {
     setFailed(null)
     setOverrides((current) => ({ ...current, [order.id]: { ...current[order.id], ...patch } }))
-    setSaving(true)
+    setSaving(cell)
     await delay(600)
-    setSaving(false)
+    setSaving(null)
     // Every third reference fails, so the rollback is visible rather than theoretical.
     if (order.id % 3 !== 0) return
     setOverrides((current) => {
@@ -451,8 +455,10 @@ const EditableCells = () => {
         isLoading={state === "initial"}
         isRefreshing={state === "refreshing"}
         cellEditSchema={orderSchema}
-        isCellSaving={saving}
-        onCellEdit={({ row, value }) => void save(row, value as Partial<Order>)}
+        savingCell={saving}
+        onCellEdit={({ row, rowId, columnId, value }) =>
+          void save(row, { rowId, columnId }, value as Partial<Order>)
+        }
       />
       {failed && <Note intent="danger">{failed}</Note>}
       <Note intent="info">

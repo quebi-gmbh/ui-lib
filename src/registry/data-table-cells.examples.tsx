@@ -249,30 +249,78 @@ function applyEdit(product: Product, value: Record<string, unknown>): Product {
 }
 
 function EditableProducts() {
-  const toast = useToast()
   const [rows, setRows] = useState<Product[]>(PRODUCTS)
-  // The draft is what makes this the batched commit model rather than the
-  // immediate one: every cell commit lands here, and the bar below the table is
-  // the only thing that writes. Both are built on the same per-cell callback.
-  const [draft, setDraft] = useState<Record<number, Product>>({})
-  const visible = rows.map((product) => draft[product.id] ?? product)
 
   return (
     <div className="flex w-full flex-col gap-3">
       <DataTable<Product>
         aria-label="Editable products"
         columns={columns}
-        data={visible}
+        data={rows}
         getRowId={(product) => String(product.id)}
         enablePagination={false}
         enableColumnChooser={false}
         allowResize
         cellEditSchema={productSchema}
+        // The commit model, in one callback: it fires the moment the schema
+        // accepts the row, and the row is written back. Nothing is held.
+        onCellEdit={({ row, value }) =>
+          setRows((current) =>
+            current.map((product) => (product.id === row.id ? applyEdit(row, value) : product)),
+          )
+        }
+        caption="Click a cell to edit it — or focus one and press Enter, F2, or just start typing. A value you pick commits itself; a value you type commits on Enter, Tab or when you leave the cell. Escape puts it back."
+      />
+      <Note intent="info">
+        Ten columns, ten different controls, one <code>editor</code> callback
+        each — text, number, select, combo box, date picker, colour picker, tag
+        field and switch. Set a product active with nothing in stock to see the
+        cross-field rule fire: the form behind a cell is the whole row, so
+        "active needs stock" is a rule it can actually check.
+      </Note>
+      <p className="text-quebi-fg-subtle text-sm">
+        A click, <Kbd>Enter</Kbd>, <Kbd>F2</Kbd> or typing edits ·{" "}
+        <Kbd>Tab</Kbd> commits and moves · <Kbd>Esc</Kbd> cancels · arrows move
+        between cells, and move the caret once a cell is open.
+      </p>
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*                            the same thing, batched                         */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Per-cell commits are the primitive; batching is what you build on them.
+ *
+ * The draft below is the whole of the difference: every commit lands in it
+ * instead of in the rows, and the bar is the only thing that writes. It is one
+ * `useState` because that is genuinely all it takes — which is the argument for
+ * the table not growing a draft of its own. The other direction does not work:
+ * a table that only reported a batch could not be made to report each cell.
+ */
+function DraftedProducts() {
+  const toast = useToast()
+  const [rows, setRows] = useState<Product[]>(PRODUCTS)
+  const [draft, setDraft] = useState<Record<number, Product>>({})
+  const visible = rows.map((product) => draft[product.id] ?? product)
+
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <DataTable<Product>
+        aria-label="Products with unsaved changes"
+        columns={columns.slice(0, 5)}
+        data={visible}
+        getRowId={(product) => String(product.id)}
+        enablePagination={false}
+        enableColumnChooser={false}
+        cellEditSchema={productSchema}
         onCellEdit={({ row, value }) =>
           setDraft((current) => ({ ...current, [row.id]: applyEdit(row, value) }))
         }
         rowClassName={(product) => (draft[product.id] ? "bg-quebi-warn/5" : undefined)}
-        caption="Double-click a cell, or focus one and press Enter, F2, or just start typing. Tab commits and moves to the next editable cell; Escape puts the value back."
+        caption="Edit a few cells: each commit lands in a draft, the row is marked, and nothing is written until you save."
       />
       <TableUnsavedBar
         count={Object.keys(draft).length}
@@ -283,39 +331,30 @@ function EditableProducts() {
         }}
         onDiscard={() => setDraft({})}
       />
-      <Note intent="info">
-        Ten columns, ten different controls, one <code>editor</code> callback
-        each — text, number, select, combo box, date picker, colour picker, tag
-        field and switch. Set a product active with nothing in stock to see the
-        cross-field rule fire: the form behind a cell is the whole row, so
-        "active needs stock" is a rule it can actually check.
-      </Note>
-      <p className="text-quebi-fg-subtle text-sm">
-        <Kbd>Enter</Kbd> or <Kbd>F2</Kbd> edits · <Kbd>Tab</Kbd> commits and
-        moves · <Kbd>Esc</Kbd> cancels · arrows move between cells, and move the
-        caret once a cell is open.
-      </p>
     </div>
   )
 }
 
-const CellEditingShowcase = () => (
+const DraftShowcase = () => (
   <ToastProvider>
-    <EditableProducts />
+    <DraftedProducts />
   </ToastProvider>
 )
+
+const CellEditingShowcase = () => <EditableProducts />
 
 /* -------------------------------------------------------------------------- */
 /*                                 bulk edit                                  */
 /* -------------------------------------------------------------------------- */
 
 /**
- * A bulk edit is the row editor over a smaller schema.
+ * A bulk edit is `TableRowEditor` over a smaller schema.
  *
  * Not the row's schema with holes in it: "apply this category to every selected
  * product" asks for one field and must not require the other nine, so the
  * schema is the one field. That is also why this needs no component of its own —
- * `TableRowEditor` in a modal is the whole of it.
+ * `TableRowEditor` in a modal is the whole of it, and it is the whole of what
+ * that component is for now that a row of a table is edited a cell at a time.
  */
 const bulkSchema = v.object({
   category: v.picklist(CATEGORIES, "Pick a category"),
@@ -407,13 +446,19 @@ export const dataTableCellExamples: ComponentExample[] = [
   {
     title: "Editable cells: any conform-* control, and the keyboard to match",
     description:
-      "Each column carries an `editor` callback that is handed Conform field metadata, so the control in a cell is whichever conform-* variant you bind — here ten columns and eight kinds of control, including the four no enum would ever have had room for. The keyboard is the part that makes it a data table rather than a page of inputs: Enter, F2 or typing opens a cell, Tab commits and moves to the next editable one (wrapping to the next row, not leaving for the next focusable element on the page), Escape restores the value, arrows move between cells and then move the caret. Commits land per cell and are batched by the Save bar, which is what per-cell commits compose into — the other direction does not.",
+      "Each column carries an `editor` callback that is handed Conform field metadata, so the control in a cell is whichever conform-* variant you bind — here ten columns and eight kinds of control, including the four no enum would ever have had room for. Cells are how a table is edited: one click opens one, and the commit follows the control rather than the focus — picking an option is the user being done, while typed text settles on Enter, on Tab, or when you leave the cell. The keyboard is what makes it a data table rather than a page of inputs: Enter, F2 or typing opens a cell, Tab commits and moves to the next editable one (wrapping to the next row, not leaving for the next focusable element on the page), Escape restores the value, arrows move between cells and then move the caret.",
     render: () => <CellEditingShowcase />,
+  },
+  {
+    title: "Batching per-cell commits behind a Save bar",
+    description:
+      "The same table with a draft in front of it: every cell commit lands in a useState instead of in the rows, edited rows are marked, and TableUnsavedBar is the only thing that writes. It is here rather than first because live commits are the model — batching is a caller's choice expressed over them, and the reverse cannot be expressed at all.",
+    render: () => <DraftShowcase />,
   },
   {
     title: "Bulk edit, through the same schema",
     description:
-      "Select rows and edit them together. The modal is TableRowEditor — the same component the inline row editor uses — over a schema holding only the fields being applied, because a bulk edit must not require the fields it is not touching.",
+      "Select rows and edit them together. The modal is TableRowEditor over a schema holding only the fields being applied, because a bulk edit must not require the fields it is not touching. Several rows and a few fields is the job that form shape is still the right one for; a single row is edited in its own cells.",
     render: () => <BulkEditShowcase />,
   },
 ]

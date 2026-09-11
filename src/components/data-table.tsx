@@ -114,8 +114,6 @@ export interface DataTableProps<T extends RowData> {
 
   /* rows */
   renderDetail?: (row: T) => ReactNode
-  renderRowEditor?: (row: T) => ReactNode
-  editingKey?: string | null
 
   /* editing a cell */
   /**
@@ -131,8 +129,14 @@ export interface DataTableProps<T extends RowData> {
   onEditingCellChange?: (cell: DataTableCellAddress | null) => void
   /** The row as form values. Defaults to the editable columns read off the row. */
   getEditValues?: (row: T) => Record<string, unknown>
-  /** A commit in flight: the open cell says so instead of pretending. */
-  isCellSaving?: boolean
+  /**
+   * The cell whose commit is in flight, if one is. An address rather than a
+   * boolean, because commits no longer wait for the cell to be left: a control
+   * commits when its value settles, so by the time the save is running the open
+   * cell is routinely a different one, and one flag for the whole table draws
+   * the spinner wherever the user happens to be rather than where the edit was.
+   */
+  savingCell?: DataTableCellAddress | null
   rowActions?: (row: T) => ReactNode
   getRowHref?: (row: T) => string | undefined
   onRowAction?: (row: T) => void
@@ -214,14 +218,12 @@ export function DataTable<T extends RowData>({
   onSelectionChange,
   bulkActions,
   renderDetail,
-  renderRowEditor,
-  editingKey,
   cellEditSchema,
   onCellEdit,
   editingCell,
   onEditingCellChange,
   getEditValues,
-  isCellSaving,
+  savingCell,
   rowActions,
   getRowHref,
   onRowAction,
@@ -413,7 +415,7 @@ export function DataTable<T extends RowData>({
     onCellEdit,
     editingCell,
     onEditingCellChange,
-    isSaving: isCellSaving,
+    savingCell,
   })
 
   const chips = columnFilters.map((filter) => {
@@ -456,8 +458,6 @@ export function DataTable<T extends RowData>({
       onRowAction={onRowAction}
       rowActions={rowActions}
       renderDetail={renderDetail}
-      renderRowEditor={renderRowEditor}
-      editingKey={editingKey}
       editingCell={cellEditing.editingCell}
       onEditingCellChange={cellEditing.setEditingCell}
       editableColumns={cellEditing.editableColumns}
