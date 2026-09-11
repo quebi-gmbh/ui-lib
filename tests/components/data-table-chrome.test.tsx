@@ -1,7 +1,7 @@
 /**
  * The chrome around the rows.
  *
- * Every case here is a defect that was visible on `/components/async-table` at
+ * Every case here is a defect that was visible on `/components/server-table` at
  * ~780px and invisible to every test that existed: a page-jump field with no
  * room left for the number, four control heights in one row, a table that
  * clipped its last columns with no way to scroll to them, two chevrons in

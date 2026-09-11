@@ -7,16 +7,19 @@ import { type ReactNode, useMemo, useRef, useState } from "react"
 import { useAsyncList } from "react-stately"
 import { Button } from "@/components/button"
 import {
-  DataTableBulkBar,
-  DataTableColumnChooser,
-  DataTableDensityToggle,
-  DataTableFilterChips,
-  DataTableFilterPanel,
-  DataTablePagination,
-  DataTableSearch,
-  DataTableSurface,
-  DataTableToolbar,
-} from "@/components/data-table"
+  CHROME_ICON_SIZE,
+  CHROME_SIZE,
+  TableBulkBar,
+  TableColumnChooser,
+  TableDensityToggle,
+  TableFilterChips,
+  TableFilterPanel,
+  TablePager,
+  TableSearch,
+  TableToolbar,
+  describeFilter,
+} from "@/components/table-controls"
+import { TableShell } from "@/components/table-shell"
 import {
   type DataTableColumn,
   type DataTableDensity,
@@ -24,7 +27,6 @@ import {
   type DataTableFilterValue,
   type DataTableQuery,
   type DataTableSelection,
-  type DataTableSort,
   dataTableFeatures,
   emptyQuery,
   emptySelection,
@@ -37,35 +39,41 @@ import {
 } from "@/lib/data-table"
 
 /**
- * Async Table — quebi design system
+ * Server Table — quebi design system
  *
- * The server-driven half of the pair. Every sort, filter, search and page
- * change is a query: the component reports the whole new `DataTableQuery`
- * through one `onQueryChange` callback and draws the rows it is handed back.
- * It never sorts, filters or pages the `rows` prop — those rows are the answer
- * to the last query, and reordering them reorders a slice.
+ * The server-driven mode. Every sort, filter, search and page change is a
+ * query: the component reports the whole new `DataTableQuery` through one
+ * `onQueryChange` callback and draws the rows it is handed back. It never
+ * sorts, filters or pages the `rows` prop — those rows are the answer to the
+ * last query, and reordering them reorders a slice.
  *
- * It is DataTable with every `manual*` flag set: same column vocabulary
- * (`DataTableColumn`), same toolbar, same pagination bar, same filter panels,
- * same selection model. What differs is where the work happens, and the four
- * places that difference is real — select-all, the total count, faceted values
- * and export — are props rather than assumptions.
+ * It is `DataTable` with every `manual*` flag set: same column vocabulary
+ * (`DataTableColumn` from `@/lib/data-table`), same shell, same controls, same
+ * selection model. What differs is where the work happens, and the four places
+ * that difference is real — select-all, the total count, faceted values and
+ * export — are props rather than assumptions.
+ *
+ * It does not depend on `DataTable`, and that is the point of the file
+ * existing. What the two modes share is the chrome and the render half, which
+ * are `@/components/table-controls` and `@/components/table-shell`; both modes
+ * are built on those two, and neither mode reaches for the other. Adding a
+ * server-driven table to a project therefore brings a toolbar and a shell, not
+ * a client row model it will never run.
+ *
+ * The name says where the rows come from, which is the only question that
+ * chooses between the two modes. "Async" said how they arrive, which was never
+ * the distinction: `DataTable` has `isLoading`, `isRefreshing`, `error` and
+ * `onRetry`, and works perfectly well over a fetch — it just sorts what it was
+ * given rather than asking again.
  */
 
-/* Re-exported under the old names so a column definition reads the same in
-   either mode; `DataTableColumn` from @/lib/data-table is the canonical one. */
-export type AsyncTableColumn<T> = DataTableColumn<T>
-export type AsyncTableSort = DataTableSort
-export type AsyncTableQuery = DataTableQuery
-export type AsyncTableFilterOption = DataTableFilterOption
-
-export interface AsyncTableFilterPage {
-  items: AsyncTableFilterOption[]
+export interface ServerTableFilterPage {
+  items: DataTableFilterOption[]
   /** Return a cursor to enable "load more" on scroll; omit when exhausted. */
   cursor?: string
 }
 
-export interface AsyncTableLoadFilterParams {
+export interface ServerTableLoadFilterParams {
   /** The column whose distinct values are being requested. */
   column: string
   search: string
@@ -73,13 +81,13 @@ export interface AsyncTableLoadFilterParams {
   signal: AbortSignal
 }
 
-export type AsyncTableLoadFilterValues = (
-  params: AsyncTableLoadFilterParams,
-) => Promise<AsyncTableFilterPage>
+export type ServerTableLoadFilterValues = (
+  params: ServerTableLoadFilterParams,
+) => Promise<ServerTableFilterPage>
 
-export interface AsyncTableProps<T extends RowData> {
+export interface ServerTableProps<T extends RowData> {
   "aria-label": string
-  columns: AsyncTableColumn<T>[]
+  columns: DataTableColumn<T>[]
   /** The rows the last query returned. Not a dataset — a page of an answer. */
   rows: T[]
   getRowId: (row: T) => string
@@ -107,7 +115,7 @@ export interface AsyncTableProps<T extends RowData> {
   tiebreakColumn?: string
 
   /** Loads a page of distinct values for a column's filter popover. */
-  loadFilterValues?: AsyncTableLoadFilterValues
+  loadFilterValues?: ServerTableLoadFilterValues
   /** Named filter sets, offered beside the chips. */
   filterPresets?: { id: string; label: string }[]
   onApplyPreset?: (id: string) => void
@@ -168,7 +176,7 @@ const EMPTY_ROWS: never[] = []
 /** The distinct values for one column, loaded from the source as the user searches. */
 function useFilterOptions(
   column: string,
-  loadFilterValues: AsyncTableLoadFilterValues | undefined,
+  loadFilterValues: ServerTableLoadFilterValues | undefined,
 ) {
   const list = useAsyncList<DataTableFilterOption & { id: string }>({
     async load({ signal, cursor, filterText }) {
@@ -204,7 +212,7 @@ function useFilterOptions(
  * filter opens. Pending edits are a transaction: Apply commits, dismissing
  * discards — which is what keeps one round-trip per change.
  */
-function AsyncFilterPanel({
+function ServerFilterPanel({
   columnId,
   label,
   variant,
@@ -217,7 +225,7 @@ function AsyncFilterPanel({
   label: string
   variant: NonNullable<DataTableColumn<never>["filterVariant"]>
   value: unknown
-  loadFilterValues?: AsyncTableLoadFilterValues
+  loadFilterValues?: ServerTableLoadFilterValues
   onApply: (value: unknown) => void
   onClear: () => void
 }) {
@@ -232,7 +240,7 @@ function AsyncFilterPanel({
   }, [facets.options, selected, variant])
 
   return (
-    <DataTableFilterPanel
+    <TableFilterPanel
       columnId={columnId}
       label={label}
       variant={variant}
@@ -247,7 +255,7 @@ function AsyncFilterPanel({
   )
 }
 
-export function AsyncTable<T extends RowData>({
+export function ServerTable<T extends RowData>({
   "aria-label": ariaLabel,
   columns,
   rows,
@@ -299,7 +307,7 @@ export function AsyncTable<T extends RowData>({
   emptyMessage,
   noResultsMessage,
   className,
-}: AsyncTableProps<T>) {
+}: ServerTableProps<T>) {
   const [internalQuery, setInternalQuery] = useState<DataTableQuery>({
     ...emptyQuery,
     ...defaultQuery,
@@ -381,13 +389,13 @@ export function AsyncTable<T extends RowData>({
 
   return (
     <div className={"flex w-full flex-col gap-2"}>
-      <DataTableToolbar
+      <TableToolbar
         caption={caption}
         actions={
           <>
             {toolbarActions}
             {enableDensityToggle && (
-              <DataTableDensityToggle
+              <TableDensityToggle
                 value={density}
                 onChange={(next) => {
                   setDensityState(next)
@@ -396,7 +404,7 @@ export function AsyncTable<T extends RowData>({
               />
             )}
             {enableColumnChooser && (
-              <DataTableColumnChooser
+              <TableColumnChooser
                 columns={table.getAllLeafColumns().map((column) => ({
                   id: column.id,
                   label: qualifiedLabel(column.columnDef.meta, column.id),
@@ -412,16 +420,22 @@ export function AsyncTable<T extends RowData>({
               />
             )}
             {onExport && (
-              // `sm` / `sq-sm` is the chrome height both tables share — see
-              // CHROME_SIZE in data-table.tsx, which every control the toolbar
-              // borrows from there is already sized to.
-              <Button intent="outline" size="sm" onPress={() => onExport(query)}>
+              // The chrome height both modes share, taken from the constant
+              // rather than restated: every control table-controls exports is
+              // already sized to it, and a second copy of the string is how a
+              // toolbar ends up two heights tall.
+              <Button intent="outline" size={CHROME_SIZE} onPress={() => onExport(query)}>
                 <ArrowDownToLine data-slot="icon" aria-hidden="true" />
                 Export
               </Button>
             )}
             {onRefresh && (
-              <Button intent="ghost" size="sq-sm" aria-label="Refresh" onPress={onRefresh}>
+              <Button
+                intent="ghost"
+                size={CHROME_ICON_SIZE}
+                aria-label="Refresh"
+                onPress={onRefresh}
+              >
                 <RotateCcw data-slot="icon" aria-hidden="true" />
               </Button>
             )}
@@ -429,21 +443,25 @@ export function AsyncTable<T extends RowData>({
         }
       >
         {enableGlobalSearch && (
-          <DataTableSearch
+          <TableSearch
             value={query.search}
             onChange={(search) => pushQuery({ ...query, search, page: 0, cursor: null })}
             placeholder="Search…"
           />
         )}
-      </DataTableToolbar>
+      </TableToolbar>
 
-      <DataTableFilterChips
+      <TableFilterChips
         filters={activeFilters.map((filter) => ({
           column: filter.column,
           label: columnLabel(filter.column),
-          text: Array.isArray(filter.value)
-            ? filter.value.filter((v) => v != null && v !== "").join(", ") || "any"
-            : String(filter.value),
+          // The same words the client mode puts in a chip. Reading the value
+          // by its shape instead of by its variant is how a number range used
+          // to arrive here as "10, 50".
+          text: describeFilter(
+            filter.variant ?? table.getColumn(filter.column)?.columnDef.meta?.filterVariant,
+            filter.value,
+          ),
         }))}
         onClear={(columnId) => setFilter(columnId, undefined)}
         onClearAll={() => pushQuery({ ...query, filters: [], page: 0, cursor: null })}
@@ -453,7 +471,7 @@ export function AsyncTable<T extends RowData>({
       />
 
       {selectionMode === "multiple" && (
-        <DataTableBulkBar
+        <TableBulkBar
           selection={selection}
           total={total}
           pageCount={rowModel.length}
@@ -461,10 +479,10 @@ export function AsyncTable<T extends RowData>({
           onClear={() => setSelection(emptySelection)}
         >
           {bulkActions?.(selection)}
-        </DataTableBulkBar>
+        </TableBulkBar>
       )}
 
-      <DataTableSurface<T>
+      <TableShell<T>
         aria-label={ariaLabel}
         table={table}
         rows={rowModel}
@@ -523,7 +541,7 @@ export function AsyncTable<T extends RowData>({
           const meta = table.getColumn(columnId)?.columnDef.meta
           if (!meta?.filterVariant) return null
           return (
-            <AsyncFilterPanel
+            <ServerFilterPanel
               columnId={columnId}
               label={meta.label}
               variant={meta.filterVariant}
@@ -538,7 +556,7 @@ export function AsyncTable<T extends RowData>({
       />
 
       {(paginationMode === "offset" || paginationMode === "cursor") && (
-        <DataTablePagination
+        <TablePager
           mode={paginationMode}
           page={query.page}
           pageSize={query.pageSize}

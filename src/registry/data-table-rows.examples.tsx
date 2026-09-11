@@ -8,7 +8,7 @@ import { FormattedCurrency, FormattedNumber } from "@/components/formatted-numbe
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/menu"
 import { Note } from "@/components/note"
 import { type DataTableColumn, type DataTableSelection, selectionCount } from "@/lib/data-table"
-import { Money, ORDERS, type Order, SMALL_ORDERS, StatusBadge } from "./data-table-fixtures.examples"
+import { Money, ORDERS, type Order, SMALL_ORDERS, StatusBadge } from "./table-fixtures.examples"
 import type { ComponentExample } from "./types"
 
 const base: DataTableColumn<Order>[] = [

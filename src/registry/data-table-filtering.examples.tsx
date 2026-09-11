@@ -3,7 +3,7 @@ import { DataTable } from "@/components/data-table"
 import { FormattedDate } from "@/components/formatted-date"
 import { Note } from "@/components/note"
 import type { DataTableColumn, DataTableFilterValue } from "@/lib/data-table"
-import { Money, ORDERS, type Order, SMALL_ORDERS, StatusBadge } from "./data-table-fixtures.examples"
+import { Money, ORDERS, type Order, SMALL_ORDERS, StatusBadge } from "./table-fixtures.examples"
 import type { ComponentExample } from "./types"
 
 /* -------------------------------------------------------------------------- */

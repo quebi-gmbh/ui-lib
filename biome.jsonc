@@ -68,7 +68,7 @@
               "form": "Use <Form> from react-router (submitting to a route action), or <ConformField> from @/components/conform-field (binding fields to a Conform form).",
               "label": "Use <Label> from @/components/field (composing a field by hand).",
               "dialog": "Use <Modal> from @/components/modal (a centered overlay), or <Drawer> from @/components/drawer (an edge-anchored panel), or <Sheet> from @/components/sheet (a side sheet), or <Dialog> from @/components/dialog (the dialog content itself (title, body, footer)).",
-              "table": "Use <Table> from @/components/table (a static table (with TableHeader, TableBody, TableColumn, TableRow, TableCell)), or <DataTable> from @/components/data-table (every row is already in the browser and the table has to sort, filter, page or group them), or <AsyncTable> from @/components/async-table (the rows are a page of a larger answer — sorting, filtering and paging are queries)."
+              "table": "Use <Table> from @/components/table (a static table (with TableHeader, TableBody, TableColumn, TableRow, TableCell)), or <DataTable> from @/components/data-table (the rows you have are all of them — the browser holds the dataset and sorts, filters, pages and groups it), or <ServerTable> from @/components/server-table (the rows are a page of a larger answer — sorting, filtering and paging are queries the server runs), or <TableShell> from @/components/table-shell (neither mode fits and you are bringing a TanStack instance of your own)."
             }
           }
         }
@@ -258,7 +258,7 @@
                   "form": "Use <Form> from react-router (submitting to a route action), or <ConformField> from @/components/conform-field (binding fields to a Conform form).",
                   "label": "Use <Label> from @/components/field (composing a field by hand).",
                   "dialog": "Use <Modal> from @/components/modal (a centered overlay), or <Drawer> from @/components/drawer (an edge-anchored panel), or <Sheet> from @/components/sheet (a side sheet), or <Dialog> from @/components/dialog (the dialog content itself (title, body, footer)).",
-                  "table": "Use <Table> from @/components/table (a static table (with TableHeader, TableBody, TableColumn, TableRow, TableCell)), or <DataTable> from @/components/data-table (every row is already in the browser and the table has to sort, filter, page or group them), or <AsyncTable> from @/components/async-table (the rows are a page of a larger answer — sorting, filtering and paging are queries)."
+                  "table": "Use <Table> from @/components/table (a static table (with TableHeader, TableBody, TableColumn, TableRow, TableCell)), or <DataTable> from @/components/data-table (the rows you have are all of them — the browser holds the dataset and sorts, filters, pages and groups it), or <ServerTable> from @/components/server-table (the rows are a page of a larger answer — sorting, filtering and paging are queries the server runs), or <TableShell> from @/components/table-shell (neither mode fits and you are bringing a TanStack instance of your own)."
                 }
               }
             }
@@ -303,7 +303,7 @@
                   "textarea": "Use <Textarea> from @/components/textarea.",
                   "label": "Use <Label> from @/components/field (composing a field by hand).",
                   "dialog": "Use <Modal> from @/components/modal (a centered overlay), or <Drawer> from @/components/drawer (an edge-anchored panel), or <Sheet> from @/components/sheet (a side sheet), or <Dialog> from @/components/dialog (the dialog content itself (title, body, footer)).",
-                  "table": "Use <Table> from @/components/table (a static table (with TableHeader, TableBody, TableColumn, TableRow, TableCell)), or <DataTable> from @/components/data-table (every row is already in the browser and the table has to sort, filter, page or group them), or <AsyncTable> from @/components/async-table (the rows are a page of a larger answer — sorting, filtering and paging are queries)."
+                  "table": "Use <Table> from @/components/table (a static table (with TableHeader, TableBody, TableColumn, TableRow, TableCell)), or <DataTable> from @/components/data-table (the rows you have are all of them — the browser holds the dataset and sorts, filters, pages and groups it), or <ServerTable> from @/components/server-table (the rows are a page of a larger answer — sorting, filtering and paging are queries the server runs), or <TableShell> from @/components/table-shell (neither mode fits and you are bringing a TanStack instance of your own)."
                 }
               }
             }

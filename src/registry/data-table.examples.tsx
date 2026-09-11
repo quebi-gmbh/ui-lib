@@ -11,7 +11,7 @@ import {
   SMALL_ORDERS,
   StatusBadge,
   compareOrders,
-} from "./data-table-fixtures.examples"
+} from "./table-fixtures.examples"
 import { dataTableRowExamples } from "./data-table-rows.examples"
 import type { ComponentExample } from "./types"
 

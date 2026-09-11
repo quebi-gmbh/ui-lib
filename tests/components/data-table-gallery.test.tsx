@@ -1,6 +1,5 @@
 /**
- * Every DataTable and AsyncTable example, rendered in a browser-shaped
- * environment.
+ * Every example in the table family, rendered in a browser-shaped environment.
  *
  * The build prerenders these pages, which already proves they render on the
  * server. What it cannot prove is the client half: effects, localStorage, the
@@ -13,8 +12,10 @@ import { render } from "@testing-library/react"
 // A rendering fixture, not app code: `tests/**/*.tsx` sits outside biome.jsonc's
 // file list precisely so a harness can reach for the router's memory adapter.
 import { createMemoryRouter, RouterProvider } from "react-router"
-import { asyncTableExamples } from "../../src/registry/async-table.examples"
 import { dataTableExamples } from "../../src/registry/data-table.examples"
+import { serverTableExamples } from "../../src/registry/server-table.examples"
+import { tableControlsExamples } from "../../src/registry/table-controls.examples"
+import { tableShellExamples } from "../../src/registry/table-shell.examples"
 import type { ComponentExample } from "../../src/registry/types"
 
 /** The examples call `useSearchParams`, so they need a router around them. */
@@ -35,8 +36,24 @@ describe("the gallery renders", () => {
     },
   )
 
-  test.each(asyncTableExamples.map((example) => [example.title, example] as const))(
-    "async-table: %s",
+  test.each(serverTableExamples.map((example) => [example.title, example] as const))(
+    "server-table: %s",
+    (_title, example) => {
+      const { container } = renderExample(example)
+      expect(container.textContent?.length ?? 0).toBeGreaterThan(0)
+    },
+  )
+
+  test.each(tableShellExamples.map((example) => [example.title, example] as const))(
+    "table-shell: %s",
+    (_title, example) => {
+      const { container } = renderExample(example)
+      expect(container.textContent?.length ?? 0).toBeGreaterThan(0)
+    },
+  )
+
+  test.each(tableControlsExamples.map((example) => [example.title, example] as const))(
+    "table-controls: %s",
     (_title, example) => {
       const { container } = renderExample(example)
       expect(container.textContent?.length ?? 0).toBeGreaterThan(0)
@@ -44,7 +61,12 @@ describe("the gallery renders", () => {
   )
 
   test("every example title is unique — the gallery keys on it", () => {
-    for (const examples of [dataTableExamples, asyncTableExamples]) {
+    for (const examples of [
+      dataTableExamples,
+      serverTableExamples,
+      tableShellExamples,
+      tableControlsExamples,
+    ]) {
       const titles = examples.map((example) => example.title)
       expect(new Set(titles).size).toBe(titles.length)
     }

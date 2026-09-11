@@ -4,7 +4,6 @@ import { alertDialogExamples } from "./alert-dialog.examples"
 import { areaChartExamples } from "./area-chart.examples"
 import { asyncMultipleSelectExamples } from "./async-multiple-select.examples"
 import { asyncSelectExamples } from "./async-select.examples"
-import { asyncTableExamples } from "./async-table.examples"
 import { avatarExamples } from "./avatar.examples"
 import { badgeExamples } from "./badge.examples"
 import { barChartExamples } from "./bar-chart.examples"
@@ -111,6 +110,7 @@ import { scatterChartExamples } from "./scatter-chart.examples"
 import { searchFieldExamples } from "./search-field.examples"
 import { selectExamples } from "./select.examples"
 import { separatorExamples } from "./separator.examples"
+import { serverTableExamples } from "./server-table.examples"
 import { sheetExamples } from "./sheet.examples"
 import { showMoreExamples } from "./show-more.examples"
 import { sidebarExamples } from "./sidebar.examples"
@@ -121,6 +121,8 @@ import { stepperExamples } from "./stepper.examples"
 import { sunburstChartExamples } from "./sunburst-chart.examples"
 import { switchExamples } from "./switch.examples"
 import { tableExamples } from "./table.examples"
+import { tableControlsExamples } from "./table-controls.examples"
+import { tableShellExamples } from "./table-shell.examples"
 import { tabsExamples } from "./tabs.examples"
 import { tagFieldExamples } from "./tag-field.examples"
 import { tagGroupExamples } from "./tag-group.examples"
@@ -142,7 +144,6 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "area-chart": areaChartExamples,
   "async-multiple-select": asyncMultipleSelectExamples,
   "async-select": asyncSelectExamples,
-  "async-table": asyncTableExamples,
   "avatar": avatarExamples,
   "badge": badgeExamples,
   "bar-chart": barChartExamples,
@@ -249,6 +250,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "search-field": searchFieldExamples,
   "select": selectExamples,
   "separator": separatorExamples,
+  "server-table": serverTableExamples,
   "sheet": sheetExamples,
   "show-more": showMoreExamples,
   "sidebar": sidebarExamples,
@@ -259,6 +261,8 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "sunburst-chart": sunburstChartExamples,
   "switch": switchExamples,
   "table": tableExamples,
+  "table-controls": tableControlsExamples,
+  "table-shell": tableShellExamples,
   "tabs": tabsExamples,
   "tag-field": tagFieldExamples,
   "tag-group": tagGroupExamples,
