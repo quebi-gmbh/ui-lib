@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "react-router"
 import * as v from "valibot"
 import { Button } from "@/components/button"
-import { DataTable, DataTableRowEditor } from "@/components/data-table"
+import { DataTable } from "@/components/data-table"
+import { TableRowEditor } from "@/components/table-controls"
 import { FormattedDate } from "@/components/formatted-date"
 import { FormattedNumber } from "@/components/formatted-number"
 import { Note } from "@/components/note"
@@ -19,7 +20,7 @@ import {
   sortsToSorting,
   sortingToSorts,
 } from "@/lib/data-table"
-import { Money, ORDERS, type Order, SMALL_ORDERS, StatusBadge, STATUSES } from "./data-table-fixtures.examples"
+import { Money, ORDERS, type Order, SMALL_ORDERS, StatusBadge, STATUSES } from "./table-fixtures.examples"
 import type { ComponentExample } from "./types"
 
 const columns: DataTableColumn<Order>[] = [
@@ -104,7 +105,7 @@ function EditableOrders() {
         enablePagination={false}
         editingKey={editingKey}
         renderRowEditor={(order) => (
-          <DataTableRowEditor
+          <TableRowEditor
             title={`Editing ${order.reference}`}
             schema={rowSchema}
             fields={editFields}

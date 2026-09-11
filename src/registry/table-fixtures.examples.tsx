@@ -1,5 +1,5 @@
 /**
- * Shared demo data for the DataTable and AsyncTable galleries.
+ * Shared demo data for the table-family galleries.
  *
  * Not a gallery entry of its own — it exports no `ComponentExample[]`. It lives
  * under the `*.examples.tsx` name because it is example code and is scoped as

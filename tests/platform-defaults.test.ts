@@ -75,8 +75,8 @@ describe(DIALOGS, () => {
 
 const SORTING = "no-client-sorting-on-a-server-driven-table"
 
-/** A component that renders an AsyncTable, with `body` in front of the return. */
-function table(body: string, jsx = "<AsyncTable aria-label=\"Orders\" columns={columns} rows={sorted} getRowId={(o: any) => o.id} />") {
+/** A component that renders a ServerTable, with `body` in front of the return. */
+function table(body: string, jsx = "<ServerTable aria-label=\"Orders\" columns={columns} rows={sorted} getRowId={(o: any) => o.id} />") {
   return `export function Orders(props: any) {\n${body}\n  return (\n    ${jsx}\n  )\n}\n`
 }
 
@@ -96,7 +96,7 @@ describe(SORTING, () => {
   })
 
   test("true positive: an arrow component, and toSorted", () => {
-    const code = `const Orders = (props: any) => {\n  const sorted = [...props.rows].toSorted(byName)\n  return <AsyncTable aria-label="Orders" columns={columns} rows={sorted} getRowId={(o: any) => o.id} />\n}\nexport default Orders\n`
+    const code = `const Orders = (props: any) => {\n  const sorted = [...props.rows].toSorted(byName)\n  return <ServerTable aria-label="Orders" columns={columns} rows={sorted} getRowId={(o: any) => o.id} />\n}\nexport default Orders\n`
     expect(fires(SORTING, code)).toBe(true)
   })
 
@@ -104,7 +104,7 @@ describe(SORTING, () => {
     // The second arm of the receiver guard: position instead of name.
     const code = table(
       "",
-      `<AsyncTable aria-label="Orders" columns={columns} rows={[...props.items].sort(byName)} getRowId={(o: any) => o.id} />`,
+      `<ServerTable aria-label="Orders" columns={columns} rows={[...props.items].sort(byName)} getRowId={(o: any) => o.id} />`,
     )
     expect(fires(SORTING, code)).toBe(true)
   })
@@ -112,7 +112,7 @@ describe(SORTING, () => {
   test("true negative: the sort is re-queried, and the rows arrive sorted", () => {
     const code = table(
       "",
-      `<AsyncTable aria-label="Orders" columns={columns} rows={props.rows} sort={props.sort} onSortChange={props.onSortChange} getRowId={(o: any) => o.id} />`,
+      `<ServerTable aria-label="Orders" columns={columns} rows={props.rows} sort={props.sort} onSortChange={props.onSortChange} getRowId={(o: any) => o.id} />`,
     )
     expect(fires(SORTING, code)).toBe(false)
   })

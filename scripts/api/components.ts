@@ -22,9 +22,21 @@ import {
   SRC_DIR,
 } from "./context"
 
-/** Parse `import` specifiers from source. */
+/**
+ * Parse module specifiers out of source — `import … from` and `export … from`
+ * alike.
+ *
+ * The re-export half matters because it is an edge in the dependency graph that
+ * looks like nothing: a component whose only reference to a sibling is
+ * `export { X } from "@/components/sibling"` would otherwise ship with
+ * `registryDependencies` that do not mention the sibling, and land in a
+ * consumer's project with a dangling import. There is one such statement in the
+ * library today (`table-shell` re-exports `TABLE_BAND_HEIGHT` from `table`) and
+ * it happens to import the same module normally as well, so nothing was wrong —
+ * which is exactly the kind of thing that stops being true quietly.
+ */
 function parseImports(source: string): string[] {
-  const re = /import\s+(?:type\s+)?(?:[^"'`]+\s+from\s+)?["'`]([^"'`]+)["'`]/g
+  const re = /(?:import|export)\s+(?:type\s+)?(?:[^"'`]+\s+from\s+)?["'`]([^"'`]+)["'`]/g
   return [...new Set([...source.matchAll(re)].map((match) => match[1]))]
 }
 
@@ -68,6 +80,24 @@ function classifyDeps(specs: string[], allSlugs: Set<string>) {
     componentDeps: [...componentDeps].sort(),
     libDeps: [...libDeps].sort(),
   }
+}
+
+/**
+ * The registry dependencies of one component's source: the sibling slugs it
+ * imports plus the `@/lib/*` modules, in the shape written into
+ * `registryDependencies`.
+ *
+ * Exported because one edge of that graph is a guarantee rather than an
+ * artefact — `server-table` must not pull `data-table` in behind it, or
+ * `npx shadcn add server-table` lands a client row model the component never
+ * runs. `tests/registry-dependencies.test.ts` asserts it, and it asserts it
+ * through this function rather than by reading `public/api/`, which is a build
+ * output and gitignored. Sharing the function is the point: a test against a
+ * second copy of the logic would pass while the emitted JSON said otherwise.
+ */
+export function registryDependenciesFor(source: string, allSlugs: Set<string>): string[] {
+  const { componentDeps, libDeps } = classifyDeps(parseImports(source), allSlugs)
+  return [...componentDeps, ...libDeps.map(libName)].sort()
 }
 
 /** One component's source and its build-time HTML, for the generated bake module. */
@@ -116,10 +146,7 @@ export async function emitComponents(highlight: Highlight): Promise<{
 
     // registryDependencies in our JSON lists both sibling components and the
     // shared libs the component needs — everything that must be pulled too.
-    const registryDependencies = [
-      ...componentDeps,
-      ...libDeps.map(libName),
-    ].sort()
+    const registryDependencies = registryDependenciesFor(source, allSlugs)
 
     const files = {
       source: `/api/components/${meta.slug}.tsx`,

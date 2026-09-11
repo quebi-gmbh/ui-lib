@@ -18,13 +18,13 @@ or { `$src.sort($cmp)`, `$src.toSorted($cmp)` } as $call where {
     $body <: contains bubble or {
       JsxSelfClosingElement(name = $table),
       JsxOpeningElement(name = $table)
-    } where { $table <: r"^AsyncTable$" }
+    } where { $table <: r"^ServerTable$" }
   },
   // applies to: app/**/*.{tsx,jsx}, src/**/*.{tsx,jsx}
   $filename <: r"(?:(?:.*/)?app/(?:.*/)?[^/]*\.(?:tsx|jsx)$|(?:.*/)?src/(?:.*/)?[^/]*\.(?:tsx|jsx)$)",
   register_diagnostic(
     span = $call,
-    message = "AsyncTable is controlled: it reports the whole new query through onQueryChange and draws its header from the query it was given, so sorting the rows here reorders one page of the answer to the last query instead of asking for a new one. Put the query in the URL from onQueryChange (queryToSearchParams), sort in the loader's ORDER BY, and pass rows and query back down. If the whole dataset is already in the browser, use DataTable from @/components/data-table — same columns, and the row model does the sorting on purpose. See https://ui-lib.quebi.de/rules/no-client-sorting-on-a-server-driven-table",
+    message = "ServerTable is controlled: it reports the whole new query through onQueryChange and draws its header from the query it was given, so sorting the rows here reorders one page of the answer to the last query instead of asking for a new one. Put the query in the URL from onQueryChange (queryToSearchParams), sort in the loader's ORDER BY, and pass rows and query back down. If the whole dataset is already in the browser, use DataTable from @/components/data-table — same columns, and the row model does the sorting on purpose. See https://ui-lib.quebi.de/rules/no-client-sorting-on-a-server-driven-table",
     severity = "warn"
   )
 }

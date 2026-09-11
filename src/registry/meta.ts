@@ -3,7 +3,6 @@ import { alertDialogMeta } from "./alert-dialog.meta"
 import { areaChartMeta } from "./area-chart.meta"
 import { asyncMultipleSelectMeta } from "./async-multiple-select.meta"
 import { asyncSelectMeta } from "./async-select.meta"
-import { asyncTableMeta } from "./async-table.meta"
 import { avatarMeta } from "./avatar.meta"
 import { badgeMeta } from "./badge.meta"
 import { barChartMeta } from "./bar-chart.meta"
@@ -110,6 +109,7 @@ import { scatterChartMeta } from "./scatter-chart.meta"
 import { searchFieldMeta } from "./search-field.meta"
 import { selectMeta } from "./select.meta"
 import { separatorMeta } from "./separator.meta"
+import { serverTableMeta } from "./server-table.meta"
 import { sheetMeta } from "./sheet.meta"
 import { showMoreMeta } from "./show-more.meta"
 import { sidebarMeta } from "./sidebar.meta"
@@ -120,6 +120,8 @@ import { stepperMeta } from "./stepper.meta"
 import { sunburstChartMeta } from "./sunburst-chart.meta"
 import { switchMeta } from "./switch.meta"
 import { tableMeta } from "./table.meta"
+import { tableControlsMeta } from "./table-controls.meta"
+import { tableShellMeta } from "./table-shell.meta"
 import { tabsMeta } from "./tabs.meta"
 import { tagFieldMeta } from "./tag-field.meta"
 import { tagGroupMeta } from "./tag-group.meta"
@@ -141,7 +143,6 @@ export const metaRegistry: ComponentMeta[] = [
   areaChartMeta,
   asyncMultipleSelectMeta,
   asyncSelectMeta,
-  asyncTableMeta,
   avatarMeta,
   badgeMeta,
   barChartMeta,
@@ -248,6 +249,7 @@ export const metaRegistry: ComponentMeta[] = [
   searchFieldMeta,
   selectMeta,
   separatorMeta,
+  serverTableMeta,
   sheetMeta,
   showMoreMeta,
   sidebarMeta,
@@ -258,6 +260,8 @@ export const metaRegistry: ComponentMeta[] = [
   sunburstChartMeta,
   switchMeta,
   tableMeta,
+  tableControlsMeta,
+  tableShellMeta,
   tabsMeta,
   tagFieldMeta,
   tagGroupMeta,

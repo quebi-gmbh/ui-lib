@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react"
-import {
-  AsyncTable,
-  type AsyncTableColumn,
-  type AsyncTableLoadFilterParams,
-} from "@/components/async-table"
+import { ServerTable, type ServerTableLoadFilterParams } from "@/components/server-table"
 import { Button } from "@/components/button"
 import { FormattedDate } from "@/components/formatted-date"
 import { FormattedNumber } from "@/components/formatted-number"
 import { Note } from "@/components/note"
 import {
+  type DataTableColumn,
   type DataTableQuery,
   type DataTableSelection,
   emptyQuery,
@@ -16,7 +13,7 @@ import {
   queryToSearchParams,
   selectionCount,
 } from "@/lib/data-table"
-import { Money, ORDERS, type Order, StatusBadge, compareOrders } from "./data-table-fixtures.examples"
+import { Money, ORDERS, type Order, StatusBadge, compareOrders } from "./table-fixtures.examples"
 import type { ComponentExample } from "./types"
 
 /* -------------------------------------------------------------------------- */
@@ -70,7 +67,7 @@ async function queryOrders(
 }
 
 /** The distinct values of one column, searchable and paged — one query each. */
-async function loadFilterValues({ column, search, cursor, signal }: AsyncTableLoadFilterParams) {
+async function loadFilterValues({ column, search, cursor, signal }: ServerTableLoadFilterParams) {
   await delay(250, signal)
   const counts = new Map<string, number>()
   for (const order of ORDERS) {
@@ -88,7 +85,7 @@ async function loadFilterValues({ column, search, cursor, signal }: AsyncTableLo
   }
 }
 
-const columns: AsyncTableColumn<Order>[] = [
+const columns: DataTableColumn<Order>[] = [
   { id: "reference", header: "Reference", accessorKey: "reference", width: 130 },
   {
     id: "status",
@@ -162,7 +159,7 @@ const ServerDriven = () => {
 
   return (
     <div className="flex w-full flex-col gap-3">
-      <AsyncTable<Order>
+      <ServerTable<Order>
         aria-label="Server-driven orders"
         columns={columns}
         rows={result.rows}
@@ -229,7 +226,7 @@ const NoTotal = () => {
 
   return (
     <div className="flex w-full flex-col gap-3">
-      <AsyncTable<Order>
+      <ServerTable<Order>
         aria-label="Orders without a total"
         columns={columns.slice(0, 5)}
         rows={result.rows}
@@ -279,7 +276,7 @@ const LoadMore = () => {
 
   return (
     <div className="flex w-full flex-col gap-3">
-      <AsyncTable<Order>
+      <ServerTable<Order>
         aria-label="Orders loaded on scroll"
         columns={columns.slice(0, 5)}
         rows={rows}
@@ -336,7 +333,7 @@ const Optimistic = () => {
 
   return (
     <div className="flex w-full flex-col gap-3">
-      <AsyncTable<Order>
+      <ServerTable<Order>
         aria-label="Orders with optimistic updates"
         columns={columns.slice(0, 5)}
         rows={rows}
@@ -371,7 +368,7 @@ const Optimistic = () => {
   )
 }
 
-export const asyncTableExamples: ComponentExample[] = [
+export const serverTableExamples: ComponentExample[] = [
   {
     title: "Server-driven orders",
     description:

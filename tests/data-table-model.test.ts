@@ -21,6 +21,8 @@ import {
   pageRange,
   queryFromSearchParams,
   queryToSearchParams,
+  readView,
+  writeView,
   selectedKeysFor,
   selectionCount,
   sortPriority,
@@ -271,5 +273,34 @@ describe("csv", () => {
 
   test("rows are CRLF-separated, headers first", () => {
     expect(toCsv(["a", "b"], [[1, "x,y"]])).toBe('a,b\r\n1,"x,y"')
+  })
+})
+
+/**
+ * The four browser-side helpers the module gained when the render layers were
+ * split apart. They were in `data-table.tsx` because they happened to be
+ * written there, not because they needed React — which meant a route loader
+ * could not read a saved layout without importing a 2,400-line component. They
+ * are tested here, with the rest of the headless core, for the same reason they
+ * live here.
+ */
+describe("the saved view", () => {
+  test("round-trips through localStorage", () => {
+    writeView("ui-lib.test.view", { density: "compact", columnOrder: ["b", "a"] })
+    expect(readView("ui-lib.test.view")).toEqual({
+      density: "compact",
+      columnOrder: ["b", "a"],
+    })
+  })
+
+  test("an unreadable entry is undefined, not a throw", () => {
+    // A layout someone's other tab wrote, or a schema from two releases ago. A
+    // saved column order is not worth taking the page down for.
+    localStorage.setItem("ui-lib.test.broken", "{not json")
+    expect(readView("ui-lib.test.broken")).toBeUndefined()
+  })
+
+  test("a key that was never written is undefined", () => {
+    expect(readView("ui-lib.test.absent")).toBeUndefined()
   })
 })

@@ -1,7 +1,8 @@
 /**
- * The headless half of DataTable and AsyncTable — one column vocabulary, one
- * query shape, one selection model, shared by the client-side and the
- * server-driven table.
+ * The headless half of the table family — one column vocabulary, one query
+ * shape, one selection model, shared by the client-side table (DataTable), the
+ * server-driven one (ServerTable) and the two modules they are both assembled
+ * from (`@/components/table-shell` and `@/components/table-controls`).
  *
  * TanStack Table is the row model; react-aria-components is the view. Nothing
  * here renders: no JSX, no `cn`, no `@/components/*` import. That is a hard
@@ -580,4 +581,55 @@ export function csvCell(value: unknown): string {
 
 export function toCsv(headers: string[], rows: unknown[][]): string {
   return [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\r\n")
+}
+
+/* -------------------------------------------------------------------------- */
+/*                          browser-side plumbing                             */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * The four functions below are the only ones here that touch the browser, and
+ * they are here rather than in a component because they have no React in them:
+ * a route loader that wants to read a saved layout, or a server-side export
+ * route that wants the same CSV the toolbar writes, can call them without
+ * pulling a rendering module in behind it. Each one is a no-op off the browser
+ * rather than a throw, so that stays true on a prerendered page.
+ */
+
+/** Read a saved column layout. Returns undefined on the server or on any error. */
+export function readView(storageKey: string): DataTableView | undefined {
+  if (typeof window === "undefined") return undefined
+  try {
+    const raw = window.localStorage.getItem(storageKey)
+    return raw ? (JSON.parse(raw) as DataTableView) : undefined
+  } catch {
+    return undefined
+  }
+}
+
+export function writeView(storageKey: string, view: DataTableView): void {
+  if (typeof window === "undefined") return
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(view))
+  } catch {
+    /* private mode, quota, no storage: a saved layout is not worth throwing over. */
+  }
+}
+
+/** Hand a generated CSV to the browser's own download machinery. */
+export function downloadCsv(filename: string, csv: string): void {
+  if (typeof document === "undefined") return
+  // The BOM is what makes Excel read the file as UTF-8 rather than as the
+  // system code page, which is where accented names turn to mojibake.
+  const url = URL.createObjectURL(new Blob([`﻿${csv}`], { type: "text/csv;charset=utf-8" }))
+  const anchor = document.createElement("a")
+  anchor.href = url
+  anchor.download = filename
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
+
+export async function copyToClipboard(text: string): Promise<void> {
+  if (typeof navigator === "undefined" || !navigator.clipboard) return
+  await navigator.clipboard.writeText(text)
 }

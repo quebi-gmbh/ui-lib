@@ -5,7 +5,7 @@
  * rendering test is the seam between the model and react-aria: that a press on
  * a header becomes a sort in the row model rather than a decoration, that a
  * filter popover's Conform form narrows the rows, that the selection model
- * survives a page change, and that AsyncTable reports one query per change and
+ * survives a page change, and that ServerTable reports one query per change and
  * sorts nothing itself.
  */
 import { describe, expect, test } from "bun:test"
@@ -13,8 +13,8 @@ import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { useState } from "react"
 import { renderToString } from "react-dom/server"
-import { AsyncTable } from "../../src/components/async-table"
 import { DataTable } from "../../src/components/data-table"
+import { ServerTable } from "../../src/components/server-table"
 import type { DataTableColumn, DataTableQuery } from "../../src/lib/data-table"
 import { emptyQuery } from "../../src/lib/data-table"
 
@@ -371,13 +371,13 @@ describe("DataTable", () => {
   })
 })
 
-describe("AsyncTable", () => {
+describe("ServerTable", () => {
   /** Records every query the table asks for; never sorts the rows it is given. */
   function Harness({ onQuery }: { onQuery: (query: DataTableQuery) => void }) {
     const [query, setQuery] = useState<DataTableQuery>({ ...emptyQuery, pageSize: 5 })
     const page = ORDERS.slice(query.page * query.pageSize, (query.page + 1) * query.pageSize)
     return (
-      <AsyncTable<Order>
+      <ServerTable<Order>
         aria-label="Server orders"
         columns={columns}
         rows={page}
