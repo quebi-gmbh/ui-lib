@@ -13,6 +13,7 @@ import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { useState } from "react"
 import { renderToString } from "react-dom/server"
+import { Button } from "../../src/components/button"
 import { DataTable } from "../../src/components/data-table"
 import { ServerTable } from "../../src/components/server-table"
 import type { DataTableColumn, DataTableQuery } from "../../src/lib/data-table"
@@ -51,6 +52,9 @@ const bandedColumns: DataTableColumn<Order>[] = [
   },
   columns[2],
 ]
+
+/** The last cell of a row — where a row-level action belongs. */
+const lastCell = (row: HTMLElement) => row.lastElementChild as HTMLElement
 
 /** Text anywhere in the document, for messages assembled from several nodes. */
 const bodyText = () => document.body.textContent ?? ""
@@ -205,6 +209,75 @@ describe("DataTable", () => {
       />,
     )
     expect(await screen.findByText("No orders match your filters.")).toBeInTheDocument()
+  })
+
+  test("row actions terminate the row instead of riding in its first cell", async () => {
+    render(
+      <DataTable<Order>
+        aria-label="Orders with actions"
+        columns={columns}
+        data={ORDERS.slice(0, 3)}
+        getRowId={(order) => String(order.id)}
+        enablePagination={false}
+        selectionMode="multiple"
+        renderDetail={(order) => <span>Detail for {order.reference}</span>}
+        rowActions={(order) => (
+          <Button intent="ghost" size="xs">
+            Delete {order.reference}
+          </Button>
+        )}
+      />,
+    )
+
+    // A column of its own, named for the assistive-technology user only.
+    const headerRow = screen.getAllByRole("row")[0]
+    expect(within(headerRow).getByRole("columnheader", { name: "Actions" })).toBe(
+      lastCell(headerRow),
+    )
+
+    // And the action is in the last cell of its row, not the first. `ms-auto`
+    // used to push it to the trailing edge of the first cell, which on a wide
+    // table is the middle of the row.
+    const action = screen.getByRole("button", { name: "Delete ORD-1000" })
+    const row = action.closest("tr")
+    expect(row).not.toBeNull()
+    expect(action.closest("td,th")).toBe(lastCell(row as HTMLElement))
+    expect(within((row as HTMLElement).children[0] as HTMLElement).queryByRole("button")).toBeNull()
+
+    // The extra column is counted, so a spanning row still reaches the end of
+    // the table: three data columns, the selection gutter, the actions column.
+    const user = userEvent.setup()
+    await user.click(screen.getAllByRole("button", { name: "Expand row" })[0])
+    const detailCell = screen.getByText("Detail for ORD-1000").closest("td")
+    expect(detailCell?.parentElement?.children).toHaveLength(1)
+    expect(detailCell?.colSpan).toBe(5)
+  })
+
+  test("the actions column is banded like the gutters when the columns are", () => {
+    render(
+      <DataTable<Order>
+        aria-label="Banded orders with actions"
+        columns={bandedColumns}
+        data={ORDERS.slice(0, 2)}
+        getRowId={(order) => String(order.id)}
+        enablePagination={false}
+        rowActions={() => (
+          <Button intent="ghost" size="xs">
+            Open
+          </Button>
+        )}
+      />,
+    )
+    // A leaf at the wrong depth is what makes react-stately fill the header row
+    // with `placeholder` nodes react-aria-components cannot render — so the
+    // actions column gets an empty band above it, exactly like the two leading
+    // gutters. Three bands across, spanning four columns.
+    const headerRows = document.querySelectorAll<HTMLTableRowElement>("thead tr")
+    expect(headerRows).toHaveLength(2)
+    const bandCells = headerRows[0].querySelectorAll("th")
+    expect(bandCells).toHaveLength(3)
+    expect(Array.from(bandCells).reduce((total, cell) => total + (cell.colSpan || 1), 0)).toBe(4)
+    expect(headerRows[1].querySelectorAll("th")).toHaveLength(4)
   })
 
   test("an expanded row adds a detail row that cannot be selected", async () => {

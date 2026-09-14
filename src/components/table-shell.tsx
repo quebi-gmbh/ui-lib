@@ -429,6 +429,21 @@ export interface TableShellProps<T extends RowData> {
   isRowDisabled?: (row: T) => boolean
   getRowHref?: (row: T) => string | undefined
   onRowAction?: (row: T) => void
+  /**
+   * Quick actions for a row, drawn in a column of their own at the end of it.
+   *
+   * They used to ride in the first cell, pushed to its trailing edge with
+   * `ms-auto`, on the argument that an action costing a whole column was a bad
+   * trade in a dense table. On anything wider than the columns need that puts
+   * the action in the middle of the row — `ms-auto` ends at the first cell's
+   * edge, not the table's — so it read as belonging to the first column rather
+   * than to the row. A real trailing column costs the width of the control and
+   * terminates the row at every viewport, which is what the affordance claims.
+   *
+   * The column is hand-rendered, outside TanStack's model on purpose: it is not
+   * data, so it cannot be sorted, grouped, pinned, resized, hidden by the column
+   * chooser or edited, and the chooser never offers it.
+   */
   rowActions?: (row: T) => ReactNode
   /** A detail panel, rendered as an extra row with one spanning cell. */
   renderDetail?: (row: T) => ReactNode
@@ -467,6 +482,15 @@ export interface TableShellProps<T extends RowData> {
 }
 
 const skeletonRowIds = ["s1", "s2", "s3", "s4", "s5"]
+
+/**
+ * The collection key of the row-actions column.
+ *
+ * Namespaced because it shares a key space with the consumer's column ids and a
+ * collision would be two columns claiming one key — react-stately keeps the
+ * last one and the table quietly loses a column. No data column is called this.
+ */
+const ROW_ACTIONS_COLUMN_ID = "quebi:row-actions"
 
 /**
  * Content inside a Table that is not part of the Table.
@@ -581,7 +605,15 @@ export function TableShell<T extends RowData>({
   const isSSR = useIsSSR()
   const showBands = hasBands && !isSSR
   const leafColumns = table.getVisibleLeafColumns()
-  const columnCount = leafColumns.length + (selectionMode === "multiple" ? 1 : 0) + (onRowReorder ? 1 : 0)
+  // Every column a spanning row has to cover: the data columns plus the three
+  // gutters that are not data — selection, reorder, and row actions.
+  // `SpanningRow` is the detail panel, the empty state and the error, and one
+  // uncounted column leaves all three short of the end of the table.
+  const columnCount =
+    leafColumns.length +
+    (selectionMode === "multiple" ? 1 : 0) +
+    (onRowReorder ? 1 : 0) +
+    (rowActions ? 1 : 0)
   // The same key each row is rendered with — a grouped row is its own id, not
   // the id of whichever leaf TanStack put in `original`.
   const pageKeys = useMemo(
@@ -781,14 +813,26 @@ export function TableShell<T extends RowData>({
                   ) : (
                     content
                   )}
-                  {isFirst && rowActions && (
-                    <span className="ms-auto ps-2">{rowActions(row.original)}</span>
-                  )}
                 </span>
               )}
             </TableCell>
           )
         })}
+        {rowActions && (
+          <TableCell
+            data-row-key={key}
+            data-column-id={ROW_ACTIONS_COLUMN_ID}
+            className={cn(cellPadding, "w-px")}
+          >
+            {/* A grouped row is an aggregate of the rows under it, so there is
+                no single row for an action to act on — the cell is still drawn,
+                because a row shorter than the header is not a row react-aria
+                can lay out. */}
+            <span className="flex items-center justify-end gap-2">
+              {row.getIsGrouped?.() ? null : rowActions(row.original)}
+            </span>
+          </TableCell>
+        )}
       </TableRow>,
     )
 
@@ -955,6 +999,21 @@ export function TableShell<T extends RowData>({
       <TableHeader
         bandDepth={showBands ? headerGroups.length - 1 : 0}
         bandClassName={cn(stickyHeader && "sticky top-0 z-20")}
+        trailing={
+          rowActions ? (
+            <TableColumn
+              id={ROW_ACTIONS_COLUMN_ID}
+              className={cn("w-px", stickyHeader && "sticky z-20")}
+              style={stickyHeader ? { top: showBands ? TABLE_BAND_HEIGHT : 0 } : undefined}
+            >
+              {/* The column has a name so screen readers announce a cell in it
+                  as something other than the blank one at the end of the row;
+                  it is hidden because the controls underneath already say what
+                  they do and a header over them would only repeat it. */}
+              <span className="sr-only">Actions</span>
+            </TableColumn>
+          ) : null
+        }
       >
         {/* The banded header is a tree: the walk starts at the top header group
             and ends at a leaf column. Ungated it would also cover the unbanded
@@ -999,6 +1058,11 @@ export function TableShell<T extends RowData>({
                     <Skeleton className="h-4 w-full" />
                   </TableCell>
                 ))}
+                {rowActions && (
+                  <TableCell className={cn(cellPadding, "w-px")}>
+                    <Skeleton className="h-4 w-8" />
+                  </TableCell>
+                )}
               </TableRow>
             ))
           : bodyRows}

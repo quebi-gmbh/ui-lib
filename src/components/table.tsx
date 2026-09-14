@@ -325,6 +325,17 @@ interface TableHeaderProps<T extends object> extends HeaderProps<T> {
   bandDepth?: number
   /** Extra classes for the bands above the gutters — the sticky offset, mostly. */
   bandClassName?: string
+  /**
+   * One more column, after the consumer's — the row-actions column, in practice.
+   *
+   * It is a gutter like the drag handle and the selection checkbox, only at the
+   * other end of the row, so it is banded exactly like them: a leaf sitting at
+   * the wrong depth is what makes react-stately fill the header row with
+   * `placeholder` nodes. The difference is that the two leading gutters are the
+   * header's own doing and this one is not — what goes in it is a render prop
+   * the caller owns — so it arrives as a node rather than as a flag.
+   */
+  trailing?: ReactNode
 }
 
 /** Stack `depth` empty bands above a gutter column, innermost last. */
@@ -347,6 +358,7 @@ const TableHeader = <T extends object>({
   className,
   bandDepth = 0,
   bandClassName,
+  trailing,
   ...props
 }: TableHeaderProps<T>) => {
   const { selectionBehavior, selectionMode, allowsDragging } = useTableOptions()
@@ -377,6 +389,7 @@ const TableHeader = <T extends object>({
           bandClassName,
         )}
       <Collection items={columns}>{children}</Collection>
+      {trailing && banded(trailing, bandDepth, "trailing", bandClassName)}
     </TableHeaderPrimitive>
   )
 }
