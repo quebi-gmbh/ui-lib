@@ -1,6 +1,16 @@
 # Pre-commit hook. Installed by `bun install` (the `prepare` script runs
 # `lefthook install`); `bunx lefthook install` re-installs it by hand.
 #
+# Where a global `core.hooksPath` is set — dev containers often point one at a
+# directory of their own — git ignores `.git/hooks` entirely and the install
+# fails. The `prepare` script reports that and succeeds anyway, because this
+# hook is not what makes the repo safe. Scope it to this repo if you want it
+# (`git config --local core.hooksPath .git/hooks`), but do not install it with
+# `--force`: that writes this repo's hook into the global path, so a dev
+# dependency of one repo starts running on every commit in every repo on the
+# machine, and any hook already there under someone else's management is
+# overwritten the moment a command below shares its name.
+#
 # This is a convenience, not a gate: `git commit --no-verify` skips it, and it
 # only sees what is on disk, not what is staged. The gate is CI, which runs the
 # same lint over the whole repo plus the test suite.

@@ -98,7 +98,10 @@ bun run build      # generate API + typecheck + production build
 
 `bun install` installs the pre-commit hook (lefthook), which lints staged files and, when a rule
 record is in the commit, checks that the generated config came with it. It is a convenience, not a
-gate — `git commit --no-verify` skips it, and CI runs the same lint over the whole tree.
+gate — `git commit --no-verify` skips it, and CI runs the same lint over the whole tree. If a
+global `core.hooksPath` is set, as some dev containers do, git ignores `.git/hooks` and there is
+nowhere to install it; `bun install` says so and carries on, and `bun run lint` is the same check by
+hand.
 
 `bun run test` covers two things. The rule suite under `tests/` runs every check through the real
 Biome CLI with the generated config and plugins — the same artifacts consumers download — and

@@ -18,7 +18,7 @@
     "repo:config": "bun run scripts/repo-config.ts",
     "lint": "biome lint",
     "lint:fix": "biome lint --write",
-    "prepare": "lefthook install || echo 'lefthook: git hooks not installed (a global core.hooksPath is set); run `bunx lefthook install --force` if you want them'"
+    "prepare": "lefthook install || echo 'lefthook: pre-commit hook not installed. A global core.hooksPath is set, so git ignores .git/hooks and there is nowhere for lefthook to write. Nothing is broken: the hook is a convenience and CI runs the same lint, which you can also run by hand with bun run lint. To have it anyway, scope it to this repo with: git config --local core.hooksPath .git/hooks && bunx lefthook install. Do not reach for --force, which installs into the global hooks path itself, where the hook then runs for every repo on the machine and can overwrite hooks that something else manages.'"
   },
   "packageManager": "bun@1.3.14",
   "dependencies": {
