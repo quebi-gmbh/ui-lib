@@ -18,7 +18,9 @@
 import { describe, expect, test } from "bun:test"
 import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import * as v from "valibot"
 import type { DataTableCellEdit } from "../../src/lib/data-table"
+import { ConformField } from "../../src/components/conform-field"
 import { DataTable } from "../../src/components/data-table"
 import {
   cell,
@@ -29,6 +31,7 @@ import {
   isEditing,
   type Product,
   PRODUCTS,
+  schema,
 } from "../editable-products"
 
 describe("opening a cell", () => {
@@ -216,6 +219,120 @@ describe("the open vocabulary", () => {
     await focusCell("1", "status")
     await user.keyboard("{Enter}")
     expect(within(cell("1", "status")).getByRole("button")).toHaveTextContent("Live")
+  })
+})
+
+describe("a cell that opens in place", () => {
+  /**
+   * The geometry, asserted where a rendering test can reach it: happy-dom has
+   * no layout, so what is checkable is the classes the arithmetic produces —
+   * the field scale the cell asked the control for, the padding the cell gave
+   * up to make room for the control's own, and the alignment it kept.
+   *
+   * The numbers behind them are in `densityEditingCell` in `table-shell`: a
+   * `normal` row is 44px, an `sm` field is 38px, and 3px of cell padding is
+   * what is left. A control that opened at `md` (42px) inside `py-3` (24px)
+   * measured 73px against the row's 44 — which is the bug this is about.
+   */
+  test("the control is the size of the row, not the size of a form", async () => {
+    render(<EditableProducts />)
+    const user = userEvent.setup()
+    await user.click(cell("1", "name"))
+
+    const input = within(cell("1", "name")).getByRole("textbox")
+    // `sm` — 38px. `md`, the form default, is `py-2.5` and 42px.
+    expect(input).toHaveClass("py-2")
+    expect(input).not.toHaveClass("py-2.5")
+  })
+
+  test("the cell gives up the padding the control's border takes back", async () => {
+    render(<EditableProducts />)
+    const user = userEvent.setup()
+    await user.click(cell("1", "name"))
+
+    expect(cell("1", "name")).toHaveClass("py-[3px]")
+    expect(cell("1", "name")).not.toHaveClass("py-3")
+  })
+
+  test("a number cell has no +/- steppers to find room for", async () => {
+    render(<EditableProducts />)
+    const user = userEvent.setup()
+    await user.click(cell("1", "stock"))
+
+    expect(within(cell("1", "stock")).queryByRole("button", { name: "Increase" })).toBeNull()
+    expect(within(cell("1", "stock")).queryByRole("button", { name: "Decrease" })).toBeNull()
+  })
+
+  test("an end-aligned column stays end-aligned while it is being edited", async () => {
+    render(<EditableProducts />)
+    const user = userEvent.setup()
+    await user.click(cell("1", "stock"))
+
+    // The wrapper around the control, which used to be hardcoded `text-start`
+    // and so overrode the cell it sits in. `text-align` inherits into the
+    // input, which is what puts the digits back under the digits.
+    const wrapper = cell("1", "stock").querySelector("form")?.parentElement
+    expect(wrapper).toHaveClass("text-end")
+    expect(wrapper).not.toHaveClass("text-start")
+    expect(cell("1", "stock")).toHaveClass("text-end")
+  })
+
+  test("the row's own disclosure stays where it was while a cell is open", async () => {
+    // The chevron is in the first cell for want of anywhere else to put it, and
+    // it belongs to the row rather than to the column: a cell that swapped it
+    // out for a control would take the row's way of collapsing with it, and —
+    // at 30px against a 20px line — the row's height as well.
+    render(
+      <DataTable<Product>
+        aria-label="Products with details"
+        columns={columns}
+        data={PRODUCTS}
+        getRowId={(product) => String(product.id)}
+        cellEditSchema={schema}
+        renderDetail={(product) => <p>Everything about {product.name}</p>}
+      />,
+    )
+    const user = userEvent.setup()
+    expect(within(cell("1", "name")).getByRole("button", { name: "Expand row" })).toBeTruthy()
+
+    await user.click(cell("1", "name"))
+    expect(isEditing("1", "name")).toBe(true)
+    expect(within(cell("1", "name")).getByRole("button", { name: "Expand row" })).toBeTruthy()
+  })
+
+  test("an editor is handed the cell's presentation for a control that is not ours", async () => {
+    // The context is what sizes the library's own controls without anyone
+    // passing a prop; this is the same answer as data, for the editor that
+    // renders something the context cannot reach.
+    const seen: { size: string; align: string }[] = []
+    render(
+      <DataTable<Product>
+        aria-label="Compact products"
+        columns={[
+          {
+            id: "name",
+            header: "Name",
+            accessorKey: "name",
+            align: "end",
+            editor: ({ field, label, size, align }) => {
+              seen.push({ size, align })
+              return <ConformField field={field} label={label} />
+            },
+          },
+        ]}
+        data={PRODUCTS}
+        getRowId={(product) => String(product.id)}
+        density="compact"
+        cellEditSchema={v.object({ name: v.string() })}
+      />,
+    )
+    const user = userEvent.setup()
+    await user.click(cell("1", "name"))
+
+    // `compact` is a 32px row, which only `xs` (30px) fits inside.
+    expect(seen[0]).toEqual({ size: "xs", align: "end" })
+    expect(within(cell("1", "name")).getByRole("textbox")).toHaveClass("py-1.5")
+    expect(cell("1", "name")).toHaveClass("py-px")
   })
 })
 

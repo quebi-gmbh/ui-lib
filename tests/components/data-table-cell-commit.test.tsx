@@ -136,24 +136,46 @@ describe("committing when the control settles", () => {
     expect(isEditing("1", "status")).toBe(true)
   })
 
-  test("a stepper press commits once, and Enter after it does not commit again", async () => {
+  test("a press that settles commits once, and Enter after it does not commit again", async () => {
     // The double-commit this rule opens: a press changes the value and commits,
     // focus is still in the control, and Enter would commit the same row again.
+    //
+    // A number field's stepper used to be the press this asked about, and a
+    // cell no longer has one — the +/- pair is ~74px of fixed width in a
+    // control the size of a table row, so an editing cell hides it. Picking an
+    // option is the same gesture with the same question.
     const edits: DataTableCellEdit<Product>[] = []
     render(<EditableProducts onCellEdit={(edit) => edits.push(edit)} />)
     const user = userEvent.setup()
 
-    await user.click(cell("1", "stock"))
-    const steppers = within(cell("1", "stock")).getAllByRole("button")
-    await user.click(steppers[steppers.length - 1])
+    await user.click(cell("1", "status"))
+    await user.click(within(cell("1", "status")).getByRole("button"))
+    await user.click(screen.getByRole("option", { name: "Draft" }))
     expect(edits).toHaveLength(1)
-    expect(edits[0].value.stock).toBe(5)
+    expect(edits[0].value.status).toBe("Draft")
 
     await user.keyboard("{Enter}")
     // Enter still finishes the cell; it just does not ask the caller to write
     // the same row a second time.
     expect(edits).toHaveLength(1)
-    expect(isEditing("1", "stock")).toBe(false)
+    expect(isEditing("1", "status")).toBe(false)
+  })
+
+  test("the keyboard steps the number field the cell has no steppers for", async () => {
+    // What the hidden +/- pair costs, and the answer to it: react-aria's
+    // NumberField steps on the arrow keys, and the shell has already handed the
+    // arrows to the control by switching the grid's own navigation off.
+    const edits: DataTableCellEdit<Product>[] = []
+    render(<EditableProducts onCellEdit={(edit) => edits.push(edit)} />)
+    const user = userEvent.setup()
+
+    await user.click(cell("1", "stock"))
+    expect(within(cell("1", "stock")).queryByRole("button", { name: "Increase" })).toBeNull()
+
+    await user.keyboard("{ArrowUp}")
+    await user.keyboard("{Enter}")
+    expect(edits).toHaveLength(1)
+    expect(edits[0].value.stock).toBe(5)
   })
 
   test("opening a cell and pressing Enter reports nothing", async () => {

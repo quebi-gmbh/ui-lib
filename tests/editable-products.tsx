@@ -54,9 +54,12 @@ export const columns: DataTableColumn<Product>[] = [
   // No editor: the column Tab has to skip over.
   { id: "id", header: "Id", accessorKey: "id" },
   {
+    // Aligned the way a number column is, which is also the thing an open cell
+    // has to keep: the digits were sliding to the left edge on the way in.
     id: "stock",
     header: "Stock",
     accessorKey: "stock",
+    align: "end",
     editor: ({ field, label }) => <ConformNumberField field={field} label={label} />,
   },
   {

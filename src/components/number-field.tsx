@@ -8,6 +8,7 @@ import {
   Input as InputPrimitive,
   NumberField as NumberFieldPrimitive,
 } from "react-aria-components"
+import { useFieldSizing } from "@/lib/field-size"
 import { cn } from "@/lib/utils"
 
 /**
@@ -65,9 +66,16 @@ interface NumberInputProps extends Omit<InputProps, "prefix" | "size"> {
    * a fixed width before a digit is drawn, and an input that is `w-full
    * min-w-0` inside a flex row will give that width up rather than overflow —
    * so a `w-24` field with steppers renders the buttons and no number.
+   *
+   * Left out, it is whatever the surrounding surface asked for — a table cell
+   * hides them, because a grid is the narrow case and ↑ / ↓ still step. See
+   * `@/lib/field-size`.
    */
   hideStepper?: boolean
-  /** Control height. Matches `Input`'s scale and `Button`'s `xs` / `sm`. */
+  /**
+   * Control height. Matches `Input`'s scale and `Button`'s `xs` / `sm`, and is
+   * likewise taken from the surrounding surface when it is left out.
+   */
   size?: NumberInputSize
 }
 
@@ -98,11 +106,12 @@ const stepperStyles = cn(
 function NumberInput({
   prefix,
   suffix,
-  hideStepper,
-  size = "md",
+  hideStepper: hideStepperProp,
+  size: sizeProp,
   className,
   ...props
 }: NumberInputProps) {
+  const { size, hideStepper } = useFieldSizing({ size: sizeProp, hideStepper: hideStepperProp })
   return (
     <Group
       data-slot="control"

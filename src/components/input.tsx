@@ -6,6 +6,7 @@ import {
   Input as InputPrimitive,
   type InputProps as PrimitiveInputProps,
 } from "react-aria-components"
+import { useFieldSizing } from "@/lib/field-size"
 import { cn } from "@/lib/utils"
 
 /**
@@ -42,11 +43,16 @@ interface InputProps extends Omit<PrimitiveInputProps, "size"> {
   /**
    * Control height. Shadows the `<input size>` attribute, which sizes a field
    * in characters and is superseded by every width class this library ships.
+   *
+   * Left out, it is whatever the surrounding surface asked for — a table cell
+   * being the one that does — and `md` where nothing asked. See
+   * `@/lib/field-size`.
    */
   size?: InputSize
 }
 
-export function Input({ className, ref, size = "md", ...props }: InputProps) {
+export function Input({ className, ref, size: sizeProp, ...props }: InputProps) {
+  const { size } = useFieldSizing({ size: sizeProp })
   return (
     <span data-slot="control" className="relative block w-full">
       <InputPrimitive

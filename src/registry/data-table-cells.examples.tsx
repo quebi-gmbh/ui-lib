@@ -125,6 +125,14 @@ const productSchema = v.pipe(
  * metadata and takes whatever control you bind it to, so the table never learns
  * the name of a single variant and gains every one of them — present and future.
  */
+/** What `FormattedCurrency` renders, in the shape react-aria's NumberField takes. */
+const PRICE_FORMAT: Intl.NumberFormatOptions = {
+  style: "currency",
+  currency: "EUR",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+}
+
 const columns: DataTableColumn<Product>[] = [
   {
     id: "name",
@@ -147,7 +155,20 @@ const columns: DataTableColumn<Product>[] = [
     align: "end",
     width: 130,
     cell: ({ row }) => <FormattedCurrency value={row.price} />,
-    editor: ({ field, label }) => <ConformNumberField field={field} label={label} step={0.5} />,
+    // The format the cell renders, handed to the control that replaces it: an
+    // open cell reads €12.50 like the closed one did, rather than 12.5. It is
+    // the one part of a cell's presentation the table cannot work out for
+    // itself — the size, the alignment and the missing steppers are the cell's
+    // doing, and no editor here names any of them. NumberField submits the
+    // parsed number whatever it displays, so the schema is untouched.
+    editor: ({ field, label }) => (
+      <ConformNumberField
+        field={field}
+        label={label}
+        step={0.5}
+        formatOptions={PRICE_FORMAT}
+      />
+    ),
   },
   {
     id: "stock",
@@ -274,9 +295,12 @@ function EditableProducts() {
       <Note intent="info">
         Ten columns, ten different controls, one <code>editor</code> callback
         each — text, number, select, combo box, date picker, colour picker, tag
-        field and switch. Set a product active with nothing in stock to see the
-        cross-field rule fire: the form behind a cell is the whole row, so
-        "active needs stock" is a rule it can actually check.
+        field and switch. None of them names a size: a cell states one around
+        the control it holds, so a row measures the same open as closed and a
+        number cell has no <code>+</code> / <code>−</code> pair to find room
+        for. Set a product active with nothing in stock to see the cross-field
+        rule fire: the form behind a cell is the whole row, so "active needs
+        stock" is a rule it can actually check.
       </Note>
       <p className="text-quebi-fg-subtle text-sm">
         A click, <Kbd>Enter</Kbd>, <Kbd>F2</Kbd> or typing edits ·{" "}

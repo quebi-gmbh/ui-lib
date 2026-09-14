@@ -196,6 +196,17 @@ export interface DataTableColumn<T> {
    * The label is visually hidden in the cell — the column header is already
    * the accessible name in a grid — but it has to be passed for the control to
    * have a name at all when a screen reader reads the cell on its own.
+   *
+   * **The cell sizes the control, so an editor names no size.** An open cell is
+   * the same box as a closed one — same height, same width, same alignment, and
+   * no +/- steppers — and that is the cell's doing rather than the callback's:
+   * see `DataTableEditorContext.size`.
+   *
+   * The one thing it cannot do for you is the *format*. A column whose `cell`
+   * renders `<FormattedCurrency>` should hand the editor the same options —
+   * `<ConformNumberField field={field} label={label} formatOptions={…} />` —
+   * so the cell still reads €1,234.00 once it opens. react-aria submits the
+   * parsed number either way, so the format is presentation only.
    */
   editor?: (ctx: DataTableEditorContext<T>) => ReactNode
   /**
@@ -236,6 +247,25 @@ export interface DataTableCellAddress {
 /** The context a column's `editor` is called with. */
 export interface DataTableEditorContext<T> extends DataTableFieldContext {
   row: T
+  /**
+   * How much room the cell has, as the field scale names it — derived from the
+   * table's density, `xs` for `compact` and `sm` for the rest.
+   *
+   * The library's own controls already have it: an editing cell states the size
+   * around the control it holds and `Input`, `NumberInput`, `SelectTrigger` and
+   * `DateInput` read it, which is what lets `({ field, label }) =>
+   * <ConformField field={field} label={label} />` be the whole of an editor and
+   * still not change the row's height when it opens. It is handed over as data
+   * as well for the control that is *not* one of them — a bare element, or a
+   * third-party widget, which has to be told.
+   *
+   * The union is spelled out rather than imported from `@/lib/field-size`: a
+   * lib module is shipped with `registryDependencies: []`, so it may not import
+   * a sibling.
+   */
+  size: "xs" | "sm" | "md"
+  /** The column's alignment. The cell already applies it; this is it as data. */
+  align: DataTableAlign
 }
 
 /** Conform metadata plus the label a control in a cell would otherwise lack. */
@@ -271,6 +301,13 @@ export interface DataTableCellEditContext<T> {
   row: T
   rowId: string
   columnId: string
+  /**
+   * The cell's presentation, passed on to the column's `editor` — see
+   * `DataTableEditorContext`. The render half owns it because density is its
+   * prop, and the control half is where the editor is called.
+   */
+  size: "xs" | "sm" | "md"
+  align: DataTableAlign
   /** The character that started the edit, when the user started it by typing. */
   seed?: string
   /** Leave the cell without moving — a commit that stays put, or a cancel. */

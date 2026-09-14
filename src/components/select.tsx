@@ -7,6 +7,7 @@ import type {
   SelectProps as SelectPrimitiveProps,
 } from "react-aria-components"
 import { Button, ListBox, Select as SelectPrimitive, SelectValue } from "react-aria-components"
+import { useFieldSizing } from "@/lib/field-size"
 import { cn } from "@/lib/utils"
 import {
   DropdownDescription,
@@ -99,11 +100,16 @@ type SelectTriggerSize = keyof typeof selectTriggerSizeStyles
 interface SelectTriggerProps extends Omit<React.ComponentProps<typeof Button>, "size"> {
   prefix?: React.ReactNode
   className?: string
-  /** Control height. Matches `Input`'s scale and `Button`'s `xs` / `sm`. */
+  /**
+   * Control height. Matches `Input`'s scale and `Button`'s `xs` / `sm`. Left
+   * out, it is whatever the surrounding surface asked for — a table cell being
+   * the one that does. See `@/lib/field-size`.
+   */
   size?: SelectTriggerSize
 }
 
-const SelectTrigger = ({ children, className, size = "md", ...props }: SelectTriggerProps) => {
+const SelectTrigger = ({ children, className, size: sizeProp, ...props }: SelectTriggerProps) => {
+  const { size } = useFieldSizing({ size: sizeProp })
   return (
     <span data-slot="control" className="relative block w-full">
       <Button

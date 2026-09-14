@@ -1254,9 +1254,16 @@ export interface TableCellEditorProps {
  * `conform-*` variant from the field metadata — which is also what wires
  * `aria-describedby` from the control to the message, so it is reachable from
  * the cell that caused it rather than summarised somewhere else on the page.
- * The cell stops truncating and grows while it is being edited; a message that
- * does not fit in 120px is the reason, and the row was going to change height
- * for the control anyway.
+ * The cell stops truncating while it is being edited, because a message that
+ * does not fit in 120px has to wrap somewhere.
+ *
+ * It is the one thing that still changes the row's height, and only when the
+ * value is refused: opening a cell moves nothing, because the shell sizes the
+ * control to the row it is in and gives up the padding the control's own border
+ * takes back (`densityEditingCell` in `table-shell`). Growing on an error is
+ * the deliberate remainder — the alternative is an overlay, and a table that is
+ * its own scroll container would clip it on the last row, which is a message
+ * the user cannot read rather than a row that moved.
  *
  * **Which keys the cell takes.** Escape, Enter and Tab, on the way *down*, so
  * they reach the cell whatever the control would otherwise do with them — and
@@ -1583,7 +1590,7 @@ export function useTableCellEditing<T>({
     editingCell,
     setEditingCell,
     editableColumns: editable.map((column) => column.id),
-    renderCellEditor: ({ row, rowId, columnId, seed, close, move }) => {
+    renderCellEditor: ({ row, rowId, columnId, size, align, seed, close, move }) => {
       const column = editable.find((candidate) => candidate.id === columnId)
       if (!column?.editor) return null
       const name = column.editField ?? column.id
@@ -1599,7 +1606,7 @@ export function useTableCellEditing<T>({
           onCommit={(value) => onCellEdit?.({ row, rowId, columnId, field: name, value })}
           onDone={(delta) => (delta ? move(delta) : close())}
         >
-          {(field) => column.editor?.({ row, field, label: column.header })}
+          {(field) => column.editor?.({ row, field, label: column.header, size, align })}
         </TableCellEditor>
       )
     },

@@ -89,6 +89,22 @@ export function Money({ value }: { value: number }) {
   return <FormattedCurrency value={value} />
 }
 
+/**
+ * The same currency as `Money`, in the shape react-aria's NumberField takes.
+ *
+ * A cell that reads €1,234.00 at rest and `1234` once it opens is the value
+ * changing shape under the cursor, so an editable money column hands its editor
+ * the format its `cell` renders — the one thing an editing cell cannot work out
+ * for itself. The commit is unaffected: NumberField submits the parsed number
+ * whatever it displays.
+ */
+export const MONEY_FORMAT: Intl.NumberFormatOptions = {
+  style: "currency",
+  currency: "EUR",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+}
+
 export function Count({ value }: { value: number }) {
   return <FormattedNumber value={value} />
 }
