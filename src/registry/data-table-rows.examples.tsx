@@ -194,7 +194,7 @@ const ActionsShowcase = () => {
             </MenuContent>
           </Menu>
         )}
-        caption="Drag the grip to reorder. The action menu lives in the first cell, so it does not cost a column. Narrow the window past sm and the rows become cards."
+        caption="Drag the grip to reorder. The action menu gets a column of its own at the end of the row, which is where an action on the whole row belongs — in the first cell it read as belonging to the first column. Narrow the window past sm and the rows become cards."
       />
       <Note intent="info">
         Whole-row navigation is <code>getRowHref</code>, which puts a real link
