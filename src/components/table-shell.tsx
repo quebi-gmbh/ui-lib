@@ -56,6 +56,7 @@ import {
   sortPriority,
   toSortDescriptor,
 } from "@/lib/data-table"
+import { FieldSizeContext, type FieldSizing } from "@/lib/field-size"
 import { cn } from "@/lib/utils"
 
 /**
@@ -133,6 +134,45 @@ const densityCell: Record<DataTableDensity, string> = {
   compact: "py-1.5",
   normal: "py-3",
   comfortable: "py-4",
+}
+
+/**
+ * The size a control in an editing cell is given, and the padding the cell has
+ * while it holds one. Together they are what makes opening a cell move nothing.
+ *
+ * A resting cell is one `text-sm` line — 20px — inside `densityCell`'s padding
+ * and `TableCell`'s own `px-3.5`. An open one is a field, whose height is fixed
+ * by the scale (`xs` 30px, `sm` 38px, `md` 42px) and whose text sits inside its
+ * own border and padding. So the cell gives up exactly the difference:
+ *
+ * | density     | row | field | cell padding                  |
+ * | ----------- | --- | ----- | ----------------------------- |
+ * | compact     |  32 |  30   | 1px = (32 − 30) / 2           |
+ * | normal      |  44 |  38   | 3px = (44 − 38) / 2           |
+ * | comfortable |  52 |  38   | 7px = (52 − 38) / 2           |
+ *
+ * and horizontally the same sum: the field's 1px border plus its `px-2.5` /
+ * `px-3` stand in for the cell's `px-3.5`, leaving 3px and 1px respectively, so
+ * the digits stay under the digits. The arithmetic is why these are pixel
+ * values and not the spacing scale — they are the remainder of two scales, not
+ * a spacing decision.
+ *
+ * `md` is deliberately not in the table: a 42px control needs a 44px row, so
+ * `comfortable` could take one and `normal` could not, and a size that changed
+ * the answer for one density only is worse than a size that is never used.
+ */
+const densityFieldSizing: Record<DataTableDensity, FieldSizing> = {
+  // Stable objects: this is a context value, and a fresh one per render would
+  // re-render every control under it on every keystroke in the cell.
+  compact: { size: "xs", hideStepper: true },
+  normal: { size: "sm", hideStepper: true },
+  comfortable: { size: "sm", hideStepper: true },
+}
+
+const densityEditingCell: Record<DataTableDensity, string> = {
+  compact: "px-[3px] py-px",
+  normal: "px-px py-[3px]",
+  comfortable: "px-px py-[7px]",
 }
 
 const alignClass = (align: string | undefined) =>
@@ -412,6 +452,11 @@ export interface TableShellProps<T extends RowData> {
   onSortColumn?: (columnId: string, direction: "asc" | "desc" | null) => void
   /** Offer "group by this column" in the column menu. Client-side only. */
   allowGrouping?: boolean
+  /**
+   * Row height, and with it the size of any control an editing cell opens —
+   * `compact` is a 32px row and an `xs` field, the other two are 44px and 52px
+   * rows and an `sm` field. See `densityFieldSizing`.
+   */
   density?: DataTableDensity
   striped?: boolean
   grid?: boolean
@@ -712,6 +757,30 @@ export function TableShell<T extends RowData>({
           const address = { rowId: key, columnId: header.column.id }
           const canEdit = editableRowKeys.has(key) && editableColumnIds.includes(header.column.id)
           const isEditingThisCell = canEdit && isSameCell(editingCell, address)
+          // The row's disclosure control, hoisted because an editing cell keeps
+          // it. It belongs to the *row* and is in this cell only because that
+          // is where there is room for it, so a cell that swapped it out for a
+          // control would take the row's way of collapsing with it — and, since
+          // a `sq-xs` button is 30px against a 20px line, the row's height too.
+          // The control replaces the value; it replaces nothing else.
+          const gutter =
+            isFirst && (row.getCanExpand?.() || (renderDetail && !row.getIsGrouped?.())) ? (
+              <Button
+                intent="ghost"
+                size="sq-xs"
+                aria-label={row.getIsExpanded?.() ? "Collapse row" : "Expand row"}
+                onPress={() => row.toggleExpanded?.()}
+                className="-my-1 shrink-0"
+              >
+                <ChevronRightIcon
+                  data-slot="icon"
+                  aria-hidden="true"
+                  className={cn("transition-transform", row.getIsExpanded?.() && "rotate-90")}
+                />
+              </Button>
+            ) : null
+          const indent =
+            isFirst && row.depth > 0 ? { paddingInlineStart: row.depth * 16 } : undefined
           const content = row.getIsGrouped?.()
             ? cell?.getIsGrouped?.()
               ? groupedCellContent(row, String(value))
@@ -735,13 +804,19 @@ export function TableShell<T extends RowData>({
                 ? pressOpensEditor(isEditingThisCell ? null : () => cellEdit.start(address))
                 : undefined)}
               className={cn(
-                cellPadding,
+                isEditingThisCell ? densityEditingCell[density] : cellPadding,
                 alignClass(meta?.align),
                 priorityClass(meta?.priority),
-                // An editing cell is the control's, at the column's width: it
-                // keeps the padding and loses the truncation, because a message
-                // under a field is the one thing in a cell that has to wrap.
-                meta?.truncate && !isEditingThisCell && "max-w-0 truncate",
+                // An editing cell is the control's, at exactly the column's
+                // width: `max-w-0` caps what the cell asks of the column, which
+                // a field would otherwise answer with its own intrinsic width —
+                // an `<input>` is 20 characters wide before anyone styles it,
+                // and a column that widened when a cell opened would move every
+                // column after it. The truncation goes, because a message under
+                // a field is the one thing in a cell that has to wrap and
+                // because `overflow-hidden` would clip the focus ring.
+                (meta?.truncate || isEditingThisCell) && "max-w-0",
+                meta?.truncate && !isEditingThisCell && "truncate",
                 // Editable at rest, not only under the pointer. A hover-only
                 // hint was defensible while the gesture was a double-click
                 // nobody would try by accident; a single click has to say so
@@ -752,47 +827,64 @@ export function TableShell<T extends RowData>({
                 canEdit &&
                   !isEditingThisCell &&
                   "cursor-text underline decoration-quebi-line/50 decoration-dotted underline-offset-4 hover:decoration-quebi-brand/70",
-                isEditingThisCell && "bg-quebi-brand/5 align-top whitespace-normal",
+                // `align-middle` is the cell's own and is why this does not say
+                // `align-top`: a row is as tall as its tallest cell, so a row
+                // with actions in it is taller than the control, and a control
+                // pinned to the top of one would sit above the text it
+                // replaced. Centred, it lands exactly where the value was.
+                isEditingThisCell && "bg-quebi-brand/5 whitespace-normal",
                 table.getColumn(header.column.id)?.getIsPinned?.() && "bg-quebi-bg",
               )}
               style={pinStyle(header.column.id)}
             >
               {isEditingThisCell && renderCellEditor ? (
+                // Two things the cell says about the control it is holding, so
+                // that the editor callback has to say neither.
+                //
+                // The size, through a context the field primitives read: an
+                // editor is written `({ field, label }) => <ConformField … />`
+                // and hands the table no chance to pass a prop, so a control
+                // that sized itself for a form is what every cell would get.
+                //
+                // The alignment, through the cell's own class — `text-align`
+                // inherits into an input, so an amount column's digits stay at
+                // the right edge instead of jumping to the left the moment the
+                // cell opens. It was hardcoded `text-start` here, which is the
+                // jump.
+                //
                 // The label a `conform-*` variant renders is the control's
                 // accessible name and the column header is already the visible
                 // one, so it is hidden here rather than left off there — a
                 // control in a cell with no name at all is the worse trade.
-                <span className="flex flex-col gap-1 text-start [&_label]:sr-only">
-                  <GridKeyboardOff />
-                  {renderCellEditor({
-                    row: row.original,
-                    rowId: key,
-                    columnId: header.column.id,
-                    seed: cellEdit.seedFor(address),
-                    close: cellEdit.close,
-                    move: (delta) => cellEdit.move(address, delta),
-                  })}
-                </span>
+                <FieldSizeContext value={densityFieldSizing[density]}>
+                  <span className="flex items-center gap-2" style={indent}>
+                    {gutter}
+                    <span
+                      className={cn(
+                        "flex min-w-0 flex-1 flex-col gap-1 [&_label]:sr-only",
+                        alignClass(meta?.align),
+                      )}
+                    >
+                      <GridKeyboardOff />
+                      {renderCellEditor({
+                        row: row.original,
+                        rowId: key,
+                        columnId: header.column.id,
+                        size: densityFieldSizing[density].size,
+                        align: meta?.align ?? "start",
+                        seed: cellEdit.seedFor(address),
+                        close: cellEdit.close,
+                        move: (delta) => cellEdit.move(address, delta),
+                      })}
+                    </span>
+                  </span>
+                </FieldSizeContext>
               ) : (
                 <span
                   className={cn("flex items-center gap-2", meta?.align === "end" && "justify-end")}
-                  style={isFirst && row.depth > 0 ? { paddingInlineStart: row.depth * 16 } : undefined}
+                  style={indent}
                 >
-                  {isFirst && (row.getCanExpand?.() || (renderDetail && !row.getIsGrouped?.())) && (
-                    <Button
-                      intent="ghost"
-                      size="sq-xs"
-                      aria-label={row.getIsExpanded?.() ? "Collapse row" : "Expand row"}
-                      onPress={() => row.toggleExpanded?.()}
-                      className="-my-1 shrink-0"
-                    >
-                      <ChevronRightIcon
-                        data-slot="icon"
-                        aria-hidden="true"
-                        className={cn("transition-transform", row.getIsExpanded?.() && "rotate-90")}
-                      />
-                    </Button>
-                  )}
+                  {gutter}
                   {meta?.truncate ? (
                     canEdit ? (
                       // A tooltip trigger is a button, and a button in a cell

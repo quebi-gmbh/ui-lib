@@ -5,6 +5,7 @@ import { BaseControl, useControl } from "@conform-to/react/future"
 import { useRef } from "react"
 import type { Color } from "react-aria-components"
 import { ColorPicker as ColorPickerPrimitive, parseColor } from "react-aria-components"
+import { useFieldSizing } from "@/lib/field-size"
 import { cn } from "@/lib/utils"
 import { ColorArea } from "@/components/color-area"
 import { ColorField } from "@/components/color-field"
@@ -62,6 +63,11 @@ export function ConformColorPicker({
   onValueChange,
 }: ConformColorPickerProps) {
   const fieldRef = useRef<HTMLDivElement>(null)
+  // The trigger is a Button, whose `xs` and `sm` are the field scale's 30px and
+  // 38px exactly — so a colour picker in a table cell is the height of the row
+  // it is in, like every other control there. `md` is Button's own default, so
+  // nothing changes outside a surface that asked for a size.
+  const { size } = useFieldSizing()
   const control = useControl({
     defaultValue: (field.initialValue as string) ?? "",
     // Conform focuses the first errored field after a failed submit; that is
@@ -108,6 +114,7 @@ export function ConformColorPicker({
         <Popover>
           <PopoverTrigger
             intent="outline"
+            size={size}
             className="w-full justify-start gap-2 font-normal"
             aria-describedby={describedBy(
               hasErrors && field.errorId,

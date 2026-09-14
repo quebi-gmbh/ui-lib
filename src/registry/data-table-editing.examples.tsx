@@ -9,6 +9,7 @@ import { ConformSelect } from "@/components/conform-select"
 import { DataTable } from "@/components/data-table"
 import { FormattedDate } from "@/components/formatted-date"
 import { FormattedNumber } from "@/components/formatted-number"
+import { Kbd } from "@/components/keyboard"
 import { Note } from "@/components/note"
 import { SelectItem } from "@/components/select"
 import { Skeleton } from "@/components/skeleton"
@@ -24,7 +25,15 @@ import {
   sortsToSorting,
   sortingToSorts,
 } from "@/lib/data-table"
-import { Money, ORDERS, type Order, SMALL_ORDERS, StatusBadge, STATUSES } from "./table-fixtures.examples"
+import {
+  Money,
+  MONEY_FORMAT,
+  ORDERS,
+  type Order,
+  SMALL_ORDERS,
+  StatusBadge,
+  STATUSES,
+} from "./table-fixtures.examples"
 import type { ComponentExample } from "./types"
 
 const columns: DataTableColumn<Order>[] = [
@@ -72,6 +81,13 @@ const rowSchema = v.object({
  * The same four fields, one control each — which is the whole of the editing
  * API. A column with no `editor` cannot be edited and Tab skips it, which is why
  * Date is read-only here without a flag saying so.
+ *
+ * Note what is *not* here: no size, no alignment, no `hideStepper`. An editing
+ * cell states all three around the control it holds, so a cell opens at the
+ * height of the row it is in, with its digits still at the right edge and no
+ * +/- pair eating the column. The one thing it cannot know is the format — the
+ * Amount column renders `<Money>` at rest, so its editor is handed the same
+ * options and the cell still reads €1,234.00 once it opens.
  */
 const editors: Record<string, DataTableColumn<Order>["editor"]> = {
   reference: ({ field, label }) => <ConformField field={field} label={label} />,
@@ -85,7 +101,9 @@ const editors: Record<string, DataTableColumn<Order>["editor"]> = {
       ))}
     </ConformSelect>
   ),
-  amount: ({ field, label }) => <ConformNumberField field={field} label={label} />,
+  amount: ({ field, label }) => (
+    <ConformNumberField field={field} label={label} formatOptions={MONEY_FORMAT} />
+  ),
 }
 
 const editableColumns = columns.map((column) => ({ ...column, editor: editors[column.id] }))
@@ -172,6 +190,16 @@ function EditableOrders() {
         form is the whole row, a rule that compares two fields has both. Nothing
         here is batched: <code>onCellEdit</code> fires the moment the schema
         accepts the row, and Undo is a history stack built on top of it.
+      </Note>
+      <Note intent="info">
+        Opening a cell moves nothing. The control is sized from the table's
+        density and the cell gives up exactly the padding the control's own
+        border takes back, so an open row measures what a closed one does; the
+        alignment is the column's, so the amounts stay under the amounts; and a
+        number cell hides the <code>+</code> / <code>−</code> pair, which costs
+        74px a grid does not have — <Kbd>↑</Kbd> and <Kbd>↓</Kbd> still step.
+        The only thing that changes the height is a value the schema refuses,
+        which is the message arriving.
       </Note>
     </div>
   )
