@@ -26,6 +26,7 @@ import { colorThumbMeta } from "./color-thumb.meta"
 import { colorWheelMeta } from "./color-wheel.meta"
 import { comboBoxMeta } from "./combo-box.meta"
 import { commandMenuMeta } from "./command-menu.meta"
+import { commitGraphMeta } from "./commit-graph.meta"
 import { composedChartMeta } from "./composed-chart.meta"
 import { conformAsyncMultipleSelectMeta } from "./conform-async-multiple-select.meta"
 import { conformAsyncSelectMeta } from "./conform-async-select.meta"
@@ -167,6 +168,7 @@ export const metaRegistry: ComponentMeta[] = [
   colorWheelMeta,
   comboBoxMeta,
   commandMenuMeta,
+  commitGraphMeta,
   composedChartMeta,
   conformAsyncMultipleSelectMeta,
   conformAsyncSelectMeta,
