@@ -24,7 +24,7 @@ export const buttonStyles = tv({
     "border border-solid",
     "transition-all duration-200 ease-out",
     "hover:scale-[1.02] active:scale-100",
-    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
     "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",
     "pending:opacity-70 pending:cursor-wait",
     // react-aria slot conventions — icons & loaders inherit current color
@@ -38,7 +38,7 @@ export const buttonStyles = tv({
       secondary:
         "bg-quebi-inverse-bg border-quebi-inverse-bg text-quebi-inverse-fg hover:bg-quebi-fg-muted hover:border-quebi-fg-muted",
       outline:
-        "bg-transparent border-quebi-line/20 text-quebi-fg hover:border-quebi-brand hover:text-quebi-brand-text",
+        "bg-transparent border-quebi-line/20 text-quebi-fg hover:border-quebi-brand-mark hover:text-quebi-brand-text",
       ghost:
         "bg-transparent border-transparent text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
       accent:

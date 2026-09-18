@@ -17,12 +17,12 @@ const navTargetClasses = [
   "rounded-quebi-sm border border-solid",
   "font-sans text-[13px] font-medium leading-none select-none",
   "transition-[color,background-color,border-color] duration-150 ease-out",
-  "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+  "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
 ].join(" ")
 
 const navTargetInteractive = [
   "cursor-pointer border-quebi-line/20 bg-transparent text-quebi-fg-muted",
-  "hover:border-quebi-brand hover:text-quebi-brand-text hover:bg-quebi-surface/[0.04]",
+  "hover:border-quebi-brand-mark hover:text-quebi-brand-text hover:bg-quebi-surface/[0.04]",
 ].join(" ")
 
 const navTargetDisabled = "cursor-not-allowed border-quebi-line/10 bg-transparent text-quebi-fg-subtle"
@@ -32,7 +32,7 @@ const pageTargetClasses = [
   "rounded-quebi-sm",
   "font-sans text-[13px] font-medium leading-none tabular-nums select-none",
   "transition-[color,background-color] duration-150 ease-out",
-  "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+  "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
 ].join(" ")
 
 const pageTargetInteractive = [

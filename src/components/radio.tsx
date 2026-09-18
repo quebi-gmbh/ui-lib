@@ -63,7 +63,7 @@ export function Radio({ className, children, ...props }: RadioProps) {
                 "before:content-[''] before:size-2 before:rounded-full",
                 isSelected && "border-quebi-brand bg-quebi-brand before:bg-quebi-bg",
                 isFocusVisible &&
-                  "ring-2 ring-quebi-brand/50 ring-offset-2 ring-offset-quebi-bg",
+                  "ring-2 ring-quebi-brand-mark ring-offset-2 ring-offset-quebi-bg",
                 isInvalid && "border-red-500",
                 isInvalid && isSelected && "bg-red-500",
                 isInvalid && isFocusVisible && "ring-red-500/50",

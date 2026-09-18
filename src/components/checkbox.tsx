@@ -46,7 +46,7 @@ export function Checkbox({ className, children, ...props }: CheckboxProps) {
               "border-quebi-line/30",
               "group-data-[selected]:border-quebi-brand group-data-[selected]:bg-quebi-brand",
               "group-data-[indeterminate]:border-quebi-brand group-data-[indeterminate]:bg-quebi-brand",
-              "group-data-[focus-visible]:ring-2 group-data-[focus-visible]:ring-quebi-brand/50 group-data-[focus-visible]:ring-offset-2 group-data-[focus-visible]:ring-offset-quebi-bg",
+              "group-data-[focus-visible]:ring-2 group-data-[focus-visible]:ring-quebi-brand-mark group-data-[focus-visible]:ring-offset-2 group-data-[focus-visible]:ring-offset-quebi-bg",
               isInvalid &&
                 "border-red-500 group-data-[focus-visible]:ring-red-500/50 group-data-[selected]:border-red-500 group-data-[selected]:bg-red-500",
             )}

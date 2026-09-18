@@ -48,7 +48,7 @@ function ProgressCircle({ className, ref, ...props }: ProgressCircleProps) {
               strokeDashoffset={100 - (percentage ?? 0)}
               strokeLinecap="round"
               transform="rotate(-90)"
-              className="origin-center stroke-quebi-brand transition-[stroke-dashoffset] duration-200"
+              className="origin-center stroke-quebi-brand-mark transition-[stroke-dashoffset] duration-200"
             />
           ) : (
             <circle
@@ -60,7 +60,7 @@ function ProgressCircle({ className, ref, ...props }: ProgressCircleProps) {
               strokeDasharray="100 200"
               strokeDashoffset={100 - 30}
               strokeLinecap="round"
-              className="origin-center stroke-quebi-brand animate-[spin_1s_cubic-bezier(0.4,0,0.2,1)_infinite]"
+              className="origin-center stroke-quebi-brand-mark animate-[spin_1s_cubic-bezier(0.4,0,0.2,1)_infinite]"
             />
           )}
         </svg>

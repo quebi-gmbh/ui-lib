@@ -94,7 +94,7 @@ export function ColorSliderThumb({ className }: { className?: string }) {
       className={cn(
         "top-[50%] size-5 rounded-full border-2 border-white",
         "shadow-quebi-glow transition-[box-shadow] duration-150",
-        "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand/50 data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
+        "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
         "data-[dragging]:scale-110",
         className,
       )}

@@ -55,7 +55,7 @@ export function ColorInput({ className, ...props }: InputProps) {
         "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
         "transition-[border-color,box-shadow] duration-200",
         "enabled:hover:border-quebi-line/40",
-        "outline-none focus:outline-none focus:border-quebi-brand focus:ring-2 focus:ring-quebi-brand/50",
+        "outline-none focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark",
         "invalid:border-red-500 focus:invalid:ring-red-500/50",
         "disabled:cursor-not-allowed disabled:opacity-50 in-disabled:opacity-50",
         "scheme-dark",

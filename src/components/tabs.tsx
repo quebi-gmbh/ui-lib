@@ -99,7 +99,7 @@ export function Tab({ className, ref, ...props }: TabProps) {
           orientation === "vertical" && "ps-4",
           // Quiet until selected: muted text, brand teal when active.
           "text-quebi-fg-muted selected:text-quebi-brand-text hover:text-quebi-fg selected:hover:text-quebi-brand-text",
-          "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg rounded-quebi-sm",
+          "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg rounded-quebi-sm",
           // Icons inside tabs.
           "*:data-[slot=icon]:-ms-0.5 *:data-[slot=icon]:me-2 *:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center",
           "disabled:opacity-50 disabled:cursor-not-allowed",

@@ -26,7 +26,7 @@ const GridList = <T extends object>({ className, ...props }: GridListProps<T>) =
     data-slot="grid-list"
     className={cn(
       "relative flex flex-col gap-y-1 sm:text-sm/6",
-      "*:data-[drop-target]:border *:data-[drop-target]:border-quebi-brand",
+      "*:data-[drop-target]:border *:data-[drop-target]:border-quebi-brand-mark",
       "has-data-[slot=grid-list-section]:gap-y-6",
       className,
     )}
@@ -79,7 +79,7 @@ const GridListItem = ({ className, children, ...props }: GridListItemProps) => {
             (isSelected || isHovered || isFocusVisible) &&
               "border-quebi-line/20 bg-quebi-brand/10",
             isFocusVisible &&
-              "ring-2 ring-quebi-brand/50 ring-offset-2 ring-offset-quebi-bg",
+              "ring-2 ring-quebi-brand-mark ring-offset-2 ring-offset-quebi-bg",
             isDisabled && "opacity-50",
             "href" in props && "cursor-pointer",
             className,

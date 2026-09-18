@@ -140,14 +140,14 @@ const choiceBoxItemStyles = tv({
       true: "not-data-readonly:not-data-focus-visible:not-selected:border-quebi-line/40",
     },
     isFocused: {
-      true: "ring-2 ring-quebi-brand/50 ring-offset-2 ring-offset-quebi-bg invalid:ring-red-500/50",
+      true: "ring-2 ring-quebi-brand-mark ring-offset-2 ring-offset-quebi-bg invalid:ring-red-500/50",
     },
     isInvalid: { true: "border-red-500 ring-2 ring-red-500/40" },
     isOneColumn: {
       true: "col-span-full",
     },
     isActive: {
-      true: ["z-20 border-quebi-brand bg-quebi-brand/5"],
+      true: ["z-20 border-quebi-brand-mark bg-quebi-brand/5"],
     },
     isDisabled: {
       true: "z-10 opacity-50 **:data-[slot=label]:text-quebi-fg-muted forced-colors:text-[GrayText] **:[[slot=description]]:text-quebi-fg-muted/70",

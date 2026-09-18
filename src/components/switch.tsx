@@ -38,7 +38,7 @@ export function Switch({ children, className, ...props }: SwitchProps) {
               "border-quebi-line/30 bg-quebi-surface/10",
               values.isSelected && "border-quebi-brand bg-quebi-brand",
               values.isFocusVisible &&
-                "ring-2 ring-quebi-brand/50 ring-offset-2 ring-offset-quebi-bg",
+                "ring-2 ring-quebi-brand-mark ring-offset-2 ring-offset-quebi-bg",
             )}
           >
             <span

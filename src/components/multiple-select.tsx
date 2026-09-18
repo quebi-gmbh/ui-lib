@@ -89,7 +89,7 @@ function MultipleSelect<T extends OptionBase>({
             ref={triggerRef}
             className={cn(
               "flex w-full items-center gap-2 rounded-quebi-sm border border-quebi-line/10 bg-quebi-surface/[0.02] p-1.5",
-              "transition-colors duration-150 focus-within:border-quebi-brand",
+              "transition-colors duration-150 focus-within:border-quebi-brand-mark",
             )}
           >
             <SelectValue<T> className="flex-1">

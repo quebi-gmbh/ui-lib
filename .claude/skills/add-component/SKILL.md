@@ -44,8 +44,16 @@ build script can import under bun without pulling in React/JSX.
 Pull from `src/quebi-theme.css` tokens (the quebi-styleguide skill is the source of truth):
 
 - Background `bg-quebi-bg`, text `text-white` / muted `text-quebi-fg-muted` / subtle `text-quebi-fg-subtle`.
-- Brand teal: `bg-quebi-brand`, `text-quebi-brand`, hover `quebi-brand-hover`. Teal is the accent —
-  reserve it for the primary/active state, not body text or headings.
+- Brand teal is three tokens, one per role, because one value cannot clear three contrast bars in
+  light mode. A **fill** is `bg-quebi-brand` (hover `bg-quebi-brand-hover`), and a `border-` belongs
+  here only when it is that fill's own edge (`border-quebi-brand bg-quebi-brand`). **Text or a
+  glyph** is `text-quebi-brand-text` / `decoration-quebi-brand-text`. A **thin graphical mark** — a
+  focus ring, an SVG stroke, a lone border that is the only thing marking a state — is
+  `ring-`/`stroke-`/`outline-`/`border-quebi-brand-mark`, drawn opaque: an alpha'd mark is under
+  3:1 in *both* themes, not just light. `tests/mark-contrast.test.ts` and
+  `tests/badge-contrast.test.ts` recompute all of this from the theme, so getting it wrong fails.
+  Teal is the accent either way — reserve it for the primary/active state, not body text or
+  headings.
 - Borders: the signature is `border border-cyan-500/10` (or `/20` for interactive).
 - Radii: `rounded-quebi-sm` (inputs/buttons), `rounded-quebi-md` (cards/surfaces). If a variant
   changes the radius (`isCircle`, `isSquare`, …), put the radius on *every* branch of that variant
@@ -54,7 +62,7 @@ Pull from `src/quebi-theme.css` tokens (the quebi-styleguide skill is the source
 - Depth = glows, never drop shadows: `shadow-quebi-glow`, `shadow-quebi-glow-strong`.
 - Motion: `transition-* duration-150/200`, `hover:scale-[1.02]` (buttons) / `hover:-translate-y-0.5`
   (cards). No bouncy springs.
-- Focus: `focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg`.
+- Focus: `focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg`.
 - Invalid: `border-red-500` / `text-red-500`. Eyebrow labels: the `quebi-eyebrow` utility.
 
 When porting a component from the Cellestial-era source (it lived in a top-level `components/`
@@ -170,7 +178,7 @@ const isRequired = field.required ?? false
   points the control at them: pass no `id` and no `aria-describedby`. Outside one (Switch, Slider,
   ChoiceBox, a hidden-input control) nothing does, so set `id={field.errorId}` /
   `id={field.descriptionId}` and `aria-describedby={describedBy(...)}` from `@/components/field`.
-- **Required marker:** `{isRequired && <span className="ml-1 text-quebi-brand">*</span>}` in the
+- **Required marker:** `{isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}` in the
   label, and `cn(hasErrors && "text-red-500")` on the label itself.
 - **A control with no native form value** (TimeField, DateRangePicker, FileTrigger, ChoiceBox,
   Calendar, RangeCalendar, DaySchedule, ColorPicker) uses `useControl` + `BaseControl` from

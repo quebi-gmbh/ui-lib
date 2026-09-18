@@ -44,7 +44,7 @@ const TreeItem = <T extends object>({ className, ...props }: TreeItemProps<T>) =
         "text-sm/6 text-quebi-fg transition-colors duration-150 focus:outline-hidden",
         "hover:bg-quebi-surface/[0.02]",
         "selected:bg-quebi-brand/10",
-        "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+        "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
         "**:data-[slot=icon]:me-1 **:data-[slot=icon]:size-5 **:data-[slot=icon]:shrink-0 sm:**:data-[slot=icon]:size-4",
         "disabled:opacity-50",
         "href" in props ? "cursor-pointer" : "cursor-default",

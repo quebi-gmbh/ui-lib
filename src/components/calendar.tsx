@@ -58,7 +58,7 @@ const Calendar = <T extends DateValue>({ className, ...props }: CalendarProps<T>
                   isDisabled && "text-quebi-fg-subtle",
                   date.compare(now) === 0 &&
                     !isSelected &&
-                    "ring-1 ring-inset ring-quebi-brand",
+                    "ring-1 ring-inset ring-quebi-brand-mark",
                   className,
                 ),
               )}

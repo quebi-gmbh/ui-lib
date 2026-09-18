@@ -79,7 +79,7 @@ export function DateRangePickerTrigger({ className, ...props }: GroupProps) {
         "group/drpt flex w-full items-stretch overflow-hidden rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
         "transition-[border-color,box-shadow] duration-200",
         "hover:border-quebi-line/40",
-        "focus-within:border-quebi-brand focus-within:ring-2 focus-within:ring-quebi-brand/50",
+        "focus-within:border-quebi-brand-mark focus-within:ring-2 focus-within:ring-quebi-brand-mark",
         className,
       )}
       {...props}
@@ -98,7 +98,7 @@ export function DateRangePickerTrigger({ className, ...props }: GroupProps) {
           "inline-flex cursor-pointer items-center border-quebi-line/20 border-l bg-quebi-surface/[0.02] px-3 text-quebi-fg-muted",
           "transition-[border-color,color] duration-200",
           "group-hover/drpt:border-quebi-line/40 hover:text-quebi-fg",
-          "group-focus-within/drpt:border-quebi-brand",
+          "group-focus-within/drpt:border-quebi-brand-mark",
           "outline-none focus-visible:outline-none",
         )}
       >

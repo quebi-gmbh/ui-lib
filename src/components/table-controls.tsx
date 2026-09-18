@@ -516,7 +516,7 @@ export function TableFilterChips({
           <Button
             aria-label={`Clear ${filter.label} filter`}
             onPress={() => onClear(filter.column)}
-            className="flex size-4 shrink-0 items-center justify-center rounded-full text-quebi-brand-text/80 outline-none transition-colors hover:bg-quebi-brand/20 hover:text-quebi-brand-text focus-visible:ring-2 focus-visible:ring-quebi-brand/50"
+            className="flex size-4 shrink-0 items-center justify-center rounded-full text-quebi-brand-text/80 outline-none transition-colors hover:bg-quebi-brand/20 hover:text-quebi-brand-text focus-visible:ring-2 focus-visible:ring-quebi-brand-mark"
           >
             <X className="size-3" strokeWidth={2.5} aria-hidden="true" />
           </Button>
