@@ -20,6 +20,7 @@ import { Fragment, type ReactNode, useEffect, useId, useMemo, useRef, useState }
 import * as v from "valibot"
 import { Badge } from "@/components/badge"
 import { Button, buttonStyles } from "@/components/button"
+import { ButtonGroup } from "@/components/button-group"
 import { Checkbox } from "@/components/checkbox"
 import { ConformCheckboxGroup } from "@/components/conform-checkbox-group"
 import { ConformDateField } from "@/components/conform-date-field"
@@ -820,7 +821,102 @@ export interface TablePagerProps {
 }
 
 /**
+ * The page jump, as its own form.
+ *
+ * Its own for two reasons. One is a bug: `ConformNumberField` binds
+ * `defaultValue` onto react-aria's uncontrolled `NumberField`, which reads it
+ * at mount and never again, and Conform builds its form context exactly once
+ * per `useForm` call — so neither the form `id` nor a `key` on the field alone
+ * can re-seed the number after ‹ › ‹‹ ›› have moved the table. A *remount of
+ * the form* can, and that is only cheap if the form is this small. The other
+ * is that the page size used to share it: an invalid size then took `Go` down
+ * with it, because one Conform form has one validity.
+ */
+function TablePagerJump({
+  page,
+  pageCount,
+  onJump,
+}: {
+  page: number
+  pageCount: number | undefined
+  onJump: (page: number) => void
+}) {
+  const [form, fields] = useForm<{ jump: number | string }>({
+    id: `${useId()}-page-jump`,
+    defaultValue: { jump: String(page + 1) },
+    onValidate: ({ formData }) =>
+      parseWithValibot(formData, {
+        schema: v.object({
+          jump: v.pipe(
+            v.optional(v.union([v.number(), v.literal("")]), ""),
+            v.check(
+              (n) => n === "" || (Number(n) >= 1 && (pageCount == null || Number(n) <= pageCount)),
+              pageCount == null ? "Enter a page number" : `Enter a page between 1 and ${pageCount}`,
+            ),
+          ),
+        }),
+      }),
+    onSubmit: (event, { submission }) => {
+      event.preventDefault()
+      if (submission?.status !== "success") return
+      const jump = (submission.value as { jump: number | "" }).jump
+      if (jump !== "" && jump != null) onJump(Number(jump) - 1)
+    },
+  })
+
+  return (
+    <ChromeForm id={form.id} onSubmit={form.onSubmit}>
+      {/* `Go` is the field's verb, so it shares the field's edge rather than
+          floating beside it — which is what `ButtonGroup` is for. `items-start`
+          rather than the group's `items-stretch`, so `Go` stays level with the
+          input when the field grows a line to say which pages exist. */}
+      <ButtonGroup className="items-start">
+        {/*
+          No steppers. They cost ~74px of the field's width, which left nothing
+          for the digits — the number was in the DOM and off the screen. They
+          would also be the wrong affordance: the value here is pending until
+          `Go`, so stepping it navigates nowhere, and the buttons that do
+          navigate are two elements to the right.
+        */}
+        <ConformNumberField
+          field={fields.jump}
+          label="Go to page"
+          className={cn(
+            // The field publishes a label-above-control stack; in a single row
+            // of chrome that would make the pager two lines tall, so the label
+            // moves beside the control and an error keeps the line underneath.
+            // The `!` is load-bearing: tailwind-merge groups utilities by name
+            // and leaves a pair that differ only by an arbitrary variant both
+            // standing, so `mt-1.5` would otherwise win or lose on sheet order.
+            "flex w-auto flex-wrap items-center gap-x-2 gap-y-1",
+            "[&>[data-slot=label]+[data-slot=control]]:mt-0!",
+            "[&>[data-slot=control]+[slot=errorMessage]]:mt-0!",
+            "[&>[data-slot=label]]:whitespace-nowrap",
+            "[&>[slot=errorMessage]]:basis-full",
+            "[&>[data-slot=control]]:w-16",
+            // The group squares its children's inner corners; the corner that
+            // meets `Go` belongs to the input inside this one.
+            "[&_input]:rounded-e-none",
+          )}
+          size={CHROME_SIZE}
+          hideStepper
+        />
+        <Button type="submit" intent="outline" size={CHROME_SIZE}>
+          Go
+        </Button>
+      </ButtonGroup>
+    </ChromeForm>
+  )
+}
+
+/**
  * Page size, page jump and the four navigation buttons.
+ *
+ * The row is two clusters rather than one line of eight controls. On the left,
+ * the two statements about the *query* — what you are looking at, and how much
+ * of it fits on a page. On the right, everything that navigates. The jump
+ * carries a visible label, because a bare number box beside a button reading
+ * `Go` says nothing about what it is a number of.
  *
  * Both inputs are Conform fields with a valibot schema, which is what makes
  * "page 900 of 15" an error message instead of an empty table: the page jump
@@ -849,100 +945,93 @@ export function TablePager({
   const pageCount = range.pageCount
   // The size in use is always one of the offered sizes. `defaultPageSize={8}`
   // against the default `pageSizes` otherwise leaves the select with nothing
-  // selected, which submits an empty `size` and fails the picklist — and
-  // because the size and the page jump are fields of one Conform form, an
-  // invalid size takes `Go` down with it and puts a schema error in the pager.
+  // selected, which submits an empty `size` and fails the picklist.
   const sizes = pageSizes.includes(pageSize)
     ? pageSizes
     : [...pageSizes, pageSize].sort((a, b) => a - b)
-  const [form, fields] = useForm<{ size: string; jump: number | string }>({
-    id: `${useId()}-pager-${page}-${pageSize}`,
-    defaultValue: { size: String(pageSize), jump: String(page + 1) },
+  const [sizeForm, sizeFields] = useForm<{ size: string }>({
+    id: `${useId()}-page-size`,
+    defaultValue: { size: String(pageSize) },
     onValidate: ({ formData }) =>
-      parseWithValibot(formData, {
-        schema: v.object({
-          size: v.picklist(sizes.map(String)),
-          jump: v.pipe(
-            v.optional(v.union([v.number(), v.literal("")]), ""),
-            v.check(
-              (n) => n === "" || (Number(n) >= 1 && (pageCount == null || Number(n) <= pageCount)),
-              pageCount == null ? "Enter a page number" : `Enter a page between 1 and ${pageCount}`,
-            ),
-          ),
-        }),
-      }),
-    onSubmit: (event, { submission }) => {
+      parseWithValibot(formData, { schema: v.object({ size: v.picklist(sizes.map(String)) }) }),
+    onSubmit: (event) => {
       event.preventDefault()
-      if (submission?.status !== "success") return
-      const jump = (submission.value as { jump: number | "" }).jump
-      if (jump !== "" && jump != null) onPageChange(Number(jump) - 1)
     },
   })
+  // The remount token for the jump. It fires when the page moved *externally*
+  // — a nav button, a page size that reset the page — and not when the user's
+  // own `Go` moved it, because remounting under their cursor would take the
+  // focus out of the field they are still typing in. The page they typed is
+  // the page the field would be re-seeded to anyway.
+  const { token, markPushed } = useExternalReset(`${page}-${pageSize}`)
+
+  // One page has nowhere to jump to, and "Enter a page between 1 and 1" is the
+  // only sentence the field could ever say. An unknown page count keeps it:
+  // not knowing how many pages there are is exactly when typing one helps.
+  const showJump = mode === "offset" && (pageCount == null || pageCount > 1)
 
   return (
     <div
+      data-slot="table-pager"
       className={cn(
-        "flex flex-wrap items-center justify-between gap-3 pt-1 print:hidden",
+        "flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pt-1 print:hidden",
         className,
       )}
     >
-      <p className="text-quebi-fg-muted text-sm tabular-nums" aria-live="polite">
-        {rowsOnPage === 0 ? (
-          "No rows"
-        ) : (
-          <>
-            Showing <FormattedNumber value={range.from} />–
-            <FormattedNumber value={range.to} />
-            {range.total != null ? (
-              <>
-                {" of "}
-                <FormattedNumber value={range.total} />
-              </>
-            ) : (
-              // A COUNT(*) over a filtered query is often the slowest part of
-              // the page. Saying "of many" is the honest alternative to
-              // inventing a total nobody asked the database for.
-              " of many"
-            )}
-          </>
-        )}
-      </p>
+      {/* What you are looking at, and how much of it fits on a page. Both are
+          statements about the query; neither navigates. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <p className="text-quebi-fg-muted text-sm tabular-nums" aria-live="polite">
+          {rowsOnPage === 0 ? (
+            "No rows"
+          ) : (
+            <>
+              Showing <FormattedNumber value={range.from} />–
+              <FormattedNumber value={range.to} />
+              {range.total != null ? (
+                <>
+                  {" of "}
+                  <FormattedNumber value={range.total} />
+                </>
+              ) : (
+                // A COUNT(*) over a filtered query is often the slowest part of
+                // the page. Saying "of many" is the honest alternative to
+                // inventing a total nobody asked the database for.
+                " of many"
+              )}
+            </>
+          )}
+        </p>
 
-      <ChromeForm id={form.id} onSubmit={form.onSubmit} className="flex items-center gap-2">
-        <ConformSelect
-          field={fields.size}
-          aria-label="Rows per page"
-          className="w-32"
-          size={CHROME_SIZE}
-          onSelectionChange={(key) => onPageSizeChange(Number(key))}
-        >
-          {sizes.map((size) => (
-            <SelectItem key={size} id={String(size)}>
-              {size} / page
-            </SelectItem>
-          ))}
-        </ConformSelect>
+        <ChromeForm id={sizeForm.id} onSubmit={sizeForm.onSubmit}>
+          <ConformSelect
+            field={sizeFields.size}
+            aria-label="Rows per page"
+            className="w-32"
+            size={CHROME_SIZE}
+            onSelectionChange={(key) => onPageSizeChange(Number(key))}
+          >
+            {sizes.map((size) => (
+              <SelectItem key={size} id={String(size)}>
+                {size} / page
+              </SelectItem>
+            ))}
+          </ConformSelect>
+        </ChromeForm>
+      </div>
 
-        {mode === "offset" && (
-          <>
-            {/*
-              No steppers. They cost ~74px of the field's width, which left
-              nothing for the digits — the number was in the DOM and off the
-              screen. They would also be the wrong affordance: the value here is
-              pending until `Go`, so stepping it navigates nowhere, and the
-              buttons that do navigate are two elements to the right.
-            */}
-            <ConformNumberField
-              field={fields.jump}
-              aria-label="Go to page"
-              className="w-20"
-              size={CHROME_SIZE}
-              hideStepper
-            />
-            <Button type="submit" intent="outline" size={CHROME_SIZE}>
-              Go
-            </Button>
-          </>
+      {/* Everything that navigates, as one unit. */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        {showJump && (
+          <TablePagerJump
+            key={token}
+            page={page}
+            pageCount={pageCount}
+            onJump={(next) => {
+              markPushed(`${next}-${pageSize}`)
+              onPageChange(next)
+            }}
+          />
         )}
 
         <div className="flex items-center gap-0.5">
@@ -989,7 +1078,7 @@ export function TablePager({
             </Button>
           )}
         </div>
-      </ChromeForm>
+      </div>
     </div>
   )
 }
