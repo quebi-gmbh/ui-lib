@@ -81,8 +81,17 @@ const SettingsIcon = () => (
   </svg>
 )
 
+// `Sidebar` pins its surface with `position: fixed`, which is what a full-page app
+// shell wants. To mount one inside a sub-region of a page — a demo card, a panel, a
+// split view — that region has to be the containing block for the fixed surface, or
+// it resolves against the viewport and paints at the left edge of the window instead.
+// `contain-layout` (`contain: layout`) is what makes this box that containing block;
+// a transform or `will-change` would too, but this one says what is meant. After it,
+// `inset-y-0` spans the card, `left-0` is the card's left edge, and `overflow-hidden`
+// clips the remainder. `h-full` on the provider keeps the row the card's height — the
+// gap spacer is `h-svh`, sized for a viewport-tall shell.
 const Shell = ({ children }: { children: React.ReactNode }) => (
-  <div className="h-[28rem] w-full overflow-hidden rounded-quebi-md border border-quebi-line/10">
+  <div className="contain-layout h-[28rem] w-full overflow-hidden rounded-quebi-md border border-quebi-line/10">
     {children}
   </div>
 )
@@ -93,7 +102,7 @@ export const sidebarExamples: ComponentExample[] = [
     description: "A standard sidebar with a header, sections, an active item, and a footer.",
     render: () => (
       <Shell>
-        <SidebarProvider>
+        <SidebarProvider className="h-full">
           <Sidebar>
             <SidebarHeader>
               <span className="px-2 font-semibold text-quebi-fg">quebi</span>
@@ -141,7 +150,7 @@ export const sidebarExamples: ComponentExample[] = [
     description: "Use the trigger (or Cmd/Ctrl+B) to collapse into an icon-only dock rail.",
     render: () => (
       <Shell>
-        <SidebarProvider defaultOpen={false}>
+        <SidebarProvider defaultOpen={false} className="h-full">
           <Sidebar collapsible="dock">
             <SidebarHeader>
               <span className="font-semibold text-quebi-fg">q</span>
@@ -179,7 +188,7 @@ export const sidebarExamples: ComponentExample[] = [
     description: "Nest collapsible groups of items with SidebarDisclosure.",
     render: () => (
       <Shell>
-        <SidebarProvider>
+        <SidebarProvider className="h-full">
           <Sidebar>
             <SidebarHeader>
               <span className="px-2 font-semibold text-quebi-fg">quebi</span>
@@ -235,7 +244,7 @@ export const sidebarExamples: ComponentExample[] = [
     description: 'Set intent="float" for a detached, rounded surface with a quebi glow.',
     render: () => (
       <Shell>
-        <SidebarProvider>
+        <SidebarProvider className="h-full">
           <Sidebar intent="float">
             <SidebarHeader>
               <span className="px-2 font-semibold text-quebi-fg">quebi</span>

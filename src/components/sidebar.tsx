@@ -44,6 +44,16 @@ import { cn } from "@/lib/utils"
  * and a `SidebarInset` for the main content. Supports docked/hidden collapse,
  * float and inset intents, disclosure groups, badges, tooltips, and a keyboard
  * shortcut to toggle.
+ *
+ * The surface is `position: fixed` to the viewport, with an in-flow spacer
+ * (`data-slot="sidebar-gap"`) reserving its width beside it — the shape a
+ * full-page app shell wants. Mounted in a sub-region of a page instead (a card,
+ * a panel, a split view), the fixed surface resolves against the viewport and
+ * paints at the left edge of the window. Give the wrapping element
+ * `contain: layout` (Tailwind's `contain-layout`) so it becomes the containing
+ * block for the fixed surface; `overflow-hidden` then clips it, and `h-full` on
+ * the `SidebarProvider` keeps the row that element's height rather than the
+ * spacer's `100svh`.
  */
 
 const SIDEBAR_WIDTH = "17rem"

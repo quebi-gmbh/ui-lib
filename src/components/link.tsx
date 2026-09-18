@@ -1,6 +1,10 @@
 "use client"
 
-import { Link as LinkPrimitive, type LinkProps as LinkPrimitiveProps } from "react-aria-components"
+import {
+  composeRenderProps,
+  Link as LinkPrimitive,
+  type LinkProps as LinkPrimitiveProps,
+} from "react-aria-components"
 import { cn } from "@/lib/utils"
 
 /**
@@ -44,7 +48,16 @@ export function Link({ className, ref, ...props }: LinkProps) {
   return (
     <LinkPrimitive
       ref={ref}
-      className={cn([...BASE_CLASSES, "href" in props && "cursor-pointer"], className)}
+      // `className` may be a render-prop function (react-aria passes it
+      // isHovered/isPressed/... ), which is how a caller styles a link per
+      // state. `cn` is clsx underneath and clsx drops a function silently, so
+      // merging it directly threw the caller's classes away and left only
+      // BASE_CLASSES behind — a sidebar item rendered as underlined prose.
+      // composeRenderProps keeps both shapes: it calls the function and merges
+      // what it returns, and passes a plain string straight through.
+      className={composeRenderProps(className, (resolved) =>
+        cn([...BASE_CLASSES, "href" in props && "cursor-pointer"], resolved),
+      )}
       {...props}
     />
   )

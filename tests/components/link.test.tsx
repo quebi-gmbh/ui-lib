@@ -75,3 +75,69 @@ test("a link with no href renders no anchor href at all", () => {
 
   expect(screen.getByText("Press me")).not.toHaveAttribute("href")
 })
+
+/**
+ * `className` as a render-prop function.
+ *
+ * react-aria lets a caller pass `className` as a function of the render state,
+ * and that is how a link styles itself per hover/press/focus. `Link` merges the
+ * caller's value into its own BASE_CLASSES with `cn` — but `cn` is clsx
+ * underneath, and clsx drops a function silently rather than calling it. So a
+ * caller that passed a function got BASE_CLASSES and nothing else, with no
+ * error and no warning anywhere: `SidebarItem` computes its entire row layout
+ * that way and rendered as underlined prose with 104px icons because of it.
+ *
+ * The underline is the sharp end of it. BASE_CLASSES underlines every link on
+ * purpose (see the component's own note on WCAG 1.4.1), and the places where a
+ * link is not inside prose are documented as opting out with `no-underline` —
+ * an opt-out that could not work at all through the function form.
+ */
+test("a render-prop className is applied, not dropped", () => {
+  renderInRouter(
+    <Link href="/dashboard" className={() => "grid grid-cols-2 no-underline"}>
+      Dashboard
+    </Link>,
+  )
+
+  const anchor = screen.getByRole("link", { name: "Dashboard" })
+  expect(anchor.className).toContain("grid")
+  expect(anchor.className).toContain("grid-cols-2")
+})
+
+test("a render-prop className wins the merge against BASE_CLASSES", () => {
+  renderInRouter(
+    <Link href="/dashboard" className={() => "no-underline"}>
+      Dashboard
+    </Link>,
+  )
+
+  // tailwind-merge puts `underline` and `no-underline` in one group and keeps
+  // the later one — the caller's. This is the documented opt-out for a link
+  // that is a nav row rather than prose.
+  const classes = screen.getByRole("link", { name: "Dashboard" }).className.split(/\s+/)
+  expect(classes).toContain("no-underline")
+  expect(classes).not.toContain("underline")
+})
+
+test("the render state reaches a render-prop className", () => {
+  renderInRouter(
+    <Link href="/dashboard" className={({ isDisabled }) => (isDisabled ? "opacity-50" : "grid")}>
+      Dashboard
+    </Link>,
+  )
+
+  expect(screen.getByRole("link", { name: "Dashboard" }).className).toContain("grid")
+})
+
+test("a plain string className still merges with BASE_CLASSES", () => {
+  renderInRouter(
+    <Link href="/dashboard" className="no-underline">
+      Dashboard
+    </Link>,
+  )
+
+  const classes = screen.getByRole("link", { name: "Dashboard" }).className.split(/\s+/)
+  expect(classes).toContain("no-underline")
+  expect(classes).not.toContain("underline")
+  expect(classes).toContain("font-medium")
+})
