@@ -1,6 +1,6 @@
 import { parseColor } from "react-aria-components"
 import { useState } from "react"
-import { ColorField } from "@/components/color-field"
+import { ColorField, ColorInput } from "@/components/color-field"
 import { Description, FieldError, Label } from "@/components/field"
 import type { ComponentExample } from "./types"
 
@@ -17,6 +17,7 @@ export const colorFieldExamples: ComponentExample[] = [
     render: () => (
       <ColorField defaultValue="#22D3EE" className="max-w-xs">
         <Label>Brand color</Label>
+        <ColorInput />
         <Description>Enter a hex value like #22D3EE.</Description>
       </ColorField>
     ),
@@ -27,6 +28,7 @@ export const colorFieldExamples: ComponentExample[] = [
     render: () => (
       <ColorField isInvalid className="max-w-xs">
         <Label>Accent color</Label>
+        <ColorInput />
         <FieldError>Please enter a valid hex color.</FieldError>
       </ColorField>
     ),
@@ -36,6 +38,7 @@ export const colorFieldExamples: ComponentExample[] = [
     render: () => (
       <ColorField isDisabled defaultValue="#64748B" className="max-w-xs">
         <Label>Color</Label>
+        <ColorInput />
       </ColorField>
     ),
   },
@@ -48,6 +51,7 @@ export const colorFieldExamples: ComponentExample[] = [
           <div className="flex max-w-xs flex-col gap-3">
             <ColorField value={value} onChange={(c) => c && setValue(c)}>
               <Label>Color</Label>
+              <ColorInput />
             </ColorField>
             <div className="flex items-center gap-2 text-sm text-quebi-fg-muted">
               <span
