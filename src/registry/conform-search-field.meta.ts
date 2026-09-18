@@ -5,6 +5,6 @@ export const conformSearchFieldMeta: ComponentMeta = {
   name: "Conform Search Field",
   description:
     "The quebi SearchField wired to Conform. Binds a string field's name, required, default, and validity from field metadata — for a query that is part of a submitted form.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "search", "validation"],
 }

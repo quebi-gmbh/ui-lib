@@ -5,6 +5,6 @@ export const conformDateRangePickerMeta: ComponentMeta = {
   name: "Conform Date Range Picker",
   description:
     "The quebi DateRangePicker wired to Conform. Binds a start/end field through a hidden fieldset that submits name.start and name.end as ISO dates.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "date", "range", "validation"],
 }

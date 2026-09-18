@@ -61,6 +61,45 @@ export const disclosureGroupExamples: ComponentExample[] = [
     ),
   },
   {
+    title: "Plain — nav groups",
+    description:
+      "variant=\"plain\" drops the card surface for bare chrome: an eyebrow header, tight padding, no border or glow. Set it on the Disclosure and the trigger, indicator and panel follow. This is the shape a long sidebar wants — collapsed groups you open one at a time.",
+    render: () => (
+      <DisclosureGroup allowsMultipleExpanded className="w-full max-w-xs gap-0.5">
+        <Disclosure id="layout" variant="plain">
+          <DisclosureTrigger>Layout</DisclosureTrigger>
+          <DisclosurePanel>
+            <ul className="space-y-0.5">
+              {["Card", "Container", "Scroll Area", "Separator"].map((name) => (
+                <li
+                  key={name}
+                  className="rounded-quebi-sm px-3 py-1.5 text-sm text-quebi-fg-muted"
+                >
+                  {name}
+                </li>
+              ))}
+            </ul>
+          </DisclosurePanel>
+        </Disclosure>
+        <Disclosure id="feedback" variant="plain">
+          <DisclosureTrigger>Feedback</DisclosureTrigger>
+          <DisclosurePanel>
+            <ul className="space-y-0.5">
+              {["Loader", "Meter", "Note", "Toast"].map((name) => (
+                <li
+                  key={name}
+                  className="rounded-quebi-sm px-3 py-1.5 text-sm text-quebi-fg-muted"
+                >
+                  {name}
+                </li>
+              ))}
+            </ul>
+          </DisclosurePanel>
+        </Disclosure>
+      </DisclosureGroup>
+    ),
+  },
+  {
     title: "Disabled item",
     description: "Individual sections can be disabled.",
     render: () => (

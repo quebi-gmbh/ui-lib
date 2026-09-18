@@ -5,6 +5,6 @@ export const conformComboBoxMeta: ComponentMeta = {
   name: "Conform Combo Box",
   description:
     "The quebi ComboBox wired to Conform. Binds a string field's name, required, default selection, and validity from field metadata and renders inline errors.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "combobox", "autocomplete", "select", "validation"],
 }

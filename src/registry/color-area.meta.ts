@@ -5,6 +5,6 @@ export const colorAreaMeta: ComponentMeta = {
   name: "Color Area",
   description:
     "Two-dimensional color picking surface built on react-aria-components, styled with the quebi design system. Drag the thumb across the gradient to pick two color channels at once.",
-  category: "Forms",
+  category: "Color",
   tags: ["form", "color", "picker", "interactive"],
 }

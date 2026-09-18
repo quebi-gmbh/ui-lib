@@ -5,6 +5,6 @@ export const conformAsyncMultipleSelectMeta: ComponentMeta = {
   name: "Conform Async Multiple Select",
   description:
     "Async Multiple Select wired to Conform: derives name and validity from field metadata, mirrors the remote-loaded selection into hidden inputs for submission, and renders inline errors.",
-  category: "Forms",
+  category: "Conform",
   tags: ["conform", "select", "multi-select", "async", "form", "validation", "tags", "search"],
 }

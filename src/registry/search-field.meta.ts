@@ -5,6 +5,6 @@ export const searchFieldMeta: ComponentMeta = {
   name: "Search Field",
   description:
     "Search input built on react-aria-components and the quebi Input, with a leading magnifying-glass icon and a clear button that appears while typing. Escape or the clear button empties the field.",
-  category: "Forms",
+  category: "Inputs",
   tags: ["form", "input", "search", "field", "interactive"],
 }

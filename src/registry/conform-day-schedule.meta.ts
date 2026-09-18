@@ -5,6 +5,6 @@ export const conformDayScheduleMeta: ComponentMeta = {
   name: "Conform Day Schedule",
   description:
     "The quebi Day Schedule wired to Conform. Submits its spans as JSON through a hidden input and derives name, required, and validity from the field metadata.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "schedule", "time", "range", "validation"],
 }

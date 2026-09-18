@@ -5,6 +5,6 @@ export const fileTriggerMeta: ComponentMeta = {
   name: "File Trigger",
   description:
     "A button that opens the native file picker, built on react-aria-components and styled with the quebi design system. Supports multiple files, directories, camera capture, and a pending state.",
-  category: "Forms",
+  category: "Files",
   tags: ["form", "file", "upload", "input", "button"],
 }

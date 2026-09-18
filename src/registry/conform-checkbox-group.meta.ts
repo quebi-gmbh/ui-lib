@@ -5,6 +5,6 @@ export const conformCheckboxGroupMeta: ComponentMeta = {
   name: "Conform Checkbox Group",
   description:
     "The quebi CheckboxGroup wired to Conform. Binds a string-array field's name, required, default selection, and validity from field metadata and renders inline errors.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "checkbox", "multiple", "validation"],
 }

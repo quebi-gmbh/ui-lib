@@ -1,4 +1,5 @@
 import type { ReactNode } from "react"
+import type { ComponentCategory } from "./categories"
 
 /** Human-curated metadata for a component. Plain data — fully serializable. */
 export interface ComponentMeta {
@@ -6,7 +7,8 @@ export interface ComponentMeta {
   slug: string
   name: string
   description: string
-  category: string
+  /** One of the canonical categories in ./categories.ts — not a free string. */
+  category: ComponentCategory
   tags: string[]
 }
 

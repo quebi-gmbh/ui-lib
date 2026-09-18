@@ -5,6 +5,6 @@ export const conformTagFieldMeta: ComponentMeta = {
   name: "Conform Tag Field",
   description:
     "The quebi TagField wired to Conform. Binds a tag list's name, form, default tags, and validity from field metadata and renders inline errors.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "tags", "chips", "validation"],
 }

@@ -1,45 +1,35 @@
 import { registry, type ComponentEntry } from "./index"
+import { componentCategories, type ComponentCategory } from "./categories"
 
 export interface CategoryGroup {
-  category: string
+  category: ComponentCategory
   components: ComponentEntry[]
 }
 
-const CONFORM_CATEGORY = "Conform"
-
-/** Conform variants are bucketed into their own nav category, not their base category. */
-export function isConform(c: ComponentEntry) {
-  return c.slug.startsWith("conform-") || c.tags.includes("conform")
-}
-
-/** The category a component appears under in the nav (Conform variants are grouped together). */
-export function navCategory(c: ComponentEntry) {
-  return isConform(c) ? CONFORM_CATEGORY : c.category
-}
-
 /**
- * Components grouped by nav category, categories and members both sorted
- * alphabetically. Conform is pinned to the end so the base components lead.
+ * Components grouped by category: groups in the canonical order declared in
+ * ./categories.ts, members alphabetical within a group, and categories with
+ * nothing in them left out — so a filtered list produces only the groups that
+ * still have a hit.
+ *
+ * A component's nav group is its `category` and nothing else. It used to be
+ * computed: anything tagged `conform` was moved into a Conform bucket, which
+ * also swept up Data Table and Table Controls, neither of which is a Conform
+ * variant — they merely mention Conform among the things they support. The
+ * Conform variants now carry `category: "Conform"` themselves.
  */
 export function groupByCategory(components: ComponentEntry[] = registry): CategoryGroup[] {
-  const byCategory = new Map<string, ComponentEntry[]>()
+  const byCategory = new Map<ComponentCategory, ComponentEntry[]>()
   for (const c of components) {
-    const key = navCategory(c)
-    const list = byCategory.get(key) ?? []
+    const list = byCategory.get(c.category) ?? []
     list.push(c)
-    byCategory.set(key, list)
+    byCategory.set(c.category, list)
   }
-  return [...byCategory.entries()]
-    .map(([category, list]) => ({
-      category,
-      components: [...list].sort((a, b) => a.name.localeCompare(b.name)),
-    }))
-    .sort((a, b) => {
-      // Pin Conform last; everything else alphabetical.
-      if (a.category === CONFORM_CATEGORY) return 1
-      if (b.category === CONFORM_CATEGORY) return -1
-      return a.category.localeCompare(b.category)
-    })
+  return componentCategories.flatMap((category) => {
+    const list = byCategory.get(category)
+    if (!list) return []
+    return [{ category, components: [...list].sort((a, b) => a.name.localeCompare(b.name)) }]
+  })
 }
 
 /** Filter components by a free-text query over name, description, category, and tags. */

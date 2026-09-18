@@ -5,6 +5,6 @@ export const conformRadioGroupMeta: ComponentMeta = {
   name: "Conform Radio Group",
   description:
     "The quebi RadioGroup wired to Conform. Binds a string field's name, required, default selection, and validity from field metadata and renders inline errors.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "radio", "choice", "validation"],
 }
