@@ -1,6 +1,6 @@
 "use client"
 
-import { useLayoutEffect, useRef } from "react"
+import { useCallback, useLayoutEffect, useRef } from "react"
 import { cn } from "@/lib/utils"
 
 type ScrollAreaOrientation = "vertical" | "horizontal" | "both"
@@ -14,11 +14,21 @@ export interface ScrollAreaProps extends React.ComponentPropsWithRef<"div"> {
 /**
  * ScrollArea — quebi design system
  *
- * A scrollable viewport with a slim, cyan-tinted scrollbar (thumb cyan-500/20).
- * Optionally fades content at the scrolled edges (`scrollFade`) and reserves a
- * gutter so content doesn't shift when the scrollbar appears (`scrollbarGutter`).
- * Self-contained: no Radix, no portals — just a native overflow container with
- * overflow-state data attributes wired up for masking.
+ * A scrollable viewport with the quebi native scrollbar (a 6px cyan pill
+ * floating 3px clear of the edges, no stepper arrows). Optionally fades content
+ * at the scrolled edges (`scrollFade`) and reserves the bar's gutter so content
+ * doesn't shift when it appears (`scrollbarGutter`). Self-contained: no Radix,
+ * no portals — just a native overflow container with overflow-state data
+ * attributes wired up for masking.
+ *
+ * `className` lands on the scroll container itself, which is the only place it
+ * can land: the browser paints the scrollbar at the inner edge of the scroll
+ * container's border box, so padding declared on a wrapper *around* it insets
+ * the bar from the card edge and leaves a dead strip beyond it. Pad the
+ * ScrollArea — `<ScrollArea className="p-4">` — and the padding reads as content
+ * inset while the bar still hugs the edge. This matches every other scrollable
+ * quebi surface (Menu, ListBox, the select popovers), which pad their overflow
+ * container directly.
  */
 export function ScrollArea({
   ref: forwardedRef,
@@ -35,6 +45,18 @@ export function ScrollArea({
 
   const allowY = orientation === "vertical" || orientation === "both"
   const allowX = orientation === "horizontal" || orientation === "both"
+
+  // One element, two refs: the effect below needs the node and so does the
+  // consumer, and a consumer's ref on a ScrollArea is only useful if it points
+  // at the thing that scrolls.
+  const setViewport = useCallback(
+    (node: HTMLDivElement | null) => {
+      viewportRef.current = node
+      if (typeof forwardedRef === "function") forwardedRef(node)
+      else if (forwardedRef) forwardedRef.current = node
+    },
+    [forwardedRef],
+  )
 
   useLayoutEffect(() => {
     const el = viewportRef.current
@@ -89,34 +111,34 @@ export function ScrollArea({
   }, [allowX, allowY])
 
   return (
-    <div ref={forwardedRef} className={cn("size-full min-h-0", className)} {...props}>
-      <div
-        ref={viewportRef}
-        className={cn(
-          "h-full overscroll-auto rounded-[inherit] outline-none transition-shadow",
-          "data-has-overflow-y:overscroll-y-contain data-has-overflow-x:overscroll-x-contain",
-          // Slim, cyan-tinted scrollbar — the shared quebi native scrollbar.
-          "quebi-scrollbar",
-          orientation === "vertical"
-            ? "overflow-x-hidden overflow-y-auto"
-            : orientation === "horizontal"
-              ? "overflow-x-auto overflow-y-hidden"
-              : "overflow-auto",
-          scrollFade && [
-            allowY &&
-              "mask-t-from-[calc(100%-min(var(--fade-size,--spacing(6)),var(--scroll-area-overflow-y-start,0)))] mask-b-from-[calc(100%-min(var(--fade-size,--spacing(6)),var(--scroll-area-overflow-y-end,0)))]",
-            allowX &&
-              "mask-l-from-[calc(100%-min(var(--fade-size,--spacing(6)),var(--scroll-area-overflow-x-start,0)))] mask-r-from-[calc(100%-min(var(--fade-size,--spacing(6)),var(--scroll-area-overflow-x-end,0)))]",
-          ],
-          scrollbarGutter && [
-            allowY && "data-has-overflow-y:pe-2.5",
-            allowX && "data-has-overflow-x:pb-2.5",
-          ],
-        )}
-        data-slot="scroll-area-viewport"
-      >
-        {children}
-      </div>
+    <div
+      ref={setViewport}
+      className={cn(
+        "size-full min-h-0 overscroll-auto rounded-[inherit] outline-none transition-shadow",
+        "data-has-overflow-y:overscroll-y-contain data-has-overflow-x:overscroll-x-contain",
+        // Slim, cyan-tinted scrollbar — the shared quebi native scrollbar.
+        "quebi-scrollbar",
+        orientation === "vertical"
+          ? "overflow-x-hidden overflow-y-auto"
+          : orientation === "horizontal"
+            ? "overflow-x-auto overflow-y-hidden"
+            : "overflow-auto",
+        scrollFade && [
+          allowY &&
+            "mask-t-from-[calc(100%-min(var(--fade-size,--spacing(6)),var(--scroll-area-overflow-y-start,0)))] mask-b-from-[calc(100%-min(var(--fade-size,--spacing(6)),var(--scroll-area-overflow-y-end,0)))]",
+          allowX &&
+            "mask-l-from-[calc(100%-min(var(--fade-size,--spacing(6)),var(--scroll-area-overflow-x-start,0)))] mask-r-from-[calc(100%-min(var(--fade-size,--spacing(6)),var(--scroll-area-overflow-x-end,0)))]",
+        ],
+        // The CSS property, not padding: padding is the consumer's to spend on
+        // content inset, and a gutter added only once the bar is already there
+        // reserves nothing. `stable` holds the space whether it shows or not.
+        scrollbarGutter && "[scrollbar-gutter:stable]",
+        className,
+      )}
+      data-slot="scroll-area-viewport"
+      {...props}
+    >
+      {children}
     </div>
   )
 }
