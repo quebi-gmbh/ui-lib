@@ -19,6 +19,7 @@ import {
   type CommitGraphCommit,
   type CommitGraphEdge,
   type CommitGraphRow,
+  LANE_COLOR_TOKENS,
   laneColor,
   layoutCommitGraph,
 } from "../src/components/commit-graph"
@@ -225,9 +226,9 @@ describe("a parent outside the window", () => {
 
 describe("the lane palette", () => {
   test("is a total function of the lane index, and cycles", () => {
-    expect(laneColor(0)).toBe(laneColor(6))
     expect(laneColor(0)).not.toBe(laneColor(1))
-    expect(laneColor(-1)).toBe(laneColor(5))
+    expect(laneColor(0)).toBe(laneColor(LANE_COLOR_TOKENS.length))
+    expect(laneColor(-1)).toBe(laneColor(LANE_COLOR_TOKENS.length - 1))
   })
 
   test("resolves to quebi tokens, so the graph re-themes with everything else", () => {

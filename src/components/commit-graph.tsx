@@ -38,9 +38,10 @@ import { cn } from "@/lib/utils"
  *
  * Lane colour is a pure function of the lane index (`laneColor`), so a lane
  * keeps its colour for as long as it is alive and a reused lane picks up the
- * colour of its index rather than of its history. The six hues are quebi
- * semantic tokens, which are re-declared per theme, so the graph reads in light
- * and dark without a second palette.
+ * colour of its index rather than of its history. The hues are quebi semantic
+ * tokens, which are re-declared per theme, so the graph reads in light and dark
+ * without a second palette — see `LANE_COLOR_TOKENS` for why that rules out the
+ * brand teal, of all colours.
  */
 
 /** A ref pointing at a commit. `kind` drives the badge's colour and glyph. */
@@ -220,24 +221,36 @@ const ROW_HEIGHT = 56
 const DOT_RADIUS = 4
 
 /**
- * The lane palette: quebi semantic colour tokens, referenced as CSS variables
- * so the SVG re-themes with everything else. Six hues, because a seventh
- * concurrent lane is rare enough that repeating the first is cheaper than
- * inventing a colour that reads in both themes.
+ * The lane palette, as quebi semantic token names.
+ *
+ * Every entry is a token the theme re-declares per mode, so the SVG re-themes
+ * with everything else and a lane is legible on both surfaces. Which is the
+ * whole reason the list is five and not the six it reads like it wants to be:
+ * a lane line is a graphical object carrying meaning, so WCAG 1.4.11 asks 3:1
+ * of it, and two otherwise obvious candidates do not clear that on the light
+ * surface — `--q-brand` is deliberately the *same* teal in both modes and
+ * measures 1.74:1 there, and `--q-warn` misses at 2.94:1. `--q-success` is
+ * within a shade of the brand teal on dark, so lane 0 still looks like quebi
+ * without being the one colour that cannot flip.
+ *
+ * `tests/commit-graph-contrast.test.ts` re-derives those numbers from
+ * `src/quebi-theme.css` rather than trusting this comment, so re-tuning a token
+ * fails a test here instead of washing a lane out in someone's light mode.
+ *
+ * Ordered so no two adjacent lanes are neighbouring hues.
  */
-const LANE_COLORS = [
-  "var(--color-quebi-brand)",
-  "var(--color-quebi-accent)",
-  "var(--color-quebi-info)",
-  "var(--color-quebi-warn)",
-  "var(--color-quebi-success)",
-  "var(--color-quebi-danger)",
-]
+export const LANE_COLOR_TOKENS = [
+  "quebi-success",
+  "quebi-accent",
+  "quebi-info",
+  "quebi-danger",
+  "quebi-fg-muted",
+] as const
 
 /** The colour a lane index draws in. Stable, and defined for every integer. */
 export function laneColor(lane: number): string {
-  const count = LANE_COLORS.length
-  return LANE_COLORS[((lane % count) + count) % count]
+  const count = LANE_COLOR_TOKENS.length
+  return `var(--color-${LANE_COLOR_TOKENS[((lane % count) + count) % count]})`
 }
 
 /** Horizontal centre of a lane within the band. */
