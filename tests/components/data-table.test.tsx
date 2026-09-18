@@ -420,11 +420,13 @@ describe("DataTable", () => {
     // Not a style choice: react-stately's buildHeaderRows rewrites the sibling
     // links of the column nodes it chains, and react-aria's SSR path re-commits
     // the collection after every appended column — so the second commit walks a
-    // corrupted tree and never finishes (adobe/react-spectrum#10598). This test
-    // is the reason the band row is gated on useIsSSR; if it ever hangs, the gate
-    // has been removed too early. The test in table.test.tsx is the other half:
-    // it fails when the upstream fix ships, which is when this one should become
-    // an assertion that the server HTML has two header rows.
+    // corrupted tree and never finishes (adobe/react-spectrum#10598, closed as
+    // out of scope — nested columns are unsupported upstream, per #5263). This
+    // test is the reason the band row is gated on useIsSSR; if it ever hangs, the
+    // gate has been removed too early. The test in table.test.tsx is the other
+    // half: it fails if that ever changes, which is when this one should become
+    // an assertion that the server HTML has two header rows. Until then one
+    // header row is the specified behaviour, not a placeholder for it.
     const html = renderToString(
       <DataTable<Order>
         aria-label="Server-rendered banded orders"

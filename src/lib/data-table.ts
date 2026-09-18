@@ -153,7 +153,10 @@ export interface DataTableColumn<T> {
    * server-rendering path cannot survive (adobe/react-spectrum#10598), so a
    * server render puts the band name above each column's label instead and the
    * real row arrives with hydration. The two are the same height, so nothing
-   * moves. `TableColumnGroup` in `@/components/table` has the detail.
+   * moves. Treat that as how banded headers work rather than as a bug in flight:
+   * upstream closed the report as out of scope, because nested columns are not a
+   * supported shape there at all. `TableColumnGroup` in `@/components/table` has
+   * the detail.
    */
   columns?: DataTableColumn<T>[]
   cell?: (ctx: DataTableCellContext<T>) => ReactNode
