@@ -5,6 +5,6 @@ export const conformInputOtpMeta: ComponentMeta = {
   name: "Conform Input OTP",
   description:
     "The quebi InputOTP wired to Conform. Binds a one-time-code field's name, required, default, and validity from field metadata and renders inline errors.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "otp", "code", "validation"],
 }

@@ -5,6 +5,6 @@ export const textFieldMeta: ComponentMeta = {
   name: "Text Field",
   description:
     "Accessible text field wrapper built on react-aria-components, styled with the quebi design system. Lays out the label → control → hint stack and composes with Label, Description, FieldError, and Input primitives, threading value, validation, and disabled state to the control.",
-  category: "Forms",
+  category: "Inputs",
   tags: ["form", "input", "text", "field", "label", "validation"],
 }

@@ -5,6 +5,6 @@ export const conformTextareaMeta: ComponentMeta = {
   name: "Conform Textarea",
   description:
     "The quebi Textarea wired to Conform. Binds a multi-line string field's name, required, default, and validity from field metadata and renders inline errors.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "textarea", "multiline", "validation"],
 }

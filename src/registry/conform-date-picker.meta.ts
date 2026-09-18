@@ -5,6 +5,6 @@ export const conformDatePickerMeta: ComponentMeta = {
   name: "Conform Date Picker",
   description:
     "The quebi DatePicker wired to Conform. Binds a date field's name, required, default, and validity from field metadata and renders inline errors.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "date", "date-picker", "calendar", "validation"],
 }

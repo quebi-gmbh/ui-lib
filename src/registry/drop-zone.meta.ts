@@ -5,6 +5,6 @@ export const dropZoneMeta: ComponentMeta = {
   name: "Drop Zone",
   description:
     "Accessible drag-and-drop target built on react-aria-components, styled with the quebi design system. A dashed cyan surface that highlights with brand teal and a glow while an item is dragged over it.",
-  category: "Forms",
+  category: "Files",
   tags: ["form", "upload", "drag", "drop", "file", "interactive"],
 }

@@ -5,6 +5,6 @@ export const listBoxMeta: ComponentMeta = {
   name: "List Box",
   description:
     "A selectable list with single or multiple selection, sections, descriptions, and drag handles. Built on react-aria-components, reuses the shared dropdown item styling, and is styled with the quebi dark surface and brand-teal selection.",
-  category: "Forms",
+  category: "Selection",
   tags: ["list", "select", "option", "section", "selection", "interactive"],
 }

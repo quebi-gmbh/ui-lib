@@ -5,6 +5,6 @@ export const conformSwitchMeta: ComponentMeta = {
   name: "Conform Switch",
   description:
     "The quebi Switch wired to Conform. Binds a boolean field's name, form, and default from field metadata without the defaultChecked/required trap of a blind spread.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "switch", "toggle", "boolean", "validation"],
 }

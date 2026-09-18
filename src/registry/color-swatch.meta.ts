@@ -5,6 +5,6 @@ export const colorSwatchMeta: ComponentMeta = {
   name: "Color Swatch",
   description:
     "Accessible color swatch built on react-aria-components, styled with the quebi design system. Renders a fixed-size square filled with a color value, with a subtle cyan inset ring.",
-  category: "Forms",
+  category: "Color",
   tags: ["form", "color", "swatch", "display"],
 }

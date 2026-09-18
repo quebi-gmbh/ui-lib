@@ -5,6 +5,6 @@ export const calendarMeta: ComponentMeta = {
   name: "Calendar",
   description:
     "An accessible month calendar with month and year selects in the header, built on react-aria-components and @internationalized/date. The selected day fills with brand teal and today is ringed — foundational for Range Calendar and Date Picker.",
-  category: "Forms",
+  category: "Date & time",
   tags: ["calendar", "date", "datepicker", "form", "input", "interactive"],
 }

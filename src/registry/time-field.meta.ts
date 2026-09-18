@@ -5,6 +5,6 @@ export const timeFieldMeta: ComponentMeta = {
   name: "Time Field",
   description:
     "A segmented time input (hour, minute, second, AM/PM) with keyboard-friendly editing, built on react-aria-components.",
-  category: "Forms",
+  category: "Date & time",
   tags: ["form", "input", "time", "field", "segmented"],
 }

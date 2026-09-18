@@ -5,6 +5,6 @@ export const conformNumberFieldMeta: ComponentMeta = {
   name: "Conform Number Field",
   description:
     "Number field wired to a Conform field — binds name, default, required, and errors from field metadata and renders inline validation.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "number", "input", "field", "validation"],
 }

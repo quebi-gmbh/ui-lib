@@ -5,6 +5,6 @@ export const conformCheckboxMeta: ComponentMeta = {
   name: "Conform Checkbox",
   description:
     "The quebi Checkbox wired to Conform. Binds a boolean field's name, required, default, and validity from field metadata and renders inline errors.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "checkbox", "boolean", "validation"],
 }

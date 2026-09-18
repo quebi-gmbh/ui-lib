@@ -5,6 +5,6 @@ export const conformFieldMeta: ComponentMeta = {
   name: "Conform Field",
   description:
     "A text field bound to a Conform field — derives name, default, required, and validation errors from the field metadata.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "input", "text-field", "validation"],
 }

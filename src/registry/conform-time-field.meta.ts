@@ -5,6 +5,6 @@ export const conformTimeFieldMeta: ComponentMeta = {
   name: "Conform Time Field",
   description:
     "The quebi TimeField wired to Conform through a hidden input — react-aria renders no form control for a TimeField, so a bare name submits nothing.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "time", "validation"],
 }

@@ -5,6 +5,6 @@ export const checkboxMeta: ComponentMeta = {
   name: "Checkbox",
   description:
     "Accessible checkbox built on react-aria-components, styled with the quebi design system. Supports selected, indeterminate, invalid, and disabled states, plus grouping.",
-  category: "Forms",
+  category: "Selection",
   tags: ["form", "input", "boolean", "interactive"],
 }

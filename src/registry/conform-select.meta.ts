@@ -5,6 +5,6 @@ export const conformSelectMeta: ComponentMeta = {
   name: "Conform Select",
   description:
     "The quebi Select wired to Conform. Binds a single-value field's name, default selection, and validity from field metadata and renders inline errors.",
-  category: "Forms",
+  category: "Conform",
   tags: ["form", "conform", "select", "dropdown", "validation"],
 }

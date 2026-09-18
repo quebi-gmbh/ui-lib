@@ -5,6 +5,6 @@ export const fieldMeta: ComponentMeta = {
   name: "Field",
   description:
     "Accessible form field primitives built on react-aria-components, styled with the quebi design system. Includes Label, Description, FieldError, plus Field, Fieldset, FieldGroup, and Legend wrappers for composing the label → control → hint stack.",
-  category: "Forms",
+  category: "Inputs",
   tags: ["form", "label", "field", "description", "error", "fieldset"],
 }
