@@ -707,6 +707,68 @@ export function pageRange(
   }
 }
 
+/**
+ * A page to offer, or the run of pages that was skipped to get to the next one.
+ * Page indices here are zero-based like `page` everywhere else in this module;
+ * the pager adds the 1 when it draws the label.
+ */
+export type DataTablePageItem = number | "gap"
+
+export interface PageItemsOptions {
+  /** Pages offered either side of the current one. */
+  siblings?: number
+  /** Pages pinned at each end, so the first and last are always one press away. */
+  boundaries?: number
+}
+
+/**
+ * The page numbers a pager should draw, and where the gaps fall.
+ *
+ * `pageRange` says how many pages there are; this says which of them fit. The
+ * window is the two ends plus a band around the current page, and anything
+ * skipped between them collapses to a `"gap"` — except a run of exactly one,
+ * which is drawn instead: an ellipsis and a single page number cost the same
+ * width, and the number is reachable.
+ *
+ * An unknown `pageCount` yields no items at all rather than a guess. That is
+ * the cursor-mode and no-total case, where the honest pager is previous/next
+ * and there is nothing to number.
+ */
+export function pageItems(
+  page: number,
+  pageCount: number | undefined,
+  { siblings = 1, boundaries = 1 }: PageItemsOptions = {},
+): DataTablePageItem[] {
+  if (pageCount == null || pageCount < 1) return []
+  // The widest a truncated window can get: both ends, the band, the current
+  // page, and the two gaps. At or under it the gaps would hide fewer pages
+  // than they cost, so every page is drawn — "1 2 … 5" for five pages is a
+  // truncation that saves nothing.
+  const widest = boundaries * 2 + siblings * 2 + 3
+  if (pageCount <= widest) return Array.from({ length: pageCount }, (_, index) => index)
+
+  const current = Math.min(Math.max(page, 0), pageCount - 1)
+  const shown = new Set<number>([current])
+  for (let i = 0; i < boundaries; i++) {
+    if (i < pageCount) shown.add(i)
+    if (pageCount - 1 - i >= 0) shown.add(pageCount - 1 - i)
+  }
+  for (let i = current - siblings; i <= current + siblings; i++) {
+    if (i >= 0 && i < pageCount) shown.add(i)
+  }
+
+  const items: DataTablePageItem[] = []
+  let previous: number | undefined
+  for (const index of [...shown].sort((a, b) => a - b)) {
+    if (previous !== undefined && index - previous > 1) {
+      items.push(index - previous === 2 ? previous + 1 : "gap")
+    }
+    items.push(index)
+    previous = index
+  }
+  return items
+}
+
 /** Filters that shrink the result must not leave you on a page past the end. */
 export function clampPage(page: number, pageSize: number, total: number | undefined): number {
   if (total == null) return Math.max(0, page)

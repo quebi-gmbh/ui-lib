@@ -13,8 +13,10 @@
 import { describe, expect, test } from "bun:test"
 import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
+import { useState } from "react"
 import { DataTable } from "../../src/components/data-table"
-import type { DataTableColumn } from "../../src/lib/data-table"
+import { ServerTable } from "../../src/components/server-table"
+import { type DataTableColumn, type DataTableQuery, emptyQuery } from "../../src/lib/data-table"
 
 interface Order {
   id: number
@@ -50,6 +52,13 @@ describe("table chrome", () => {
     "size-7.5": "sq-xs",
     "size-9.5": "sq-sm",
     "size-11.5": "sq-md",
+    // A pagination page number sets its height outright rather than deriving it
+    // from padding: it carries no border and the nav targets beside it do, so
+    // the same `py-*` would leave the two 2px apart. Listed here so the numbers
+    // are inside the assertion below rather than quietly excused from it — they
+    // used to be a hard-coded 32px, which is neither `xs` (30) nor `sm` (38).
+    "h-7.5": "xs",
+    "h-9.5": "sm",
   }
 
   const chromeHeight = (element: Element): string | null => {
@@ -78,8 +87,9 @@ describe("table chrome", () => {
       // biome-ignore lint/style/noNonNullAssertion: asserted not null on the line above.
       pager!.querySelectorAll("button, input, [role=button]"),
     ).filter((element) => chromeHeight(element) !== null)
-    // Page size, page jump, Go, and the four nav buttons.
-    expect(controls.length).toBeGreaterThanOrEqual(7)
+    // Page size, page jump, Go, the four nav targets, and a page number for
+    // each of the five pages 24 rows make at 5 a page.
+    expect(controls.length).toBeGreaterThanOrEqual(12)
     expect([...new Set(controls.map(chromeHeight))].sort()).toEqual(["sm", "sq-sm"])
   })
 
@@ -127,6 +137,77 @@ describe("table chrome", () => {
     expect(screen.getByText(/Showing/).textContent).toContain("21")
   })
 
+  test("the pager numbers its pages, and a number is somewhere to press", async () => {
+    render(
+      <DataTable<Order>
+        aria-label="Orders"
+        columns={columns}
+        data={ORDERS}
+        getRowId={(order) => String(order.id)}
+        defaultPageSize={5}
+      />,
+    )
+    // 24 rows at 5 a page is 5 pages, which all fit in the window.
+    const pager = screen.getByRole("navigation", { name: "Pagination" })
+    expect(
+      within(pager)
+        .getAllByRole("button")
+        .map((target) => target.textContent)
+        .filter((text) => text !== ""),
+    ).toEqual(["1", "2", "3", "4", "5"])
+
+    // The page you are on says so, and is not a press.
+    expect(within(pager).getByRole("button", { name: "1" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+
+    await userEvent.setup().click(within(pager).getByRole("button", { name: "3" }))
+    expect(screen.getByText(/Showing/).textContent).toContain("11")
+    expect(within(pager).getByRole("button", { name: "3" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    // A page is a query parameter here, not an address: no target offers one.
+    expect(within(pager).queryAllByRole("link")).toHaveLength(0)
+  })
+
+  test("a page count nobody knows is not numbered, and still pages", async () => {
+    function Unknown() {
+      const [query, setQuery] = useState<DataTableQuery>({ ...emptyQuery, pageSize: 5 })
+      return (
+        <ServerTable<Order>
+          aria-label="Orders"
+          columns={columns}
+          rows={ORDERS.slice(query.page * 5, query.page * 5 + 5)}
+          getRowId={(order) => String(order.id)}
+          query={query}
+          onQueryChange={setQuery}
+          // No `total`: a COUNT(*) nobody ran. There is nothing to number, and
+          // a guessed page count is worse than none.
+          hasMore
+        />
+      )
+    }
+    render(<Unknown />)
+
+    const pager = screen.getByRole("navigation", { name: "Pagination" })
+    expect(
+      within(pager)
+        .getAllByRole("button")
+        .map((target) => target.textContent)
+        .filter((text) => text !== ""),
+    ).toEqual([])
+    expect(screen.getByText(/Showing/).textContent).toContain("of many")
+
+    // Previous/next still work, which is what this pager always offered.
+    await userEvent.setup().click(within(pager).getByRole("button", { name: "Next page" }))
+    expect(screen.getByText(/Showing/).textContent).toContain("6")
+    // And the jump stays: not knowing how many pages there are is exactly when
+    // typing one helps.
+    expect(screen.getByRole("textbox", { name: "Go to page" })).toHaveValue("2")
+  })
+
   test("the page jump follows the page you navigated to", async () => {
     render(
       <DataTable<Order>
@@ -138,9 +219,9 @@ describe("table chrome", () => {
       />,
     )
     const user = userEvent.setup()
-    // Re-queried every time: the fix remounts the control, so a reference held
-    // across a navigation is a detached node and would pass while the visible
-    // field said something else.
+    // Re-queried every time. The field is controlled now and does not remount,
+    // but a reference held across a navigation would still pass on a detached
+    // node if it ever went back to remounting.
     const jump = () => screen.getByRole("textbox", { name: "Go to page" })
 
     expect(jump()).toHaveValue("1")

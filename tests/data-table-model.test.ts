@@ -22,6 +22,7 @@ import {
   matchesFilter,
   nextEditableCell,
   nextSorting,
+  pageItems,
   pageRange,
   queryFromSearchParams,
   queryToSearchParams,
@@ -201,6 +202,64 @@ describe("the pager, when the total is not free", () => {
     expect(clampPage(19, 20, 0)).toBe(0)
     // Unknown total: nothing to clamp against, so the page stands.
     expect(clampPage(19, 20, undefined)).toBe(19)
+  })
+})
+
+/**
+ * The window of page numbers a pager draws. Indices are zero-based like `page`
+ * everywhere else in the module; the label is `index + 1`.
+ */
+describe("the page window", () => {
+  test("every page is offered while they all fit", () => {
+    expect(pageItems(0, 5)).toEqual([0, 1, 2, 3, 4])
+    expect(pageItems(4, 5)).toEqual([0, 1, 2, 3, 4])
+  })
+
+  test("the two ends and a band around the current page survive the truncation", () => {
+    // Page 8 of 24: first, gap, 6–8, gap, last.
+    expect(pageItems(7, 24)).toEqual([0, "gap", 6, 7, 8, "gap", 23])
+  })
+
+  test("a gap hiding a single page draws the page instead", () => {
+    // A run of one costs the same width as the ellipsis that would hide it,
+    // and the number is somewhere you can go.
+    expect(pageItems(3, 9)).toEqual([0, 1, 2, 3, 4, "gap", 8])
+    expect(pageItems(0, 5, { siblings: 1, boundaries: 1 })).toEqual([0, 1, 2, 3, 4])
+  })
+
+  test("the window slides to the ends without leaving a gap beside the boundary", () => {
+    expect(pageItems(0, 24)).toEqual([0, 1, "gap", 23])
+    expect(pageItems(23, 24)).toEqual([0, "gap", 22, 23])
+  })
+
+  test("siblings and boundaries widen it", () => {
+    expect(pageItems(11, 24, { siblings: 2, boundaries: 2 })).toEqual([
+      0,
+      1,
+      "gap",
+      9,
+      10,
+      11,
+      12,
+      13,
+      "gap",
+      22,
+      23,
+    ])
+  })
+
+  test("an unknown page count is no window at all, not a guessed one", () => {
+    // Cursor mode and the honest "of many" path: there is nothing to number,
+    // and the pager falls back to previous/next.
+    expect(pageItems(3, undefined)).toEqual([])
+    expect(pageItems(0, 0)).toEqual([])
+  })
+
+  test("a page past the end still draws a window, centred on the last page", () => {
+    // `clampPage` is what keeps this from happening; the pager should not draw
+    // an empty row if it does.
+    expect(pageItems(99, 5)).toEqual([0, 1, 2, 3, 4])
+    expect(pageItems(-3, 5)).toEqual([0, 1, 2, 3, 4])
   })
 })
 

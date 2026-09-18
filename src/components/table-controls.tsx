@@ -5,10 +5,6 @@ import type { FieldMetadata, Submission } from "@conform-to/react"
 import { parseWithValibot } from "@conform-to/valibot"
 import {
   AlignJustify,
-  ChevronFirst,
-  ChevronLast,
-  ChevronLeft,
-  ChevronRight,
   Columns3,
   Loader2,
   RotateCcw,
@@ -20,7 +16,6 @@ import { Fragment, type ReactNode, useEffect, useId, useMemo, useRef, useState }
 import * as v from "valibot"
 import { Badge } from "@/components/badge"
 import { Button, buttonStyles } from "@/components/button"
-import { ButtonGroup } from "@/components/button-group"
 import { Checkbox } from "@/components/checkbox"
 import { ConformCheckboxGroup } from "@/components/conform-checkbox-group"
 import { ConformDateField } from "@/components/conform-date-field"
@@ -31,6 +26,19 @@ import { ConformSelect } from "@/components/conform-select"
 import { ConformSwitch } from "@/components/conform-switch"
 import { FormattedNumber } from "@/components/formatted-number"
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/menu"
+import {
+  Pagination,
+  PaginationFirst,
+  PaginationGap,
+  PaginationInfo,
+  PaginationItem,
+  PaginationJump,
+  PaginationLast,
+  PaginationList,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationStack,
+} from "@/components/pagination"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/popover"
 import { SelectItem } from "@/components/select"
 import {
@@ -46,6 +54,7 @@ import {
   editValuesFor,
   isSameCell,
   leafColumns,
+  pageItems,
   pageRange,
   selectionCount,
 } from "@/lib/data-table"
@@ -821,113 +830,26 @@ export interface TablePagerProps {
 }
 
 /**
- * The page jump, as its own form.
+ * The result summary, the page numbers, and the two query controls under them.
  *
- * Its own for two reasons. One is a bug: `ConformNumberField` binds
- * `defaultValue` onto react-aria's uncontrolled `NumberField`, which reads it
- * at mount and never again, and Conform builds its form context exactly once
- * per `useForm` call — so neither the form `id` nor a `key` on the field alone
- * can re-seed the number after ‹ › ‹‹ ›› have moved the table. A *remount of
- * the form* can, and that is only cheap if the form is this small. The other
- * is that the page size used to share it: an invalid size then took `Go` down
- * with it, because one Conform form has one validity.
- */
-function TablePagerJump({
-  page,
-  pageCount,
-  onJump,
-}: {
-  page: number
-  pageCount: number | undefined
-  onJump: (page: number) => void
-}) {
-  const [form, fields] = useForm<{ jump: number | string }>({
-    id: `${useId()}-page-jump`,
-    defaultValue: { jump: String(page + 1) },
-    onValidate: ({ formData }) =>
-      parseWithValibot(formData, {
-        schema: v.object({
-          jump: v.pipe(
-            v.optional(v.union([v.number(), v.literal("")]), ""),
-            v.check(
-              (n) => n === "" || (Number(n) >= 1 && (pageCount == null || Number(n) <= pageCount)),
-              pageCount == null ? "Enter a page number" : `Enter a page between 1 and ${pageCount}`,
-            ),
-          ),
-        }),
-      }),
-    onSubmit: (event, { submission }) => {
-      event.preventDefault()
-      if (submission?.status !== "success") return
-      const jump = (submission.value as { jump: number | "" }).jump
-      if (jump !== "" && jump != null) onJump(Number(jump) - 1)
-    },
-  })
-
-  return (
-    <ChromeForm id={form.id} onSubmit={form.onSubmit}>
-      {/* `Go` is the field's verb, so it shares the field's edge rather than
-          floating beside it — which is what `ButtonGroup` is for. `items-start`
-          rather than the group's `items-stretch`, so `Go` stays level with the
-          input when the field grows a line to say which pages exist. */}
-      <ButtonGroup className="items-start">
-        {/*
-          No steppers. They cost ~74px of the field's width, which left nothing
-          for the digits — the number was in the DOM and off the screen. They
-          would also be the wrong affordance: the value here is pending until
-          `Go`, so stepping it navigates nowhere, and the buttons that do
-          navigate are two elements to the right.
-        */}
-        <ConformNumberField
-          field={fields.jump}
-          label="Go to page"
-          className={cn(
-            // The field publishes a label-above-control stack; in a single row
-            // of chrome that would make the pager two lines tall, so the label
-            // moves beside the control and an error keeps the line underneath.
-            // The `!` is load-bearing: tailwind-merge groups utilities by name
-            // and leaves a pair that differ only by an arbitrary variant both
-            // standing, so `mt-1.5` would otherwise win or lose on sheet order.
-            "flex w-auto flex-wrap items-center gap-x-2 gap-y-1",
-            "[&>[data-slot=label]+[data-slot=control]]:mt-0!",
-            "[&>[data-slot=control]+[slot=errorMessage]]:mt-0!",
-            "[&>[data-slot=label]]:whitespace-nowrap",
-            "[&>[slot=errorMessage]]:basis-full",
-            "[&>[data-slot=control]]:w-16",
-            // The group squares its children's inner corners; the corner that
-            // meets `Go` belongs to the input inside this one.
-            "[&_input]:rounded-e-none",
-          )}
-          size={CHROME_SIZE}
-          hideStepper
-        />
-        <Button type="submit" intent="outline" size={CHROME_SIZE}>
-          Go
-        </Button>
-      </ButtonGroup>
-    </ChromeForm>
-  )
-}
-
-/**
- * Page size, page jump and the four navigation buttons.
+ * This *is* `Pagination` — the centred column the gallery calls "with result
+ * info and jump", assembled from `PaginationStack`, `PaginationInfo` and a
+ * `PaginationList` whose window comes from `pageItems`. The old argument for
+ * keeping the two families apart was that `Pagination` is link-based and a
+ * table page is a query parameter with no address; that argument is about the
+ * anchors, and the anchors are the part that is optional. A target with an
+ * `onPress` and no `href` is a button wearing the same clothes, so the table
+ * gets the shape without inventing URLs for pages that have none.
  *
- * The row is two clusters rather than one line of eight controls. On the left,
- * the two statements about the *query* — what you are looking at, and how much
- * of it fits on a page. On the right, everything that navigates. The jump
- * carries a visible label, because a bare number box beside a button reading
- * `Go` says nothing about what it is a number of.
+ * What stays the pager's own is everything that knows about a *query*: the
+ * rows-per-page select, and the honest degradation when nobody counted the
+ * rows. `pageCount` is undefined in cursor mode and whenever `total` is absent,
+ * and there is nothing to number then — so the numbered row is replaced by
+ * previous/next, which is what this component always offered.
  *
- * Both inputs are Conform fields with a valibot schema, which is what makes
- * "page 900 of 15" an error message instead of an empty table: the page jump
- * is validated against the page count before it becomes a query.
- *
- * Not `Pagination`, and the difference is not cosmetic. `Pagination` is
- * link-based — a URL per page, an anchor you can middle-click, for paging
- * through a document. This is a control bound to a query: it reports a page
- * index through a callback, it knows the page *size* and can change it, and it
- * degrades honestly when nobody counted the rows. A table's pager has no href
- * to offer, because the page is a parameter of a query rather than an address.
+ * "Page 900 of 15" is still a field error rather than an empty table; the check
+ * moved into `PaginationJump` along with the field, where the value is
+ * controlled and can no longer disagree with the page you are actually on.
  */
 export function TablePager({
   page,
@@ -958,30 +880,21 @@ export function TablePager({
       event.preventDefault()
     },
   })
-  // The remount token for the jump. It fires when the page moved *externally*
-  // — a nav button, a page size that reset the page — and not when the user's
-  // own `Go` moved it, because remounting under their cursor would take the
-  // focus out of the field they are still typing in. The page they typed is
-  // the page the field would be re-seeded to anyway.
-  const { token, markPushed } = useExternalReset(`${page}-${pageSize}`)
-
   // One page has nowhere to jump to, and "Enter a page between 1 and 1" is the
   // only sentence the field could ever say. An unknown page count keeps it:
   // not knowing how many pages there are is exactly when typing one helps.
   const showJump = mode === "offset" && (pageCount == null || pageCount > 1)
+  // Nothing to number when nobody counted the rows, and nothing to number in
+  // cursor mode either — the window is empty and the row is previous/next.
+  const pages = mode === "offset" ? pageItems(page, pageCount) : []
 
   return (
-    <div
-      data-slot="table-pager"
-      className={cn(
-        "flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pt-1 print:hidden",
-        className,
-      )}
-    >
-      {/* What you are looking at, and how much of it fits on a page. Both are
-          statements about the query; neither navigates. */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <p className="text-quebi-fg-muted text-sm tabular-nums" aria-live="polite">
+    <div data-slot="table-pager" className={cn("pt-1 print:hidden", className)}>
+      <PaginationStack>
+        {/* `aria-live` is the only thing in this column with no visual trace:
+            the numbers below say which page you are on, and this says what is
+            on it — to a reader who cannot see either move. */}
+        <PaginationInfo className="text-sm tabular-nums" aria-live="polite">
           {rowsOnPage === 0 ? (
             "No rows"
           ) : (
@@ -1001,84 +914,81 @@ export function TablePager({
               )}
             </>
           )}
-        </p>
+        </PaginationInfo>
 
-        <ChromeForm id={sizeForm.id} onSubmit={sizeForm.onSubmit}>
-          <ConformSelect
-            field={sizeFields.size}
-            aria-label="Rows per page"
-            className="w-32"
-            size={CHROME_SIZE}
-            onSelectionChange={(key) => onPageSizeChange(Number(key))}
-          >
-            {sizes.map((size) => (
-              <SelectItem key={size} id={String(size)}>
-                {size} / page
-              </SelectItem>
-            ))}
-          </ConformSelect>
-        </ChromeForm>
-      </div>
-
-      {/* Everything that navigates, as one unit. */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        {showJump && (
-          <TablePagerJump
-            key={token}
-            page={page}
-            pageCount={pageCount}
-            onJump={(next) => {
-              markPushed(`${next}-${pageSize}`)
-              onPageChange(next)
-            }}
-          />
-        )}
-
-        <div className="flex items-center gap-0.5">
-          {mode === "offset" && (
-            <Button
-              intent="ghost"
-              size={CHROME_ICON_SIZE}
-              aria-label="First page"
+        <Pagination size={CHROME_SIZE}>
+          <PaginationList>
+            {mode === "offset" && (
+              <PaginationFirst
+                isDisabled={!range.hasPrevious}
+                onPress={() => onPageChange(0)}
+              />
+            )}
+            <PaginationPrevious
               isDisabled={!range.hasPrevious}
-              onPress={() => onPageChange(0)}
+              onPress={() => onPageChange(page - 1)}
+            />
+            {pages.map((item, index) =>
+              item === "gap" ? (
+                // biome-ignore lint/suspicious/noArrayIndexKey: a gap has no identity beyond its position in the window.
+                <PaginationGap key={`gap-${index}`} />
+              ) : (
+                <PaginationItem
+                  key={item}
+                  isCurrent={item === page}
+                  onPress={() => onPageChange(item)}
+                >
+                  {item + 1}
+                </PaginationItem>
+              ),
+            )}
+            <PaginationNext
+              isDisabled={!range.hasNext}
+              onPress={() => onPageChange(page + 1)}
+            />
+            {mode === "offset" && (
+              <PaginationLast
+                // Without a total there is no last page to go to, and a control
+                // that guesses one is worse than one that is not offered.
+                isDisabled={pageCount == null || page + 1 >= pageCount}
+                onPress={() => pageCount && onPageChange(pageCount - 1)}
+              />
+            )}
+          </PaginationList>
+        </Pagination>
+
+        {/* The two controls that are about the *query* rather than about where
+            you are in it: how much fits on a page, and which page to ask for
+            by name. They sit under the numbers because neither is navigation. */}
+        <div className="flex flex-wrap items-start justify-center gap-x-4 gap-y-2">
+          <ChromeForm id={sizeForm.id} onSubmit={sizeForm.onSubmit}>
+            <ConformSelect
+              field={sizeFields.size}
+              aria-label="Rows per page"
+              className="w-32"
+              size={CHROME_SIZE}
+              onSelectionChange={(key) => onPageSizeChange(Number(key))}
             >
-              <ChevronFirst data-slot="icon" aria-hidden="true" />
-            </Button>
-          )}
-          <Button
-            intent="ghost"
-            size={CHROME_ICON_SIZE}
-            aria-label="Previous page"
-            isDisabled={!range.hasPrevious}
-            onPress={() => onPageChange(page - 1)}
-          >
-            <ChevronLeft data-slot="icon" aria-hidden="true" />
-          </Button>
-          <Button
-            intent="ghost"
-            size={CHROME_ICON_SIZE}
-            aria-label="Next page"
-            isDisabled={!range.hasNext}
-            onPress={() => onPageChange(page + 1)}
-          >
-            <ChevronRight data-slot="icon" aria-hidden="true" />
-          </Button>
-          {mode === "offset" && (
-            <Button
-              intent="ghost"
-              size={CHROME_ICON_SIZE}
-              aria-label="Last page"
-              // Without a total there is no last page to go to, and a button
-              // that guesses one is worse than a button that is not offered.
-              isDisabled={pageCount == null || page + 1 >= pageCount}
-              onPress={() => pageCount && onPageChange(pageCount - 1)}
-            >
-              <ChevronLast data-slot="icon" aria-hidden="true" />
-            </Button>
+              {sizes.map((size) => (
+                <SelectItem key={size} id={String(size)}>
+                  {size} / page
+                </SelectItem>
+              ))}
+            </ConformSelect>
+          </ChromeForm>
+
+          {showJump && (
+            <PaginationJump
+              // One-based going in and coming out: the number a reader types is
+              // the number on the target, and the query's index is this line.
+              page={page + 1}
+              pageCount={pageCount}
+              onJump={(next) => onPageChange(next - 1)}
+              size={CHROME_SIZE}
+            />
           )}
         </div>
-      </div>
+      </PaginationStack>
     </div>
   )
 }
