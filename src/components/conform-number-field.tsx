@@ -4,7 +4,12 @@ import type { FieldMetadata } from "@conform-to/react"
 import type { NumberFieldProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { Description, FieldError, Label } from "@/components/field"
-import { NumberField, NumberInput, type NumberInputSize } from "@/components/number-field"
+import {
+  NumberField,
+  NumberInput,
+  type NumberInputSize,
+  type NumberInputStepper,
+} from "@/components/number-field"
 
 export interface ConformNumberFieldProps
   extends Omit<
@@ -34,6 +39,12 @@ export interface ConformNumberFieldProps
   hideStepper?: boolean
   /** Control height. Matches `Input`'s scale and `Button`'s `xs` / `sm`. */
   size?: NumberInputSize
+  /**
+   * Which glyphs the steppers draw: `plus-minus` (the default), `chevron` or
+   * `arrow`. Forwarded to `NumberInput`; it changes the icons only, so it
+   * cannot change the control's size.
+   */
+  stepper?: NumberInputStepper
 }
 
 /** Read a Conform constraint, which arrives as a string on the wire, as a number. */
@@ -61,6 +72,7 @@ export function ConformNumberField({
   description,
   hideStepper,
   size,
+  stepper,
   className,
   ...props
 }: ConformNumberFieldProps) {
@@ -87,7 +99,7 @@ export function ConformNumberField({
           {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
         </Label>
       )}
-      <NumberInput hideStepper={hideStepper} size={size} />
+      <NumberInput hideStepper={hideStepper} size={size} stepper={stepper} />
       {/* No ids and no aria-describedby here: this is a react-aria field, so it
           generates the description and error ids and already points the control
           at them. Setting id={field.errorId} would not break that — on mount

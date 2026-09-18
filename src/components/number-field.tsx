@@ -1,6 +1,13 @@
 "use client"
 
-import { MinusIcon, PlusIcon } from "lucide-react"
+import {
+  ArrowDown as ArrowDownIcon,
+  ArrowUp as ArrowUpIcon,
+  ChevronDown as ChevronDownIcon,
+  ChevronUp as ChevronUpIcon,
+  MinusIcon,
+  PlusIcon,
+} from "lucide-react"
 import type { InputProps, NumberFieldProps } from "react-aria-components"
 import {
   Button,
@@ -54,6 +61,21 @@ const numberInputSizeStyles = {
 
 type NumberInputSize = keyof typeof numberInputSizeStyles
 
+/**
+ * The glyphs the stepper pair draws: decrement first, increment second.
+ *
+ * Only the icons change — the pair stays the side-by-side row it has always
+ * been, so every variant is the same height and the same ~74px wide, and a
+ * field that fits one fits all three.
+ */
+const numberInputStepperIcons = {
+  "plus-minus": [MinusIcon, PlusIcon],
+  chevron: [ChevronDownIcon, ChevronUpIcon],
+  arrow: [ArrowDownIcon, ArrowUpIcon],
+} as const
+
+type NumberInputStepper = keyof typeof numberInputStepperIcons
+
 interface NumberInputProps extends Omit<InputProps, "prefix" | "size"> {
   /** Text / glyph rendered in a tag attached to the left edge (e.g. `£`). */
   prefix?: React.ReactNode
@@ -77,6 +99,18 @@ interface NumberInputProps extends Omit<InputProps, "prefix" | "size"> {
    * likewise taken from the surrounding surface when it is left out.
    */
   size?: NumberInputSize
+  /**
+   * Which glyphs the steppers draw. `plus-minus` is the default — the pair a
+   * quantity reads best as, because +/- says "add one" without implying an
+   * ordering. `chevron` and `arrow` draw the up / down pair a spinner
+   * conventionally uses, which is the better read when the number is a
+   * position on a scale (a page, a rank, a priority) rather than an amount.
+   *
+   * Geometry is not part of this choice: all three are the same horizontal
+   * row, so swapping the glyph cannot change the control's size. See
+   * `hideStepper` for the width that costs.
+   */
+  stepper?: NumberInputStepper
 }
 
 const addonStyles = cn(
@@ -108,10 +142,12 @@ function NumberInput({
   suffix,
   hideStepper: hideStepperProp,
   size: sizeProp,
+  stepper = "plus-minus",
   className,
   ...props
 }: NumberInputProps) {
   const { size, hideStepper } = useFieldSizing({ size: sizeProp, hideStepper: hideStepperProp })
+  const [DecrementIcon, IncrementIcon] = numberInputStepperIcons[stepper]
   return (
     <Group
       data-slot="control"
@@ -169,14 +205,14 @@ function NumberInput({
             aria-label="Decrease"
             className={cn(stepperStyles, "-ml-px")}
           >
-            <MinusIcon className="size-4" />
+            <DecrementIcon className="size-4" />
           </Button>
           <Button
             slot="increment"
             aria-label="Increase"
             className={cn(stepperStyles, "-ml-px rounded-e-quebi-sm")}
           >
-            <PlusIcon className="size-4" />
+            <IncrementIcon className="size-4" />
           </Button>
         </div>
       ) : null}
@@ -184,5 +220,5 @@ function NumberInput({
   )
 }
 
-export type { NumberFieldProps, NumberInputProps, NumberInputSize }
+export type { NumberFieldProps, NumberInputProps, NumberInputSize, NumberInputStepper }
 export { NumberField, NumberInput }

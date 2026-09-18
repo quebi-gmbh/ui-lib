@@ -57,6 +57,32 @@ export const numberFieldExamples: ComponentExample[] = [
     ),
   },
   {
+    title: "Stepper icons",
+    description:
+      "plus-minus is the default and reads as an amount; chevron and arrow draw the up / down pair a spinner conventionally uses, for a number that is a position on a scale. Icons only — all three are the same row, so the control is the same size either way.",
+    render: () => (
+      <div className="flex max-w-xs flex-col gap-6">
+        <NumberField defaultValue={4} minValue={0}>
+          <Label>Quantity</Label>
+          <NumberInput />
+          <Description>plus-minus — the default.</Description>
+        </NumberField>
+
+        <NumberField defaultValue={2} minValue={1}>
+          <Label>Page</Label>
+          <NumberInput stepper="chevron" />
+          <Description>chevron.</Description>
+        </NumberField>
+
+        <NumberField defaultValue={3} minValue={1}>
+          <Label>Priority</Label>
+          <NumberInput stepper="arrow" />
+          <Description>arrow.</Description>
+        </NumberField>
+      </div>
+    ),
+  },
+  {
     title: "Without steppers",
     description: "Hide the increment / decrement buttons for free-form entry.",
     render: () => (
