@@ -6,13 +6,7 @@ import type {
   ListBoxProps,
   PopoverProps,
 } from "react-aria-components"
-import {
-  Button,
-  ComboBoxContext,
-  ComboBox as ComboboxPrimitive,
-  ListBox,
-  useSlottedContext,
-} from "react-aria-components"
+import { Button, ComboBox as ComboboxPrimitive, ListBox } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { DropdownDescription, DropdownItem, DropdownLabel, DropdownSection } from "@/components/dropdown"
 import { PopoverContent } from "@/components/popover"
@@ -25,16 +19,26 @@ import { Input } from "@/components/input"
  * dropdown of options. Built on react-aria-components, it composes the quebi
  * Input for the control and reuses the Dropdown surface/items inside a Popover.
  * Selection and focus read in brand teal via the shared dropdown styling.
+ *
+ * The list opens as soon as the input is focused (`menuTrigger="focus"`), so
+ * tabbing in shows there is a list instead of making the first keystroke both
+ * reveal and filter it. Pass `menuTrigger="input"` for react-aria's own default
+ * (open on typing) or `"manual"` to leave the chevron as the only way in.
  */
 
 interface ComboBoxProps<T extends object> extends Omit<ComboboxPrimitiveProps<T>, "children"> {
   children: React.ReactNode
 }
 
-const ComboBox = <T extends object>({ className, ...props }: ComboBoxProps<T>) => {
+const ComboBox = <T extends object>({
+  className,
+  menuTrigger = "focus",
+  ...props
+}: ComboBoxProps<T>) => {
   return (
     <ComboboxPrimitive
       data-slot="control"
+      menuTrigger={menuTrigger}
       className={cn("group flex w-full flex-col gap-y-1.5", className)}
       {...props}
     />
@@ -79,9 +83,14 @@ const ComboBoxContent = <T extends object>({
   )
 }
 
-/** Takes `Input`'s props, including `size`. */
+/**
+ * Takes `Input`'s props, including `size`.
+ *
+ * The chevron stays rendered whatever the input holds: it is the button's only
+ * visible affordance, and hiding it once you type left a 36px-wide invisible
+ * toggle over the end of the field — and moved the input's end padding with it.
+ */
 const ComboBoxInput = (props: React.ComponentProps<typeof Input>) => {
-  const context = useSlottedContext(ComboBoxContext)
   return (
     <span
       data-slot="control"
@@ -89,9 +98,7 @@ const ComboBoxInput = (props: React.ComponentProps<typeof Input>) => {
     >
       <Input {...props} placeholder={props?.placeholder} />
       <Button className="absolute end-0 top-0 grid h-full w-9 cursor-default place-content-center outline-none">
-        {!context?.inputValue && (
-          <ChevronsUpDown data-slot="icon" className="-me-1 size-4 text-quebi-fg-muted" />
-        )}
+        <ChevronsUpDown data-slot="icon" className="-me-1 size-4 text-quebi-fg-muted" />
       </Button>
     </span>
   )

@@ -222,14 +222,14 @@ describe("committing when the control settles", () => {
   test("opening a combo box's popover commits nothing; picking from it commits", async () => {
     // The case the old blur rule existed for. A popover opening changes no
     // value, so there is nothing to report — and where focus went is no longer
-    // a question anyone asks.
+    // a question anyone asks. Opening the editor is enough to open the list:
+    // ComboBox defaults to menuTrigger="focus", and the editor takes focus.
     const edits: DataTableCellEdit<Product>[] = []
     render(<ComboProducts onCellEdit={(edit) => edits.push(edit)} />)
     const user = userEvent.setup()
 
     await user.click(cell("1", "status"))
     expect(isEditing("1", "status")).toBe(true)
-    await user.click(within(cell("1", "status")).getByRole("button"))
     expect(screen.getByRole("listbox")).toBeInTheDocument()
     expect(edits).toHaveLength(0)
 
