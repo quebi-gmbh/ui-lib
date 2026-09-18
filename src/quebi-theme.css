@@ -29,9 +29,11 @@
      blocks below for the numbers. */
   --color-quebi-fg-subtle:    var(--q-fg-subtle);   /* captions / meta */
 
-  /* Brand, as a *fill*: the mint a button, a ring or a tint is painted in.
-     Deliberately the same value in both themes — see `--q-brand` below. Put
-     `--color-quebi-on-brand` on top of it, never `--color-quebi-fg`. */
+  /* Brand, as a *fill*: the mint a button, a badge tint or a selected control is
+     painted in. Deliberately the same value in both themes — see `--q-brand`
+     below. Put `--color-quebi-on-brand` on top of it, never
+     `--color-quebi-fg`. A border belongs here only when it is the *edge* of such
+     a fill; a border that is on its own is a mark, not a fill. */
   --color-quebi-brand:        var(--q-brand);
   --color-quebi-brand-hover:  var(--q-brand-hover);
 
@@ -40,10 +42,29 @@
      mode, and mint text on the light surface is 1.74:1 — WCAG 1.4.3 asks 4.5:1.
      Identical to `--q-brand` on dark, where the fill value is already legible,
      so this split costs the dark theme nothing. Reach for it for any
-     `text-`/`decoration-` utility; reach for `--color-quebi-brand` for any
-     `bg-`/`border-`/`ring-`/`stroke-` one. */
+     `text-`/`decoration-` utility; for a `ring-`/`stroke-`/`outline-` one reach
+     for `--color-quebi-brand-mark` below, and for `bg-` for `--color-quebi-brand`. */
   --color-quebi-brand-text:       var(--q-brand-text);
   --color-quebi-brand-text-hover: var(--q-brand-text-hover);
+
+  /* Brand, as a *thin graphical mark* on a page surface: a focus ring, a focus
+     border, an SVG stroke. A third token because it answers a third question.
+     The fill has no contrast duty of its own; text is judged at WCAG 1.4.3's
+     4.5:1; a mark is judged at 1.4.11 / 2.4.11's 3:1 — so the mark may be the
+     *brightest* teal that clears its own bar rather than inheriting the text
+     token's stricter budget. Identical to `--q-brand` on dark, like the text
+     token, so the split costs the dark theme nothing.
+
+     Reach for it for `ring-`/`stroke-`/`outline-` and for a lone `border-` that
+     is the only thing marking a state. Use `--color-quebi-brand` when the border
+     is the *edge of a mint fill* (`border-quebi-brand bg-quebi-brand`), and for
+     the low-alpha tint borders, where the label carries the meaning.
+
+     Draw it opaque. 50% of any teal on `#f4f6f6` is under 2:1, and — less
+     obviously — the old `ring-quebi-brand/50` was only 3.29:1 on *dark* too
+     once composited over `#030712`. `tests/mark-contrast.test.ts` recomputes
+     every alpha it finds rather than trusting that. */
+  --color-quebi-brand-mark:   var(--q-brand-mark);
 
   /* Tint base for the low-alpha `white/[0.0x]` surfaces & borders. Flips the
      tint direction (white on dark, ink on light); keep using with /opacity. */
@@ -117,6 +138,8 @@
      fill token. The split only bites in light mode. */
   --q-brand-text:       #2dd4a8;
   --q-brand-text-hover: #5eead4;
+  /* Same again for the mark role: 10.64:1 on #030712 as a stroke. */
+  --q-brand-mark:       #2dd4a8;
   --q-surface:     #ffffff;  /* white tint on dark */
   --q-line:        #06b6d4;  /* cyan-500 hairline */
   --q-on-brand:    #052e22;  /* dark ink on mint — both themes */
@@ -150,6 +173,12 @@
      emerald, which is `--q-success`: the two would be a hue apart. */
   --q-brand-text:       #0f766e;
   --q-brand-text-hover: #115e59;
+  /* teal-600 — 3.45:1 on #f4f6f6, and the brightest step on the teal ladder
+     that clears 1.4.11's 3:1 at all: teal-500 (#14b8a6) is 2.29:1 and the
+     light brand-hover (#14b88f) is 2.34:1. One step lighter than the text
+     token, which is the whole reason this is not just `--q-brand-text` under
+     another name — a mark that only has to reach 3:1 gets to stay mintier. */
+  --q-brand-mark:       #0d9488;
   --q-surface:     #0b1120;  /* ink tint on light */
   --q-line:        #0b1120;  /* ink hairline */
   --q-on-brand:    #052e22;  /* unchanged — it sits ON mint, which has not moved */

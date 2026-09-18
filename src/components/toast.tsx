@@ -200,7 +200,7 @@ function ToastItem({ toast, onDismiss }: { toast: ToastRecord; onDismiss: (id: s
         className={cn(
           "-mr-1 -mt-1 shrink-0 cursor-pointer rounded-quebi-sm p-1 text-current/70",
           "transition-colors duration-150 hover:bg-quebi-surface/10 hover:text-current",
-          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
         )}
       >
         <CloseIcon className="size-4" />

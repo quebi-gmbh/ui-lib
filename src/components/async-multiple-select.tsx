@@ -252,7 +252,7 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
         data-invalid={isInvalid || undefined}
         className={cn(
           "flex w-full flex-wrap items-center gap-1.5 rounded-quebi-sm border border-quebi-line/10 bg-quebi-surface/[0.02] p-1.5",
-          "transition-colors duration-150 focus-within:border-quebi-brand",
+          "transition-colors duration-150 focus-within:border-quebi-brand-mark",
           isInvalid && "border-red-500",
           isDisabled ? "cursor-not-allowed opacity-50" : "cursor-text",
         )}
@@ -281,7 +281,7 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
                   }}
                   className={cn(
                     "flex size-4 shrink-0 items-center justify-center rounded-full text-quebi-fg-subtle outline-none transition-colors duration-150",
-                    "hover:bg-cyan-500/10 hover:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-brand/50",
+                    "hover:bg-cyan-500/10 hover:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-brand-mark",
                   )}
                 >
                   <X className="size-3" strokeWidth={2.5} aria-hidden="true" />

@@ -105,7 +105,7 @@ export function DisclosureTrigger({
           cn(
             "flex w-full cursor-pointer items-center justify-between gap-3 text-start font-medium outline-hidden",
             "transition-colors duration-150",
-            "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand/50 data-[focus-visible]:ring-inset",
+            "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark data-[focus-visible]:ring-inset",
             "disabled:opacity-50 disabled:cursor-not-allowed",
             "[&_[data-slot=icon]]:size-4 [&_[data-slot=icon]]:shrink-0",
             variant === "card" && "px-4 py-3 text-sm text-quebi-fg data-[hovered]:text-quebi-fg",

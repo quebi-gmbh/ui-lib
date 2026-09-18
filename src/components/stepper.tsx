@@ -143,7 +143,7 @@ function AdminBullet({
     status === "done"
       ? "border-transparent bg-quebi-brand text-quebi-on-brand"
       : status === "active"
-        ? "border-quebi-brand bg-quebi-bg text-quebi-brand-text"
+        ? "border-quebi-brand-mark bg-quebi-bg text-quebi-brand-text"
         : "border-transparent bg-quebi-surface/[0.06] text-quebi-fg-subtle"
   return (
     <span
@@ -211,7 +211,7 @@ function KioskBullet({
     status === "done"
       ? "border-transparent bg-quebi-brand text-quebi-on-brand"
       : status === "active"
-        ? "border-quebi-brand bg-quebi-bg text-quebi-brand-text"
+        ? "border-quebi-brand-mark bg-quebi-bg text-quebi-brand-text"
         : "border-transparent bg-quebi-surface/[0.06] text-quebi-fg-subtle"
   return (
     <span

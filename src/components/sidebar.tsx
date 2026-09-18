@@ -420,7 +420,7 @@ const SidebarSection = ({ className, ...props }: SidebarSectionProps) => {
       {...props}
     >
       {state !== "collapsed" && "label" in props && (
-        <Header className="mb-1 flex shrink-0 items-center rounded-quebi-sm px-2 text-quebi-fg-muted text-xs/6 outline-none ring-quebi-brand/50 transition-[margin,opa] duration-200 ease-linear *:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0 group-data-[collapsible=dock]:-mt-8 group-data-[collapsible=dock]:opacity-0">
+        <Header className="mb-1 flex shrink-0 items-center rounded-quebi-sm px-2 text-quebi-fg-muted text-xs/6 outline-none ring-quebi-brand-mark transition-[margin,opa] duration-200 ease-linear *:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0 group-data-[collapsible=dock]:-mt-8 group-data-[collapsible=dock]:opacity-0">
           {props.label}
         </Header>
       )}
@@ -481,7 +481,7 @@ const SidebarItem = ({
             isCurrent &&
               "font-medium bg-quebi-brand/10 text-quebi-brand-text hover:bg-quebi-brand/10 hover:text-quebi-brand-text [&_.text-muted-fg]:text-quebi-brand-text/80 [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-brand-text hover:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-brand-text",
             isFocusVisible &&
-              "outline-hidden ring-2 ring-quebi-brand/50 ring-inset",
+              "outline-hidden ring-2 ring-quebi-brand-mark ring-inset",
             (isPressed || isHovered) &&
               "bg-quebi-surface/[0.04] text-quebi-fg [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
             isDisabled && "opacity-50",
@@ -634,7 +634,7 @@ const SidebarDisclosureTrigger = ({
               "col-span-full gap-3 p-2 **:data-[slot=chevron]:text-quebi-fg-muted **:last:data-[slot=icon]:ms-auto sm:gap-2 sm:text-sm/5",
               isCollapsed && "justify-center",
 
-              isFocusVisible && "outline-hidden ring-2 ring-quebi-brand/50 ring-inset",
+              isFocusVisible && "outline-hidden ring-2 ring-quebi-brand-mark ring-inset",
               (isPressed || isHovered) &&
                 "bg-quebi-surface/[0.04] text-quebi-fg **:data-[slot=chevron]:text-quebi-fg **:data-[slot=icon]:text-quebi-fg **:last:data-[slot=icon]:text-quebi-fg",
               isDisabled && "opacity-50",

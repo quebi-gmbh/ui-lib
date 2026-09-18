@@ -19,13 +19,14 @@ export const thingStyles = tv({
   base: [
     "transition-colors duration-200",
     "rounded-quebi-sm border border-cyan-500/20",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
     "disabled:opacity-50 disabled:cursor-not-allowed",
   ],
   variants: {
     intent: {
       primary: "bg-quebi-brand border-quebi-brand text-quebi-bg hover:bg-quebi-brand-hover",
-      outline: "bg-transparent text-white hover:border-quebi-brand hover:text-quebi-brand",
+      outline:
+        "bg-transparent text-white hover:border-quebi-brand-mark hover:text-quebi-brand-text",
     },
     size: {
       sm: "px-3 py-1.5 text-sm",

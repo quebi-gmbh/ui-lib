@@ -134,7 +134,7 @@ const DialogCloseIcon = ({ className, ...props }: CloseButtonIndicatorProps) => 
       aria-label="Close"
       slot="close"
       className={cn(
-        "close absolute end-1 top-1 z-50 grid size-8 place-content-center rounded-quebi-sm text-quebi-fg-muted transition-colors hover:bg-quebi-surface/[0.06] hover:text-quebi-fg focus:bg-quebi-surface/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 sm:end-2 sm:top-2 sm:size-7",
+        "close absolute end-1 top-1 z-50 grid size-8 place-content-center rounded-quebi-sm text-quebi-fg-muted transition-colors hover:bg-quebi-surface/[0.06] hover:text-quebi-fg focus:bg-quebi-surface/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark sm:end-2 sm:top-2 sm:size-7",
         className,
       )}
     >

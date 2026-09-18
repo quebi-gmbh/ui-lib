@@ -84,7 +84,7 @@ const addonStyles = cn(
   "pointer-events-none bg-quebi-surface/[0.02] text-quebi-fg-muted",
   "border border-quebi-line/20",
   "transition-[border-color] duration-200",
-  "group-hover/addons:border-quebi-line/40 group-focus-within/addons:border-quebi-brand",
+  "group-hover/addons:border-quebi-line/40 group-focus-within/addons:border-quebi-brand-mark",
 )
 
 const stepperStyles = cn(
@@ -93,8 +93,8 @@ const stepperStyles = cn(
   "border border-quebi-line/20",
   "transition-[color,border-color,background-color] duration-200",
   "outline-none cursor-pointer",
-  "hover:border-quebi-brand hover:text-quebi-brand-text",
-  "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+  "hover:border-quebi-brand-mark hover:text-quebi-brand-text",
+  "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
   "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-quebi-line/20 disabled:hover:text-quebi-fg-muted",
 )
 
@@ -121,7 +121,7 @@ function NumberInput({
         "group/addons flex w-full items-stretch rounded-quebi-sm",
         "transition-[box-shadow] duration-200",
         // Wrapper owns the outer focus ring so every segment highlights together.
-        "focus-within:ring-2 focus-within:ring-quebi-brand/50",
+        "focus-within:ring-2 focus-within:ring-quebi-brand-mark",
         // Strip inner input's own ring (wrapper owns it).
         "[&_input:focus]:ring-0 [&_input:focus]:ring-transparent",
       )}
@@ -139,7 +139,7 @@ function NumberInput({
           numberInputSizeStyles[size],
           "transition-[border-color,box-shadow] duration-200",
           "enabled:hover:border-quebi-line/40",
-          "outline-none focus:outline-none focus:border-quebi-brand",
+          "outline-none focus:outline-none focus:border-quebi-brand-mark",
           "invalid:border-red-500",
           "disabled:cursor-not-allowed disabled:opacity-50 in-disabled:opacity-50",
           "scheme-dark",

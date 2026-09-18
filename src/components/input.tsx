@@ -63,7 +63,7 @@ export function Input({ className, ref, size: sizeProp, ...props }: InputProps) 
           inputSizeStyles[size],
           "transition-[border-color,box-shadow] duration-200",
           "enabled:hover:border-quebi-line/40",
-          "outline-none focus:outline-none focus:border-quebi-brand focus:ring-2 focus:ring-quebi-brand/50",
+          "outline-none focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark",
           "invalid:border-red-500 focus:invalid:ring-red-500/50",
           "[&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden",
           "disabled:cursor-not-allowed disabled:opacity-50",

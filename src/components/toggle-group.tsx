@@ -75,7 +75,7 @@ export const toggleGroupItemStyles = tv({
     "font-sans font-semibold whitespace-nowrap select-none cursor-pointer",
     "border border-solid border-transparent text-quebi-fg-muted",
     "transition-all duration-200 ease-out",
-    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg focus-visible:z-10",
+    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg focus-visible:z-10",
     "hover:not-selected:bg-quebi-surface/[0.04] hover:not-selected:text-quebi-fg",
     "selected:bg-quebi-brand selected:border-quebi-brand selected:text-quebi-on-brand selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover selected:hover:border-quebi-brand-hover",
     "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent",

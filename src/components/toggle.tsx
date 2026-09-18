@@ -24,7 +24,7 @@ export const toggleStyles = tv({
     "font-sans font-semibold whitespace-nowrap select-none cursor-pointer",
     "border border-solid",
     "transition-all duration-200 ease-out",
-    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
     "disabled:opacity-50 disabled:cursor-not-allowed",
     // react-aria slot convention — icons inherit current color
     "*:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center",
@@ -33,7 +33,7 @@ export const toggleStyles = tv({
     intent: {
       outline: [
         "bg-transparent border-quebi-line/20 text-quebi-fg-muted",
-        "hover:text-quebi-fg hover:border-quebi-brand",
+        "hover:text-quebi-fg hover:border-quebi-brand-mark",
         "selected:bg-quebi-brand selected:border-quebi-brand selected:text-quebi-on-brand selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover selected:hover:border-quebi-brand-hover selected:hover:text-quebi-on-brand",
       ],
       plain: [

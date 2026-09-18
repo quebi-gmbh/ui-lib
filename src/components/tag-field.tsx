@@ -190,7 +190,7 @@ export function TagField({
               "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
               "transition-[border-color,box-shadow] duration-200",
               "enabled:hover:border-quebi-line/40",
-              "outline-none focus:outline-none focus:border-quebi-brand focus:ring-2 focus:ring-quebi-brand/50",
+              "outline-none focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark",
               isInvalid && "border-red-500 focus:ring-red-500/50",
               "disabled:cursor-not-allowed disabled:opacity-50",
               "scheme-dark",
@@ -230,7 +230,7 @@ export function TagField({
                     "transition-colors duration-150",
                     allowsRemoving && "hover:border-quebi-line/40 hover:text-quebi-fg",
                     "data-[selected]:border-quebi-brand/40 data-[selected]:bg-quebi-brand/10 data-[selected]:text-quebi-brand-text",
-                    "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand/50 data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
+                    "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
                     "data-[disabled]:opacity-50",
                     "outline-none",
                   ),
@@ -247,7 +247,7 @@ export function TagField({
                           "-mr-1 flex size-4 shrink-0 items-center justify-center rounded-full",
                           "text-quebi-fg-subtle transition-colors duration-150",
                           "hover:bg-quebi-surface/10 hover:text-quebi-fg",
-                          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50",
+                          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark",
                           "cursor-pointer",
                         )}
                       >

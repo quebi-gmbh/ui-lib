@@ -26,8 +26,8 @@ const BASE_CLASSES = [
   "font-sans font-medium text-quebi-brand-text",
   "underline decoration-quebi-brand-text/40 underline-offset-2",
   "transition-colors duration-150 ease-out",
-  "hover:text-quebi-brand-text-hover hover:decoration-quebi-brand-text-hover",
-  "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg rounded-quebi-sm",
+  "hover:text-quebi-brand-text-hover hover:underline",
+  "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg rounded-quebi-sm",
   "disabled:cursor-default disabled:opacity-50 disabled:no-underline",
   "data-disabled:cursor-default data-disabled:opacity-50 data-disabled:no-underline",
 ]

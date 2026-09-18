@@ -82,7 +82,7 @@ const ContextMenuTrigger = ({ className, ...props }: ContextMenuTriggerProps) =>
     <button
       className={cn(
         "cursor-default outline-hidden disabled:opacity-60 disabled:forced-colors:disabled:text-[GrayText]",
-        "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+        "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
         className,
       )}
       ref={buttonRef}

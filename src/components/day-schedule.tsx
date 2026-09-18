@@ -35,7 +35,7 @@ export interface DaySpan {
 const TONES: Record<DayScheduleTone, { bar: string; node: string }> = {
   brand: {
     bar: "bg-quebi-brand shadow-[0_0_12px_rgb(45_212_168/0.35)]",
-    node: "border-quebi-brand",
+    node: "border-quebi-brand-mark",
   },
   cyan: {
     bar: "bg-cyan-500 shadow-[0_0_12px_rgb(6_182_212/0.35)]",
@@ -284,7 +284,7 @@ export function DaySchedule({
                   "touch-none transition-shadow duration-150",
                   tone.bar,
                   interactive ? "cursor-grab active:cursor-grabbing" : "cursor-default",
-                  "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+                  "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
                 )}
                 style={{
                   left: lane,
@@ -314,7 +314,7 @@ export function DaySchedule({
                     "transition-transform duration-150",
                     tone.node,
                     interactive ? "cursor-ns-resize hover:scale-110" : "cursor-default",
-                    "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+                    "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
                   )}
                   style={{ left: lane, top: toPercent(span[part]) }}
                 />

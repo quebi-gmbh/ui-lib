@@ -64,7 +64,7 @@ export function SliderThumb({ className, ...props }: SliderThumbProps) {
       className={cn(
         "top-1/2 left-1/2 size-5 rounded-full border border-quebi-line/20 bg-quebi-brand outline-hidden",
         "shadow-quebi-glow transition-[width,height] duration-150",
-        "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand/50 data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
+        "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
         "data-[dragging]:scale-110 data-[disabled]:opacity-60",
         className,
       )}

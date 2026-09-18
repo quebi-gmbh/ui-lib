@@ -121,8 +121,8 @@ const SelectTrigger = ({ children, className, size: sizeProp, ...props }: Select
           "transition-[border-color,box-shadow] duration-200",
           "enabled:hover:border-quebi-line/40",
           // focus / open → brand-teal border + ring.
-          "outline-none focus:outline-none focus:border-quebi-brand focus:ring-2 focus:ring-quebi-brand/50",
-          "group-open/select:border-quebi-brand group-open/select:ring-2 group-open/select:ring-quebi-brand/50",
+          "outline-none focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark",
+          "group-open/select:border-quebi-brand-mark group-open/select:ring-2 group-open/select:ring-quebi-brand-mark",
           // invalid wins via red border + ring.
           "group-invalid/select:border-red-500 group-invalid/select:focus:ring-red-500/50 group-invalid/select:group-open/select:ring-red-500/50",
           // leading icons / loader, muted.

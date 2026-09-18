@@ -61,7 +61,7 @@ const MenuTrigger = ({ className, ref, ...props }: MenuTriggerProps) => (
     data-slot="menu-trigger"
     className={cn(
       "relative inline text-start outline-hidden",
-      "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+      "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
       "*:data-[slot=chevron]:size-5 sm:*:data-[slot=chevron]:size-4",
       className,
     )}

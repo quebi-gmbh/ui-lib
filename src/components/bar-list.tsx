@@ -72,7 +72,7 @@ export function BarList<T>({
             }}
             className={cn(
               "group w-full rounded-quebi-sm outline-none",
-              "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+              "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
               onValueChange &&
                 "m-0! cursor-pointer transition-colors duration-150 hover:bg-cyan-500/5",
             )}

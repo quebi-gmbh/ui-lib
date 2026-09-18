@@ -94,7 +94,7 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
                 className={cn(
                   "size-14 shrink-0 overflow-hidden rounded-quebi-sm border bg-quebi-bg transition-colors duration-150",
                   index === activeIndex
-                    ? "border-quebi-brand ring-1 ring-quebi-brand"
+                    ? "border-quebi-brand-mark ring-1 ring-quebi-brand-mark"
                     : "border-quebi-line/10 hover:border-quebi-line/20",
                 )}
               >
