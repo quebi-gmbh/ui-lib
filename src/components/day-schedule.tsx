@@ -1,7 +1,10 @@
 "use client"
 
+import { Time } from "@internationalized/date"
 import { useCallback, useRef, useState } from "react"
+import type { TimeValue } from "react-aria-components"
 import { cn } from "@/lib/utils"
+import { TimeField, TimeInput } from "@/components/time-field"
 
 /**
  * DaySchedule — quebi design system
@@ -14,9 +17,35 @@ import { cn } from "@/lib/utils"
  * Spans are minutes from midnight (0–1440), so the component stays free of any
  * date library. Supply `spans` + `onSpansChange` for controlled use, or
  * `defaultSpans` to let it manage its own state.
+ *
+ * The rotated times beside each span are text by default. `timeLabels="editable"`
+ * makes them TimeFields instead, so a time can be typed rather than dragged to.
  */
 
 const DAY_MINUTES = 1440
+
+/**
+ * Lanes sit as far apart as the widest thing drawn in one. A static time label
+ * is only as wide as its line box (~16px), so 18px clears it; rotating a
+ * TimeField into the same slot puts the library control's own height there —
+ * a 20px line box, a few pixels more once a focused segment's tint is counted —
+ * so the editable mode needs half again as much room. `labelOffset` is derived
+ * from the gap, so the name column follows on its own.
+ */
+const LANE_GAP = 18
+const EDITABLE_LANE_GAP = 36
+
+/**
+ * A quarter turn anticlockwise about the lane, then clear of the handle: the
+ * start time runs up from the span's start, the end time down from its end.
+ * The `-50%` is half the element's own *height*, which is what centres the
+ * rotated box on the lane — so a taller control still sits on its lane, it
+ * just needs a wider gap to its neighbour.
+ */
+const EDGE_TRANSFORM = {
+  start: "rotate(-90deg) translate(16px, -50%)",
+  end: "rotate(-90deg) translate(calc(-100% - 16px), -50%)",
+} as const
 
 export type DayScheduleTone = "brand" | "cyan"
 
@@ -56,6 +85,92 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
 
 type DragPart = "body" | "start" | "end"
 
+/** Which rotated edge time to draw: none, read-only text, or a typeable field. */
+export type DayScheduleTimeLabels = "none" | "static" | "editable"
+
+type SpanEdge = "start" | "end"
+
+/**
+ * A minute offset as a `Time`. 1440 — midnight closing the day — has no `Time`
+ * of its own, so it reads as `00:00`; leaving that field untouched never emits
+ * a change, so the span keeps its 24:00 end.
+ */
+const toTimeValue = (minutes: number) =>
+  new Time(Math.floor(minutes / 60) % 24, Math.floor(minutes % 60))
+
+interface EdgeTimeFieldProps {
+  /** The field's accessible name — "pairing start time". */
+  label: string
+  minutes: number
+  /** The lane's `left`, shared with the bar and the handle. */
+  lane: string
+  edge: SpanEdge
+  isDisabled: boolean
+  isReadOnly: boolean
+  onCommit: (minutes: number) => void
+}
+
+/**
+ * The rotated, typeable edge time.
+ *
+ * It holds a draft of its own, and that is the whole point of it. react-aria
+ * reports a segmented field on every keystroke, so typing `17` into the hour
+ * emits `01:00` before it emits `17:00` — and committing the `01:00` would run
+ * it through the same clamp a drag uses, pin the span against `minDuration`,
+ * and leave the second keystroke editing a value the user never saw. The draft
+ * is what the field shows while it has focus; it reaches the schedule when
+ * focus leaves, or on Enter.
+ */
+function EdgeTimeField({
+  label,
+  minutes,
+  lane,
+  edge,
+  isDisabled,
+  isReadOnly,
+  onCommit,
+}: EdgeTimeFieldProps) {
+  // `undefined` is "not being edited" — then the field shows the span itself,
+  // so a drag on the handle still moves the number under the cursor.
+  const [draft, setDraft] = useState<TimeValue | null>()
+
+  const commit = () => {
+    if (draft) onCommit(draft.hour * 60 + draft.minute)
+    setDraft(undefined)
+  }
+
+  return (
+    <TimeField
+      aria-label={label}
+      value={draft === undefined ? toTimeValue(minutes) : draft}
+      onChange={(next) => setDraft(next)}
+      // react-aria routes this through `useFocusWithin`, so it fires when focus
+      // leaves the field — not when it steps from the hour segment to the minute.
+      onBlur={commit}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          // Commit without leaving the field, and — inside a form — without
+          // submitting the draft the schedule has not been told about yet.
+          event.preventDefault()
+          commit()
+        }
+        if (event.key === "Escape") setDraft(undefined)
+      }}
+      isDisabled={isDisabled}
+      isReadOnly={isReadOnly}
+      // Match `formatDayTime`: two digits, 24-hour, whatever the locale prefers.
+      hourCycle={24}
+      shouldForceLeadingZeros
+      className="absolute origin-top-left"
+      style={{ left: lane, top: toPercent(minutes), transform: EDGE_TRANSFORM[edge] }}
+    >
+      {/* The rotated box is the control's own metrics, so it carries no chrome
+          and no padding of its own — the lane is the box. */}
+      <TimeInput bare className="w-auto px-0 py-0" />
+    </TimeField>
+  )
+}
+
 export interface DayScheduleProps extends Omit<React.ComponentProps<"div">, "onChange"> {
   /** Controlled spans. Pair with `onSpansChange`. */
   spans?: DaySpan[]
@@ -70,11 +185,24 @@ export interface DayScheduleProps extends Omit<React.ComponentProps<"div">, "onC
   tickInterval?: number
   /** Track height in pixels. */
   height?: number
-  /** Horizontal distance between lanes, in pixels. */
+  /**
+   * Horizontal distance between lanes, in pixels. Defaults to 18, or to 36 in
+   * `timeLabels="editable"` — where the rotated control needs the room.
+   */
   laneGap?: number
   /** Offset of the first lane from the track's left edge, in pixels. */
   laneOffset?: number
-  /** Render the rotated start/end time labels beside each span. */
+  /**
+   * The rotated start/end times beside each span. `"static"` draws them as
+   * text; `"editable"` draws a TimeField the user can type a time into, which
+   * also widens the default `laneGap` to fit it; `"none"` omits them.
+   *
+   * A typed time is taken as typed — `step` snaps a drag, not a keystroke.
+   * `formatTime` does not apply to an editable field: the segments are
+   * react-aria's, rendered for the active locale.
+   */
+  timeLabels?: DayScheduleTimeLabels
+  /** @deprecated Use `timeLabels`: `false` is `"none"`, `true` is `"static"`. */
   showTimeLabels?: boolean
   isDisabled?: boolean
   isReadOnly?: boolean
@@ -90,8 +218,9 @@ export function DaySchedule({
   minDuration = 30,
   tickInterval = 120,
   height = 560,
-  laneGap = 18,
+  laneGap: laneGapProp,
   laneOffset = 24,
+  timeLabels,
   showTimeLabels = true,
   isDisabled = false,
   isReadOnly = false,
@@ -99,6 +228,9 @@ export function DaySchedule({
   className,
   ...props
 }: DayScheduleProps) {
+  const labelMode: DayScheduleTimeLabels = timeLabels ?? (showTimeLabels ? "static" : "none")
+  const laneGap = laneGapProp ?? (labelMode === "editable" ? EDITABLE_LANE_GAP : LANE_GAP)
+
   const [uncontrolled, setUncontrolled] = useState<DaySpan[]>(defaultSpans)
   const isControlled = controlledSpans !== undefined
   const spans = isControlled ? controlledSpans : uncontrolled
@@ -331,33 +463,40 @@ export function DaySchedule({
                 {span.label}
               </div>
 
-              {/* Rotated edge times */}
-              {showTimeLabels && (
-                <>
+              {/* Rotated edge times — text, or a field to type one into */}
+              {labelMode === "static" &&
+                (["start", "end"] as const).map((edge) => (
                   <div
+                    key={edge}
                     aria-hidden="true"
                     className="absolute origin-top-left whitespace-nowrap text-[10.5px] text-quebi-fg-muted tabular-nums"
                     style={{
                       left: lane,
-                      top: toPercent(span.start),
-                      transform: "rotate(-90deg) translate(16px, -50%)",
+                      top: toPercent(span[edge]),
+                      transform: EDGE_TRANSFORM[edge],
                     }}
                   >
-                    {formatTime(span.start)}
+                    {formatTime(span[edge])}
                   </div>
-                  <div
-                    aria-hidden="true"
-                    className="absolute origin-top-left whitespace-nowrap text-[10.5px] text-quebi-fg-muted tabular-nums"
-                    style={{
-                      left: lane,
-                      top: toPercent(span.end),
-                      transform: "rotate(-90deg) translate(calc(-100% - 16px), -50%)",
-                    }}
-                  >
-                    {formatTime(span.end)}
-                  </div>
-                </>
-              )}
+                ))}
+
+              {labelMode === "editable" &&
+                (["start", "end"] as const).map((edge) => (
+                  <EdgeTimeField
+                    key={edge}
+                    label={`${span.label} ${edge} time`}
+                    minutes={span[edge]}
+                    lane={lane}
+                    edge={edge}
+                    isDisabled={isDisabled}
+                    isReadOnly={isReadOnly}
+                    // Through the same clamp a drag uses, so `minDuration` and
+                    // the day bounds stay in one place. It does not snap, and
+                    // that is deliberate: typing 13:07 and getting 13:00 back
+                    // would be the control disagreeing with the keyboard.
+                    onCommit={(minute) => applyMove(index, edge, minute, span)}
+                  />
+                ))}
             </div>
           )
         })}

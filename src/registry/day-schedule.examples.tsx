@@ -43,6 +43,20 @@ const CoarseSchedule = () => {
   )
 }
 
+const TypedTimes = () => {
+  const [spans, setSpans] = useState<DaySpan[]>(WORKDAY.slice(0, 3))
+
+  return (
+    <div className="w-full max-w-md">
+      <div className="mb-5 flex items-baseline justify-between">
+        <div className="font-bold text-quebi-fg tracking-tight">wed 20 aug</div>
+        <span className="text-[10.5px] text-quebi-fg-subtle">type a time, or drag</span>
+      </div>
+      <DaySchedule spans={spans} onSpansChange={setSpans} timeLabels="editable" height={400} />
+    </div>
+  )
+}
+
 const LiveTotals = () => {
   const [spans, setSpans] = useState<DaySpan[]>(WORKDAY.slice(0, 3))
   const total = spans.reduce((sum, s) => sum + (s.end - s.start), 0)
@@ -73,6 +87,12 @@ export const dayScheduleExamples: ComponentExample[] = [
     title: "Controlled with derived output",
     description: "Because it is controlled, the total scheduled time updates as you drag.",
     render: () => <LiveTotals />,
+  },
+  {
+    title: "Editable times",
+    description:
+      "timeLabels=\"editable\" turns the rotated times into TimeFields, and widens the lanes to fit them. A typed time is taken as typed — the 15-minute step snaps a drag, not a keystroke — and commits when the field loses focus or on Enter.",
+    render: () => <TypedTimes />,
   },
   {
     title: "Read-only",

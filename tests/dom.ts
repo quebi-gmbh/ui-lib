@@ -36,6 +36,37 @@ expect.extend(matchers as unknown as Parameters<typeof expect.extend>[0])
 afterEach(cleanup)
 
 /**
+ * Collapsing the selection to where it already is, which in happy-dom is an
+ * infinite loop.
+ *
+ * Every react-aria date/time segment collapses the selection onto itself when
+ * it takes focus ("or Chrome won't fire input events"), and listens for
+ * `selectionchange` to collapse it again if anything moves it — the guard that
+ * keeps an Android composition from rewriting the segment's DOM. A browser
+ * fires `selectionchange` only when the selection actually moves, so that
+ * settles in one round. happy-dom's `collapse` builds a fresh `Range` every
+ * call and compares by identity, so it always fires: segment collapses, event,
+ * segment collapses, event, until the stack runs out — and the overflow lands
+ * as a `RangeError` storm from happy-dom's own error dispatch rather than as a
+ * failure anyone can read.
+ *
+ * Making the no-op a no-op is the whole fix. Nothing in the suite asserts on
+ * the selection; what it buys is the ability to focus a segment at all, which
+ * is what testing a TimeField, DateField or DatePicker by keyboard needs.
+ */
+{
+  const selection = window.getSelection()
+  const prototype = selection && (Object.getPrototypeOf(selection) as Selection)
+  const collapse = prototype?.collapse
+  if (prototype && collapse) {
+    prototype.collapse = function (node: Node | null, offset = 0) {
+      if (this.anchorNode === node && this.anchorOffset === offset) return
+      collapse.call(this, node, offset)
+    }
+  }
+}
+
+/**
  * `new Option(...)`, which happy-dom does not install as a global (it has
  * `HTMLOptionElement`, but not the legacy constructor that is an alias for it).
  *
