@@ -43,6 +43,21 @@ const CoarseSchedule = () => {
   )
 }
 
+const BackToBack = () => {
+  const [spans, setSpans] = useState<DaySpan[]>([
+    { id: "standup", label: "standup", start: 540, end: 555 },
+    { id: "one-on-one", label: "1:1", start: 545, end: 590 },
+    { id: "triage", label: "triage", start: 555, end: 585 },
+    { id: "retro", label: "retro", start: 560, end: 600 },
+  ])
+
+  return (
+    <div className="w-full max-w-md">
+      <DaySchedule spans={spans} onSpansChange={setSpans} height={360} />
+    </div>
+  )
+}
+
 const TypedTimes = () => {
   const [spans, setSpans] = useState<DaySpan[]>(WORKDAY.slice(0, 3))
 
@@ -87,6 +102,12 @@ export const dayScheduleExamples: ComponentExample[] = [
     title: "Controlled with derived output",
     description: "Because it is controlled, the total scheduled time updates as you drag.",
     render: () => <LiveTotals />,
+  },
+  {
+    title: "Names that want the same place",
+    description:
+      "Four spans inside one hour, so every name wants the same spot in the column beside them. They are pushed apart by a line's height instead of drawn on top of each other, and any name that had to move keeps a leader line back to its own bar. Drag one onto another and the column re-settles.",
+    render: () => <BackToBack />,
   },
   {
     title: "Editable times",

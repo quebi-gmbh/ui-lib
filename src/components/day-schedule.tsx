@@ -20,6 +20,11 @@ import { TimeField, TimeInput } from "@/components/time-field"
  *
  * The rotated times beside each span are text by default. `timeLabels="editable"`
  * makes them TimeFields instead, so a time can be typed rather than dragged to.
+ *
+ * Span names share a single column to the right of the lanes. Two spans can
+ * always be dragged onto the same midpoint, so that column de-overlaps itself
+ * (`layoutNames`) and any name it had to move keeps a leader line back to its
+ * own bar.
  */
 
 const DAY_MINUTES = 1440
@@ -34,6 +39,13 @@ const DAY_MINUTES = 1440
  */
 const LANE_GAP = 18
 const EDITABLE_LANE_GAP = 36
+
+/**
+ * The least vertical distance between two span names. They share one column, so
+ * this is the only thing keeping them apart: a `text-xs` line box is 16px, and
+ * the extra two are what stop two names from reading as one block of text.
+ */
+const LABEL_GAP = 18
 
 /**
  * A quarter turn anticlockwise about the lane, then clear of the handle: the
@@ -61,14 +73,26 @@ export interface DaySpan {
   tone?: DayScheduleTone
 }
 
-const TONES: Record<DayScheduleTone, { bar: string; node: string }> = {
+/**
+ * `text` is the tone as *text*, which is a different value from the fill: these
+ * are the theme's text tokens, so each one clears 4.5:1 on its own theme's
+ * surface, where `bg-quebi-brand` — a fill colour, deliberately the same teal in
+ * both themes — measures 1.74:1 on the light one.
+ *
+ * The name carries it because a name no longer always sits on its span's
+ * midpoint: `layoutNames` moves it when a neighbour is in the way, and once it
+ * has moved, the colour is what still says which bar it belongs to.
+ */
+const TONES: Record<DayScheduleTone, { bar: string; node: string; text: string }> = {
   brand: {
     bar: "bg-quebi-brand shadow-[0_0_12px_rgb(45_212_168/0.35)]",
     node: "border-quebi-brand-mark",
+    text: "text-quebi-brand-text",
   },
   cyan: {
     bar: "bg-cyan-500 shadow-[0_0_12px_rgb(6_182_212/0.35)]",
     node: "border-cyan-500",
+    text: "text-quebi-info",
   },
 }
 
@@ -82,6 +106,59 @@ export function formatDayTime(minutes: number) {
 const toPercent = (minutes: number) => `${((minutes / DAY_MINUTES) * 100).toFixed(4)}%`
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
+
+/** Keep a computed pixel offset out of `top: 303.33333333333337px`. */
+const round = (value: number) => Math.round(value * 100) / 100
+
+/**
+ * Where each span's name is drawn, in pixels down the track — indexed like
+ * `spans`, whatever order they come in.
+ *
+ * A name wants to sit on its span's midpoint, and nothing stops two spans from
+ * sharing one. Dragging until they do is the component's entire purpose, and
+ * two names at the same `top` in the same column draw on top of each other:
+ * unreadable, and silent about which of the two you are looking at. So the
+ * wanted positions are de-overlapped before they are drawn — sort by y, sweep
+ * down pushing each name clear of the one above it, then sweep back up so the
+ * column still ends inside the track.
+ *
+ * This is arithmetic on `height`, which is a prop, so it is exact at render
+ * time: no measuring, no layout effect. That is not an optimisation. The site
+ * is prerendered, so a position taken from a measured DOM would be absent from
+ * the HTML and would land — visibly — one frame after hydration.
+ */
+function layoutNames(spans: DaySpan[], height: number) {
+  const wanted = spans
+    .map((span, index) => ({
+      index,
+      y: (((span.start + span.end) / 2) * height) / DAY_MINUTES,
+    }))
+    // Ties break by span order rather than by whatever the sort makes of them,
+    // so two spans sharing a midpoint are laid out the same way every render.
+    .sort((a, b) => a.y - b.y || a.index - b.index)
+
+  // Down: each name clears the one above it, and the first clears the top edge.
+  let floor = Number.NEGATIVE_INFINITY
+  for (const name of wanted) {
+    name.y = Math.max(name.y, floor, 0)
+    floor = name.y + LABEL_GAP
+  }
+
+  // Up: the column ends inside the track. Skipped when the names cannot all fit
+  // in `height` — pushing then would only trade an overflow at the bottom for
+  // one at the top, and restack everything on the way.
+  if ((wanted.length - 1) * LABEL_GAP <= height) {
+    let ceiling = height
+    for (let i = wanted.length - 1; i >= 0; i--) {
+      wanted[i].y = Math.min(wanted[i].y, ceiling)
+      ceiling = wanted[i].y - LABEL_GAP
+    }
+  }
+
+  const tops: number[] = []
+  for (const name of wanted) tops[name.index] = round(name.y)
+  return tops
+}
 
 type DragPart = "body" | "start" | "end"
 
@@ -352,6 +429,8 @@ export function DaySchedule({
   )
   // Push the name column clear of the widest lane so labels never overlap bars.
   const labelOffset = laneOffset + Math.max(0, spans.length - 1) * laneGap + 28
+  // …and clear of each other, which the column on its own does not give you.
+  const nameTops = layoutNames(spans, height)
 
   return (
     <div
@@ -392,8 +471,15 @@ export function DaySchedule({
 
         {spans.map((span, index) => {
           const tone = TONES[span.tone ?? (index % 2 === 0 ? "brand" : "cyan")]
-          const lane = `${laneOffset + index * laneGap}px`
+          const laneX = laneOffset + index * laneGap
+          const lane = `${laneX}px`
           const valueText = `${span.label}, ${formatTime(span.start)} to ${formatTime(span.end)}`
+          // Where the name would sit if nothing were in its way, and where it
+          // actually sits. A name that had to move gets a leader line back to
+          // its own span, because the tone alone repeats every other lane.
+          const midpointY = round((((span.start + span.end) / 2) * height) / DAY_MINUTES)
+          const nameTop = nameTops[index]
+          const isNameMoved = Math.abs(nameTop - midpointY) >= 1
 
           return (
             // biome-ignore lint/a11y/useSemanticElements: <fieldset> is the element for this role, but this wrapper only exists to name the three sliders below it and has no box of its own — a fieldset brings a UA border, padding and `min-inline-size: min-content` into a track whose children are absolutely positioned against it.
@@ -452,13 +538,39 @@ export function DaySchedule({
                 />
               ))}
 
+              {/* Leader line — only drawn for a name that had to move.
+                  `currentColor` and not a `stroke` attribute on purpose: a
+                  colour that reaches the DOM only as an attribute value is a
+                  name Tailwind never scans, so the variable behind it may not
+                  be emitted at all. A utility class on the <svg> is scanned. */}
+              {isNameMoved && (
+                <svg
+                  aria-hidden="true"
+                  focusable="false"
+                  className={cn(
+                    "pointer-events-none absolute inset-0 h-full w-full opacity-40",
+                    tone.text,
+                  )}
+                >
+                  <line
+                    x1={laneX + 6}
+                    y1={midpointY}
+                    x2={labelOffset - 4}
+                    y2={nameTop}
+                    stroke="currentColor"
+                    strokeWidth={1}
+                    strokeDasharray="2 3"
+                  />
+                </svg>
+              )}
+
               {/* Name */}
               <div
-                className="absolute -translate-y-1/2 whitespace-nowrap text-xs text-quebi-fg-muted"
-                style={{
-                  left: `${labelOffset}px`,
-                  top: toPercent((span.start + span.end) / 2),
-                }}
+                className={cn(
+                  "absolute -translate-y-1/2 whitespace-nowrap text-xs",
+                  tone.text,
+                )}
+                style={{ left: `${labelOffset}px`, top: `${nameTop}px` }}
               >
                 {span.label}
               </div>
