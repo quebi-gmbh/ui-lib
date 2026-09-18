@@ -27,6 +27,7 @@ import { colorThumbExamples } from "./color-thumb.examples"
 import { colorWheelExamples } from "./color-wheel.examples"
 import { comboBoxExamples } from "./combo-box.examples"
 import { commandMenuExamples } from "./command-menu.examples"
+import { commitGraphExamples } from "./commit-graph.examples"
 import { composedChartExamples } from "./composed-chart.examples"
 import { conformAsyncMultipleSelectExamples } from "./conform-async-multiple-select.examples"
 import { conformAsyncSelectExamples } from "./conform-async-select.examples"
@@ -168,6 +169,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "color-wheel": colorWheelExamples,
   "combo-box": comboBoxExamples,
   "command-menu": commandMenuExamples,
+  "commit-graph": commitGraphExamples,
   "composed-chart": composedChartExamples,
   "conform-async-multiple-select": conformAsyncMultipleSelectExamples,
   "conform-async-select": conformAsyncSelectExamples,
