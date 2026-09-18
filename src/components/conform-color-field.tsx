@@ -2,7 +2,12 @@
 
 import type { FieldMetadata } from "@conform-to/react"
 import { cn } from "@/lib/utils"
-import { ColorField, type ColorFieldProps, ColorInput } from "@/components/color-field"
+import {
+  ColorField,
+  ColorFieldGroup,
+  type ColorFieldProps,
+  ColorInput,
+} from "@/components/color-field"
 import { Description, FieldError, Label } from "@/components/field"
 
 export interface ConformColorFieldProps
@@ -59,7 +64,9 @@ export function ConformColorField({
           {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
         </Label>
       )}
-      <ColorInput placeholder={placeholder} />
+      <ColorFieldGroup>
+        <ColorInput placeholder={placeholder} />
+      </ColorFieldGroup>
       {/* No ids and no aria-describedby here: this is a react-aria field, so it
           generates the description and error ids and already points the control
           at them. Setting id={field.errorId} would not break that — on mount
