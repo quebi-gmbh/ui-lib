@@ -643,8 +643,9 @@ export function TableShell<T extends RowData>({
   const hasBands = headerGroups.length > 1
   // The same signal react-aria's own collection uses to pick its SSR path, and
   // for the same reason: a band is a parent column, and parent columns do not
-  // survive that path (adobe/react-spectrum#10598). `TableColumnGroup` has the
-  // whole story. Until the gate opens — one render after hydration — the band
+  // survive that path (adobe/react-spectrum#10598, closed as out of scope —
+  // `TableColumnGroup` has the whole story, including why this is not waiting on
+  // a release). Until the gate opens — one render after hydration — the band
   // name rides above each leaf label instead, in a block the band row's own
   // height, so nothing moves when the real row arrives.
   const isSSR = useIsSSR()

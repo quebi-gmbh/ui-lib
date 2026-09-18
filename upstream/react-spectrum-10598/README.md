@@ -1,27 +1,43 @@
-# adobe/react-spectrum#10598 — the reply, and the repro that backs it
+# adobe/react-spectrum#10598 — the evidence, and what upstream did with it
 
-This folder is not ui-lib code. It is the attachment to an outbound bug report:
-[adobe/react-spectrum#10598](https://github.com/adobe/react-spectrum/issues/10598), which ui-lib's
-SSR band gate in `src/components/table-shell.tsx` exists to work around, and which task #34 is
-waiting on. It sits outside `biome.jsonc`'s `files.includes` on purpose — it imports
-`react-aria-components` primitives and writes a raw `<th>`, which is exactly what this repo's own
-rules forbid, because it has to be a plain consumer of the upstream library and nothing else. Same
-reason it has its own `package.json` and lockfile: the versions that reproduce are part of the
-report.
+This folder is not ui-lib code. It is the standing evidence behind ui-lib's SSR band gate in
+`src/components/table-shell.tsx`: three runnable shapes of an upstream bug, a verified fix for two
+of them, and a written-out argument. It sits outside `biome.jsonc`'s `files.includes` on purpose —
+it imports `react-aria-components` primitives and writes a raw `<th>`, which is exactly what this
+repo's own rules forbid, because it has to be a plain consumer of the upstream library and nothing
+else. Same reason it has its own `package.json` and lockfile: the versions that reproduce are part
+of the claim.
 
-The issue's one reply declines to investigate, on the premise that react-aria-components does not
-use react-stately's `TableCollection`. That premise is checkable and half wrong, so the reply below
-checks it — with file and line references into the published sources, three runnable shapes of the
-bug (a corrupted header, a render that never returns, and one that throws with no SSR involved), and
-a fix for the first two that is verified to work and verified not to disturb react-stately's own
-`TableCollection`.
+## Status: the issue is closed, and the gate is permanent until #5263 moves
 
-**Posting it is a human step.** An agent speaking for the repo owner in someone else's tracker, in a
-thread that opened this way, is not a thing to automate. Everything here is ready to paste.
+[#10598](https://github.com/adobe/react-spectrum/issues/10598) was closed on **2026-09-12**. The
+sequence is worth knowing, because none of it turns on the report being wrong:
 
-One placeholder is left in the reply on purpose: **STACKBLITZ LINK**. The issue template asks for a
-sandbox, and this folder is one — drop it into a StackBlitz node project (or a gist, or any public
-repo) and put the URL there. `npm install && npm run repro` is the whole instruction.
+1. A contributor declined to investigate, saying the report was about a class RAC "doesn't even
+   use". That is the premise the reply below was written to refute.
+2. He then **edited that comment** to concede the diagnosis: *"For any human reviewer looking at
+   this, the point it is trying to get at is simply that we should be making mutable clones of nodes
+   before passing them into `buildHeaderRows`."* Which is the report, restated as the fix.
+3. A maintainer closed the issue anyway, on different grounds: RAC's table collection "doesn't
+   support nested columns/column groups yet" —
+   [#5263](https://github.com/adobe/react-spectrum/issues/5263), open since 2023 and labelled a bug
+   — and "if you're going to add a branch component to support that for your application, then
+   you'll probably have to create your own table collection."
+
+So the mechanism stands unrefuted and the fix is declined as out of scope. There is no release to
+wait for and no reply that would change that; the outstanding question upstream is the *feature*,
+#5263, not the bug. ui-lib's answer is the gate: the band row renders on the client only, the band
+name rides above each leaf label in the server HTML at the same height, and
+`tests/components/table.test.tsx` keeps both bugs asserted so that if #5263 is ever taken up we find
+out from a red test rather than by re-checking a tracker.
+
+**The reply below was never posted**, and posting it to a closed issue is not obviously worth
+anyone's afternoon. It is kept because it is the case, assembled and checked, and #5263 is where it
+would go if someone decides to make it. The one placeholder in it — **STACKBLITZ LINK** — is
+unfilled for the same reason: this folder is the sandbox, and it only needs a URL if it is ever
+actually sent. `npm install && npm run repro` is the whole instruction.
+
+Delete this folder when #5263 closes, in either direction.
 
 ## Run it
 
@@ -69,7 +85,12 @@ recalled:
 
 ---
 
-## The reply, ready to post
+## The reply, as it stood when the issue closed
+
+Written against the *unedited* first comment — the one that said RAC does not use react-stately's
+`TableCollection`. Section 1 is therefore answering a point its author has since withdrawn; the rest
+is untouched by anything that happened in the thread, and is the part that would carry over to
+#5263.
 
 > Thanks for looking. The premise is checkable, so here are the lines — all from the released
 > packages.

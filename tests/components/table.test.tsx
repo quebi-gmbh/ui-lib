@@ -103,33 +103,37 @@ describe("Table", () => {
    * over every leaf is the shape that corrupts without hanging, so this can be
    * asserted rather than timed out.
    *
-   * **When this test fails, the upstream fix has shipped.** Then: drop the
-   * `useIsSSR` gate and the band-name fallback block in `table-shell.tsx`, drop
+   * **Nobody upstream is fixing this, so do not read a passing run as "not yet".**
+   * #10598 was closed on 2026-09-12. The mechanism was not disputed — the
+   * contributor who first declined to investigate edited his reply to concede it
+   * ("we should be making mutable clones of nodes before passing them into
+   * `buildHeaderRows`") — but a maintainer closed it because react-aria-components'
+   * table collection does not support nested columns at all. That is
+   * https://github.com/adobe/react-spectrum/issues/5263, open since 2023 and
+   * labelled a bug, with the advice that an application wanting a branch column
+   * "will probably have to create your own table collection". #5263 is what this
+   * test now watches: a fix would arrive as part of nested-column support, not as
+   * a patch release against the report.
+   *
+   * **If this test does fail, that has happened.** Then: drop the `useIsSSR` gate
+   * and the band-name fallback block in `table-shell.tsx`, drop
    * `TABLE_BAND_HEIGHT` (nothing else needs a hard-coded row height), turn the
    * server-render test in `data-table.test.tsx` into one that asserts two header
-   * rows in the server HTML, and delete this test.
+   * rows in the server HTML, and delete this test. Check the sibling test below
+   * separately — the two halves can move independently.
    *
-   * Upstream status, checked 2026-09-11: the issue is open and the bug is still
-   * in the newest released stack — this test passes unchanged against
-   * react-stately 3.50.0 / react-aria 3.52.1 / react-aria-components 1.21.1, so
-   * a version bump is not what is missing. The one reply it has says the report
-   * is about a class react-aria-components "doesn't even use". It does use it:
-   * RAC's own `TableCollection.updateColumns` calls `buildHeaderRows` imported
-   * from `react-stately/private/table/TableCollection` — one import line in
-   * `react-aria-components/dist/private/Table.js` — and that function is where
-   * the writes to `prevKey`/`nextKey` happen. Nothing in the report has been
-   * refuted, but nothing will move upstream until someone says so there.
-   *
-   * The reply that says so — and a standalone repro of all three shapes that
-   * needs none of this repo — is in `upstream/react-spectrum-10598/`, together
-   * with two things this test cannot show. Three bands over one leaf each make
-   * `buildHeaderRows` execute `item.nextKey = item.key`, so the `nextKey` walk
-   * has a one-node cycle and `renderToString` never returns. And deleting only
-   * the `prevKey`/`nextKey` writes from `buildHeaderRows` fixes both of those
-   * shapes while leaving react-stately's own `TableCollection` byte-identical,
-   * because `GridCollection` re-chains every child from `childNodes` order after
-   * `buildHeaderRows` has run — so those particular writes are already dead for
-   * the only other caller. Posting the reply is a human step; see that README.
+   * Everything needed to act on that, or to make the case again if #5263 is ever
+   * picked up, is in `upstream/react-spectrum-10598/`: a standalone repro of all
+   * three shapes that needs none of this repo, and the provenance for every
+   * claim. Two things live there that this test cannot show. Three bands over one
+   * leaf each make `buildHeaderRows` execute `item.nextKey = item.key`, so the
+   * `nextKey` walk has a one-node cycle and `renderToString` never returns. And
+   * deleting only the `prevKey`/`nextKey` writes from `buildHeaderRows` fixes
+   * both of those shapes while leaving react-stately's own `TableCollection`
+   * byte-identical, because `GridCollection` re-chains every child from
+   * `childNodes` order after `buildHeaderRows` has run — so those particular
+   * writes are already dead for the only other caller. The fix is three lines and
+   * it is verified; what is missing is a maintainer who wants it.
    */
   test("a band is still corrupted by react-stately on the server", () => {
     const html = renderToString(
@@ -183,14 +187,22 @@ describe("Table", () => {
    * this stops throwing — and then `bandDepth`, `banded()` and `bandClassName`
    * can go, along with the `bandDepth` argument `table-shell.tsx` computes.
    *
-   * Upstream status, checked 2026-09-11: still present. react-stately 3.50.0's
-   * `buildHeaderRows` is byte-identical to the 3.48.0 in this lockfile, and the
-   * placeholder literal it constructs still has no `render`.
+   * Upstream status, checked 2026-09-18: still present, and still nobody's
+   * errand. react-stately's `buildHeaderRows` is unchanged from the 3.48.0 in
+   * this lockfile through 3.50.0 and the 2026-09-18 nightly, and the placeholder
+   * literal it constructs still has no `render`. #10598 is closed as out of
+   * scope; see the sibling test above for what was actually said and why the
+   * watch now points at
+   * https://github.com/adobe/react-spectrum/issues/5263 instead.
    *
    * This half needs a fix on the react-aria-components side rather than the
    * react-stately one — `Collection.tsx` calls `node.render!(node)` with no case
-   * for a placeholder — so it is separate from the mutation bug above and will
-   * probably land separately. `upstream/react-spectrum-10598/placeholder.tsx` is
+   * for a placeholder — so it is separate from the mutation bug above and could
+   * still land separately, whatever happens to #5263: rendering a placeholder as
+   * a blank cell is a defensible change on its own terms and does not require
+   * anyone to commit to nested columns. That is why this test exists rather than
+   * being folded into the one above, and why its instructions are its own.
+   * `upstream/react-spectrum-10598/placeholder.tsx` is
    * this same shape written against plain react-aria-components, for the upstream
    * thread; it is worth knowing that this one is not SSR-specific, which is what
    * makes it the cleanest of the three to hand someone.

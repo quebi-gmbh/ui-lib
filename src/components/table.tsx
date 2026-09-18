@@ -243,15 +243,27 @@ interface TableColumnGroupProps {
  * links now cross band boundaries: `updateColumns` reaches a column twice, the
  * duplicate makes `buildHeaderRows` link a node to itself, and the next walk
  * never ends. So a banded header is rendered only where react-aria is not using
- * that path — see `useIsSSR` in table-shell.tsx — and the gate goes away when
- * react-stately stops mutating shared nodes.
+ * that path — see `useIsSSR` in table-shell.tsx.
  *
- * That is reported upstream as
- * [adobe/react-spectrum#10598](https://github.com/adobe/react-spectrum/issues/10598),
- * with the reproduction and the mechanism. What watches for the fix is a test in
- * `tests/components/table.test.tsx`, which asserts the corruption on a shape
- * that comes out wrong without hanging: when it fails, the gate, the fallback
- * block and `TABLE_BAND_HEIGHT` can all go.
+ * Expect that gate to stay. It was reported with the mechanism and a repro as
+ * [adobe/react-spectrum#10598](https://github.com/adobe/react-spectrum/issues/10598)
+ * and closed on 2026-09-12 — not as wrong, but as out of scope. A contributor
+ * edited his first reply to concede the diagnosis ("we should be making mutable
+ * clones of nodes before passing them into `buildHeaderRows`"); a maintainer
+ * then closed it on the grounds that react-aria-components' table collection
+ * does not support nested columns at all. That is
+ * [#5263](https://github.com/adobe/react-spectrum/issues/5263), open since 2023,
+ * and the advice attached to it is that an application wanting a branch column
+ * "will probably have to create your own table collection".
+ *
+ * Which is to say this component stands on a shape upstream has not committed
+ * to. Everything underneath it works regardless — `buildHeaderRows` computes the
+ * span, `useTableColumnHeader` emits the ARIA, the keyboard delegate walks it and
+ * `TableLayout` measures it — and the single place the missing commitment shows
+ * is that one server-rendering path. `tests/components/table.test.tsx` keeps
+ * asserting both upstream bugs anyway, so if #5263 is ever taken up and they go
+ * with it, those tests fail and say so; then the gate, the fallback block and
+ * `TABLE_BAND_HEIGHT` can all go. Nobody is waiting for that.
  */
 const TableColumnGroup = createBranchComponent<
   object,
@@ -317,10 +329,15 @@ interface TableHeaderProps<T extends object> extends HeaderProps<T> {
    *
    * That is the second half of
    * [adobe/react-spectrum#10598](https://github.com/adobe/react-spectrum/issues/10598),
-   * and `tests/components/table.test.tsx` watches it the same way it watches the
-   * first: a test that renders the shape *without* this prop and asserts the
-   * throw. When that test fails, this prop, `banded()` and `bandClassName` can
-   * all go.
+   * which was closed as out of scope along with the first — nested columns are
+   * not a supported shape upstream
+   * ([#5263](https://github.com/adobe/react-spectrum/issues/5263)), so neither
+   * half is being fixed on its own. `tests/components/table.test.tsx` watches it
+   * the same way it watches the first: a test that renders the shape *without*
+   * this prop and asserts the throw. If that test ever fails, this prop,
+   * `banded()` and `bandClassName` can all go — but this half needs a change in
+   * react-aria-components' renderer rather than in react-stately, so it could
+   * still go first.
    */
   bandDepth?: number
   /** Extra classes for the bands above the gutters — the sticky offset, mostly. */
