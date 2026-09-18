@@ -10,7 +10,8 @@ import type { ComponentExample } from "./types"
 export const inputOtpExamples: ComponentExample[] = [
   {
     title: "Default",
-    description: "A six-digit code in a single group.",
+    description:
+      "A six-digit code in a single group. One input sits under all six slots: click a digit you have typed to correct it, and anything further right lands on the first empty slot.",
     render: () => (
       <InputOTP maxLength={6} aria-label="One-time password">
         <InputOTPGroup>
