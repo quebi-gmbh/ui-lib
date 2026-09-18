@@ -30,7 +30,20 @@ export function ruleById(id: string): RuleMeta {
   return rule
 }
 
-const ROOT = join("/tmp", `quebi-rules-tests-${process.pid}`)
+/**
+ * The temp project, deliberately checked out under a decoy path.
+ *
+ * `src/components/` above the project root is the shape that broke the old
+ * `$filename` guards: a rule scoped to `src/**` fired on every file in a
+ * checkout under `~/src/…`, and a carve-out for `src/components/**` would have
+ * excused a whole repo under a path containing one — silently, which is the
+ * worse of the two. Scope is an `overrides` entry now and Biome resolves its
+ * `includes` against the project root, so the ancestors cannot matter. Putting
+ * every rule test behind this path is how that stays true: the whole suite is
+ * the regression test, and `tests/config.test.ts` says so out loud as well.
+ */
+const SCRATCH = join("/tmp", `quebi-rules-tests-${process.pid}`)
+const ROOT = join(SCRATCH, "src", "components", "project")
 const BIOME = join(import.meta.dir, "..", "node_modules", ".bin", "biome")
 const PLUGIN_DIR = "ui-lib-rules"
 
@@ -46,7 +59,7 @@ export const racPrimitives = deriveRacPrimitives(
 )
 
 function setUp() {
-  rmSync(ROOT, { recursive: true, force: true })
+  rmSync(SCRATCH, { recursive: true, force: true })
   mkdirSync(join(ROOT, PLUGIN_DIR), { recursive: true })
 
   for (const rule of pluginRules(rulesRegistry)) {

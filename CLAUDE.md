@@ -148,16 +148,25 @@ register, plus the quebi styling and self-contained-dependency conventions.
   `src/registry/meta.ts`. The site's own chrome lives in `src/site/` (header, footer, sidebars,
   theme toggle, code block) and is linted at full strength, exactly like `src/routes/`. Put new
   app-side UI there; do not park it next to the library source.
-- The plugin rules are about JSX, and each `.grit` plugin says so itself: the generator compiles
-  the record's `appliesTo` into a `$filename` guard alongside the exception guards, because Biome
-  loads plugins globally and `overrides` cannot scope them. That is what lets the file list above
+- The plugin rules are about JSX, and a `.grit` file says nothing about where it applies. Its
+  scope is the `overrides` entry that loads it: `includes` is the record's `appliesTo`, then its
+  exception paths and any `localScopes` entries as `!` lines. That is what lets the file list above
   be the repo's code rather than only its TSX — a `.ts` file is linted by Biome's recommended set
   and by the built-in rules the records configure, and the plugin rules stay quiet about a file no
-  record claims. Widen a record's `appliesTo` and its plugin widens with it; there is no per-plugin
-  guard to hand-edit. A built-in is scoped by the config that switches it on instead, so its
+  record claims. Widen a record's `appliesTo` and its override widens with it; there is nothing
+  per-plugin to hand-edit. A built-in is scoped by the config that switches it on instead, so its
   `appliesTo` is documentation — which is why `no-browser-dialogs` names `.ts` and `.js` too: a
   `confirm()` in a helper module is the same bug as one in a component, and the rule really does
   fire there.
+- Nothing is listed in the top-level `plugins`, and that is load-bearing rather than tidy. An
+  override *adds* its plugins to the files it matches and cannot subtract one already loaded
+  globally, so a plugin named in both would run everywhere and its `includes` would be decoration.
+  Both halves are pinned in `tests/config.test.ts`. Until task #93 a plugin's scope was instead a
+  `$filename` regex compiled into the pattern — and `$filename` is the file's *absolute* path, so
+  `src/**` matched every file in a checkout under `~/src/…` and `bun run lint` was red on a clean
+  tree for anyone who keeps their repos there. No regex over an absolute path can find the project
+  root; Biome resolving an override's `includes` against it is the whole fix. `tests/harness.ts`
+  materialises its temp project under `…/src/components/project/` so the suite keeps proving it.
 - CSS is still outside the file list: Biome cannot parse Tailwind v4's at-rules. The
   `no-hardcoded-design-values` record documents that gap.
 - `src/registry/*.examples.tsx` is copied verbatim by agents through

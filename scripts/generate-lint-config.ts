@@ -143,10 +143,11 @@ export const localScopes: LocalScope[] = [
  * `scripts/`, `tests/`, the rule records themselves, `src/lib/`. That was not the
  * rules' doing. It was a plugin-loading detail leaking into the file list: Biome
  * loads GritQL plugins globally, so before each plugin carried its record's
- * `appliesTo` as a `$filename` guard, the only way to keep a JSX rule from
+ * `appliesTo` as a scope, the only way to keep a JSX rule from
  * answering questions about a `.ts` file was to keep the `.ts` file out of the
- * run. `renderGritPlugin` compiles that guard now, so the file list is free to be
- * what it should have been: the code in this repo.
+ * run. Each plugin is loaded by an `overrides` entry carrying its record's
+ * `appliesTo` now, so the file list is free to be what it should have been: the
+ * code in this repo.
  *
  * Which matters because most of what runs here is Biome's recommended set, and
  * a `noAssignInExpressions` in a generator is the same defect as one in a
@@ -242,7 +243,7 @@ function elementScopedOverride(ruleId: string, elements: string[] | undefined): 
     : "off"
 }
 
-/** Repo-local guards for one plugin rule, pulled out of the scope table. */
+/** Repo-local carve-outs for one plugin rule, pulled out of the scope table. */
 export function localIgnoresFor(ruleId: string): ExtraPluginIgnore[] {
   return localScopes
     .filter((scope) => scope.rules.includes(ruleId))
@@ -259,12 +260,27 @@ export async function buildRepoConfig() {
     ),
   )
 
-  const generated = buildBiomeConfig(rulesRegistry, `./${PLUGIN_DIR}`, primitives)
+  // Both kinds of rule are scoped the same way now: a built-in by the override
+  // that configures it, a plugin by the override that loads it. `localIgnoresFor`
+  // is what the second one needs — the repo-local carve-outs, appended to the
+  // record's own exceptions as further `!` entries on that plugin's `includes`.
+  const generated = buildBiomeConfig(
+    rulesRegistry,
+    `./${PLUGIN_DIR}`,
+    primitives,
+    localIgnoresFor,
+  )
 
-  // A local scope on a built-in rule becomes an ordinary override. On a plugin
-  // rule it cannot: Biome's overrides do not scope plugins, so those guards are
-  // compiled into the plugin by `localIgnoresFor` instead.
-  const localOverrides = localScopes.flatMap((scope) => {
+  // A local scope on a built-in rule becomes an ordinary override of its own;
+  // on a plugin rule it has already been folded into that plugin's scope above.
+  // Typed as an override that *could* carry plugins even though these never do,
+  // so the two halves of `overrides` are one type and `annotate` can ask any
+  // entry which plugins it loads.
+  const localOverrides: {
+    includes: string[]
+    plugins?: string[]
+    linter: { rules: Record<string, Record<string, BuiltInOverride>> }
+  }[] = localScopes.flatMap((scope) => {
     const rules: Record<string, Record<string, BuiltInOverride>> = {}
     for (const ruleId of scope.rules) {
       const key = biomeRuleKey(ruleId)
@@ -292,7 +308,9 @@ export async function buildRepoConfig() {
     // by accident would rewrite every file.
     formatter: { enabled: false },
     assist: { enabled: false },
-    plugins: generated.plugins,
+    // No top-level `plugins`: every plugin is loaded by the `overrides` entry
+    // that scopes it. One listed here would run over every file in the file
+    // list, and no override could take it back — see buildBiomeConfig.
     linter: {
       enabled: true,
       rules: {
@@ -333,36 +351,66 @@ function header(): string {
  */
 function annotate(json: string, config: Awaited<ReturnType<typeof buildRepoConfig>>): string {
   const plugins = pluginRules(rulesRegistry)
-  const reasonsFor = (path: string): string[] => [
-    ...rulesRegistry.flatMap((rule) =>
-      rule.exceptions
-        .filter((exception) => exception.paths?.includes(path))
-        .map((exception) => `${rule.id} — ${firstSentence(exception.reason)}`),
-    ),
-    ...localScopes
-      .filter((scope) => scope.includes.includes(path))
-      .flatMap((scope) =>
-        scope.rules.map((id) => `local scope, ${id} — ${firstSentence(scope.reason)}`),
+
+  /**
+   * Why `path` is carved out, restricted to `owners` when the override has
+   * some. A plugin override loads one rule, so the eight arguments for
+   * excepting `src/components/**` are seven arguments about some other rule —
+   * repeating them under every plugin is how a file of reasons becomes a file
+   * nobody reads. A built-in override really does configure several rules at
+   * once, and there `owners` is empty and every reason belongs.
+   */
+  const reasonsFor = (path: string, owners: Set<string>): string[] => {
+    const mine = (id: string) => owners.size === 0 || owners.has(id)
+    return [
+      ...rulesRegistry.flatMap((rule) =>
+        mine(rule.id)
+          ? rule.exceptions
+              .filter((exception) => exception.paths?.includes(path))
+              .map((exception) => `${rule.id} — ${firstSentence(exception.reason)}`)
+          : [],
       ),
-  ]
+      ...localScopes
+        .filter((scope) => scope.includes.includes(path))
+        .flatMap((scope) =>
+          scope.rules
+            .filter(mine)
+            .map((id) => `local scope, ${id} — ${firstSentence(scope.reason)}`),
+        ),
+    ]
+  }
 
   // Only inside `overrides`. The same glob can appear in `files.includes` too —
   // `tests/**\/*.tsx` does — and "this rule is relaxed here" written above a
   // file-list entry reads as if the file list were what relaxed it. It is not:
   // the file list says which files are linted, the override says with what.
   let inOverrides = false
+  // Which override the current line belongs to. `overrides` is the last key the
+  // generator writes and each entry opens at one fixed indent, so counting them
+  // is a position in the array rather than a guess about the JSON.
+  let index = -1
 
   return json
     .split("\n")
     .map((line) => {
       const indent = line.match(/^\s*/)?.[0] ?? ""
       if (/^\s*"overrides":/.test(line)) inOverrides = true
+      if (inOverrides && /^ {4}\{$/.test(line)) index += 1
       const plugin = plugins.find((rule) => line.includes(`/${rule.id}.grit`))
       if (plugin) return `${indent}// ${plugin.title}\n${line}`
       const path = line.match(/^\s*"([^"]+)",?$/)?.[1]
       if (!inOverrides) return line
-      if (!path || !config.overrides.some((o) => o.includes.includes(path))) return line
-      return [...reasonsFor(path).map((reason) => `${indent}// ${reason}`), line].join("\n")
+      const override = config.overrides[index]
+      if (!path || !override?.includes.includes(path)) return line
+      const owners = new Set(
+        plugins.filter((r) => override.plugins?.includes(`./${PLUGIN_DIR}/${r.id}.grit`)).map((r) => r.id),
+      )
+      // A plugin's scope writes its carve-outs as `!glob`. Same glob, same
+      // argument — the `!` is Biome's word for "except", not part of the path.
+      return [
+        ...reasonsFor(path.replace(/^!/, ""), owners).map((reason) => `${indent}// ${reason}`),
+        line,
+      ].join("\n")
     })
     .join("\n")
 }
@@ -380,7 +428,7 @@ export async function writeRepoConfig(root = ROOT) {
   for (const rule of pluginRules(rulesRegistry)) {
     await writeFile(
       join(root, PLUGIN_DIR, `${rule.id}.grit`),
-      renderGritPlugin(rule, undefined, localIgnoresFor(rule.id)),
+      renderGritPlugin(rule),
     )
     written.push(`${PLUGIN_DIR}/${rule.id}.grit`)
   }

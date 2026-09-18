@@ -2,6 +2,25 @@
 // AUTO-GENERATED from https://ui-lib.quebi.de/api/rules/no-client-sorting-on-a-server-driven-table.json — do not edit by hand.
 //
 // https://ui-lib.quebi.de/rules/no-client-sorting-on-a-server-driven-table
+//
+// This file says what the rule is, not where it applies. A plugin listed in
+// the top-level `plugins` runs against every file Biome lints, so scope it
+// with an `overrides` entry — Biome resolves `includes` against the project
+// root, which is the one thing a $filename regex in here could not do:
+//
+//   {
+//     "overrides": [
+//       {
+//         "includes": [
+//           "app/**/*.{tsx,jsx}",
+//           "src/**/*.{tsx,jsx}"
+//         ],
+//         "plugins": [
+//           "./ui-lib-rules/no-client-sorting-on-a-server-driven-table.grit"
+//         ]
+//       }
+//     ]
+//   }
 
 language js;
 
@@ -20,8 +39,6 @@ or { `$src.sort($cmp)`, `$src.toSorted($cmp)` } as $call where {
       JsxOpeningElement(name = $table)
     } where { $table <: r"^ServerTable$" }
   },
-  // applies to: app/**/*.{tsx,jsx}, src/**/*.{tsx,jsx}
-  $filename <: r"(?:(?:.*/)?app/(?:.*/)?[^/]*\.(?:tsx|jsx)$|(?:.*/)?src/(?:.*/)?[^/]*\.(?:tsx|jsx)$)",
   register_diagnostic(
     span = $call,
     message = "ServerTable is controlled: it reports the whole new query through onQueryChange and draws its header from the query it was given, so sorting the rows here reorders one page of the answer to the last query instead of asking for a new one. Put the query in the URL from onQueryChange (queryToSearchParams), sort in the loader's ORDER BY, and pass rows and query back down. If the whole dataset is already in the browser, use DataTable from @/components/data-table — same columns, and the row model does the sorting on purpose. See https://ui-lib.quebi.de/rules/no-client-sorting-on-a-server-driven-table",

@@ -28,6 +28,7 @@ import {
   localIgnoresFor,
   localScopes,
 } from "../scripts/generate-lint-config"
+
 import { racPrimitives } from "./harness"
 
 const BIOME = join(ROOT, "node_modules", ".bin", "biome")
@@ -91,9 +92,11 @@ describe("the generated config is the one the rule records describe", () => {
     const expected = pluginRules(rulesRegistry)
     for (const rule of expected) {
       const path = join(ROOT, PLUGIN_DIR, `${rule.id}.grit`)
-      expect(readFileSync(path, "utf8")).toBe(
-        renderGritPlugin(rule, undefined, localIgnoresFor(rule.id)),
-      )
+      // Byte-identical to the published plugin, which is new: the repo's local
+      // carve-outs used to be compiled into its copy as extra $filename guards,
+      // and are `!` entries on the override that loads it now. The file says
+      // what the rule is; every path decision is in biome.jsonc.
+      expect(readFileSync(path, "utf8")).toBe(renderGritPlugin(rule))
     }
     // An orphan is the dangerous case: a rule deleted from the registry leaves a
     // plugin behind that biome.jsonc no longer loads, or worse, still does.
@@ -115,6 +118,25 @@ describe("the generated config is the one the rule records describe", () => {
     const after = buildBiomeConfig(withoutButton, "./x", racPrimitives)
     expect(JSON.stringify(before)).toContain('"button"')
     expect(JSON.stringify(after)).not.toContain('"button"')
+  })
+
+  test("a local scope on a plugin rule reaches the override that loads it", async () => {
+    // These used to be extra $filename guards inside the repo's own copy of the
+    // plugin, which is why `renderGritPlugin` took them as an argument. They are
+    // `!` entries on that plugin's override now, and the path between the table
+    // and the config is short enough to be worth pinning: a local scope that
+    // silently failed to reach Biome would show up as a red `bun run lint` with
+    // no explanation in the tree.
+    const config = await buildRepoConfig()
+    for (const rule of pluginRules(rulesRegistry)) {
+      const override = config.overrides.find((o) =>
+        o.plugins?.includes(`./${PLUGIN_DIR}/${rule.id}.grit`),
+      )
+      expect(override).toBeTruthy()
+      for (const { glob } of localIgnoresFor(rule.id)) {
+        expect(override?.includes).toContain(`!${glob}`)
+      }
+    }
   })
 
   test("every local scope names real rules and says why", () => {

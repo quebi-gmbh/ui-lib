@@ -2,6 +2,25 @@
 // AUTO-GENERATED from https://ui-lib.quebi.de/api/rules/intent-buttons-must-not-be-type-button.json — do not edit by hand.
 //
 // https://ui-lib.quebi.de/rules/intent-buttons-must-not-be-type-button
+//
+// This file says what the rule is, not where it applies. A plugin listed in
+// the top-level `plugins` runs against every file Biome lints, so scope it
+// with an `overrides` entry — Biome resolves `includes` against the project
+// root, which is the one thing a $filename regex in here could not do:
+//
+//   {
+//     "overrides": [
+//       {
+//         "includes": [
+//           "app/**/*.{tsx,jsx}",
+//           "src/**/*.{tsx,jsx}"
+//         ],
+//         "plugins": [
+//           "./ui-lib-rules/intent-buttons-must-not-be-type-button.grit"
+//         ]
+//       }
+//     ]
+//   }
 
 language js;
 
@@ -13,8 +32,6 @@ or {
   $spread <: r".*\.(?:insert|remove|reorder|reset|update|validate)\.getButtonProps\(.*",
   $attrs <: contains JsxAttribute(name = `type`, initializer = $init),
   $init <: r".*button.*",
-  // applies to: app/**/*.{tsx,jsx}, src/**/*.{tsx,jsx}
-  $filename <: r"(?:(?:.*/)?app/(?:.*/)?[^/]*\.(?:tsx|jsx)$|(?:.*/)?src/(?:.*/)?[^/]*\.(?:tsx|jsx)$)",
   register_diagnostic(
     span = $node,
     message = "A Conform intent button has to be type='submit': getButtonProps supplies name, value, form and formNoValidate but never the type, and a type='button' control fires no submit event, so the insert/remove/reorder is dropped silently. Change it to type='submit', or call form.insert(...) from onPress instead of spreading the props. See https://ui-lib.quebi.de/rules/intent-buttons-must-not-be-type-button",

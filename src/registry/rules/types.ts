@@ -23,8 +23,8 @@ export type RuleEnforcementKind = "lint" | "types" | "convention"
  * `rule` is a built-in Biome rule whose options are derived from the record —
  * nothing is hand-written, so the config cannot describe something the page does
  * not. `plugin` is a GritQL pattern, for the checks Biome has no built-in rule
- * for; the generator wraps it in a plugin file and compiles the rule's
- * documented exceptions into it as `$filename` guards.
+ * for; the generator wraps it in a plugin file and loads it from an `overrides`
+ * entry carrying the rule's `appliesTo` and its documented exceptions.
  */
 export type BiomeEnforcement =
   | {
@@ -43,8 +43,9 @@ export type BiomeEnforcement =
       via: "plugin"
       /**
        * The GritQL pattern body: everything between `language js;` and the
-       * closing brace of the `where` block, minus the filename guards and the
-       * register_diagnostic call, which the generator adds. Written against
+       * closing brace of the `where` block, minus the register_diagnostic call,
+       * which the generator adds. Nothing here says where the rule applies —
+       * that is the `overrides` entry the generator writes. Written against
        * Biome's CST node names (PascalCase, snake_case fields).
        */
       pattern: string

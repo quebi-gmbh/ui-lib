@@ -2,6 +2,27 @@
 // AUTO-GENERATED from https://ui-lib.quebi.de/api/rules/format-values-through-the-library.json — do not edit by hand.
 //
 // https://ui-lib.quebi.de/rules/format-values-through-the-library
+//
+// This file says what the rule is, not where it applies. A plugin listed in
+// the top-level `plugins` runs against every file Biome lints, so scope it
+// with an `overrides` entry — Biome resolves `includes` against the project
+// root, which is the one thing a $filename regex in here could not do:
+//
+//   {
+//     "overrides": [
+//       {
+//         "includes": [
+//           "app/**/*.{tsx,jsx}",
+//           "src/**/*.{tsx,jsx}",
+//           "!src/components/**",
+//           "!components/ui/**"
+//         ],
+//         "plugins": [
+//           "./ui-lib-rules/format-values-through-the-library.grit"
+//         ]
+//       }
+//     ]
+//   }
 
 language js;
 
@@ -14,12 +35,6 @@ or {
   `new Intl.RelativeTimeFormat($args)`
 } as $call where {
   $call <: not within JsFunctionDeclaration(id = r"^(?:format[A-Z]|use[A-Z]).*"),
-  // applies to: app/**/*.{tsx,jsx}, src/**/*.{tsx,jsx}
-  $filename <: r"(?:(?:.*/)?app/(?:.*/)?[^/]*\.(?:tsx|jsx)$|(?:.*/)?src/(?:.*/)?[^/]*\.(?:tsx|jsx)$)",
-  // documented exception: src/components/**
-  not $filename <: r"(?:.*/)?src/components/.*",
-  // documented exception: components/ui/**
-  not $filename <: r"(?:.*/)?components/ui/.*",
   register_diagnostic(
     span = $call,
     message = "This formats a value against whatever locale the runtime has, which differs between the prerender and the browser. Render <FormattedNumber>, <FormattedCurrency> or <FormattedDate> from @/components/formatted-number and @/components/formatted-date, or call formatNumber(value, locale) / formatCurrency(value, locale) where a string is needed. See https://ui-lib.quebi.de/rules/format-values-through-the-library",
