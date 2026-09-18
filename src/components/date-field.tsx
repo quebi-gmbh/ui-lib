@@ -77,7 +77,12 @@ export function DateInput({
                 "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
                 dateInputSizeStyles[size],
                 "transition-[border-color,box-shadow] duration-200",
-                "enabled:hover:border-quebi-line/40",
+                // `DateInput` is a `<div role="group">`, so the `enabled:` this line used
+                // to carry never matched and the field had no hover feedback at all,
+                // despite the chrome above claiming to match `Input`. The guards are what
+                // `enabled:` was standing in for: hover must not outrank focus-within or
+                // the open state, and must stay off a disabled field.
+                "not-aria-disabled:not-focus-within:not-group-open:hover:border-quebi-line/40",
                 "outline-none focus-within:border-quebi-brand-mark focus-within:outline-none focus-within:ring-2 focus-within:ring-quebi-brand-mark",
                 "group-open:border-quebi-brand-mark group-open:ring-2 group-open:ring-quebi-brand-mark",
                 "invalid:border-red-500 focus-within:invalid:ring-red-500/50",

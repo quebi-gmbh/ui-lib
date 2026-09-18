@@ -181,10 +181,18 @@ const SOURCES = [
 const alphaOf = (suffix: string | undefined) =>
   suffix === undefined ? 1 : suffix.startsWith("[") ? Number(suffix.slice(1, -1)) : Number(suffix) / 100
 
+/**
+ * `inset-ring` is listed with the rest rather than left to the `ring` branch:
+ * the lookbehind rejects a `-` before the property, so `inset-ring-…` would
+ * otherwise slip past this whole file. An inward ring is as much the only thing
+ * marking a state as an outward one — Input's "inward only" focus candidate is
+ * exactly that — so it is judged at the same 3:1.
+ */
 const MARK_UTILITY =
-  /(?<![-\w])(?:[\w:[\]./-]*:)?(ring|stroke|outline|border|divide)-quebi-brand-mark(?:\/(\[[\d.]+\]|\d+))?(?![\w/-])/g
+  /(?<![-\w])(?:[\w:[\]./-]*:)?(inset-ring|ring|stroke|outline|border|divide)-quebi-brand-mark(?:\/(\[[\d.]+\]|\d+))?(?![\w/-])/g
 
-const FILL_MARK = /(?<![-\w])(?:[\w:[\]./-]*:)?(ring|stroke|outline)-quebi-brand(?:\/(?:\[[\d.]+\]|\d+))?(?![\w/-])/g
+const FILL_MARK =
+  /(?<![-\w])(?:[\w:[\]./-]*:)?(inset-ring|ring|stroke|outline)-quebi-brand(?:\/(?:\[[\d.]+\]|\d+))?(?![\w/-])/g
 
 /** An opaque `border-quebi-brand` / `bg-quebi-brand` — the fill token, no alpha. */
 const OPAQUE_BRAND_BORDER = /(?<![-\w])(?:[\w:[\]./-]*:)?border-quebi-brand(?![\w/-])/

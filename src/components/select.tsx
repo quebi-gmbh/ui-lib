@@ -119,7 +119,11 @@ const SelectTrigger = ({ children, className, size: sizeProp, ...props }: Select
           "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
           selectTriggerSizeStyles[size],
           "transition-[border-color,box-shadow] duration-200",
-          "enabled:hover:border-quebi-line/40",
+          // `not-focus` / `not-group-open` guard against hover *beating* the two
+          // brand states: `enabled:hover:` is (0,3,0) specificity, `focus:` and
+          // `group-open/select:` are both (0,2,0), so unguarded a hovered trigger
+          // that is focused or open loses its mint border and keeps only the ring.
+          "enabled:not-focus:not-group-open/select:hover:border-quebi-line/40",
           // focus / open → brand-teal border + ring.
           "outline-none focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark",
           "group-open/select:border-quebi-brand-mark group-open/select:ring-2 group-open/select:ring-quebi-brand-mark",

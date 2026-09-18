@@ -54,7 +54,10 @@ export function ColorInput({ className, ...props }: InputProps) {
         "placeholder:text-quebi-fg-subtle placeholder:normal-case",
         "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
         "transition-[border-color,box-shadow] duration-200",
-        "enabled:hover:border-quebi-line/40",
+        // `not-focus` guards against hover *beating* focus: `enabled:hover:` is
+        // (0,3,0) specificity and `focus:` is (0,2,0), so unguarded a hovered,
+        // focused field loses its mint border and keeps only the ring — a halo.
+        "enabled:not-focus:hover:border-quebi-line/40",
         "outline-none focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark",
         "invalid:border-red-500 focus:invalid:ring-red-500/50",
         "disabled:cursor-not-allowed disabled:opacity-50 in-disabled:opacity-50",

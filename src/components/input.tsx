@@ -62,7 +62,16 @@ export function Input({ className, ref, size: sizeProp, ...props }: InputProps) 
           "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
           inputSizeStyles[size],
           "transition-[border-color,box-shadow] duration-200",
-          "enabled:hover:border-quebi-line/40",
+          // `not-focus` is load-bearing. `enabled:hover:` compiles to
+          // `.cls:enabled:hover` — specificity (0,3,0) — and the focus border
+          // below is `.cls:focus` at (0,2,0), so without the guard *hover wins
+          // over focus*: a focused field, once the pointer is over it, drops back
+          // to the grey hairline and keeps only the mark-teal ring. A ring with no
+          // border under it is a halo floating off the field, which is what was
+          // reported as the focus glow being too much. `Textarea` never had this
+          // because it uses a plain `hover:` — (0,2,0), and Tailwind emits `focus`
+          // after `hover`, so focus wins there on order alone.
+          "enabled:not-focus:hover:border-quebi-line/40",
           "outline-none focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark",
           "invalid:border-red-500 focus:invalid:ring-red-500/50",
           "[&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden",
