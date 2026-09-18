@@ -112,10 +112,12 @@ export default function RulesEnforcement() {
               ))}
             </ul>
             <p className="mt-2 text-quebi-fg-muted">
-              Biome loads plugins globally and <Code>overrides</Code> does not scope them, so each
-              plugin carries its own exceptions as <Code>$filename</Code> guards compiled into the
-              pattern. Same records, same carve-outs — a different mechanism because the tool
-              requires one.
+              Each plugin is loaded by an <Code>overrides</Code> entry of its own, whose{" "}
+              <Code>includes</Code> are the paths the rule applies to followed by its exceptions as{" "}
+              <Code>!</Code> entries — the same mechanism the built-ins use, from the same records.
+              Load one from the top-level <Code>plugins</Code> instead and it runs against every
+              file you lint: an override adds a plugin to the files it matches and cannot take one
+              away.
             </p>
           </DescriptionDetails>
         </DescriptionList>
