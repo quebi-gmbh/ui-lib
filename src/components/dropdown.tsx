@@ -172,7 +172,7 @@ const DropdownDescription = ({ className, ...props }: TextProps) => (
 const DropdownSeparator = ({ className, ...props }: Omit<SeparatorProps, "orientation">) => (
   <Separator
     orientation="horizontal"
-    className={cn("col-span-full -mx-1 h-px bg-cyan-500/10", className)}
+    className={cn("col-span-full -mx-1 h-px bg-quebi-line/20", className)}
     {...props}
   />
 )

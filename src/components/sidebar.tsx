@@ -708,7 +708,7 @@ const SidebarSeparator = ({ className, ...props }: SidebarSeparatorProps) => {
       data-slot="sidebar-separator"
       orientation="horizontal"
       className={cn(
-        "mx-auto h-px w-[calc(var(--sidebar-width)---spacing(10))] border-0 bg-cyan-500/10 forced-colors:bg-[ButtonBorder]",
+        "mx-auto h-px w-[calc(var(--sidebar-width)---spacing(10))] border-0 bg-quebi-line/20 forced-colors:bg-[ButtonBorder]",
         className,
       )}
       {...props}
