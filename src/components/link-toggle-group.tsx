@@ -56,7 +56,7 @@ export function LinkToggleGroup<T extends string = string>({
               "outline-none transition-colors duration-200",
               "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
               isActive
-                ? "bg-quebi-brand/15 text-quebi-brand shadow-quebi-glow"
+                ? "bg-quebi-brand/15 text-quebi-brand-text shadow-quebi-glow"
                 : "text-quebi-fg-muted hover:text-quebi-fg",
             )}
           >

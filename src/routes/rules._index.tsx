@@ -103,7 +103,7 @@ export default function Rules() {
                       </div>
                       <CardTitle className="mt-3">{rule.title}</CardTitle>
                       <CardDescription className="mt-2">{rule.summary}</CardDescription>
-                      <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-quebi-brand transition-colors duration-200 group-hover:text-quebi-brand-hover">
+                      <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-quebi-brand-text transition-colors duration-200 group-hover:text-quebi-brand-text-hover">
                         Read the rule <ArrowRight className="h-4 w-4" />
                       </span>
                     </Card>
@@ -126,7 +126,7 @@ export default function Rules() {
               All {rulesRegistry.length} rules as one Biome config, with a GritQL plugin for each
               rule Biome has no built-in for and the documented exceptions already applied.
             </CardDescription>
-            <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-quebi-brand transition-colors duration-200 group-hover:text-quebi-brand-hover">
+            <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-quebi-brand-text transition-colors duration-200 group-hover:text-quebi-brand-text-hover">
               Set it up <ArrowRight className="h-4 w-4" />
             </span>
           </Card>

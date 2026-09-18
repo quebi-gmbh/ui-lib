@@ -220,7 +220,7 @@ export const commitGraphExamples: ComponentExample[] = [
             aria-label="Selectable commit history"
           />
           <p className="text-quebi-fg-muted text-sm">
-            Selected: <span className="font-mono text-quebi-brand">{selected ?? "none"}</span>
+            Selected: <span className="font-mono text-quebi-brand-text">{selected ?? "none"}</span>
           </p>
         </div>
       )

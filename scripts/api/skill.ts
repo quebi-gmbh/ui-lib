@@ -63,6 +63,11 @@ Always start from **${BASE_URL}/llms.txt**, which documents the workflow and lis
   they bind name/validity/errors from field metadata.
 - The library assumes Tailwind v4 and the quebi tokens (\`quebi-brand\`, \`quebi-bg\`, \`quebi-fg-muted\`,
   \`rounded-quebi-*\`, etc.). If the target project lacks them, bring in the quebi theme too.
+- Brand mint is two tokens, because one value cannot do both jobs: \`quebi-brand\` is the **fill**
+  (\`bg-\`, \`border-\`, \`ring-\`, \`stroke-\`) and stays mint in both themes, with \`quebi-on-brand\` for
+  anything drawn on top of it; \`quebi-brand-text\` is the same brand as **text or a glyph**
+  (\`text-\`, \`decoration-\`) and darkens in light mode, where mint on the light surface is 1.74:1.
+  The semantic \`quebi-danger/warn/success/info/accent\` are text values on the same footing.
 
 ## Rules — how to write JSX against this library
 

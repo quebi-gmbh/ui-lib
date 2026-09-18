@@ -18,7 +18,7 @@ export function Header() {
             to="/components"
             className={({ isActive }) =>
               `transition-colors duration-200 ${
-                isActive ? "text-quebi-brand" : "text-quebi-fg-muted hover:text-quebi-fg"
+                isActive ? "text-quebi-brand-text" : "text-quebi-fg-muted hover:text-quebi-fg"
               }`
             }
           >
@@ -28,7 +28,7 @@ export function Header() {
             to="/rules"
             className={({ isActive }) =>
               `transition-colors duration-200 ${
-                isActive ? "text-quebi-brand" : "text-quebi-fg-muted hover:text-quebi-fg"
+                isActive ? "text-quebi-brand-text" : "text-quebi-fg-muted hover:text-quebi-fg"
               }`
             }
           >

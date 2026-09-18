@@ -82,7 +82,7 @@ export default function RuleDetail() {
           <Code>{rule.id}</Code>
         </div>
         {group ? (
-          <p className="mt-6 text-lg font-medium text-quebi-brand">{group.principle}</p>
+          <p className="mt-6 text-lg font-medium text-quebi-brand-text">{group.principle}</p>
         ) : null}
       </header>
 
@@ -123,7 +123,7 @@ export default function RuleDetail() {
                         {target.slug ? (
                           <Link
                             to={`/components/${target.slug}`}
-                            className="font-medium text-quebi-brand transition-colors duration-200 hover:text-quebi-brand-hover"
+                            className="font-medium text-quebi-brand-text transition-colors duration-200 hover:text-quebi-brand-text-hover"
                           >
                             {target.name}
                           </Link>
@@ -257,7 +257,7 @@ export default function RuleDetail() {
             Enforcing more than this one rule?{" "}
             <Link
               to="/rules/enforcement"
-              className="font-medium text-quebi-brand transition-colors duration-200 hover:text-quebi-brand-hover"
+              className="font-medium text-quebi-brand-text transition-colors duration-200 hover:text-quebi-brand-text-hover"
             >
               Take the whole config
             </Link>{" "}

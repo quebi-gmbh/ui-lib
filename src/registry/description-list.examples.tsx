@@ -29,7 +29,7 @@ export const descriptionListExamples: ComponentExample[] = [
         <DescriptionDetails>#QB-2026-0042</DescriptionDetails>
         <DescriptionTerm>Status</DescriptionTerm>
         <DescriptionDetails>
-          <span className="text-quebi-brand">Paid</span>
+          <span className="text-quebi-brand-text">Paid</span>
         </DescriptionDetails>
         <DescriptionTerm>Amount</DescriptionTerm>
         <DescriptionDetails>€1,280.00</DescriptionDetails>

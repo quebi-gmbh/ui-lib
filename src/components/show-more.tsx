@@ -46,7 +46,7 @@ const togglePillStyles = tv({
     "px-3 py-2 text-sm font-sans font-semibold whitespace-nowrap select-none cursor-pointer",
     "text-quebi-fg",
     "transition-all duration-200 ease-out hover:scale-[1.02] active:scale-100",
-    "hover:border-quebi-brand hover:text-quebi-brand",
+    "hover:border-quebi-brand hover:text-quebi-brand-text",
     "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
     "selected:border-quebi-brand selected:bg-quebi-brand selected:text-quebi-on-brand selected:hover:bg-quebi-brand-hover selected:hover:border-quebi-brand-hover selected:hover:text-quebi-on-brand selected:hover:shadow-quebi-glow-strong",
     "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",

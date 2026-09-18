@@ -126,16 +126,34 @@ describe("every lane colour is legible on both surfaces", () => {
 })
 
 describe("the tokens the palette deliberately leaves out", () => {
-  // Not a style preference: these are the two a git graph would reach for first,
-  // and both are unreadable on the light surface. Pinned so the palette cannot
-  // drift back to them, and so this stops failing the day the theme fixes them.
-  test.each([["q-brand"], ["q-warn"]])(
-    "--%s still fails 3:1 in light mode, which is why it is not a lane",
-    (name) => {
-      const light = THEMES[1].values
-      const ratio = contrast(light.get(name) as string, light.get("q-bg") as string)
-      expect(ratio).toBeLessThan(3)
-      expect(LANE_COLORS as readonly string[]).not.toContain(`var(--${name})`)
-    },
-  )
+  /**
+   * The two a git graph would reach for first. When this palette was chosen both
+   * were unreadable on the light surface, so both were excluded for the same
+   * reason and pinned here — with the note that the pin "stops failing the day
+   * the theme fixes them". Half of that has now happened (task #94), so the two
+   * no longer share a reason and no longer share a test.
+   */
+  test("--q-brand is still not a lane, and still could not be one", () => {
+    // The mint is the same value in both themes on purpose — a brand fill has
+    // to stay mint — so this is the one token re-tuning cannot rescue. Task #94
+    // gave it a separate `--q-brand-text` for *text*; a lane is a 1.5px stroke
+    // with no text alternative, so 1.4.11's 3:1 applies to the fill value here
+    // and that is still 1.74:1.
+    const light = THEMES[1].values
+    const ratio = contrast(light.get("q-brand") as string, light.get("q-bg") as string)
+    expect(ratio).toBeLessThan(3)
+    expect(LANE_COLORS as readonly string[]).not.toContain("var(--q-brand)")
+  })
+
+  test("--q-warn now clears 3:1, so it is a free choice rather than a forced one", () => {
+    // Task #94 moved the light value to amber-800 for text legibility, which
+    // took the lane threshold with it. So amber is now *eligible*; it is left
+    // out because five lanes is the palette CommitGraph was designed around,
+    // not because it cannot be read. Adding it is a design change, and this
+    // assertion is deliberately not the one that would block it — it pins the
+    // ratio, and lets the palette grow.
+    const light = THEMES[1].values
+    const ratio = contrast(light.get("q-warn") as string, light.get("q-bg") as string)
+    expect(ratio).toBeGreaterThanOrEqual(3)
+  })
 })

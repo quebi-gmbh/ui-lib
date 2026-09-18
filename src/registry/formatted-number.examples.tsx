@@ -98,7 +98,7 @@ export const formattedNumberExamples: ComponentExample[] = [
     render: () => (
       <FormattedCurrency value={24990} locale="de-DE">
         {(formatted) => (
-          <span className="text-2xl font-semibold text-quebi-brand tabular-nums">{formatted}</span>
+          <span className="text-2xl font-semibold text-quebi-brand-text tabular-nums">{formatted}</span>
         )}
       </FormattedCurrency>
     ),

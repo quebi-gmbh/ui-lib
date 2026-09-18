@@ -507,16 +507,16 @@ export function TableFilterChips({
       {filters.map((filter) => (
         <span
           key={filter.column}
-          className="inline-flex items-center gap-x-1 rounded-full border border-quebi-brand/30 bg-quebi-brand/10 py-0.5 pe-1 ps-2.5 font-medium text-quebi-brand text-xs"
+          className="inline-flex items-center gap-x-1 rounded-full border border-quebi-brand/30 bg-quebi-brand/10 py-0.5 pe-1 ps-2.5 font-medium text-quebi-brand-text text-xs"
         >
           <span>
             {filter.label}
-            <span className="text-quebi-brand/70"> · {filter.text}</span>
+            <span className="text-quebi-brand-text/70"> · {filter.text}</span>
           </span>
           <Button
             aria-label={`Clear ${filter.label} filter`}
             onPress={() => onClear(filter.column)}
-            className="flex size-4 shrink-0 items-center justify-center rounded-full text-quebi-brand/80 outline-none transition-colors hover:bg-quebi-brand/20 hover:text-quebi-brand focus-visible:ring-2 focus-visible:ring-quebi-brand/50"
+            className="flex size-4 shrink-0 items-center justify-center rounded-full text-quebi-brand-text/80 outline-none transition-colors hover:bg-quebi-brand/20 hover:text-quebi-brand-text focus-visible:ring-2 focus-visible:ring-quebi-brand/50"
           >
             <X className="size-3" strokeWidth={2.5} aria-hidden="true" />
           </Button>

@@ -827,7 +827,7 @@ export function TableShell<T extends RowData>({
                 // firms it up, and the cell is the control only once it opens.
                 canEdit &&
                   !isEditingThisCell &&
-                  "cursor-text underline decoration-quebi-line/50 decoration-dotted underline-offset-4 hover:decoration-quebi-brand/70",
+                  "cursor-text underline decoration-quebi-line/50 decoration-dotted underline-offset-4 hover:decoration-quebi-brand-text/70",
                 // `align-middle` is the cell's own and is why this does not say
                 // `align-top`: a row is as tall as its tallest cell, so a row
                 // with actions in it is taller than the control, and a control
@@ -1008,7 +1008,7 @@ export function TableShell<T extends RowData>({
           <span className="inline-flex items-center gap-1">
             {meta?.label ?? column.id}
             {priority != null && sorting.length > 1 && (
-              <span className="grid size-4 place-content-center rounded-full bg-quebi-brand/20 font-semibold text-[10px] text-quebi-brand tabular-nums">
+              <span className="grid size-4 place-content-center rounded-full bg-quebi-brand/20 font-semibold text-[10px] text-quebi-brand-text tabular-nums">
                 {priority}
               </span>
             )}
@@ -1019,7 +1019,7 @@ export function TableShell<T extends RowData>({
                   size="sq-xs"
                   isCircle
                   aria-label={isFiltered ? `Filter ${meta?.label} (active)` : `Filter ${meta?.label}`}
-                  className={cn("relative", isFiltered && "text-quebi-brand")}
+                  className={cn("relative", isFiltered && "text-quebi-brand-text")}
                 >
                   <Filter data-slot="icon" aria-hidden="true" />
                 </PopoverTrigger>

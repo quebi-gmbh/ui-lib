@@ -73,14 +73,14 @@ export const noAppearanceClassesOnLayoutElementsRule: RuleMeta = {
   key={title}
   className="group relative rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02] p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-quebi-brand/30 hover:shadow-quebi-glow"
 >
-  <Icon className="h-6 w-6 text-quebi-brand" strokeWidth={1.75} />
+  <Icon className="h-6 w-6 text-quebi-brand-text" strokeWidth={1.75} />
   <h3 className="mt-2 text-xl font-semibold text-quebi-fg">{title}</h3>
   <p className="mt-3 text-sm leading-relaxed text-quebi-fg-muted">{body}</p>
 </article>`,
       right: `import { Card, CardDescription, CardTitle } from "@/components/card"
 
 <Card key={title} interactive>
-  <Icon data-slot="icon" className="h-6 w-6 text-quebi-brand" strokeWidth={1.75} />
+  <Icon data-slot="icon" className="h-6 w-6 text-quebi-brand-text" strokeWidth={1.75} />
   <CardTitle className="mt-2">{title}</CardTitle>
   <CardDescription className="mt-3">{body}</CardDescription>
 </Card>`,

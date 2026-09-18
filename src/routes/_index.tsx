@@ -115,7 +115,7 @@ function Features() {
       <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
         {features.map(({ icon: Icon, eyebrow, title, body }) => (
           <Card key={title} interactive>
-            <Icon data-slot="icon" className="h-6 w-6 text-quebi-brand" strokeWidth={1.75} />
+            <Icon data-slot="icon" className="h-6 w-6 text-quebi-brand-text" strokeWidth={1.75} />
             <span className="quebi-eyebrow mt-4">{eyebrow}</span>
             <CardTitle className="mt-2">{title}</CardTitle>
             <CardDescription className="mt-3">{body}</CardDescription>

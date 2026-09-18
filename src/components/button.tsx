@@ -38,7 +38,7 @@ export const buttonStyles = tv({
       secondary:
         "bg-quebi-inverse-bg border-quebi-inverse-bg text-quebi-inverse-fg hover:bg-quebi-fg-muted hover:border-quebi-fg-muted",
       outline:
-        "bg-transparent border-quebi-line/20 text-quebi-fg hover:border-quebi-brand hover:text-quebi-brand",
+        "bg-transparent border-quebi-line/20 text-quebi-fg hover:border-quebi-brand hover:text-quebi-brand-text",
       ghost:
         "bg-transparent border-transparent text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
       accent:

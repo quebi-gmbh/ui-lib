@@ -122,7 +122,7 @@ export function ConformColorSwatchPicker({
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>
           {label}
-          {field.required && <span className="ml-1 text-quebi-brand">*</span>}
+          {field.required && <span className="ml-1 text-quebi-brand-text">*</span>}
         </Label>
       )}
       {/* These ids are ours to set: the swatch grid is not a react-aria field,

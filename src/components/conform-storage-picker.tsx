@@ -108,7 +108,7 @@ export function ConformStoragePicker({
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>
           {label}
-          {field.required && <span className="ml-1 text-quebi-brand">*</span>}
+          {field.required && <span className="ml-1 text-quebi-brand-text">*</span>}
         </Label>
       )}
 

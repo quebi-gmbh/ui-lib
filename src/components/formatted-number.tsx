@@ -93,7 +93,7 @@ export function formatCurrency(value: number, locale: string): string {
  * @example
  * // Custom formatting with children
  * <FormattedNumber value={123.45} options={{ style: 'currency', currency: 'EUR' }}>
- *   {(formatted) => <span className="font-semibold text-quebi-brand">{formatted}</span>}
+ *   {(formatted) => <span className="font-semibold text-quebi-brand-text">{formatted}</span>}
  * </FormattedNumber>
  */
 export function FormattedNumber({
