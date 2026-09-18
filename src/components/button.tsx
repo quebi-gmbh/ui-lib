@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils"
  * ghost, accent (purple), danger (red).
  * Sizes: xs / sm / md (default) / lg / xl, plus square icon-only (sq-*).
  *
- * Depth comes from quebi glows, never drop shadows. Hover lifts with a
+ * Depth comes from shadow-quebi-glow, never a hand-rolled shadow. Hover lifts with a
  * subtle scale; the brand teal is reserved for the primary CTA.
  */
 export const buttonStyles = tv({

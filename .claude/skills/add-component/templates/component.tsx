@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils"
  * <Thing> — quebi design system
  *
  * One-line summary of intents/sizes/states. Teal is the accent (primary/active
- * only). Depth from quebi glows, never drop shadows.
+ * only). Depth from shadow-quebi-glow, never a hand-rolled shadow-lg.
  */
 export const thingStyles = tv({
   base: [

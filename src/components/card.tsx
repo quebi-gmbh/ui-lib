@@ -3,9 +3,14 @@ import { cn } from "@/lib/utils"
 /**
  * Card — quebi design system
  *
- * A surface for grouping related content. Depth comes from quebi glows, never
- * drop shadows; the signature is a faint cyan border over a near-transparent
- * white fill. Interactive cards lift on hover and pick up a brand glow.
+ * A surface for grouping related content. Depth comes from shadow-quebi-glow —
+ * a mint bloom on dark, a neutral shadow on light — never a hand-rolled
+ * shadow-lg; the signature is a faint cyan border over a near-transparent
+ * white fill. Interactive cards lift on hover and pick up that elevation.
+ *
+ * Note that a Card is *not* an overlay: it stays on the tinted surface token
+ * and does not take `bg-quebi-elevated`, which is for things that float above
+ * the page.
  *
  * Sub-components compose the layout: CardHeader (title + description + action),
  * CardContent, and CardFooter.

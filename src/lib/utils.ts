@@ -18,7 +18,9 @@ import { extendTailwindMerge } from "tailwind-merge"
  * Colours need no entry — tailwind-merge already treats an unknown value in a
  * colour position as a colour.
  *
- * Keep these lists in step with the `@theme` block in quebi-theme.css.
+ * Keep these lists in step with the `@theme` blocks in quebi-theme.css — both
+ * of them: the shadow tokens live in the `@theme inline` block since task #117,
+ * where they can flip per theme, and their names are what this list matches.
  */
 const twMerge = extendTailwindMerge({
   extend: {

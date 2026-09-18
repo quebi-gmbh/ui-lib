@@ -14,10 +14,11 @@ import { tv, type VariantProps } from "tailwind-variants"
 /**
  * Tooltip — quebi design system
  *
- * A floating label built on react-aria-components. The surface is a dark
- * panel with a subtle cyan hairline border and an optional arrow that
- * orients itself to the trigger. Depth comes from a quebi glow, never a
- * drop shadow.
+ * A floating label built on react-aria-components. The surface is
+ * `bg-quebi-elevated` — the overlay surface, not the page one — with a subtle
+ * cyan hairline border and an optional arrow that orients itself to the
+ * trigger. Depth is `shadow-quebi-glow`, which is a mint bloom on dark and a
+ * neutral drop shadow on light.
  *
  * Compose `Tooltip` (the trigger wrapper) around an interactive
  * `TooltipTrigger` and a `TooltipContent`.
@@ -25,7 +26,7 @@ import { tv, type VariantProps } from "tailwind-variants"
 const tooltipStyles = tv({
   base: [
     "group max-w-sm origin-(--trigger-anchor-point) will-change-transform",
-    "rounded-quebi-sm border border-quebi-line/20 bg-quebi-bg px-2.5 py-1.5",
+    "rounded-quebi-sm border border-quebi-line/20 bg-quebi-elevated px-2.5 py-1.5",
     "text-sm/6 text-quebi-fg shadow-quebi-glow",
     "*:[strong]:font-semibold **:[.text-muted]:text-quebi-fg-muted",
   ],
