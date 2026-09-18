@@ -20,7 +20,10 @@ export function Textarea({ className, ...props }: TextAreaProps) {
           "bg-quebi-bg text-sm text-quebi-fg placeholder:text-quebi-fg-subtle",
           "border border-quebi-line/20",
           "transition-colors duration-150",
-          "hover:border-quebi-line/40",
+          // `not-focus` pins what today only holds by luck: `hover:` and `focus:` are
+          // both (0,2,0), so the winner is Tailwind's emission order (focus last).
+          // The guard says the intent instead of relying on it.
+          "not-focus:hover:border-quebi-line/40",
           "focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark focus:ring-offset-2 focus:ring-offset-quebi-bg",
           "invalid:border-red-500 focus:invalid:border-red-500 focus:invalid:ring-red-500/50",
           "aria-invalid:border-red-500 focus:aria-invalid:ring-red-500/50",

@@ -118,7 +118,12 @@ const addonStyles = cn(
   "pointer-events-none bg-quebi-surface/[0.02] text-quebi-fg-muted",
   "border border-quebi-line/20",
   "transition-[border-color] duration-200",
-  "group-hover/addons:border-quebi-line/40 group-focus-within/addons:border-quebi-brand-mark",
+  // Same guard as the input's hover, for the same reason: `group-hover` and
+  // `group-focus-within` are both (0,2,0) and Tailwind emits `focus-within`
+  // *before* `hover`, so unguarded the addon reverts to the grey hairline the
+  // moment the pointer lands on a focused field — while the input beside it
+  // stays mark-teal, which is the one thing these addons exist not to do.
+  "group-not-focus-within/addons:group-hover/addons:border-quebi-line/40 group-focus-within/addons:border-quebi-brand-mark",
 )
 
 const stepperStyles = cn(
@@ -174,7 +179,10 @@ function NumberInput({
           "border border-quebi-line/20 bg-quebi-surface/[0.02]",
           numberInputSizeStyles[size],
           "transition-[border-color,box-shadow] duration-200",
-          "enabled:hover:border-quebi-line/40",
+          // `not-focus` guards against hover *beating* focus: `enabled:hover:` is
+          // (0,3,0) specificity and `focus:` is (0,2,0), so unguarded a hovered,
+          // focused field loses its mint border and keeps only the ring — a halo.
+          "enabled:not-focus:hover:border-quebi-line/40",
           "outline-none focus:outline-none focus:border-quebi-brand-mark",
           "invalid:border-red-500",
           "disabled:cursor-not-allowed disabled:opacity-50 in-disabled:opacity-50",

@@ -148,7 +148,10 @@ export function DatePickerTrigger({ className, ...props }: GroupProps) {
       className={cn(
         "group/dpt flex w-full items-stretch overflow-hidden rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
         "transition-[border-color,box-shadow] duration-200",
-        "hover:border-quebi-line/40",
+        // Unguarded this *beat* the focus border below: both are (0,2,0) and
+        // Tailwind emits `focus-within` before `hover`, so pointing at a focused
+        // picker dropped the mark-teal border and left the ring floating off it.
+        "not-focus-within:hover:border-quebi-line/40",
         "focus-within:border-quebi-brand-mark focus-within:ring-2 focus-within:ring-quebi-brand-mark",
         className,
       )}
@@ -162,7 +165,10 @@ export function DatePickerTrigger({ className, ...props }: GroupProps) {
         className={cn(
           "inline-flex cursor-pointer items-center border-quebi-line/20 border-l bg-quebi-surface/[0.02] px-3 text-quebi-fg-muted",
           "transition-[border-color,color] duration-200",
-          "group-hover/dpt:border-quebi-line/40 hover:text-quebi-fg",
+          // Guarded for the same reason as the wrapper border: this divider and
+          // that border are one edge, so they have to change together or the
+          // control reads as two.
+          "group-not-focus-within/dpt:group-hover/dpt:border-quebi-line/40 hover:text-quebi-fg",
           "group-focus-within/dpt:border-quebi-brand-mark",
           "outline-none focus-visible:outline-none",
         )}
