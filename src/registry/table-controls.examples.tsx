@@ -257,8 +257,8 @@ const PagerAndSelection = () => {
         Select the whole page and the bar offers "select all {total} matching",
         which is a different claim from "these {rowsOnPage}" — and the only one
         that can be made about rows the browser has never seen. Type 900 into the
-        page jump and the schema says how many pages there are instead of showing
-        you an empty table.
+        page jump and it says how many pages there are instead of showing you an
+        empty table.
       </Note>
     </div>
   )
@@ -280,7 +280,7 @@ export const tableControlsExamples: ComponentExample[] = [
   {
     title: "Pager, selection and bulk actions",
     description:
-      "TablePager over 300 imaginary rows: page size, a validated page jump, and first/previous/next/last. Beside it, TableBulkBar reading one selection model — select the whole page and it offers \"select all 300 matching\", which is the only claim that can be made about rows the browser has never seen.",
+      "TablePager over 300 imaginary rows — which is Pagination's centred column: the range summary, the numbered page row with first/previous/next/last, and the rows-per-page select beside a labelled page jump underneath. Beside it, TableBulkBar reading one selection model — select the whole page and it offers \"select all 300 matching\", which is the only claim that can be made about rows the browser has never seen.",
     render: () => <PagerAndSelection />,
   },
 ]

@@ -4,7 +4,7 @@ export const paginationMeta: ComponentMeta = {
   slug: "pagination",
   name: "Pagination",
   description:
-    "Compact row of navigation targets for paging through results, with first/prev/next/last controls and an active page styled in the quebi brand teal. Link-based on purpose — a URL per page, an anchor you can middle-click — which is what makes it the pager for pages of a document. A table page is a parameter of a query and has no address, so a table takes TablePager from Table Controls instead.",
+    "The pager for a page of results, and the shape to reach for: PaginationStack centres the range summary above the row of page numbers, with an optional PaginationJump — a labelled \"Go to page\" field whose bound is a message under the input rather than an empty result. Targets are links by default — a URL per page, an anchor you can middle-click — and pressable without one, so the same row serves a page that is a query parameter with no address. That callback mode is what Table Controls' TablePager renders, so a table and a page of a document number their pages the same way. Sizes match Button: xs is 30px, sm 38px and the default.",
   category: "Navigation",
-  tags: ["navigation", "pagination", "pager", "links"],
+  tags: ["navigation", "pagination", "pager", "links", "jump"],
 }
