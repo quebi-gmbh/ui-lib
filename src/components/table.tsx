@@ -121,7 +121,7 @@ const ColumnResizer = ({ className, ...props }: ColumnResizerProps) => (
       ),
     )}
   >
-    <div className="h-full w-px bg-cyan-500/10 py-(--gutter-y)" />
+    <div className="h-full w-px bg-quebi-line/20 py-(--gutter-y)" />
   </ColumnResizerPrimitive>
 )
 

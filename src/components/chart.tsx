@@ -554,7 +554,7 @@ const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
         <>
           {!nestLabel ? <span className="font-medium">{tooltipLabel}</span> : null}
           {labelSeparator && (
-            <span aria-hidden className="mt-2 mb-3 block h-px w-full bg-cyan-500/10" />
+            <span aria-hidden className="mt-2 mb-3 block h-px w-full bg-quebi-line/20" />
           )}
         </>
       )}
