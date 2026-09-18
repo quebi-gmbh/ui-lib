@@ -20,7 +20,14 @@ export const badgeIntents = {
   warning: "bg-amber-500/10 border-amber-500/20 text-quebi-warn",
   danger: "bg-red-500/10 border-red-500/20 text-quebi-danger",
   info: "bg-cyan-500/10 border-quebi-line/20 text-quebi-info",
-  ai: "border-transparent bg-gradient-to-r from-quebi-brand to-purple-500 text-quebi-on-brand shadow-quebi-glow",
+  // The one intent that is a fill rather than a tint, and the only one whose
+  // label crosses two colours. `text-quebi-on-brand` is dark ink, so the far
+  // stop is the one that decides legibility and a *darker* purple is the wrong
+  // direction: `purple-700` would read 2.12:1. `purple-400` is the vivid end of
+  // the sweep that the ink still clears — 7.81:1 over the mint, 6.07:1 at the
+  // midpoint, 5.60:1 over the purple, where `purple-500` was 3.74:1 and the
+  // label faded out across its own badge. Pinned by `tests/badge-contrast.test.ts`.
+  ai: "border-transparent bg-gradient-to-r from-quebi-brand to-purple-400 text-quebi-on-brand shadow-quebi-glow",
   outline: "bg-transparent border-quebi-line/20 text-quebi-fg-muted",
 }
 
