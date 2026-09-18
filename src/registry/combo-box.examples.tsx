@@ -25,9 +25,24 @@ const fruits = [
 export const comboBoxExamples: ComponentExample[] = [
   {
     title: "Default",
-    description: "A labelled combo box with a filterable list of options.",
+    description:
+      "A labelled combo box with a filterable list of options. The list opens as soon as the input is focused.",
     render: () => (
       <ComboBox className="max-w-xs" aria-label="Fruit">
+        <Label>Favorite fruit</Label>
+        <ComboBoxInput placeholder="Search fruit..." />
+        <ComboBoxContent items={fruits}>
+          {(item) => <ComboBoxItem id={item.id}>{item.name}</ComboBoxItem>}
+        </ComboBoxContent>
+      </ComboBox>
+    ),
+  },
+  {
+    title: "Opens on typing",
+    description:
+      'Pass menuTrigger="input" for react-aria\'s own default: the list stays shut until you type, and the chevron is the only way to see it whole.',
+    render: () => (
+      <ComboBox className="max-w-xs" aria-label="Fruit" menuTrigger="input">
         <Label>Favorite fruit</Label>
         <ComboBoxInput placeholder="Search fruit..." />
         <ComboBoxContent items={fruits}>
@@ -42,7 +57,7 @@ export const comboBoxExamples: ComponentExample[] = [
     render: () => (
       <ComboBox className="max-w-xs" aria-label="Fruit">
         <Label>Favorite fruit</Label>
-        <Description>Start typing to filter the list.</Description>
+        <Description>Focus the field to see every option; type to filter.</Description>
         <ComboBoxInput placeholder="Search fruit..." />
         <ComboBoxContent items={fruits}>
           {(item) => <ComboBoxItem id={item.id}>{item.name}</ComboBoxItem>}
