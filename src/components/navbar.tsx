@@ -23,8 +23,10 @@ import { cn } from "@/lib/utils"
  * Navbar — quebi design system
  *
  * A responsive top/bottom navigation bar. On desktop it renders an inline bar
- * (surface bg-quebi-bg, hairline cyan border); below the mobile breakpoint it
- * collapses into a Sheet drawer toggled by the NavbarTrigger.
+ * (surface bg-quebi-bg when it is flush with the page, bg-quebi-elevated for
+ * the `float` intent and the inset content panel, hairline cyan border); below
+ * the mobile breakpoint it collapses into a Sheet drawer toggled by the
+ * NavbarTrigger.
  *
  * The active link is marked with the brand teal indicator. Depth comes from the
  * quebi hairline border, not drop shadows.
@@ -197,7 +199,7 @@ const Navbar = ({
         className={twMerge(
           "relative isolate hidden py-(--navbar-gutter) [--navbar-gutter:--spacing(2.5)] md:block",
           intent === "float" &&
-            "rounded-quebi-md bg-quebi-bg py-0 *:data-[navbar=content]:max-w-7xl *:data-[navbar=content]:rounded-quebi-md *:data-[navbar=content]:border *:data-[navbar=content]:border-quebi-line/10 *:data-[navbar=content]:bg-quebi-bg *:data-[navbar=content]:px-4 *:data-[navbar=content]:py-(--navbar-gutter)",
+            "rounded-quebi-md bg-quebi-elevated py-0 *:data-[navbar=content]:max-w-7xl *:data-[navbar=content]:rounded-quebi-md *:data-[navbar=content]:border *:data-[navbar=content]:border-quebi-line/10 *:data-[navbar=content]:bg-quebi-elevated *:data-[navbar=content]:px-4 *:data-[navbar=content]:py-(--navbar-gutter)",
           ["default", "inset"].includes(intent) && "px-4",
           intent === "default" && "border-b border-quebi-line/10 bg-quebi-bg",
           className,
@@ -326,7 +328,7 @@ const NavbarInset = ({ className, ref, children, ...props }: React.ComponentProp
       className={twMerge("flex flex-1 flex-col bg-quebi-bg pb-2 md:px-2", className)}
       {...props}
     >
-      <div className="grow bg-quebi-bg p-6 md:rounded-quebi-md md:p-16 md:shadow-quebi-glow md:ring-1 md:ring-quebi-line/10">
+      <div className="grow bg-quebi-elevated p-6 md:rounded-quebi-md md:p-16 md:shadow-quebi-glow md:ring-1 md:ring-quebi-line/10">
         <div className="mx-auto max-w-7xl">{children}</div>
       </div>
     </div>

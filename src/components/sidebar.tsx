@@ -34,8 +34,10 @@ import { cn } from "@/lib/utils"
  * Sidebar — quebi design system
  *
  * A full-featured, collapsible navigation surface built on
- * react-aria-components. The surface sits on `bg-quebi-bg` with the signature
- * cyan hairline border; the active item is highlighted with the brand teal.
+ * react-aria-components. A docked sidebar is flush with the page and sits on
+ * `bg-quebi-bg`; the ones that float above it — the mobile modal, the `float`
+ * intent, the `inset` content panel — sit on `bg-quebi-elevated`. Either way
+ * the signature cyan hairline border, and the brand teal on the active item.
  *
  * Compose a `SidebarProvider` around a `Sidebar` (containing `SidebarHeader`,
  * `SidebarContent` with `SidebarSection`/`SidebarItem`, and `SidebarFooter`)
@@ -218,7 +220,7 @@ const SidebarMobile = ({ side = "left", className, children, ...props }: Sidebar
         data-intent="default"
         aria-label="Sidebar"
         className={cn(
-          "fixed inset-y-0 z-50 flex w-(--sidebar-width) flex-col bg-quebi-bg text-quebi-fg [--sidebar-width:18rem]",
+          "fixed inset-y-0 z-50 flex w-(--sidebar-width) flex-col bg-quebi-elevated text-quebi-fg [--sidebar-width:18rem]",
           "border-quebi-line/10 transition will-change-transform",
           side === "left" &&
             "left-0 border-r entering:slide-in-from-left exiting:slide-out-to-left",
@@ -329,7 +331,7 @@ const Sidebar = ({
           data-slot="sidebar-inner"
           className={cn(
             "flex h-full w-full flex-col text-quebi-fg",
-            "group-data-[intent=float]:rounded-quebi-md group-data-[intent=float]:border group-data-[intent=float]:border-quebi-line/10 group-data-[intent=float]:bg-quebi-bg group-data-[intent=float]:shadow-quebi-glow",
+            "group-data-[intent=float]:rounded-quebi-md group-data-[intent=float]:border group-data-[intent=float]:border-quebi-line/10 group-data-[intent=float]:bg-quebi-elevated group-data-[intent=float]:shadow-quebi-glow",
           )}
         >
           {children}
@@ -557,7 +559,7 @@ const SidebarInset = ({ className, ref, ...props }: React.ComponentProps<"main">
       ref={ref}
       className={cn(
         "relative flex w-full flex-1 flex-col bg-quebi-bg lg:min-w-0",
-        "group-has-data-[intent=inset]/sidebar-root:border group-has-data-[intent=inset]/sidebar-root:border-quebi-line/10 group-has-data-[intent=inset]/sidebar-root:bg-quebi-bg",
+        "group-has-data-[intent=inset]/sidebar-root:border group-has-data-[intent=inset]/sidebar-root:border-quebi-line/10 group-has-data-[intent=inset]/sidebar-root:bg-quebi-elevated",
         "md:group-has-data-[intent=inset]/sidebar-root:m-2",
         "md:group-has-data-[side=left]:group-has-data-[intent=inset]/sidebar-root:ms-0",
         "md:group-has-data-[side=right]:group-has-data-[intent=inset]/sidebar-root:me-0",

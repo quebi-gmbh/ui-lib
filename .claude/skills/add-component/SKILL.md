@@ -44,6 +44,12 @@ build script can import under bun without pulling in React/JSX.
 Pull from `src/quebi-theme.css` tokens (the quebi-styleguide skill is the source of truth):
 
 - Background `bg-quebi-bg`, text `text-white` / muted `text-quebi-fg-muted` / subtle `text-quebi-fg-subtle`.
+- A surface that **floats above the page** — a popover, a menu, a list box, a dialog panel, a toast,
+  a `float`/inset chrome variant — is `bg-quebi-elevated`, not `bg-quebi-bg`. The two share a value
+  on dark and differ in light, where the page is `#f4f6f6`, a Card tints *down* from it, and an
+  overlay painted in the page colour renders lighter than the card it sits in — a pale patch rather
+  than something raised. A surface that is *flush* with the page (a docked sidebar, a default
+  navbar, a table's pinned column, an input) stays on `bg-quebi-bg`.
 - Brand teal is three tokens, one per role, because one value cannot clear three contrast bars in
   light mode. A **fill** is `bg-quebi-brand` (hover `bg-quebi-brand-hover`), and a `border-` belongs
   here only when it is that fill's own edge (`border-quebi-brand bg-quebi-brand`). **Text or a
@@ -59,7 +65,11 @@ Pull from `src/quebi-theme.css` tokens (the quebi-styleguide skill is the source
   changes the radius (`isCircle`, `isSquare`, …), put the radius on *every* branch of that variant
   and none of it in `base` — a base radius and a variant radius both survive the merge, and the
   sheet decides the winner, so the variant silently loses. `tests/radius-merge.test.ts` enforces it.
-- Depth = glows, never drop shadows: `shadow-quebi-glow`, `shadow-quebi-glow-strong`.
+- Depth = `shadow-quebi-glow` / `shadow-quebi-glow-strong`, never a hand-rolled `shadow-lg`. The
+  token is theme-aware: the signature mint bloom on dark, a neutral downward shadow on light, where
+  an emissive glow reads as "shiny" rather than "raised". Both are declared in the `@theme inline`
+  block of `src/quebi-theme.css` and flip through `--q-glow*`, so the class means "this is raised"
+  and the theme decides how that looks.
 - Motion: `transition-* duration-150/200`, `hover:scale-[1.02]` (buttons) / `hover:-translate-y-0.5`
   (cards). No bouncy springs.
 - Focus: `focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg`.

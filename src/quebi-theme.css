@@ -6,7 +6,7 @@
  */
 
 /*
- * ---------------- Color tokens (theme-aware) ----------------
+ * ---------------- Theme-aware tokens ----------------
  * The `--color-quebi-*` tokens are declared `inline` so their utilities
  * (bg-quebi-bg, text-quebi-fg, border-quebi-line, …) resolve to the runtime
  * `--q-*` variables directly. Those runtime variables are flipped per theme by
@@ -14,10 +14,37 @@
  * without touching markup. `<html>` always carries an explicit `dark` or
  * `light` class (set by the no-flash script in root.tsx); `.dark` is also what
  * chart.tsx's ChartStyle selector targets.
+ *
+ * The `--shadow-quebi-*` tokens are in here for the same reason, and only since
+ * task #117 — see the elevation section at the end of this block for what being
+ * stuck in the plain `@theme` block did to them.
  */
 @theme inline {
   /* Surfaces & text */
   --color-quebi-bg:           var(--q-bg);          /* page background */
+
+  /* The surface of something that floats ABOVE the page: a popover, a menu, a
+     list box, a dialog panel, a toast, the `float` navbar and sidebar. Not the
+     same question as `--color-quebi-bg`, which is what the page itself is
+     painted in — and the two only look like the same question on dark, where
+     they share a value.
+
+     In light the page is `#f4f6f6` and a default Card tints *down* from it
+     (`bg-quebi-surface/[0.02]` is ink at 2%, ≈ `#eff1f2`), so an overlay painted
+     in the page colour renders ~2% *lighter* than the card it sits in, edged by
+     a 10%-alpha hairline: a pale patch rather than something raised. White is
+     what a light theme actually elevates with, and it puts the overlay a clear
+     step above both the card and the page.
+
+     Dark keeps `#030712`, so this is a no-op there by value and the dark theme
+     is unchanged — on dark, elevation is the glow's job (below).
+
+     Use it for portal surfaces and for the `float`/inset chrome variants. A
+     surface that is *flush* with the page — a default navbar, a docked sidebar,
+     a table's pinned column, an input — stays on `--color-quebi-bg`, or it will
+     stop matching the page it is welded to. */
+  --color-quebi-elevated:     var(--q-elevated);    /* overlay / floating surface */
+
   --color-quebi-fg:           var(--q-fg);          /* primary foreground */
   --color-quebi-fg-muted:     var(--q-fg-muted);    /* body copy */
   /* Captions / meta — timestamps, helper text, table meta, placeholders. The
@@ -88,6 +115,28 @@
   --color-quebi-success:      var(--q-success);
   --color-quebi-info:         var(--q-info);
   --color-quebi-accent:       var(--q-accent);
+
+  /* ---------------- Elevation (theme-aware) ----------------
+     These live in the `inline` block for exactly the reason the colours do, and
+     until task #117 they did not: declared in the plain `@theme` block below,
+     they were the one thing in this file that could not re-theme, so both
+     themes got the same mint bloom.
+
+     An emissive glow is a dark-first idea. It reads as light coming *off* a
+     surface, which needs a dark backdrop to read at all; on `#f4f6f6` it does
+     not say "raised", it says "shiny" — and because the overlay surface had no
+     contrast against its container either (see `--color-quebi-elevated`), that
+     bloom was the *only* thing separating a popover from the card behind it,
+     doing the one job it is worst at. Light gets what a light surface actually
+     takes its depth from: a neutral, downward, occlusion-shaped shadow.
+
+     The names do not move, so no markup does either. `shadow-quebi-glow` still
+     means "this is raised" everywhere it is used — a card hover, a slider thumb,
+     a selected toggle — it just stops meaning "mint" in the theme that has no
+     use for mint light. Both names are also listed under `shadow` in
+     `extendTailwindMerge` in `src/lib/utils.ts`; keep them in step. */
+  --shadow-quebi-glow:        var(--q-glow);
+  --shadow-quebi-glow-strong: var(--q-glow-strong);
 }
 
 @theme {
@@ -104,8 +153,8 @@
   --radius-quebi-lg:   1rem;     /* 16px — large surfaces */
 
   /* ---------------- Shadows / glows ---------------- */
-  --shadow-quebi-glow:        0 0 20px rgb(45 212 168 / 0.15);
-  --shadow-quebi-glow-strong: 0 0 30px rgb(45 212 168 / 0.30);
+  /* Moved to the `@theme inline` block above, where they can flip per theme —
+     nothing belongs here that has a light value and a dark one. */
 
   /* ---------------- Container widths ---------------- */
   /* `--container-*` tokens become `max-w-*` utilities in v4. Two measures, and
@@ -126,6 +175,10 @@
 :root,
 .dark {
   --q-bg:          #030712;
+  /* The same value as the page, on purpose: on dark an overlay does not need a
+     lighter surface to read as raised, because the glow below already carries
+     it. The token exists so light can differ; here it costs nothing. */
+  --q-elevated:    #030712;
   --q-fg:          #ffffff;
   --q-fg-muted:    #9ca3af;  /* gray-400 — 7.93:1 */
   /* Between gray-500 and gray-400: 5.14:1, and still 4.61:1 once a
@@ -150,10 +203,23 @@
   --q-success:     #34d399;  /* emerald-400 */
   --q-info:        #22d3ee;  /* cyan-300 */
   --q-accent:      #c4b5fd;  /* purple-300 */
+  /* The signature: depth as light coming off the surface. Symmetrical, mint,
+     no direction — it is a glow and not a shadow, and it only reads that way
+     against a near-black page. Unchanged; this is the value the token has
+     always had, now written where the light theme can disagree with it. */
+  --q-glow:        0 0 20px rgb(45 212 168 / 0.15);
+  --q-glow-strong: 0 0 30px rgb(45 212 168 / 0.30);
 }
 
 .light {
   --q-bg:          #f4f6f6;
+  /* Pure white, two steps up: above the page (#f4f6f6) and above the ink-tinted
+     card a component is usually shown inside (≈ #eff1f2). That ordering is the
+     point — the overlay used to be the page colour exactly, which left it a
+     rung *below* where it belongs and only ~2% off the card, a pale patch.
+     Every text token gains a little contrast here rather than losing it, since
+     white is lighter than the surface they were measured against. */
+  --q-elevated:    #ffffff;
   --q-fg:          #0b1120;
   /* gray-700, one step down from the gray-600 this was. Body copy gets darker
      for the same reason the state colours did in #94 — but here it is also what
@@ -194,6 +260,14 @@
   --q-success:     #065f46;  /* emerald-800 */
   --q-info:        #155e75;  /* cyan-800 */
   --q-accent:      #6d28d9;  /* violet-700 */
+  /* Depth as occlusion, not emission: a tight contact shadow under the edge
+     plus a wide soft one below it, both cast downward and both in the same ink
+     (`#0b1120`) the light theme already tints surfaces and hairlines with — so
+     the shadow is a darker version of the page, never a grey from somewhere
+     else. The alphas are low because what they fall on is near-white; this is
+     the pair doing the separating a mint bloom cannot do here. */
+  --q-glow:        0 1px 2px rgb(11 17 32 / 0.06), 0 8px 24px rgb(11 17 32 / 0.08);
+  --q-glow-strong: 0 2px 4px rgb(11 17 32 / 0.08), 0 16px 40px rgb(11 17 32 / 0.16);
 }
 
 /* ---------------- Custom utilities (v4 @utility syntax) ---------------- */

@@ -126,7 +126,7 @@ const CommandMenu = ({
         >
           <Modal
             className={cn(
-              "row-start-2 bg-quebi-bg text-start text-quebi-fg shadow-quebi-glow-strong outline-none ring-1 ring-quebi-line/10 md:row-start-1",
+              "row-start-2 bg-quebi-elevated text-start text-quebi-fg shadow-quebi-glow-strong outline-none ring-1 ring-quebi-line/10 md:row-start-1",
               "max-h-[calc(var(--visual-viewport-height)*0.8)] w-full sm:fixed sm:top-[10%] sm:left-1/2 sm:-translate-x-1/2",
               "rounded-t-quebi-md md:rounded-quebi-md",
               sizes[size],

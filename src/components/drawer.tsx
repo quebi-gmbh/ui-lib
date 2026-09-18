@@ -29,7 +29,7 @@ import { Button, type ButtonProps } from "@/components/button"
  * Modal/ModalOverlay for accessibility and `motion` for the slide + drag-to-
  * dismiss gesture. Composes the same overlay surface tokens as Dialog.
  *
- * Surface tokens: bg-quebi-bg, border-quebi-line/10. Depth via quebi glow.
+ * Surface tokens: bg-quebi-elevated, border-quebi-line/10. Depth via shadow-quebi-glow.
  */
 
 const DrawerRoot = motion.create(ModalPrimitive)
@@ -76,7 +76,7 @@ const DrawerContent = ({
           {({ state }) => (
             <DrawerRoot
               className={cn(
-                "fixed max-h-full touch-none overflow-hidden border border-quebi-line/10 bg-quebi-bg align-middle text-quebi-fg shadow-quebi-glow will-change-transform",
+                "fixed max-h-full touch-none overflow-hidden border border-quebi-line/10 bg-quebi-elevated align-middle text-quebi-fg shadow-quebi-glow will-change-transform",
                 side === "top" &&
                   (isFloat
                     ? "inset-x-2 top-2 rounded-quebi-md"

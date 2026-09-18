@@ -32,7 +32,7 @@ import {
  * `isOpen`/`onOpenChange` and leave `Sheet` out. A `Sheet` with a single child
  * puts that child in its trigger slot, which warns on every render.
  *
- * Surface tokens: bg-quebi-bg, border-quebi-line/10. Depth via glow, not shadow.
+ * Surface tokens: bg-quebi-elevated, border-quebi-line/10. Depth via shadow-quebi-glow.
  */
 const Sheet = DialogTriggerPrimitive
 
@@ -79,8 +79,8 @@ const SheetContent = ({
       <Modal
         data-float={isFloat}
         className={cn(
-          // quebi DS — surface with bg-quebi-bg + cyan border, matching Dialog.
-          "fixed z-50 grid gap-4 border border-quebi-line/10 bg-quebi-bg text-quebi-fg shadow-quebi-glow",
+          // quebi DS — surface with bg-quebi-elevated + cyan border, matching Dialog.
+          "fixed z-50 grid gap-4 border border-quebi-line/10 bg-quebi-elevated text-quebi-fg shadow-quebi-glow",
           "transform-gpu transition ease-in-out will-change-transform [--visual-viewport-vertical-padding:16px]",
           "data-[float=true]:rounded-quebi-md",
           "entering:fade-in entering:animate-in entering:duration-500",

@@ -157,7 +157,7 @@ const toastStyles = tv({
   ],
   variants: {
     intent: {
-      default: "border-quebi-line/10 bg-quebi-bg/90 text-quebi-fg-muted",
+      default: "border-quebi-line/10 bg-quebi-elevated/90 text-quebi-fg-muted",
       success: "border-emerald-500/20 bg-emerald-500/10 text-quebi-success",
       warning: "border-amber-500/20 bg-amber-500/10 text-quebi-warn",
       danger: "border-red-500/20 bg-red-500/10 text-quebi-danger",

@@ -19,8 +19,10 @@ import { cn } from "@/lib/utils"
 /**
  * List Box — quebi design system
  *
- * A selectable list rendered on the quebi dark surface with cyan hairlines and
- * brand-teal selection. Foundational: Multiple Select builds on top of it.
+ * A selectable list rendered on the quebi overlay surface
+ * (`bg-quebi-elevated`, never the page's `bg-quebi-bg` — it floats above it)
+ * with cyan hairlines and brand-teal selection. Foundational: Multiple Select
+ * builds on top of it.
  * Reuses the shared dropdown item styling so items match menus and selects.
  */
 
@@ -29,7 +31,7 @@ const ListBox = <T extends object>({ className, ...props }: ListBoxProps<T>) => 
     {...props}
     data-slot="list-box"
     className={cn(
-      "quebi-scrollbar grid max-h-96 w-full min-w-56 scroll-py-1 grid-cols-[auto_1fr] flex-col gap-y-1 overflow-y-auto overscroll-contain rounded-quebi-md border border-quebi-line/10 bg-quebi-bg p-1 shadow-quebi-glow outline-hidden has-data-[slot=drag-icon]:grid-cols-[auto_auto_1fr] *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
+      "quebi-scrollbar grid max-h-96 w-full min-w-56 scroll-py-1 grid-cols-[auto_1fr] flex-col gap-y-1 overflow-y-auto overscroll-contain rounded-quebi-md border border-quebi-line/10 bg-quebi-elevated p-1 shadow-quebi-glow outline-hidden has-data-[slot=drag-icon]:grid-cols-[auto_auto_1fr] *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
       className,
     )}
   />

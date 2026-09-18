@@ -16,7 +16,7 @@ import { Button, type ButtonProps } from "@/components/button"
  * body. Foundational — modal / popover / sheet / drawer compose this surface
  * inside their own overlay. Pair with react-aria's Modal/Popover to present it.
  *
- * Surface tokens: bg-quebi-bg, border-quebi-line/10, rounded-quebi-md.
+ * Surface tokens: bg-quebi-elevated, border-quebi-line/10, rounded-quebi-md.
  */
 const Dialog = ({
   role = "dialog",
@@ -28,7 +28,7 @@ const Dialog = ({
       data-slot="dialog"
       role={role}
       className={cn(
-        "peer/dialog group/dialog relative flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-hidden rounded-quebi-md border border-quebi-line/10 bg-quebi-bg text-quebi-fg outline-none [--gutter:--spacing(6)] sm:[--gutter:--spacing(8)]",
+        "peer/dialog group/dialog relative flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-hidden rounded-quebi-md border border-quebi-line/10 bg-quebi-elevated text-quebi-fg outline-none [--gutter:--spacing(6)] sm:[--gutter:--spacing(8)]",
         className,
       )}
       {...props}
