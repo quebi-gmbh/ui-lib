@@ -21,7 +21,7 @@ export const progressCircleExamples: ComponentExample[] = [
     render: () => (
       <div className="flex items-center gap-6">
         <ProgressCircle aria-label="Loading" isIndeterminate className="size-4" />
-        <ProgressCircle aria-label="Loading" isIndeterminate className="size-8 text-quebi-brand" />
+        <ProgressCircle aria-label="Loading" isIndeterminate className="size-8 text-quebi-brand-text" />
       </div>
     ),
   },

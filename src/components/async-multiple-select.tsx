@@ -368,7 +368,7 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
                   className={cn(
                     "flex cursor-pointer items-center gap-2 rounded-quebi-sm px-2.5 py-1.5 text-sm text-quebi-fg outline-none transition-colors duration-150",
                     isActive && "bg-quebi-surface/[0.05]",
-                    isSel && "text-quebi-brand",
+                    isSel && "text-quebi-brand-text",
                   )}
                 >
                   <Check

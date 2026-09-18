@@ -229,7 +229,7 @@ export function TagField({
                     "border-quebi-line/20 bg-quebi-surface/[0.06] text-quebi-fg-muted",
                     "transition-colors duration-150",
                     allowsRemoving && "hover:border-quebi-line/40 hover:text-quebi-fg",
-                    "data-[selected]:border-quebi-brand/40 data-[selected]:bg-quebi-brand/10 data-[selected]:text-quebi-brand",
+                    "data-[selected]:border-quebi-brand/40 data-[selected]:bg-quebi-brand/10 data-[selected]:text-quebi-brand-text",
                     "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand/50 data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
                     "data-[disabled]:opacity-50",
                     "outline-none",

@@ -93,7 +93,7 @@ const stepperStyles = cn(
   "border border-quebi-line/20",
   "transition-[color,border-color,background-color] duration-200",
   "outline-none cursor-pointer",
-  "hover:border-quebi-brand hover:text-quebi-brand",
+  "hover:border-quebi-brand hover:text-quebi-brand-text",
   "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
   "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-quebi-line/20 disabled:hover:text-quebi-fg-muted",
 )

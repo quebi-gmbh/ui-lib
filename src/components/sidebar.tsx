@@ -479,7 +479,7 @@ const SidebarItem = ({
             "**:data-[slot=avatar]:[--avatar-size:--spacing(5)]",
             "[&:has([data-slot=avatar]+[data-slot=sidebar-label])_[data-slot=avatar]:has(+[data-slot=sidebar-label])]:me-2",
             isCurrent &&
-              "font-medium bg-quebi-brand/10 text-quebi-brand hover:bg-quebi-brand/10 hover:text-quebi-brand [&_.text-muted-fg]:text-quebi-brand/80 [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-brand hover:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-brand",
+              "font-medium bg-quebi-brand/10 text-quebi-brand-text hover:bg-quebi-brand/10 hover:text-quebi-brand-text [&_.text-muted-fg]:text-quebi-brand-text/80 [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-brand-text hover:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-brand-text",
             isFocusVisible &&
               "outline-hidden ring-2 ring-quebi-brand/50 ring-inset",
             (isPressed || isHovered) &&

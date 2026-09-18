@@ -22,7 +22,7 @@ const navTargetClasses = [
 
 const navTargetInteractive = [
   "cursor-pointer border-quebi-line/20 bg-transparent text-quebi-fg-muted",
-  "hover:border-quebi-brand hover:text-quebi-brand hover:bg-quebi-surface/[0.04]",
+  "hover:border-quebi-brand hover:text-quebi-brand-text hover:bg-quebi-surface/[0.04]",
 ].join(" ")
 
 const navTargetDisabled = "cursor-not-allowed border-quebi-line/10 bg-transparent text-quebi-fg-subtle"

@@ -46,7 +46,7 @@ export function Snippet({
     >
       <pre className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto font-mono text-sm leading-relaxed text-quebi-fg [scrollbar-width:none]">
         {symbol ? (
-          <span aria-hidden="true" className="shrink-0 select-none text-quebi-brand">
+          <span aria-hidden="true" className="shrink-0 select-none text-quebi-brand-text">
             {symbol}
           </span>
         ) : null}
@@ -56,7 +56,7 @@ export function Snippet({
         <Button
           onPress={copy}
           aria-label={copied ? "Copied" : "Copy command"}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-quebi-sm border border-quebi-line/20 bg-quebi-bg/80 px-2.5 py-1.5 text-xs font-medium text-quebi-fg-muted backdrop-blur transition-colors duration-200 hover:border-quebi-brand hover:text-quebi-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-quebi-sm border border-quebi-line/20 bg-quebi-bg/80 px-2.5 py-1.5 text-xs font-medium text-quebi-fg-muted backdrop-blur transition-colors duration-200 hover:border-quebi-brand hover:text-quebi-brand-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg"
         >
           {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
           {copied ? "Copied" : "Copy"}

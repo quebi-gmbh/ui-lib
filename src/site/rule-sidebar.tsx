@@ -18,7 +18,7 @@ import { groupRules, rulesRegistry } from "@/registry/rules"
  */
 const BASE = "rounded-quebi-sm px-3 py-1.5 text-sm transition-colors duration-150"
 const RESTING = "text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg"
-const CURRENT = "bg-quebi-brand/10 font-medium text-quebi-brand"
+const CURRENT = "bg-quebi-brand/10 font-medium text-quebi-brand-text"
 
 const itemClasses = ({ isActive }: { isActive: boolean }) =>
   cn("block", BASE, isActive ? CURRENT : RESTING)

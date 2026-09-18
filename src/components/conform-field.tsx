@@ -61,7 +61,7 @@ export function ConformField({
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>
           {label}
-          {isRequired && <span className="ml-1 text-quebi-brand">*</span>}
+          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
         </Label>
       )}
       <Input placeholder={placeholder} />

@@ -90,7 +90,7 @@ export function BarList<T>({
                 {item.href ? (
                   <Link
                     href={item.href}
-                    className="truncate whitespace-nowrap rounded-quebi-sm font-normal text-sm/6 text-quebi-fg no-underline hover:text-quebi-brand-hover hover:underline hover:underline-offset-2"
+                    className="truncate whitespace-nowrap rounded-quebi-sm font-normal text-sm/6 text-quebi-fg no-underline hover:text-quebi-brand-text-hover hover:underline hover:underline-offset-2"
                     target="_blank"
                     rel="noreferrer"
                     onClick={(event) => event.stopPropagation()}

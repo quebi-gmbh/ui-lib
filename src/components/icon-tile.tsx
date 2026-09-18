@@ -39,7 +39,7 @@ import { cn } from "@/lib/utils"
  */
 export const iconTileIntents = {
   neutral: "bg-quebi-surface/[0.06] border-quebi-surface/10 text-quebi-fg-muted",
-  brand: "bg-quebi-brand/10 border-quebi-brand/20 text-quebi-brand",
+  brand: "bg-quebi-brand/10 border-quebi-brand/20 text-quebi-brand-text",
   accent: "bg-purple-500/10 border-purple-500/20 text-quebi-accent",
   success: "bg-emerald-500/10 border-emerald-500/20 text-quebi-success",
   warning: "bg-amber-500/10 border-amber-500/20 text-quebi-warn",

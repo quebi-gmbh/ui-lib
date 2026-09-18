@@ -245,7 +245,7 @@ const NavbarItem = ({ className, isCurrent, ...props }: NavbarItemProps) => {
         [
           "href" in props ? "cursor-pointer" : "cursor-default",
           "group/navbar-item pressed:bg-quebi-surface/[0.06] pressed:text-quebi-fg hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
-          "text-quebi-fg-muted aria-[current=page]:text-quebi-fg aria-[current=page]:*:data-[slot=icon]:text-quebi-brand",
+          "text-quebi-fg-muted aria-[current=page]:text-quebi-fg aria-[current=page]:*:data-[slot=icon]:text-quebi-brand-text",
           "col-span-full grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] supports-[grid-template-columns:subgrid]:grid-cols-subgrid md:supports-[grid-template-columns:subgrid]:grid-cols-none",
           "relative min-w-0 items-center gap-x-3 rounded-quebi-sm p-2 text-start font-medium text-base/6 md:gap-x-(--navbar-gutter) md:px-(--navbar-gutter) md:py-[calc(var(--navbar-gutter)---spacing(0.5))] md:text-sm/5",
           "*:data-[slot=icon]:size-5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-quebi-fg-subtle md:*:data-[slot=icon]:size-4",

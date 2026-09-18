@@ -21,7 +21,7 @@ export function Text({ className, ...props }: React.ComponentPropsWithoutRef<"p"
 }
 
 export const textLinkStyles = tv({
-  base: "text-quebi-brand underline decoration-quebi-brand/40 transition-colors duration-150 ease-out hover:text-quebi-brand-hover hover:decoration-quebi-brand-hover has-data-[slot=icon]:inline-flex has-data-[slot=icon]:items-center has-data-[slot=icon]:gap-x-1",
+  base: "text-quebi-brand-text underline decoration-quebi-brand-text/40 transition-colors duration-150 ease-out hover:text-quebi-brand-text-hover hover:decoration-quebi-brand-text-hover has-data-[slot=icon]:inline-flex has-data-[slot=icon]:items-center has-data-[slot=icon]:gap-x-1",
 })
 
 export function TextLink({ className, ...props }: React.ComponentPropsWithoutRef<typeof Link>) {

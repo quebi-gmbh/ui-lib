@@ -49,7 +49,7 @@ export const formattedStorageExamples: ComponentExample[] = [
       <Row>
         <span className="text-quebi-fg-muted">
           Storage:{" "}
-          <FormattedStorage value={512} className="text-quebi-brand font-semibold" />
+          <FormattedStorage value={512} className="text-quebi-brand-text font-semibold" />
         </span>
       </Row>
     ),

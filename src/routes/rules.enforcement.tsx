@@ -75,7 +75,7 @@ export default function RulesEnforcement() {
               <div key={rule.id}>
                 <Link
                   to={`/rules/${rule.id}`}
-                  className="font-medium text-quebi-brand transition-colors duration-200 hover:text-quebi-brand-hover"
+                  className="font-medium text-quebi-brand-text transition-colors duration-200 hover:text-quebi-brand-text-hover"
                 >
                   {rule.navTitle ?? rule.title}
                 </Link>{" "}
@@ -97,7 +97,7 @@ export default function RulesEnforcement() {
                 <li key={rule.id}>
                   <Link
                     to={`/rules/${rule.id}`}
-                    className="font-medium text-quebi-brand transition-colors duration-200 hover:text-quebi-brand-hover"
+                    className="font-medium text-quebi-brand-text transition-colors duration-200 hover:text-quebi-brand-text-hover"
                   >
                     {rule.navTitle ?? rule.title}
                   </Link>{" "}

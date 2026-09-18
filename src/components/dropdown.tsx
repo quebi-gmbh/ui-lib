@@ -100,7 +100,7 @@ const dropdownItemStyles = tv({
     },
     isSelected: {
       // Selected → brand-teal fill so it reads as the chosen value.
-      true: "bg-quebi-brand/15 font-semibold text-quebi-brand [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-brand",
+      true: "bg-quebi-brand/15 font-semibold text-quebi-brand-text [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-brand-text",
     },
     isFocused: {
       // Keyboard-focused → subtle white wash so nav reads cleanly on the dark surface.

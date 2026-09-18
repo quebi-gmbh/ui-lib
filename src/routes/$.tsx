@@ -14,7 +14,7 @@ export default function NotFound() {
       <p className="mt-4 text-base text-quebi-fg-muted">That page doesn't exist.</p>
       <Link
         to="/"
-        className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-quebi-brand transition-colors duration-200 hover:text-quebi-brand-hover"
+        className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-quebi-brand-text transition-colors duration-200 hover:text-quebi-brand-text-hover"
       >
         <ArrowLeft className="h-4 w-4" />
         Back home

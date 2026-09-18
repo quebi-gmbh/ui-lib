@@ -37,7 +37,7 @@ export default function Components() {
                   <Card interactive className="p-6">
                     <CardTitle>{c.name}</CardTitle>
                     <CardDescription className="mt-2 line-clamp-2">{c.description}</CardDescription>
-                    <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-quebi-brand transition-colors duration-200 group-hover:text-quebi-brand-hover">
+                    <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-quebi-brand-text transition-colors duration-200 group-hover:text-quebi-brand-text-hover">
                       View <ArrowRight className="h-4 w-4" />
                     </span>
                   </Card>

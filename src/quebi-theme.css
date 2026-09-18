@@ -22,9 +22,21 @@
   --color-quebi-fg-muted:     var(--q-fg-muted);    /* body copy */
   --color-quebi-fg-subtle:    var(--q-fg-subtle);   /* captions / meta */
 
-  /* Brand */
+  /* Brand, as a *fill*: the mint a button, a ring or a tint is painted in.
+     Deliberately the same value in both themes — see `--q-brand` below. Put
+     `--color-quebi-on-brand` on top of it, never `--color-quebi-fg`. */
   --color-quebi-brand:        var(--q-brand);
   --color-quebi-brand-hover:  var(--q-brand-hover);
+
+  /* Brand, as *text or a glyph* on a page surface. A separate token because the
+     two roles cannot share a value: the mint fill has to stay mint in light
+     mode, and mint text on the light surface is 1.74:1 — WCAG 1.4.3 asks 4.5:1.
+     Identical to `--q-brand` on dark, where the fill value is already legible,
+     so this split costs the dark theme nothing. Reach for it for any
+     `text-`/`decoration-` utility; reach for `--color-quebi-brand` for any
+     `bg-`/`border-`/`ring-`/`stroke-` one. */
+  --color-quebi-brand-text:       var(--q-brand-text);
+  --color-quebi-brand-text-hover: var(--q-brand-text-hover);
 
   /* Tint base for the low-alpha `white/[0.0x]` surfaces & borders. Flips the
      tint direction (white on dark, ink on light); keep using with /opacity. */
@@ -39,7 +51,10 @@
   --color-quebi-inverse-bg:   var(--q-inverse-bg);
   --color-quebi-inverse-fg:   var(--q-inverse-fg);
 
-  /* Semantic state text (flips 400-level on dark → 600/700-level on light). */
+  /* Semantic state text (flips 400-level on dark → 700/800-level on light).
+     These are text values first: every one of them clears 4.5:1 on its own
+     theme's surface, and on the 10% tint a Badge paints behind it. The handful
+     of `bg-`/`border-` uses are all /5 or /30, where the step barely shows. */
   --color-quebi-danger:       var(--q-danger);
   --color-quebi-warn:         var(--q-warn);
   --color-quebi-success:      var(--q-success);
@@ -88,6 +103,10 @@
   --q-fg-subtle:   #6b7280;
   --q-brand:       #2dd4a8;
   --q-brand-hover: #5eead4;
+  /* On dark the fill value is already 10.64:1 as text, so the text token is the
+     fill token. The split only bites in light mode. */
+  --q-brand-text:       #2dd4a8;
+  --q-brand-text-hover: #5eead4;
   --q-surface:     #ffffff;  /* white tint on dark */
   --q-line:        #06b6d4;  /* cyan-500 hairline */
   --q-on-brand:    #052e22;  /* dark ink on mint — both themes */
@@ -105,18 +124,28 @@
   --q-fg:          #0b1120;
   --q-fg-muted:    #4b5563;
   --q-fg-subtle:   #8b95a5;
-  --q-brand:       #2dd4a8;
+  --q-brand:       #2dd4a8;  /* unchanged — mint fills stay dark-first */
   --q-brand-hover: #14b88f;
+  /* teal-700/800. The mint darkened until it is readable *as text* on #f4f6f6
+     (5.05:1, and 4.75:1 on the mint tint a brand Badge paints behind it). Not
+     emerald, which is `--q-success`: the two would be a hue apart. */
+  --q-brand-text:       #0f766e;
+  --q-brand-text-hover: #115e59;
   --q-surface:     #0b1120;  /* ink tint on light */
   --q-line:        #0b1120;  /* ink hairline */
-  --q-on-brand:    #052e22;  /* unchanged — mint fills stay dark-first */
+  --q-on-brand:    #052e22;  /* unchanged — it sits ON mint, which has not moved */
   --q-inverse-bg:  #0b1120;
   --q-inverse-fg:  #ffffff;
-  --q-danger:      #dc2626;  /* red-600 */
-  --q-warn:        #d97706;  /* amber-600 */
-  --q-success:     #059669;  /* emerald-600 */
-  --q-info:        #0891b2;  /* cyan-600 */
-  --q-accent:      #7c3aed;  /* purple-600 */
+  /* One step down from the 600s these used to be, because a 600 is a fill value
+     and these are read as 12px text. Each is the lowest step on its own ladder
+     that clears 4.5:1 against the tint a Badge paints behind it, with margin —
+     600-level cleared the bare surface and then lost it again under the tint
+     (red-600 was 4.45:1 before the tint even touched it). */
+  --q-danger:      #b91c1c;  /* red-700 */
+  --q-warn:        #92400e;  /* amber-800 — amber-700 is 4.31:1 on the tint */
+  --q-success:     #065f46;  /* emerald-800 */
+  --q-info:        #155e75;  /* cyan-800 */
+  --q-accent:      #6d28d9;  /* violet-700 */
 }
 
 /* ---------------- Custom utilities (v4 @utility syntax) ---------------- */

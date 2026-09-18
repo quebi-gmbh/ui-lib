@@ -111,7 +111,7 @@ function AdminBullet({ index, status }: { index: number; status: StepStatus }) {
     status === "done"
       ? "border-transparent bg-quebi-brand text-quebi-on-brand shadow-quebi-glow"
       : status === "active"
-        ? "border-quebi-brand bg-quebi-bg text-quebi-brand shadow-quebi-glow-strong"
+        ? "border-quebi-brand bg-quebi-bg text-quebi-brand-text shadow-quebi-glow-strong"
         : "border-transparent bg-quebi-surface/[0.06] text-quebi-fg-subtle"
   return (
     <span aria-current={status === "active" ? "step" : undefined} className={cn(base, state)}>
@@ -166,7 +166,7 @@ function KioskBullet({ index, status }: { index: number; status: StepStatus }) {
     status === "done"
       ? "border-transparent bg-quebi-brand text-quebi-on-brand shadow-quebi-glow"
       : status === "active"
-        ? "border-quebi-brand bg-quebi-bg text-quebi-brand shadow-quebi-glow-strong"
+        ? "border-quebi-brand bg-quebi-bg text-quebi-brand-text shadow-quebi-glow-strong"
         : "border-transparent bg-quebi-surface/[0.06] text-quebi-fg-subtle"
   return (
     <span aria-current={status === "active" ? "step" : undefined} className={cn(base, state)}>

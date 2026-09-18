@@ -14,9 +14,9 @@ import { cn } from "@/lib/utils"
 const EXTERNAL_HREF_RE = /^(https?:|mailto:|tel:)/i
 
 const BASE_CLASSES = [
-  "font-sans font-medium text-quebi-brand no-underline",
+  "font-sans font-medium text-quebi-brand-text no-underline",
   "transition-colors duration-150 ease-out",
-  "hover:text-quebi-brand-hover hover:underline",
+  "hover:text-quebi-brand-text-hover hover:underline",
   "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg rounded-quebi-sm",
   "disabled:cursor-default disabled:opacity-50 disabled:no-underline",
 ]

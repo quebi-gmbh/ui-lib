@@ -27,7 +27,7 @@ export const headingExamples: ComponentExample[] = [
     title: "Custom className",
     description: "Override the color or weight via className.",
     render: () => (
-      <Heading level={2} className="text-quebi-brand">
+      <Heading level={2} className="text-quebi-brand-text">
         Highlighted heading
       </Heading>
     ),
