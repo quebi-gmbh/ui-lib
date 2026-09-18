@@ -33,7 +33,7 @@ export function ruleById(id: string): RuleMeta {
 /**
  * The temp project, deliberately checked out under a decoy path.
  *
- * `src/components/` above the project root is the shape that broke the old
+ * `src/components/app/` above the project root is the shape that broke the old
  * `$filename` guards: a rule scoped to `src/**` fired on every file in a
  * checkout under `~/src/…`, and a carve-out for `src/components/**` would have
  * excused a whole repo under a path containing one — silently, which is the
@@ -41,9 +41,14 @@ export function ruleById(id: string): RuleMeta {
  * `includes` against the project root, so the ancestors cannot matter. Putting
  * every rule test behind this path is how that stays true: the whole suite is
  * the regression test, and `tests/config.test.ts` says so out loud as well.
+ *
+ * Every segment here is a decoy for a glob some record actually declares — `app`
+ * and `src` are the two roots every `appliesTo` starts from, and `src/components`
+ * is the exception path that carves the library layer back out (task #97). One
+ * path, so a decoy cannot be the half nobody thought to write down.
  */
 const SCRATCH = join("/tmp", `quebi-rules-tests-${process.pid}`)
-const ROOT = join(SCRATCH, "src", "components", "project")
+const ROOT = join(SCRATCH, "src", "components", "app", "project")
 const BIOME = join(import.meta.dir, "..", "node_modules", ".bin", "biome")
 const PLUGIN_DIR = "ui-lib-rules"
 
