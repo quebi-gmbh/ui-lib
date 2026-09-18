@@ -21,6 +21,11 @@ import { cn } from "@/lib/utils"
  * and grab handle use brand teal. Supports single and range values, horizontal
  * and vertical orientations, an optional value output, and disabled state. Focus
  * uses the quebi teal ring.
+ *
+ * The slider's length along its own axis is a default, not a fixture: a
+ * horizontal slider fills its container and a vertical one is 12rem tall until
+ * `className` says otherwise (`w-72`, `h-64`, `h-full`). The other axis is the
+ * track's 6px thickness, which the component owns.
  */
 export function SliderGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -32,14 +37,29 @@ export function SliderGroup({ className, ...props }: React.ComponentProps<"div">
   )
 }
 
-export function Slider({ className, ...props }: SliderProps) {
+export function Slider({ className, orientation = "horizontal", ...props }: SliderProps) {
+  const isVertical = orientation === "vertical"
   return (
     <SliderPrimitive
       data-slot="control"
+      orientation={orientation}
       className={cn(
         "group relative flex touch-none select-none flex-col disabled:opacity-50",
-        "orientation-horizontal:w-full orientation-horizontal:min-w-fit orientation-horizontal:gap-y-2",
-        "orientation-vertical:h-full orientation-vertical:min-h-fit orientation-vertical:w-1.5 orientation-vertical:items-center orientation-vertical:gap-y-2",
+        "orientation-horizontal:min-w-fit orientation-horizontal:gap-y-2",
+        "orientation-vertical:min-h-fit orientation-vertical:items-center orientation-vertical:gap-y-2",
+        // The slider's length along its own axis is the one thing a consumer
+        // always sets — `<Slider className="w-72">`, `<Slider
+        // orientation="vertical" className="h-48">` — so the default has to be
+        // a plain utility that tailwind-merge can drop. Written as an
+        // `orientation-*:` variant it compiles to
+        // `.orientation-vertical\:h-full[data-orientation="vertical"]`, which
+        // tailwind-merge keeps (different group) and CSS then resolves in the
+        // variant's favour at specificity (0,2,0) against a bare `.h-48`. The
+        // consumer's class lost silently, and for vertical it lost to
+        // `height: 100%` of an auto-height parent: the track is `flex-1`, so
+        // the whole slider collapsed to the thumb. Picking the class off the
+        // prop instead keeps both axes overridable.
+        isVertical ? "h-48 w-fit" : "w-full",
         className,
       )}
       {...props}
@@ -125,6 +145,7 @@ export function SliderFill({ className, ...props }: React.HTMLAttributes<HTMLDiv
 
   return (
     <div
+      data-slot="slider-fill"
       {...props}
       style={getStyle()}
       className={cn(
