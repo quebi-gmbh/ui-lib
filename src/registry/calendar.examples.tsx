@@ -5,13 +5,14 @@ import type { ComponentExample } from "./types"
 export const calendarExamples: ComponentExample[] = [
   {
     title: "Default",
-    description: "A month calendar with month and year selects; today is ringed in brand teal.",
+    description:
+      "A month calendar. The header names the month it is showing and opens the Month Picker grid; today is ringed in brand teal.",
     render: () => <Calendar aria-label="Event date" />,
   },
   {
     title: "Chevron steppers",
     description:
-      "The stepper variant swaps the month and year dropdowns for a chevron on each side; the paging pair on the right is dropped, so the month keeps one set of controls.",
+      "The stepper variant swaps the month-picker trigger for a chevron on each side of the month and of the year; the paging pair on the right is dropped, so the month keeps one set of controls.",
     render: () => <Calendar aria-label="Event date" variant="stepper" />,
   },
   {
@@ -45,9 +46,9 @@ export const calendarExamples: ComponentExample[] = [
     },
   },
   {
-    title: "Dropdowns within bounds",
+    title: "Picker within bounds",
     description:
-      "The month and year dropdowns offer only what minValue and maxValue can reach — with a year to book in, the year select lists two years, not forty-one.",
+      "The month grid dims what minValue and maxValue cannot reach, and a month they reach only in part lands on the first day of it that is legal.",
     render: () => {
       const now = today(getLocalTimeZone())
       return (

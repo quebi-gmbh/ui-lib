@@ -23,13 +23,13 @@ import { cn } from "@/lib/utils"
  * @internationalized/date. Restyled to quebi tokens: the range endpoints fill
  * with brand teal, the days in-between get a faint brand wash, and today is
  * marked with a brand dot. Composes the shared header and grid header from the
- * Calendar component — including its `variant`, so a range calendar can carry
- * the chevron-stepper header too. Foundational — Date Picker and Date Range
- * Picker depend on it.
+ * Calendar component — including its `variant`, so a range calendar gets the
+ * same Month Picker popover, and can carry the chevron-stepper header too.
+ * Foundational — Date Picker and Date Range Picker depend on it.
  */
 
 interface RangeCalendarProps<T extends DateValue> extends RangeCalendarPrimitiveProps<T> {
-  /** Header treatment — dropdowns (default) or chevron steppers. */
+  /** Header treatment — the month-picker popover (default) or chevron steppers. */
   variant?: CalendarHeaderVariant
 }
 
