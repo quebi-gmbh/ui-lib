@@ -13,8 +13,9 @@ import { cn } from "@/lib/utils"
  * Radio — quebi design system
  *
  * Built on react-aria-components. An 18px circle with a cyan-tinted border;
- * selected state fills with brand teal and shows a white center dot. Focus
- * uses the quebi teal ring; invalid uses red.
+ * selected state fills with brand teal, rings it in the brand *mark* token so
+ * the control has a boundary on the light page, and shows a dark `on-brand`
+ * center dot. Focus uses the quebi teal ring; invalid uses red.
  */
 export function RadioGroup({ className, ...props }: RadioGroupProps) {
   return (
@@ -61,7 +62,14 @@ export function Radio({ className, children, ...props }: RadioProps) {
                 "transition-colors duration-150",
                 "border-quebi-line/30",
                 "before:content-[''] before:size-2 before:rounded-full",
-                isSelected && "border-quebi-brand bg-quebi-brand before:bg-quebi-bg",
+                // Boundary in the mark token, dot in `on-brand`: mint edged in
+                // mint is 1.74:1 on the light page and a `--q-bg` dot on mint
+                // is 1.74:1 too, so on light the whole selected state was one
+                // flat pale patch (task #145). Teal-600 gives the ring 3.45:1
+                // against the page and the dot 7.81:1 against the fill; on dark
+                // `--q-brand-mark` is `--q-brand`, so only the dot moves there
+                // (10.64:1 → 7.81:1, both far clear).
+                isSelected && "border-quebi-brand-mark bg-quebi-brand before:bg-quebi-on-brand",
                 isFocusVisible &&
                   "ring-2 ring-quebi-brand-mark ring-offset-2 ring-offset-quebi-bg",
                 isInvalid && "border-red-500",

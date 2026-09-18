@@ -1,6 +1,6 @@
 "use client"
 
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { use } from "react"
 import type {
   DialogProps,
@@ -29,7 +29,9 @@ import { Button, type ButtonProps } from "@/components/button"
  * Modal/ModalOverlay for accessibility and `motion` for the slide + drag-to-
  * dismiss gesture. Composes the same overlay surface tokens as Dialog.
  *
- * Surface tokens: bg-quebi-elevated, border-quebi-line/10. Depth via shadow-quebi-glow.
+ * Surface tokens: bg-quebi-elevated, border-quebi-line/20. Depth is a neutral
+ * shadow, not the mint `shadow-quebi-glow` it used to carry: a halo painted at
+ * full strength from the first frame of the slide is what task #142 reported.
  */
 
 const DrawerRoot = motion.create(ModalPrimitive)
@@ -57,6 +59,10 @@ const DrawerContent = ({
   ...props
 }: DrawerContentProps) => {
   const state = use(OverlayTriggerStateContext)
+  // Modal guards its scrim with `motion-reduce:backdrop-blur-none`; the blur is
+  // an animated value here, so the same guard has to be a hook.
+  const prefersReducedMotion = useReducedMotion()
+  const blurAmount = isBlurred && !prefersReducedMotion ? "blur(8px)" : "blur(0px)"
   if (!state) throw new Error("DrawerContent must be used within a Drawer")
 
   return (
@@ -66,17 +72,27 @@ const DrawerContent = ({
           isDismissable
           isOpen={props?.isOpen || state?.isOpen}
           onOpenChange={props?.onOpenChange || state?.setOpen}
-          animate={{ backgroundColor: "rgba(0, 0, 0, 0.6)" }}
-          exit={{ backgroundColor: "rgba(0, 0, 0, 0)" }}
-          className={cn(
-            "fixed inset-0 z-50 will-change-auto [--visual-viewport-vertical-padding:32px]",
-            isBlurred && "backdrop-blur-sm backdrop-filter",
-          )}
+          // The blur is a motion value rather than a `backdrop-blur-sm` class so
+          // it can tween: as a class it was applied the moment the overlay
+          // mounted and removed the moment AnimatePresence unmounted it, which
+          // is the hard cut reported in task #142 — the scrim had already faded
+          // to transparent while the page was still fully blurred, then snapped
+          // sharp. 8px is what `backdrop-blur-sm` resolves to, so the drawer
+          // still matches the Modal's scrim at rest. (Motion writes the
+          // unprefixed property only; Safari below 18 simply gets no blur.)
+          initial={{ backgroundColor: "rgba(0, 0, 0, 0)", backdropFilter: "blur(0px)" }}
+          animate={{
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            backdropFilter: blurAmount,
+          }}
+          exit={{ backgroundColor: "rgba(0, 0, 0, 0)", backdropFilter: "blur(0px)" }}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
+          className="fixed inset-0 z-50 will-change-auto [--visual-viewport-vertical-padding:32px]"
         >
           {({ state }) => (
             <DrawerRoot
               className={cn(
-                "fixed max-h-full touch-none overflow-hidden border border-quebi-line/10 bg-quebi-elevated align-middle text-quebi-fg shadow-quebi-glow will-change-transform",
+                "fixed max-h-full touch-none overflow-hidden border border-quebi-line/20 bg-quebi-elevated align-middle text-quebi-fg shadow-xl will-change-transform",
                 side === "top" &&
                   (isFloat
                     ? "inset-x-2 top-2 rounded-quebi-md"
@@ -120,7 +136,9 @@ const DrawerContent = ({
                 bounceStiffness: 600,
                 bounceDamping: 20,
               }}
-              transition={{ duration: 0.15, ease: "easeInOut" }}
+              // Same length and curve as the overlay above, so the scrim and its
+              // blur clear exactly when the panel has finished leaving.
+              transition={{ duration: 0.2, ease: "easeInOut" }}
               onDragEnd={(_, { offset, velocity }) => {
                 if (side === "bottom" && (velocity.y > 150 || offset.y > screen.height * 0.25)) {
                   state.close()

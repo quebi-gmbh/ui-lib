@@ -2,6 +2,7 @@
 
 import type { FieldMetadata } from "@conform-to/react"
 import { type CalendarDate, parseDate } from "@internationalized/date"
+import { composeRenderProps } from "react-aria-components"
 import type { DateFieldProps, DateValue } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { DateField, DateInput } from "@/components/date-field"
@@ -65,7 +66,7 @@ export function ConformDateField({
       defaultValue={toDefaultValue(field.initialValue)}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={cn("w-full", className)}
+      className={composeRenderProps(className, (resolved) => cn("w-full", resolved))}
     >
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>

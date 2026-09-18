@@ -2,6 +2,7 @@
 
 import type { DialogProps, ModalOverlayProps } from "react-aria-components"
 import {
+  composeRenderProps,
   DialogTrigger as DialogTriggerPrimitive,
   Modal,
   ModalOverlay,
@@ -78,15 +79,17 @@ const SheetContent = ({
     >
       <Modal
         data-float={isFloat}
-        className={cn(
-          // quebi DS — surface with bg-quebi-elevated + cyan border, matching Dialog.
-          "fixed z-50 grid gap-4 border border-quebi-line/10 bg-quebi-elevated text-quebi-fg shadow-quebi-glow",
-          "transform-gpu transition ease-in-out will-change-transform [--visual-viewport-vertical-padding:16px]",
-          "data-[float=true]:rounded-quebi-md",
-          "entering:fade-in entering:animate-in entering:duration-500",
-          "exiting:fade-in exiting:animate-out exiting:duration-300",
-          sideVariants[side],
-          className,
+        className={composeRenderProps(className, (resolved) =>
+          cn(
+            // quebi DS — surface with bg-quebi-elevated + cyan border, matching Dialog.
+            "fixed z-50 grid gap-4 border border-quebi-line/10 bg-quebi-elevated text-quebi-fg shadow-quebi-glow",
+            "transform-gpu transition ease-in-out will-change-transform [--visual-viewport-vertical-padding:16px]",
+            "data-[float=true]:rounded-quebi-md",
+            "entering:fade-in entering:animate-in entering:duration-500",
+            "exiting:fade-in exiting:animate-out exiting:duration-300",
+            sideVariants[side],
+            resolved,
+          ),
         )}
       >
         <Dialog

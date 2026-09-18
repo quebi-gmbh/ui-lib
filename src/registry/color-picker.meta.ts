@@ -4,7 +4,7 @@ export const colorPickerMeta: ComponentMeta = {
   slug: "color-picker",
   name: "Color Picker",
   description:
-    "Accessible color picker wrapper built on react-aria-components, styled with the quebi design system. Includes an EyeDropper helper for sampling colors.",
+    "Accessible color picker wrapper built on react-aria-components, styled with the quebi design system. Includes a sizeable EyeDropper helper for sampling colors.",
   category: "Color",
   tags: ["form", "input", "color", "picker"],
 }

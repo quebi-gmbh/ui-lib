@@ -1,6 +1,7 @@
 "use client"
 
 import type { FieldMetadata } from "@conform-to/react"
+import { composeRenderProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import {
   ColorField,
@@ -55,8 +56,15 @@ export function ConformColorField({
       defaultValue={initialValue === "" ? null : initialValue}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      aria-label={props["aria-label"] ?? label ?? "Color"}
-      className={cn("flex w-full flex-col gap-1.5", className)}
+      // A `label` is rendered as a real `<Label>` below, and react-aria folds
+      // an `aria-label` into the input's `aria-labelledby` chain *alongside*
+      // it — so `?? label` announced "Brand color Brand color" (task #147).
+      // The literal is only for the unlabelled case, where nothing else names
+      // the control.
+      aria-label={props["aria-label"] ?? (label ? undefined : "Color")}
+      className={composeRenderProps(className, (resolved) =>
+        cn("flex w-full flex-col gap-1.5", resolved),
+      )}
     >
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>

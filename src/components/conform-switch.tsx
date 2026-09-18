@@ -8,6 +8,14 @@ import { Switch } from "@/components/switch"
 
 export interface ConformSwitchProps
   extends Omit<SwitchProps, "name" | "value" | "form" | "defaultSelected" | "isSelected"> {
+  /**
+   * The wrapper's class. A plain string, unlike the inherited
+   * `SwitchProps["className"]`: this lands on the `Field` div around the
+   * control, which has no render state to compose a function against. Keeping
+   * the wider type would let a caller pass a render prop that clsx drops in
+   * silence.
+   */
+  className?: string
   /** A switch bound to a boolean form value. */
   field: FieldMetadata<boolean>
   label?: string

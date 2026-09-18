@@ -12,6 +12,9 @@ import { breadcrumbsExamples } from "./breadcrumbs.examples"
 import { buttonExamples } from "./button.examples"
 import { buttonGroupExamples } from "./button-group.examples"
 import { calendarExamples } from "./calendar.examples"
+import { calendarShellExamples } from "./calendar-shell.examples"
+import { calendarTimelineExamples } from "./calendar-timeline.examples"
+import { calendarToolbarExamples } from "./calendar-toolbar.examples"
 import { cardExamples } from "./card.examples"
 import { carouselExamples } from "./carousel.examples"
 import { chartExamples } from "./chart.examples"
@@ -46,6 +49,7 @@ import { conformDayScheduleExamples } from "./conform-day-schedule.examples"
 import { conformFieldExamples } from "./conform-field.examples"
 import { conformFileTriggerExamples } from "./conform-file-trigger.examples"
 import { conformInputOtpExamples } from "./conform-input-otp.examples"
+import { conformMonthPickerExamples } from "./conform-month-picker.examples"
 import { conformMultipleSelectExamples } from "./conform-multiple-select.examples"
 import { conformNumberFieldExamples } from "./conform-number-field.examples"
 import { conformRadioGroupExamples } from "./conform-radio-group.examples"
@@ -58,6 +62,8 @@ import { conformSwitchExamples } from "./conform-switch.examples"
 import { conformTagFieldExamples } from "./conform-tag-field.examples"
 import { conformTextareaExamples } from "./conform-textarea.examples"
 import { conformTimeFieldExamples } from "./conform-time-field.examples"
+import { conformWeekPickerExamples } from "./conform-week-picker.examples"
+import { conformYearPickerExamples } from "./conform-year-picker.examples"
 import { containerExamples } from "./container.examples"
 import { contextMenuExamples } from "./context-menu.examples"
 import { dataTableExamples } from "./data-table.examples"
@@ -65,6 +71,7 @@ import { dateFieldExamples } from "./date-field.examples"
 import { datePickerExamples } from "./date-picker.examples"
 import { dateRangePickerExamples } from "./date-range-picker.examples"
 import { dayScheduleExamples } from "./day-schedule.examples"
+import { dayViewExamples } from "./day-view.examples"
 import { descriptionListExamples } from "./description-list.examples"
 import { dialogExamples } from "./dialog.examples"
 import { disclosureGroupExamples } from "./disclosure-group.examples"
@@ -95,6 +102,7 @@ import { menuExamples } from "./menu.examples"
 import { meterExamples } from "./meter.examples"
 import { modalExamples } from "./modal.examples"
 import { monthPickerExamples } from "./month-picker.examples"
+import { monthViewExamples } from "./month-view.examples"
 import { multipleSelectExamples } from "./multiple-select.examples"
 import { navbarExamples } from "./navbar.examples"
 import { noteExamples } from "./note.examples"
@@ -142,6 +150,7 @@ import { trackerExamples } from "./tracker.examples"
 import { treemapExamples } from "./treemap.examples"
 import { treeExamples } from "./tree.examples"
 import { weekPickerExamples } from "./week-picker.examples"
+import { weekViewExamples } from "./week-view.examples"
 import { yearPickerExamples } from "./year-picker.examples"
 
 const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
@@ -157,6 +166,9 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "button": buttonExamples,
   "button-group": buttonGroupExamples,
   "calendar": calendarExamples,
+  "calendar-shell": calendarShellExamples,
+  "calendar-timeline": calendarTimelineExamples,
+  "calendar-toolbar": calendarToolbarExamples,
   "card": cardExamples,
   "carousel": carouselExamples,
   "chart": chartExamples,
@@ -191,6 +203,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "conform-field": conformFieldExamples,
   "conform-file-trigger": conformFileTriggerExamples,
   "conform-input-otp": conformInputOtpExamples,
+  "conform-month-picker": conformMonthPickerExamples,
   "conform-multiple-select": conformMultipleSelectExamples,
   "conform-number-field": conformNumberFieldExamples,
   "conform-radio-group": conformRadioGroupExamples,
@@ -203,6 +216,8 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "conform-tag-field": conformTagFieldExamples,
   "conform-textarea": conformTextareaExamples,
   "conform-time-field": conformTimeFieldExamples,
+  "conform-week-picker": conformWeekPickerExamples,
+  "conform-year-picker": conformYearPickerExamples,
   "container": containerExamples,
   "context-menu": contextMenuExamples,
   "data-table": dataTableExamples,
@@ -210,6 +225,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "date-picker": datePickerExamples,
   "date-range-picker": dateRangePickerExamples,
   "day-schedule": dayScheduleExamples,
+  "day-view": dayViewExamples,
   "description-list": descriptionListExamples,
   "dialog": dialogExamples,
   "disclosure-group": disclosureGroupExamples,
@@ -240,6 +256,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "meter": meterExamples,
   "modal": modalExamples,
   "month-picker": monthPickerExamples,
+  "month-view": monthViewExamples,
   "multiple-select": multipleSelectExamples,
   "navbar": navbarExamples,
   "note": noteExamples,
@@ -287,6 +304,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "treemap": treemapExamples,
   "tree": treeExamples,
   "week-picker": weekPickerExamples,
+  "week-view": weekViewExamples,
   "year-picker": yearPickerExamples,
 }
 

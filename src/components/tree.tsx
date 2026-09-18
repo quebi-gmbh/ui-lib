@@ -9,6 +9,7 @@ import type {
 } from "react-aria-components"
 import {
   Button,
+  composeRenderProps,
   TreeItemContent,
   TreeItem as TreeItemPrimitive,
   Tree as TreePrimitive,
@@ -27,9 +28,11 @@ import { cn } from "@/lib/utils"
 const Tree = <T extends object>({ className, ...props }: TreeProps<T>) => {
   return (
     <TreePrimitive
-      className={cn(
-        "flex cursor-default flex-col gap-y-1 overflow-auto outline-hidden forced-color-adjust-none",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          "flex cursor-default flex-col gap-y-1 overflow-auto outline-hidden forced-color-adjust-none",
+          resolved,
+        ),
       )}
       {...props}
     />
@@ -39,16 +42,18 @@ const Tree = <T extends object>({ className, ...props }: TreeProps<T>) => {
 const TreeItem = <T extends object>({ className, ...props }: TreeItemProps<T>) => {
   return (
     <TreeItemPrimitive
-      className={cn(
-        "group/tree-item relative flex shrink-0 select-none rounded-quebi-sm px-2 py-1.5",
-        "text-sm/6 text-quebi-fg transition-colors duration-150 focus:outline-hidden",
-        "hover:bg-quebi-surface/[0.02]",
-        "selected:bg-quebi-brand/10",
-        "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-        "**:data-[slot=icon]:me-1 **:data-[slot=icon]:size-5 **:data-[slot=icon]:shrink-0 sm:**:data-[slot=icon]:size-4",
-        "disabled:opacity-50",
-        "href" in props ? "cursor-pointer" : "cursor-default",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          "group/tree-item relative flex shrink-0 select-none rounded-quebi-sm px-2 py-1.5",
+          "text-sm/6 text-quebi-fg transition-colors duration-150 focus:outline-hidden",
+          "hover:bg-quebi-surface/[0.02]",
+          "selected:bg-quebi-brand/10",
+          "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+          "**:data-[slot=icon]:me-1 **:data-[slot=icon]:size-5 **:data-[slot=icon]:shrink-0 sm:**:data-[slot=icon]:size-4",
+          "disabled:opacity-50",
+          "href" in props ? "cursor-pointer" : "cursor-default",
+          resolved,
+        ),
       )}
       {...props}
     />

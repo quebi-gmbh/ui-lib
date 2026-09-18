@@ -297,7 +297,7 @@ const TableColumnGroup = createBranchComponent<
       // `border-*` class where the last one written wins.
       label != null && "border-b border-b-quebi-line/10",
       grid && "border-l border-l-quebi-line/10 first:border-l-0",
-      "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark",
+      "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark data-[focus-visible]:ring-inset",
       className,
     ),
   }
@@ -447,7 +447,7 @@ const TableRow = <T extends object>({
           cn(
             "group relative cursor-default outline outline-transparent transition-colors duration-150 hover:bg-quebi-surface/[0.02]",
             isFocusVisible &&
-              "bg-quebi-brand/10 outline-quebi-brand-mark ring-2 ring-quebi-brand-mark",
+              "bg-quebi-brand/10 outline-quebi-brand-mark ring-2 ring-quebi-brand-mark ring-inset",
             isDragging && "cursor-grabbing bg-quebi-brand/10 text-quebi-fg outline-quebi-brand-mark",
             isSelected && "bg-quebi-brand/10 text-quebi-fg",
             striped && "even:bg-quebi-surface/[0.02]",

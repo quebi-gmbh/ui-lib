@@ -59,7 +59,8 @@ const XCircleIcon = (props: IconProps) => (
  * An inline callout / alert for contextual feedback. Five intents:
  * default (neutral surface), info (cyan), success (emerald), warning
  * (amber), danger (red). Borders use the signature translucent rings;
- * each intent tints its surface and leading status icon to match.
+ * each intent tints its surface, its leading status icon *and* its title to
+ * match — a callout does not opt its own heading out of its own intent.
  */
 export interface NoteProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   intent?: "default" | "info" | "warning" | "danger" | "success"
@@ -109,7 +110,18 @@ export function Note({
     <div data-slot="note" className={cn(noteStyles({ intent }), className)} {...props}>
       {Icon && indicator && <Icon aria-hidden="true" className="mt-px size-5 shrink-0" />}
       <div className="min-w-0 flex-1">
-        {title && <div className="font-semibold text-quebi-fg">{title}</div>}
+        {/* The title inherits the intent colour and carries its emphasis by
+            weight alone. It used to force `text-quebi-fg`, which was a
+            mechanical swap of the dark-only `text-white` it started as — on
+            light that painted a near-black heading over a red or amber surface
+            (task #136). Only `default` still names a colour, because that
+            intent's root is `text-quebi-fg-muted` and the heading would
+            otherwise lose its step up in the hierarchy. */}
+        {title && (
+          <div className={cn("font-semibold", intent === "default" && "text-quebi-fg")}>
+            {title}
+          </div>
+        )}
         <div className={title ? "mt-1" : undefined}>{children}</div>
       </div>
     </div>

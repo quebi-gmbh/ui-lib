@@ -79,11 +79,13 @@ const ToolbarGroup = ({ isDisabled, className, ...props }: ToolbarGroupProps) =>
   return (
     <ToolbarGroupContext value={{ isDisabled }}>
       <Group
-        className={cn(
-          "flex gap-1.5",
-          "group-orientation-vertical:flex-col group-orientation-vertical:items-start",
-          "group-orientation-horizontal:items-center",
-          className,
+        className={composeRenderProps(className, (resolved) =>
+          cn(
+            "flex gap-1.5",
+            "group-orientation-vertical:flex-col group-orientation-vertical:items-start",
+            "group-orientation-horizontal:items-center",
+            resolved,
+          ),
         )}
         {...props}
       >

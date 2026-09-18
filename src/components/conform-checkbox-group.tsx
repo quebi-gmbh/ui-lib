@@ -2,6 +2,7 @@
 
 import type { FieldMetadata } from "@conform-to/react"
 import type { PropsWithChildren } from "react"
+import { composeRenderProps } from "react-aria-components"
 import type { CheckboxGroupProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { CheckboxGroup } from "@/components/checkbox"
@@ -57,7 +58,7 @@ export function ConformCheckboxGroup({
       }
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={cn("flex flex-col gap-3", className)}
+      className={composeRenderProps(className, (resolved) => cn("flex flex-col gap-3", resolved))}
     >
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>

@@ -12,15 +12,21 @@ import type { ComponentExample } from "./types"
 
 /**
  * The dropdown primitives are rendered inside any react-aria collection
- * (Menu/Select/Combo Box/List Box). We host them in a styled ListBox here to
- * preview the quebi menu surface live.
+ * (Menu/Select/Combo Box/List Box). We host them in a ListBox here to preview
+ * the quebi menu surface live — radius, hairline and `bg-quebi-elevated` all
+ * come from ListBox itself, so only the grid, width and padding are set here.
+ *
+ * `shadow-none` is the one deliberate subtraction (task #140): these previews
+ * are pinned open inside a card rather than floating over the page, so the
+ * elevation shadow a real menu casts has nothing to sit above and reads as a
+ * smudge around five stacked panels.
  */
 const Surface = ({
   children,
   ...props
 }: { children: React.ReactNode } & React.ComponentProps<typeof ListBox>) => (
   <ListBox
-    className="grid w-64 grid-cols-[auto_1fr_1.5rem_0.5rem_auto] gap-y-0.5 rounded-quebi-md border border-quebi-line/10 bg-quebi-elevated p-1.5 shadow-quebi-glow outline-none"
+    className="grid w-64 grid-cols-[auto_1fr_1.5rem_0.5rem_auto] gap-y-0.5 p-1.5 shadow-none outline-none"
     {...props}
   >
     {children}

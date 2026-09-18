@@ -3,6 +3,7 @@
 import {
   Button as ButtonPrimitive,
   type ButtonProps as ButtonPrimitiveProps,
+  composeRenderProps,
 } from "react-aria-components"
 import { tv, type VariantProps } from "tailwind-variants"
 import { cn } from "@/lib/utils"
@@ -33,18 +34,31 @@ export const buttonStyles = tv({
   ],
   variants: {
     intent: {
+      // The mint fill's edge is drawn in the *mark* token, not the fill token
+      // (task #145): mint on the light page is 1.74:1, so `border-quebi-brand`
+      // gave the pill no boundary against the page at all, and the hover border
+      // made it fainter still. `--q-brand-mark` is teal-600 on light (3.45:1,
+      // WCAG 1.4.11) and identical to `--q-brand` on dark, so the dark theme is
+      // byte-for-byte unchanged. It does not move on hover — a boundary that
+      // weakens when you point at it is the bug below, again.
       primary:
-        "bg-quebi-brand border-quebi-brand text-quebi-on-brand hover:bg-quebi-brand-hover hover:border-quebi-brand-hover hover:shadow-quebi-glow-strong",
+        "bg-quebi-brand border-quebi-brand-mark text-quebi-on-brand hover:bg-quebi-brand-hover hover:shadow-quebi-glow-strong",
       secondary:
         "bg-quebi-inverse-bg border-quebi-inverse-bg text-quebi-inverse-fg hover:bg-quebi-fg-muted hover:border-quebi-fg-muted",
       outline:
         "bg-transparent border-quebi-line/20 text-quebi-fg hover:border-quebi-brand-mark hover:text-quebi-brand-text",
       ghost:
         "bg-transparent border-transparent text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
+      // 600-level fills, darkening on hover. At 500 the white label was 3.96:1
+      // (accent) and 3.76:1 (danger) — under 1.4.3's 4.5:1, which `xs` (12px)
+      // and `sm` (14px) are squarely subject to — and both intents *lightened*
+      // on hover, to 2.64:1 and 2.77:1, so the label faded out exactly when the
+      // pointer was on it (task #144). Now 5.38 → 6.98 and 4.83 → 6.47: every
+      // size clears 4.5:1, and hover improves it, as `primary` already did.
       accent:
-        "bg-purple-500 border-purple-500 text-white hover:bg-purple-400 hover:border-purple-400",
+        "bg-purple-600 border-purple-600 text-white hover:bg-purple-700 hover:border-purple-700",
       danger:
-        "bg-red-500 border-red-500 text-white hover:bg-red-400 hover:border-red-400",
+        "bg-red-600 border-red-600 text-white hover:bg-red-700 hover:border-red-700",
     },
     size: {
       xs: ["text-xs px-2.5 py-1.5", "*:data-[slot=icon]:size-3 *:data-[slot=loader]:size-3"],
@@ -88,7 +102,9 @@ export function Button({ className, intent, size, isCircle, ref, ...props }: But
     <ButtonPrimitive
       ref={ref}
       {...props}
-      className={cn(buttonStyles({ intent, size, isCircle }), className)}
+      className={composeRenderProps(className, (resolved) =>
+        cn(buttonStyles({ intent, size, isCircle }), resolved),
+      )}
     />
   )
 }

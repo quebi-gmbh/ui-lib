@@ -2,7 +2,11 @@
 
 import { createContext, use } from "react"
 import type { BreadcrumbProps, BreadcrumbsProps, LinkProps } from "react-aria-components"
-import { Breadcrumb, Breadcrumbs as BreadcrumbsPrimitive } from "react-aria-components"
+import {
+  Breadcrumb,
+  Breadcrumbs as BreadcrumbsPrimitive,
+  composeRenderProps,
+} from "react-aria-components"
 import { Link } from "@/components/link"
 import { cn } from "@/lib/utils"
 
@@ -50,7 +54,9 @@ const BreadcrumbsItem = ({
 
   return (
     <Breadcrumb
-      className={cn("flex items-center gap-2 text-quebi-fg-muted", className)}
+      className={composeRenderProps(className, (resolved) =>
+        cn("flex items-center gap-2 text-quebi-fg-muted", resolved),
+      )}
       data-slot="breadcrumb-item"
       {...props}
     >

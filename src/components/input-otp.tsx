@@ -132,7 +132,7 @@ export function InputOTPSlot({
         "transition-[border-color,box-shadow] duration-200",
         "first:rounded-s-quebi-sm first:border-l last:rounded-e-quebi-sm",
         "data-[active=true]:z-10 data-[active=true]:border-quebi-brand-mark",
-        "data-[active=true]:ring-2 data-[active=true]:ring-quebi-brand-mark",
+        "data-[active=true]:ring-2 data-[active=true]:ring-quebi-brand-mark data-[active=true]:ring-offset-2 data-[active=true]:ring-offset-quebi-bg",
         "aria-invalid:border-red-500 data-[active=true]:aria-invalid:border-red-500 data-[active=true]:aria-invalid:ring-red-500/50",
         className,
       )}

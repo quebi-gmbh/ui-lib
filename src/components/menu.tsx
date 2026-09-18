@@ -59,11 +59,13 @@ const MenuTrigger = ({ className, ref, ...props }: MenuTriggerProps) => (
   <Button
     ref={ref}
     data-slot="menu-trigger"
-    className={cn(
-      "relative inline text-start outline-hidden",
-      "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-      "*:data-[slot=chevron]:size-5 sm:*:data-[slot=chevron]:size-4",
-      className,
+    className={composeRenderProps(className, (resolved) =>
+      cn(
+        "relative inline text-start outline-hidden",
+        "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+        "*:data-[slot=chevron]:size-5 sm:*:data-[slot=chevron]:size-4",
+        resolved,
+      ),
     )}
     {...props}
   />
@@ -100,7 +102,9 @@ const MenuContent = <T extends object>({
 }: MenuContentProps<T>) => {
   return (
     <PopoverContent
-      className={cn("min-w-32 *:data-[slot=popover-inner]:overflow-hidden", popover?.className)}
+      className={composeRenderProps(popover?.className, (resolved) =>
+        cn("min-w-32 *:data-[slot=popover-inner]:overflow-hidden", resolved),
+      )}
       placement={placement}
       {...popover}
     >

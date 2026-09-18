@@ -3,6 +3,7 @@
 import { Search, X } from "lucide-react"
 import {
   Button,
+  composeRenderProps,
   SearchField as SearchFieldPrimitive,
   type SearchFieldProps as PrimitiveSearchFieldProps,
 } from "react-aria-components"
@@ -29,7 +30,9 @@ export function SearchField({ className, ref, ...props }: SearchFieldProps) {
       data-slot="control"
       {...props}
       aria-label={props["aria-label"] ?? "Search"}
-      className={cn("group/search-field block w-full", className)}
+      className={composeRenderProps(className, (resolved) =>
+        cn("group/search-field block w-full", resolved),
+      )}
     />
   )
 }

@@ -55,7 +55,7 @@ export function Tag({ children, className, ...props }: TagProps) {
           "transition-colors duration-150",
           "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
           "hover:border-quebi-line/20",
-          "data-[selected]:border-quebi-brand data-[selected]:bg-quebi-brand data-[selected]:text-quebi-on-brand",
+          "data-[selected]:border-quebi-brand-mark data-[selected]:bg-quebi-brand data-[selected]:text-quebi-on-brand",
           "data-[href]:cursor-pointer",
           allowsRemoving && "pr-1",
           isDisabled && "cursor-not-allowed opacity-50",

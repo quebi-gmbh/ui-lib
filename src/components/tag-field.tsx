@@ -193,7 +193,7 @@ export function TagField({
               // (0,3,0) specificity and `focus:` is (0,2,0), so unguarded a hovered,
               // focused field loses its mint border and keeps only the ring — a halo.
               "enabled:not-focus:hover:border-quebi-line/40",
-              "outline-none focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark",
+              "outline-none focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark focus:ring-offset-2 focus:ring-offset-quebi-bg",
               isInvalid && "border-red-500 focus:ring-red-500/50",
               "disabled:cursor-not-allowed disabled:opacity-50",
               "scheme-dark",

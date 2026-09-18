@@ -1,6 +1,12 @@
 "use client"
 
-import { Label, type LabelProps, ProgressBar, type ProgressBarProps } from "react-aria-components"
+import {
+  composeRenderProps,
+  Label,
+  type LabelProps,
+  ProgressBar,
+  type ProgressBarProps,
+} from "react-aria-components"
 import { cn } from "@/lib/utils"
 
 /**
@@ -81,13 +87,15 @@ export function LeaderboardItem({
       <ProgressBar
         onClick={onAction}
         minValue={minValue}
-        className={cn(
-          "relative overflow-hidden rounded-quebi-sm px-2 py-1.5 text-sm/6 text-quebi-fg outline-none",
-          "transition-colors duration-150",
-          "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-          onAction ? "cursor-pointer hover:bg-quebi-surface/[0.02]" : "cursor-default",
-          "[&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-          className,
+        className={composeRenderProps(className, (resolved) =>
+          cn(
+            "relative overflow-hidden rounded-quebi-sm px-2 py-1.5 text-sm/6 text-quebi-fg outline-none",
+            "transition-colors duration-150",
+            "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+            onAction ? "cursor-pointer hover:bg-quebi-surface/[0.02]" : "cursor-default",
+            "[&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+            resolved,
+          ),
         )}
         {...props}
       >

@@ -68,7 +68,7 @@ export const colorFieldExamples: ComponentExample[] = [
               <ColorFieldGroup />
             </ColorField>
             <div className="flex items-center gap-2 text-sm text-quebi-fg-muted">
-              <ColorSwatch color={value} className="size-5 sm:size-5" />
+              <ColorSwatch color={value} className="size-5" />
               {value.toString("hex")}
             </div>
           </div>

@@ -4,6 +4,7 @@ import type { DateDuration } from "@internationalized/date"
 import { CalendarDays } from "lucide-react"
 import {
   Button,
+  composeRenderProps,
   DateRangePicker as DateRangePickerPrimitive,
   type DateRangePickerProps as DateRangePickerPrimitiveProps,
   type DateValue,
@@ -49,7 +50,9 @@ export function DateRangePicker<T extends DateValue>({
   return (
     <DateRangePickerPrimitive
       data-slot="control"
-      className={cn("group flex w-full flex-col gap-1.5", className)}
+      className={composeRenderProps(className, (resolved) =>
+        cn("group flex w-full flex-col gap-1.5", resolved),
+      )}
       {...props}
     >
       {(values) => (
@@ -80,15 +83,17 @@ export function DateRangePickerTrigger({ className, ...props }: GroupProps) {
   return (
     <Group
       data-slot="control"
-      className={cn(
-        "group/drpt flex w-full items-stretch overflow-hidden rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
-        "transition-[border-color,box-shadow] duration-200",
-        // Unguarded this *beat* the focus border below: both are (0,2,0) and
-        // Tailwind emits `focus-within` before `hover`, so pointing at a focused
-        // picker dropped the mark-teal border and left the ring floating off it.
-        "not-focus-within:hover:border-quebi-line/40",
-        "focus-within:border-quebi-brand-mark focus-within:ring-2 focus-within:ring-quebi-brand-mark",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          "group/drpt flex w-full items-stretch overflow-hidden rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
+          "transition-[border-color,box-shadow] duration-200",
+          // Unguarded this *beat* the focus border below: both are (0,2,0) and
+          // Tailwind emits `focus-within` before `hover`, so pointing at a focused
+          // picker dropped the mark-teal border and left the ring floating off it.
+          "not-focus-within:hover:border-quebi-line/40",
+          "focus-within:border-quebi-brand-mark focus-within:ring-2 focus-within:ring-quebi-brand-mark focus-within:ring-offset-2 focus-within:ring-offset-quebi-bg",
+          resolved,
+        ),
       )}
       {...props}
     >

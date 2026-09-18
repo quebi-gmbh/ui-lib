@@ -2,6 +2,7 @@
 
 import type { DialogProps, DialogTriggerProps, ModalOverlayProps } from "react-aria-components"
 import {
+  composeRenderProps,
   DialogTrigger as DialogTriggerPrimitive,
   ModalOverlay,
   Modal as ModalPrimitive,
@@ -112,33 +113,42 @@ const ModalContent = ({
     <ModalOverlay
       data-slot="modal-overlay"
       isDismissable={isDismissable}
-      className={cn(
-        // quebi backdrop — dark scrim + subtle blur.
-        "fixed start-0 top-0 z-50 h-(--visual-viewport-height,100vh) w-screen",
-        "bg-black/60 backdrop-blur-sm motion-reduce:backdrop-blur-none",
-        "grid grid-rows-[1fr_auto] justify-items-center sm:grid-rows-[1fr_auto_3fr]",
-        "entering:fade-in entering:animate-in entering:duration-300 entering:ease-out",
-        "exiting:fade-out exiting:animate-out exiting:ease-in",
-        size === "fullscreen" ? "md:p-3" : "md:p-4",
-        overlay?.className,
+      className={composeRenderProps(overlay?.className, (resolved) =>
+        cn(
+          // quebi backdrop — dark scrim + subtle blur.
+          "fixed start-0 top-0 z-50 h-(--visual-viewport-height,100vh) w-screen",
+          "bg-black/60 backdrop-blur-sm motion-reduce:backdrop-blur-none",
+          "grid grid-rows-[1fr_auto] justify-items-center sm:grid-rows-[1fr_auto_3fr]",
+          "entering:fade-in entering:animate-in entering:duration-300 entering:ease-out",
+          "exiting:fade-out exiting:animate-out exiting:ease-in",
+          size === "fullscreen" ? "md:p-3" : "md:p-4",
+          resolved,
+        ),
       )}
       {...props}
     >
       <ModalPrimitive
         data-slot="modal-content"
-        className={cn(
-          "row-start-2 w-full text-start align-middle",
-          "[--visual-viewport-vertical-padding:16px]",
-          size === "fullscreen"
-            ? "**:data-[slot=dialog-body]:min-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding)-var(--dialog-header-height)-var(--dialog-footer-height))] sm:[--visual-viewport-vertical-padding:16px]"
-            : "sm:[--visual-viewport-vertical-padding:32px]",
-          // quebi surface — bg-quebi-elevated, cyan border, shadow-quebi-glow elevation.
-          "relative overflow-hidden bg-quebi-elevated text-quebi-fg",
-          "rounded-t-quebi-md border border-quebi-line/10 shadow-quebi-glow-strong sm:rounded-quebi-md",
-          sizes[size],
-          "entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-300 entering:ease-out",
-          "exiting:slide-out-to-bottom sm:exiting:zoom-out-95 sm:exiting:slide-out-to-bottom-0 exiting:animate-out exiting:ease-in",
-          className,
+        className={composeRenderProps(className, (resolved) =>
+          cn(
+            "row-start-2 w-full text-start align-middle",
+            "[--visual-viewport-vertical-padding:16px]",
+            size === "fullscreen"
+              ? "**:data-[slot=dialog-body]:min-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding)-var(--dialog-header-height)-var(--dialog-footer-height))] sm:[--visual-viewport-vertical-padding:16px]"
+              : "sm:[--visual-viewport-vertical-padding:32px]",
+            // quebi surface — bg-quebi-elevated, cyan hairline, neutral elevation.
+            // Not `shadow-quebi-glow-strong`: a mint halo around a dialog reads as
+            // the panel being lit rather than raised (task #137), and the scrim
+            // below already does most of the separating. A dialog is the tallest
+            // overlay there is, so it takes the top rung of the neutral ramp
+            // (`shadow-xl`) where a popover takes `shadow-lg`.
+            "relative overflow-hidden bg-quebi-elevated text-quebi-fg",
+            "rounded-t-quebi-md border border-quebi-line/20 shadow-xl sm:rounded-quebi-md",
+            sizes[size],
+            "entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-300 entering:ease-out",
+            "exiting:slide-out-to-bottom sm:exiting:zoom-out-95 sm:exiting:slide-out-to-bottom-0 exiting:animate-out exiting:ease-in",
+            resolved,
+          ),
         )}
       >
         <Dialog role={role} aria-label={ariaLabel} aria-labelledby={ariaLabelledby}>

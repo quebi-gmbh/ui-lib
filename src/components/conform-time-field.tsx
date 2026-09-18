@@ -4,6 +4,7 @@ import type { FieldMetadata } from "@conform-to/react"
 import { BaseControl, useControl } from "@conform-to/react/future"
 import { parseTime, type Time } from "@internationalized/date"
 import { useRef } from "react"
+import { composeRenderProps } from "react-aria-components"
 import type { TimeFieldProps, TimeValue } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { Description, FieldError, focusFirstControl, Label } from "@/components/field"
@@ -90,7 +91,7 @@ export function ConformTimeField({
       onBlur={() => control.blur()}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={cn("w-full", className)}
+      className={composeRenderProps(className, (resolved) => cn("w-full", resolved))}
     >
       <BaseControl
         name={field.name}

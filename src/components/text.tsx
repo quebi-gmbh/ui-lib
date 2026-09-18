@@ -1,4 +1,5 @@
 import { tv } from "tailwind-variants"
+import { composeRenderProps } from "react-aria-components"
 import { Link } from "@/components/link"
 import { cn } from "@/lib/utils"
 
@@ -30,7 +31,9 @@ export const textLinkStyles = tv({
 })
 
 export function TextLink({ className, ...props }: React.ComponentPropsWithoutRef<typeof Link>) {
-  return <Link {...props} className={cn(textLinkStyles(), className)} />
+  return <Link {...props} className={composeRenderProps(className, (resolved) =>
+                            cn(textLinkStyles(), resolved),
+                          )} />
 }
 
 export function Strong({ className, ...props }: React.ComponentPropsWithoutRef<"strong">) {

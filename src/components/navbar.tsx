@@ -12,7 +12,7 @@ import {
   useState,
 } from "react"
 import type { LinkProps } from "react-aria-components"
-import { Link } from "react-aria-components"
+import { composeRenderProps, Link } from "react-aria-components"
 import { twJoin, twMerge } from "tailwind-merge"
 import { Button, type ButtonProps } from "@/components/button"
 import { Separator } from "@/components/separator"
@@ -243,23 +243,25 @@ const NavbarItem = ({ className, isCurrent, ...props }: NavbarItemProps) => {
     <Link
       data-slot="navbar-item"
       aria-current={isCurrent ? "page" : undefined}
-      className={cn(
-        [
-          "href" in props ? "cursor-pointer" : "cursor-default",
-          "group/navbar-item pressed:bg-quebi-surface/[0.06] pressed:text-quebi-fg hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
-          "text-quebi-fg-muted aria-[current=page]:text-quebi-fg aria-[current=page]:*:data-[slot=icon]:text-quebi-brand-text",
-          "col-span-full grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] supports-[grid-template-columns:subgrid]:grid-cols-subgrid md:supports-[grid-template-columns:subgrid]:grid-cols-none",
-          "relative min-w-0 items-center gap-x-3 rounded-quebi-sm p-2 text-start font-medium text-base/6 md:gap-x-(--navbar-gutter) md:px-(--navbar-gutter) md:py-[calc(var(--navbar-gutter)---spacing(0.5))] md:text-sm/5",
-          "*:data-[slot=icon]:size-5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-quebi-fg-subtle md:*:data-[slot=icon]:size-4",
-          "*:data-[slot=loader]:size-5 *:data-[slot=loader]:shrink-0 md:*:data-[slot=loader]:size-4",
-          "*:not-nth-2:last:data-[slot=icon]:row-start-1 *:not-nth-2:last:data-[slot=icon]:ms-auto *:not-nth-2:last:data-[slot=icon]:size-5 md:*:not-nth-2:last:data-[slot=icon]:size-4",
-          "*:data-[slot=avatar]:-m-0.5 *:data-[slot=avatar]:size-6 md:*:data-[slot=avatar]:size-5",
-          "pressed:*:data-[slot=icon]:text-quebi-fg hover:*:data-[slot=icon]:text-quebi-fg",
-          "transition-colors duration-150",
-          "outline-hidden focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-          "text-start disabled:cursor-default disabled:opacity-50",
-        ],
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          [
+            "href" in props ? "cursor-pointer" : "cursor-default",
+            "group/navbar-item pressed:bg-quebi-surface/[0.06] pressed:text-quebi-fg hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
+            "text-quebi-fg-muted aria-[current=page]:text-quebi-fg aria-[current=page]:*:data-[slot=icon]:text-quebi-brand-text",
+            "col-span-full grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] supports-[grid-template-columns:subgrid]:grid-cols-subgrid md:supports-[grid-template-columns:subgrid]:grid-cols-none",
+            "relative min-w-0 items-center gap-x-3 rounded-quebi-sm p-2 text-start font-medium text-base/6 md:gap-x-(--navbar-gutter) md:px-(--navbar-gutter) md:py-[calc(var(--navbar-gutter)---spacing(0.5))] md:text-sm/5",
+            "*:data-[slot=icon]:size-5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-quebi-fg-subtle md:*:data-[slot=icon]:size-4",
+            "*:data-[slot=loader]:size-5 *:data-[slot=loader]:shrink-0 md:*:data-[slot=loader]:size-4",
+            "*:not-nth-2:last:data-[slot=icon]:row-start-1 *:not-nth-2:last:data-[slot=icon]:ms-auto *:not-nth-2:last:data-[slot=icon]:size-5 md:*:not-nth-2:last:data-[slot=icon]:size-4",
+            "*:data-[slot=avatar]:-m-0.5 *:data-[slot=avatar]:size-6 md:*:data-[slot=avatar]:size-5",
+            "pressed:*:data-[slot=icon]:text-quebi-fg hover:*:data-[slot=icon]:text-quebi-fg",
+            "transition-colors duration-150",
+            "outline-hidden focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+            "text-start disabled:cursor-default disabled:opacity-50",
+          ],
+          resolved,
+        ),
       )}
       {...props}
     >
@@ -348,7 +350,7 @@ const NavbarTrigger = ({ className, onPress, ref, ...props }: NavbarTriggerProps
       intent="ghost"
       aria-label={props["aria-label"] || "Toggle Navbar"}
       size="sq-sm"
-      className={cn("-ms-2 lg:hidden", className)}
+      className={composeRenderProps(className, (resolved) => cn("-ms-2 lg:hidden", resolved))}
       onPress={(event) => {
         onPress?.(event)
         toggleNavbar()

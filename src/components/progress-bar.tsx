@@ -2,6 +2,7 @@
 
 import { createContext, use } from "react"
 import {
+  composeRenderProps,
   ProgressBar as ProgressBarPrimitive,
   type ProgressBarProps,
   type ProgressBarRenderProps,
@@ -21,10 +22,12 @@ export function ProgressBar({ className, children, ...props }: ProgressBarProps)
   return (
     <ProgressBarPrimitive
       data-slot="control"
-      className={cn(
-        "flex w-full flex-col gap-2",
-        "*:data-[slot=progress-bar-header]:font-medium",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          "flex w-full flex-col gap-2",
+          "*:data-[slot=progress-bar-header]:font-medium",
+          resolved,
+        ),
       )}
       {...props}
     >

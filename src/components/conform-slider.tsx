@@ -1,6 +1,7 @@
 "use client"
 
 import type { FieldMetadata } from "@conform-to/react"
+import { composeRenderProps } from "react-aria-components"
 import type { SliderProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { describedBy, Description, FieldError, Label } from "@/components/field"
@@ -78,7 +79,7 @@ export function ConformSlider({
     <Slider
       {...props}
       defaultValue={toDefaultValue(field.initialValue, isRange)}
-      className={cn("w-full", className)}
+      className={composeRenderProps(className, (resolved) => cn("w-full", resolved))}
     >
       {(label || showOutput) && (
         <div className={cn("flex items-center", label ? "justify-between" : "justify-end")}>

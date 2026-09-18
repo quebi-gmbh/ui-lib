@@ -86,7 +86,7 @@ export const drawerExamples: ComponentExample[] = [
           </DrawerHeader>
           <DrawerBody>
             <p className="text-sm text-quebi-fg-muted">
-              Floating drawers detach from the viewport edge and pick up the quebi glow.
+              Floating drawers detach from the viewport edge, rounded on every side.
             </p>
           </DrawerBody>
           <DrawerFooter>

@@ -7,7 +7,7 @@ import {
   ColorPickerStateContext,
   parseColor,
 } from "react-aria-components"
-import { Button } from "@/components/button"
+import { Button, type ButtonProps } from "@/components/button"
 import { cn } from "@/lib/utils"
 
 /**
@@ -58,7 +58,22 @@ const EyeDropperIcon = () => (
   </svg>
 )
 
-const EyeDropper = () => {
+/** Button's square scale, kept in sync with `Button` rather than restated. */
+type SquareButtonSize = Extract<NonNullable<ButtonProps["size"]>, `sq-${string}`>
+
+interface EyeDropperProps {
+  /**
+   * Button's square size. Defaults to `sq-sm` — 38px, which is the field
+   * scale's `sm` exactly, so the dropper is the height of the `Input` or
+   * `Button` beside it. The old default was `sq-md` (46px), a height no field
+   * in this library ships; it overhung a hex input by 4px top and bottom.
+   */
+  size?: SquareButtonSize
+  /** Escape hatch for a row on a height the square scale does not have. */
+  className?: string
+}
+
+const EyeDropper = ({ size = "sq-sm", className }: EyeDropperProps) => {
   const state = use(ColorPickerStateContext)
   if (!state) throw new Error("EyeDropper must be used within a ColorPicker")
 
@@ -72,13 +87,21 @@ const EyeDropper = () => {
 
   return (
     <Button
-      className="shrink-0"
+      className={cn("shrink-0", className)}
       aria-label="Eye dropper"
-      size="sq-md"
+      size={size}
       intent="outline"
       onPress={() => {
         const eyeDropper = window.EyeDropper ? new window.EyeDropper() : null
-        eyeDropper?.open().then((result) => state.setColor(parseColor(result.sRGBHex)))
+        eyeDropper
+          ?.open()
+          .then((result) => state.setColor(parseColor(result.sRGBHex)))
+          // Dismissing the native eyedropper (Esc, or a click outside it)
+          // rejects with AbortError. A cancelled pick is not a failure — left
+          // unhandled it was one console error per Esc. Anything else still is.
+          .catch((error: unknown) => {
+            if (!(error instanceof DOMException && error.name === "AbortError")) throw error
+          })
       }}
     >
       <EyeDropperIcon />
@@ -86,5 +109,5 @@ const EyeDropper = () => {
   )
 }
 
-export type { ColorPickerProps }
+export type { ColorPickerProps, EyeDropperProps }
 export { ColorPicker, EyeDropper }

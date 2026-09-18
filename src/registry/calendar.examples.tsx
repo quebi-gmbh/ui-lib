@@ -45,6 +45,21 @@ export const calendarExamples: ComponentExample[] = [
     },
   },
   {
+    title: "Dropdowns within bounds",
+    description:
+      "The month and year dropdowns offer only what minValue and maxValue can reach — with a year to book in, the year select lists two years, not forty-one.",
+    render: () => {
+      const now = today(getLocalTimeZone())
+      return (
+        <Calendar
+          aria-label="Booking date"
+          minValue={now}
+          maxValue={now.add({ years: 1 })}
+        />
+      )
+    },
+  },
+  {
     title: "Disabled",
     description: "The whole calendar dims and blocks interaction.",
     render: () => <Calendar aria-label="Locked calendar" isDisabled />,

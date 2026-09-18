@@ -2,6 +2,7 @@
 
 import type { DateFieldProps, DateInputProps, DateValue } from "react-aria-components"
 import {
+  composeRenderProps,
   DateField as DateFieldPrimitive,
   DateInput as DateInputPrimitive,
   DateSegment,
@@ -30,7 +31,9 @@ export function DateField<T extends DateValue>({ className, ...props }: DateFiel
     <DateFieldPrimitive
       {...props}
       data-slot="control"
-      className={cn("group flex w-fit flex-col gap-1", className)}
+      className={composeRenderProps(className, (resolved) =>
+        cn("group flex w-fit flex-col gap-1", resolved),
+      )}
     />
   )
 }
@@ -75,28 +78,30 @@ export function DateInput({
   return (
     <span data-slot="control" className={bare ? "relative block w-full" : "relative block"}>
       <DateInputPrimitive
-        className={cn(
-          "relative block appearance-none text-quebi-fg",
-          textSize,
-          bare
-            ? ["w-full rounded-none border-0 bg-transparent outline-none", dateInputSizeStyles[size]]
-            : [
-                // quebi input chrome — matches input.tsx.
-                "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
-                dateInputSizeStyles[size],
-                "transition-[border-color,box-shadow] duration-200",
-                // `DateInput` is a `<div role="group">`, so the `enabled:` this line used
-                // to carry never matched and the field had no hover feedback at all,
-                // despite the chrome above claiming to match `Input`. The guards are what
-                // `enabled:` was standing in for: hover must not outrank focus-within or
-                // the open state, and must stay off a disabled field.
-                "not-aria-disabled:not-focus-within:not-group-open:hover:border-quebi-line/40",
-                "outline-none focus-within:border-quebi-brand-mark focus-within:outline-none focus-within:ring-2 focus-within:ring-quebi-brand-mark",
-                "group-open:border-quebi-brand-mark group-open:ring-2 group-open:ring-quebi-brand-mark",
-                "invalid:border-red-500 focus-within:invalid:ring-red-500/50",
-                "in-disabled:cursor-not-allowed in-disabled:opacity-50",
-              ],
-          className,
+        className={composeRenderProps(className, (resolved) =>
+          cn(
+            "relative block appearance-none text-quebi-fg",
+            textSize,
+            bare
+              ? ["w-full rounded-none border-0 bg-transparent outline-none", dateInputSizeStyles[size]]
+              : [
+                  // quebi input chrome — matches input.tsx.
+                  "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
+                  dateInputSizeStyles[size],
+                  "transition-[border-color,box-shadow] duration-200",
+                  // `DateInput` is a `<div role="group">`, so the `enabled:` this line used
+                  // to carry never matched and the field had no hover feedback at all,
+                  // despite the chrome above claiming to match `Input`. The guards are what
+                  // `enabled:` was standing in for: hover must not outrank focus-within or
+                  // the open state, and must stay off a disabled field.
+                  "not-aria-disabled:not-focus-within:not-group-open:hover:border-quebi-line/40",
+                  "outline-none focus-within:border-quebi-brand-mark focus-within:outline-none focus-within:ring-2 focus-within:ring-quebi-brand-mark focus-within:ring-offset-2 focus-within:ring-offset-quebi-bg",
+                  "group-open:border-quebi-brand-mark group-open:ring-2 group-open:ring-quebi-brand-mark group-open:ring-offset-2 group-open:ring-offset-quebi-bg",
+                  "invalid:border-red-500 focus-within:invalid:ring-red-500/50",
+                  "in-disabled:cursor-not-allowed in-disabled:opacity-50",
+                ],
+            resolved,
+          ),
         )}
         {...props}
       >

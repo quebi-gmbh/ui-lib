@@ -2,6 +2,7 @@
 
 import type { HeadingProps, TextProps } from "react-aria-components"
 import {
+  composeRenderProps,
   Heading,
   Button as PrimitiveButton,
   Dialog as PrimitiveDialog,
@@ -37,7 +38,10 @@ const Dialog = ({
 }
 
 const DialogTrigger = ({ className, ...props }: ButtonProps) => (
-  <Button className={cn("cursor-pointer", className)} {...props} />
+  <Button
+    className={composeRenderProps(className, (resolved) => cn("cursor-pointer", resolved))}
+    {...props}
+  />
 )
 
 interface DialogHeaderProps extends Omit<React.ComponentProps<"div">, "title"> {

@@ -1,7 +1,7 @@
 "use client"
 
 import type { TextFieldProps } from "react-aria-components"
-import { TextField as TextFieldPrimitive } from "react-aria-components"
+import { composeRenderProps, TextField as TextFieldPrimitive } from "react-aria-components"
 import { cn } from "@/lib/utils"
 
 /**
@@ -17,16 +17,18 @@ export function TextField({ className, ...props }: TextFieldProps) {
   return (
     <TextFieldPrimitive
       data-slot="control"
-      className={cn(
-        "w-full",
-        // label → control → hint stack with 6px between siblings.
-        "[&>[data-slot=label]+[data-slot=control]]:mt-1.5",
-        "[&>[data-slot=label]+[slot='description']]:mt-1",
-        "[&>[slot=description]+[data-slot=control]]:mt-1.5",
-        "[&>[data-slot=control]+[slot=description]]:mt-1.5",
-        "[&>[data-slot=control]+[slot=errorMessage]]:mt-1.5",
-        "in-disabled:opacity-50 disabled:opacity-50",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          "w-full",
+          // label → control → hint stack with 6px between siblings.
+          "[&>[data-slot=label]+[data-slot=control]]:mt-1.5",
+          "[&>[data-slot=label]+[slot='description']]:mt-1",
+          "[&>[slot=description]+[data-slot=control]]:mt-1.5",
+          "[&>[data-slot=control]+[slot=description]]:mt-1.5",
+          "[&>[data-slot=control]+[slot=errorMessage]]:mt-1.5",
+          "in-disabled:opacity-50 disabled:opacity-50",
+          resolved,
+        ),
       )}
       {...props}
     />

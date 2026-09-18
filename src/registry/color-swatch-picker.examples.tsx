@@ -9,7 +9,8 @@ const PALETTE = ["#14b8a6", "#0ea5e9", "#6366f1", "#a855f7", "#ec4899", "#f59e0b
 export const colorSwatchPickerExamples: ComponentExample[] = [
   {
     title: "Default",
-    description: "A grid of swatches; the selected one shows a brand-teal ring.",
+    description:
+      "A grid of swatches; the selected one shows a neutral halo — a ring in the foreground colour, offset from the swatch in the page colour, so it reads over any hue.",
     render: () => (
       <ColorSwatchPicker defaultValue="#14b8a6" aria-label="Accent color">
         {PALETTE.map((color) => (

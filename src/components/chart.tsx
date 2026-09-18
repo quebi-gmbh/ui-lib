@@ -10,7 +10,12 @@ import {
   useMemo,
   useState,
 } from "react"
-import { ToggleButton, ToggleButtonGroup, type ToggleButtonGroupProps } from "react-aria-components"
+import {
+  composeRenderProps,
+  ToggleButton,
+  ToggleButtonGroup,
+  type ToggleButtonGroupProps,
+} from "react-aria-components"
 import type {
   CartesianGridProps as CartesianGridPrimitiveProps,
   CartesianGridProps,
@@ -665,11 +670,13 @@ const ChartLegendContent = ({
   return (
     <ToggleButtonGroup
       ref={ref}
-      className={cn(
-        "flex flex-wrap items-center gap-x-1",
-        verticalAlign === "top" ? "pb-3" : "pt-3",
-        align === "right" ? "justify-end" : align === "left" ? "justify-start" : "justify-center",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          "flex flex-wrap items-center gap-x-1",
+          verticalAlign === "top" ? "pb-3" : "pt-3",
+          align === "right" ? "justify-end" : align === "left" ? "justify-start" : "justify-center",
+          resolved,
+        ),
       )}
       // `[]`, not `undefined`: an undefined `selectedKeys` makes the group
       // uncontrolled, and the first click flips it to controlled — React logs

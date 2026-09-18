@@ -6,7 +6,13 @@ import type {
   PopoverProps,
   SelectProps as SelectPrimitiveProps,
 } from "react-aria-components"
-import { Button, ListBox, Select as SelectPrimitive, SelectValue } from "react-aria-components"
+import {
+  Button,
+  composeRenderProps,
+  ListBox,
+  Select as SelectPrimitive,
+  SelectValue,
+} from "react-aria-components"
 import { useFieldSizing } from "@/lib/field-size"
 import { cn } from "@/lib/utils"
 import {
@@ -39,7 +45,7 @@ const Select = <T extends object, M extends "single" | "multiple" = "single">({
   return (
     <SelectPrimitive
       data-slot="control"
-      className={cn("group/select w-full", className)}
+      className={composeRenderProps(className, (resolved) => cn("group/select w-full", resolved))}
       {...props}
     />
   )
@@ -60,18 +66,22 @@ const SelectContent = <T extends object>({
   return (
     <PopoverContent
       placement={popover?.placement ?? "bottom"}
-      className={cn(
-        "min-w-(--trigger-width) scroll-py-1 overflow-y-auto overscroll-contain",
-        popover?.className,
+      className={composeRenderProps(popover?.className, (resolved) =>
+        cn(
+          "min-w-(--trigger-width) scroll-py-1 overflow-y-auto overscroll-contain",
+          resolved,
+        ),
       )}
       {...popover}
     >
       <ListBox
         layout="stack"
         orientation="vertical"
-        className={cn(
-          "grid max-h-96 w-full grid-cols-[auto_1fr] flex-col gap-y-1 overflow-y-auto p-1 outline-hidden *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
-          className,
+        className={composeRenderProps(className, (resolved) =>
+          cn(
+            "grid max-h-96 w-full grid-cols-[auto_1fr] flex-col gap-y-1 overflow-y-auto p-1 outline-hidden *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
+            resolved,
+          ),
         )}
         items={items}
         {...props}
@@ -125,8 +135,8 @@ const SelectTrigger = ({ children, className, size: sizeProp, ...props }: Select
           // that is focused or open loses its mint border and keeps only the ring.
           "enabled:not-focus:not-group-open/select:hover:border-quebi-line/40",
           // focus / open → brand-teal border + ring.
-          "outline-none focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark",
-          "group-open/select:border-quebi-brand-mark group-open/select:ring-2 group-open/select:ring-quebi-brand-mark",
+          "outline-none focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark focus:ring-offset-2 focus:ring-offset-quebi-bg",
+          "group-open/select:border-quebi-brand-mark group-open/select:ring-2 group-open/select:ring-quebi-brand-mark group-open/select:ring-offset-2 group-open/select:ring-offset-quebi-bg",
           // invalid wins via red border + ring.
           "group-invalid/select:border-red-500 group-invalid/select:focus:ring-red-500/50 group-invalid/select:group-open/select:ring-red-500/50",
           // leading icons / loader, muted.

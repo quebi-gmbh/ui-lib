@@ -2,6 +2,7 @@
 
 import type { FieldMetadata } from "@conform-to/react"
 import type { PropsWithChildren } from "react"
+import { composeRenderProps } from "react-aria-components"
 import type { SelectProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { Description, FieldError, Label } from "@/components/field"
@@ -60,7 +61,9 @@ export function ConformSelect<T extends object>({
       defaultSelectedKey={initialValue === "" ? null : initialValue}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={cn("flex w-full flex-col gap-1.5", className)}
+      className={composeRenderProps(className, (resolved) =>
+        cn("flex w-full flex-col gap-1.5", resolved),
+      )}
     >
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>

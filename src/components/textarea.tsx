@@ -1,6 +1,10 @@
 "use client"
 
-import { TextArea as TextAreaPrimitive, type TextAreaProps } from "react-aria-components"
+import {
+  composeRenderProps,
+  TextArea as TextAreaPrimitive,
+  type TextAreaProps,
+} from "react-aria-components"
 import { cn } from "@/lib/utils"
 
 /**
@@ -15,20 +19,22 @@ export function Textarea({ className, ...props }: TextAreaProps) {
     <span data-slot="control" className="relative block w-full">
       <TextAreaPrimitive
         {...props}
-        className={cn(
-          "field-sizing-content block min-h-20 w-full appearance-none resize-y rounded-quebi-sm px-3 py-2",
-          "bg-quebi-bg text-sm text-quebi-fg placeholder:text-quebi-fg-subtle",
-          "border border-quebi-line/20",
-          "transition-colors duration-150",
-          // `not-focus` pins what today only holds by luck: `hover:` and `focus:` are
-          // both (0,2,0), so the winner is Tailwind's emission order (focus last).
-          // The guard says the intent instead of relying on it.
-          "not-focus:hover:border-quebi-line/40",
-          "focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark focus:ring-offset-2 focus:ring-offset-quebi-bg",
-          "invalid:border-red-500 focus:invalid:border-red-500 focus:invalid:ring-red-500/50",
-          "aria-invalid:border-red-500 focus:aria-invalid:ring-red-500/50",
-          "disabled:opacity-50 disabled:cursor-not-allowed",
-          className,
+        className={composeRenderProps(className, (resolved) =>
+          cn(
+            "field-sizing-content block min-h-20 w-full appearance-none resize-y rounded-quebi-sm px-3 py-2",
+            "bg-quebi-bg text-sm text-quebi-fg placeholder:text-quebi-fg-subtle",
+            "border border-quebi-line/20",
+            "transition-colors duration-150",
+            // `not-focus` pins what today only holds by luck: `hover:` and `focus:` are
+            // both (0,2,0), so the winner is Tailwind's emission order (focus last).
+            // The guard says the intent instead of relying on it.
+            "not-focus:hover:border-quebi-line/40",
+            "focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark focus:ring-offset-2 focus:ring-offset-quebi-bg",
+            "invalid:border-red-500 focus:invalid:border-red-500 focus:invalid:ring-red-500/50",
+            "aria-invalid:border-red-500 focus:aria-invalid:ring-red-500/50",
+            "disabled:opacity-50 disabled:cursor-not-allowed",
+            resolved,
+          ),
         )}
       />
     </span>

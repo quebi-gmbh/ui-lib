@@ -141,7 +141,7 @@ function AdminBullet({
     "inline-flex size-8 items-center justify-center rounded-full border-2 text-[13px] font-bold transition-all duration-200"
   const state =
     status === "done"
-      ? "border-transparent bg-quebi-brand text-quebi-on-brand"
+      ? "border-quebi-brand-mark bg-quebi-brand text-quebi-on-brand"
       : status === "active"
         ? "border-quebi-brand-mark bg-quebi-bg text-quebi-brand-text"
         : "border-transparent bg-quebi-surface/[0.06] text-quebi-fg-subtle"
@@ -209,7 +209,7 @@ function KioskBullet({
     "inline-flex size-7 items-center justify-center rounded-full border-2 text-[12px] font-bold transition-all duration-200"
   const state =
     status === "done"
-      ? "border-transparent bg-quebi-brand text-quebi-on-brand"
+      ? "border-quebi-brand-mark bg-quebi-brand text-quebi-on-brand"
       : status === "active"
         ? "border-quebi-brand-mark bg-quebi-bg text-quebi-brand-text"
         : "border-transparent bg-quebi-surface/[0.06] text-quebi-fg-subtle"
