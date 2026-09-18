@@ -233,6 +233,166 @@ describe("the wider lanes", () => {
   })
 })
 
+/**
+ * The name column de-overlap (task #159).
+ *
+ * Every name is drawn at the same `left`, so the only thing separating two of
+ * them is their `top` — and until this, that was each span's own midpoint and
+ * nothing else. Two spans sharing a midpoint is not a corner case here: the
+ * component exists to be dragged, the shipped example has a lunch whose
+ * midpoint is 780, and dragging anything else onto 780 put two names in exactly
+ * the same place, one drawn over the other.
+ *
+ * `layoutNames` sweeps the wanted positions apart by `LABEL_GAP` (18px — the
+ * 16px `text-xs` line box, plus enough not to read as one block). What the
+ * sweep must not do is move a name that had no reason to move, or push the
+ * column out of the track, so both are pinned below. It is arithmetic on the
+ * `height` prop rather than a measurement, which is what lets it run during
+ * render: the site is prerendered, and a measured position would be missing
+ * from the HTML and would jump one frame after hydration.
+ */
+describe("the name column", () => {
+  /** Every name's `top`, in pixels, keyed by the name. */
+  function nameTops(container: HTMLElement) {
+    const labels = new Set(["deep work", "review", "lunch", "pairing", "deploy"])
+    const tops: Record<string, number> = {}
+    for (const el of Array.from(container.querySelectorAll<HTMLElement>("div"))) {
+      const text = el.textContent ?? ""
+      if (el.style.top && el.style.left && labels.has(text)) {
+        tops[text] = Number.parseFloat(el.style.top)
+      }
+    }
+    return tops
+  }
+
+  /** The midpoint a name would sit on if nothing were in its way. */
+  const midpointOf = (start: number, end: number, height: number) =>
+    (((start + end) / 2) * height) / 1440
+
+  test("a name whose neighbours are far away keeps its own midpoint", () => {
+    const { container } = render(
+      <DaySchedule
+        defaultSpans={[
+          { id: "a", label: "deep work", start: 120, end: 240 },
+          { id: "b", label: "review", start: 900, end: 1020 },
+        ]}
+        height={560}
+        timeLabels="none"
+      />,
+    )
+
+    const tops = nameTops(container)
+    expect(tops["deep work"]).toBeCloseTo(midpointOf(120, 240, 560), 1)
+    expect(tops.review).toBeCloseTo(midpointOf(900, 1020, 560), 1)
+  })
+
+  test("two spans sharing a midpoint get two readable names", () => {
+    // The reported case: lunch's default midpoint is 780, and "deep work"
+    // dragged to 690–870 lands on the same one.
+    const { container } = render(
+      <DaySchedule
+        defaultSpans={[
+          { id: "deep-work", label: "deep work", start: 690, end: 870 },
+          { id: "lunch", label: "lunch", start: 750, end: 810 },
+        ]}
+        height={400}
+        timeLabels="none"
+      />,
+    )
+
+    const tops = nameTops(container)
+    expect(Math.abs(tops.lunch - tops["deep work"])).toBeGreaterThanOrEqual(18)
+    // The first of the pair is the one that keeps the midpoint; the tie breaks
+    // by span order, so it is the same one on every render.
+    expect(tops["deep work"]).toBeCloseTo(midpointOf(690, 870, 400), 1)
+  })
+
+  test("a whole crowd comes apart, in order, and in one pass", () => {
+    const spans: DaySpan[] = [
+      { id: "a", label: "deep work", start: 700, end: 740 },
+      { id: "b", label: "review", start: 710, end: 750 },
+      { id: "c", label: "lunch", start: 720, end: 760 },
+      { id: "d", label: "pairing", start: 730, end: 770 },
+    ]
+    const { container } = render(
+      <DaySchedule defaultSpans={spans} height={560} timeLabels="none" />,
+    )
+
+    const tops = nameTops(container)
+    const inOrder = ["deep work", "review", "lunch", "pairing"].map((name) => tops[name])
+    // Still reading top to bottom in midpoint order — a sweep that reordered
+    // them would separate the text and mislabel every bar.
+    for (let i = 1; i < inOrder.length; i++) {
+      expect(inOrder[i] - inOrder[i - 1]).toBeGreaterThanOrEqual(18)
+    }
+  })
+
+  test("the column stays inside the track when the crowd is at the bottom", () => {
+    const { container } = render(
+      <DaySchedule
+        defaultSpans={[
+          { id: "a", label: "deep work", start: 1380, end: 1440 },
+          { id: "b", label: "review", start: 1370, end: 1440 },
+          { id: "c", label: "lunch", start: 1360, end: 1440 },
+        ]}
+        height={300}
+        timeLabels="none"
+      />,
+    )
+
+    const tops = Object.values(nameTops(container))
+    expect(Math.max(...tops)).toBeLessThanOrEqual(300)
+    expect(Math.min(...tops)).toBeGreaterThanOrEqual(0)
+  })
+
+  test("a name that had to move gets a leader line back to its span", () => {
+    const stacked = render(
+      <DaySchedule
+        defaultSpans={[
+          { id: "deep-work", label: "deep work", start: 690, end: 870 },
+          { id: "lunch", label: "lunch", start: 750, end: 810 },
+        ]}
+        height={400}
+        timeLabels="none"
+      />,
+    ).container
+    // One line, for the one name that moved.
+    expect(stacked.querySelectorAll("svg line")).toHaveLength(1)
+
+    const apart = render(
+      <DaySchedule
+        defaultSpans={[
+          { id: "a", label: "deep work", start: 120, end: 240 },
+          { id: "b", label: "review", start: 900, end: 1020 },
+        ]}
+        height={560}
+        timeLabels="none"
+      />,
+    ).container
+    expect(apart.querySelectorAll("svg line")).toHaveLength(0)
+  })
+
+  test("names carry their span's tone, so a moved one still says which bar", () => {
+    const { container } = render(
+      <DaySchedule
+        defaultSpans={[
+          { id: "a", label: "deep work", start: 120, end: 240, tone: "brand" },
+          { id: "b", label: "review", start: 900, end: 1020, tone: "cyan" },
+        ]}
+        timeLabels="none"
+      />,
+    )
+
+    const classOf = (text: string) =>
+      Array.from(container.querySelectorAll<HTMLElement>("div")).find(
+        (el) => el.textContent === text && el.style.left && el.style.top,
+      )?.className
+
+    expect(classOf("deep work")).toContain("text-quebi-brand-text")
+    expect(classOf("review")).toContain("text-quebi-info")
+  })
+})
+
 describe("guarded modes", () => {
   test("read-only keeps the fields visible and refuses the edit", () => {
     const seen: DaySpan[][] = []
