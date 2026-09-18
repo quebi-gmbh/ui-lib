@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils"
  * saturation, lightness, alpha, …) with a live gradient track, an optional
  * label/output row, and a self-contained draggable thumb. The gradient track
  * is user data; the chrome (label, output, focus ring, thumb) is restyled to
- * quebi tokens.
+ * quebi tokens. Disabled keeps the gradient and mutes it with `opacity-50`.
  */
 export interface ColorSliderProps extends PrimitiveColorSliderProps {
   /** Optional eyebrow label rendered above the track. */
@@ -74,15 +74,13 @@ export function ColorSliderTrack({ className, ...props }: SliderTrackProps) {
         "group col-span-2 rounded-quebi-sm border border-quebi-line/10",
         "orientation-horizontal:h-6 orientation-horizontal:w-full",
         "orientation-vertical:ms-[50%] orientation-vertical:h-56 orientation-vertical:w-6 orientation-vertical:-translate-x-[50%]",
-        "disabled:opacity-50 forced-colors:bg-[GrayText]",
+        "disabled:opacity-50 disabled:forced-colors:bg-[GrayText]",
         className,
       )}
       {...props}
-      style={({ defaultStyle, isDisabled }) => ({
+      style={({ defaultStyle }) => ({
         ...defaultStyle,
-        background: isDisabled
-          ? undefined
-          : `${defaultStyle.background}, repeating-conic-gradient(#262b30 0% 25%, #1a1e22 0% 50%) 50% / 16px 16px`,
+        background: `${defaultStyle.background}, repeating-conic-gradient(#262b30 0% 25%, #1a1e22 0% 50%) 50% / 16px 16px`,
       })}
     />
   )

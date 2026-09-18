@@ -12,7 +12,11 @@ import { ColorThumb } from "@/components/color-thumb"
  *
  * A circular hue picker built on react-aria-components. The hue gradient on the
  * track is user data (the spectrum) and is left untouched; quebi tokens style
- * the disabled state and the thumb. Drag the thumb around the ring to pick a hue.
+ * the thumb. Drag the thumb around the ring to pick a hue.
+ *
+ * Disabled keeps the spectrum and mutes it with `opacity-50`, matching ColorArea
+ * and ColorSliderTrack: a color surface with the color taken out is an empty
+ * ring, not a state.
  */
 export interface ColorWheelProps
   extends Omit<PrimitiveColorWheelProps, "outerRadius" | "innerRadius"> {}
@@ -21,12 +25,10 @@ export function ColorWheel(props: ColorWheelProps) {
   return (
     <PrimitiveColorWheel {...props} outerRadius={100} innerRadius={74}>
       <ColorWheelTrack
-        className="disabled:bg-quebi-fg-subtle/40 forced-colors:disabled:bg-[GrayText]"
-        style={({ defaultStyle, isDisabled }) => ({
+        className="disabled:opacity-50 disabled:forced-colors:bg-[GrayText]"
+        style={({ defaultStyle }) => ({
           ...defaultStyle,
-          background: isDisabled
-            ? undefined
-            : `${defaultStyle.background}, repeating-conic-gradient(#CCC 0% 25%, white 0% 50%) 50% / 16px 16px`,
+          background: `${defaultStyle.background}, repeating-conic-gradient(#CCC 0% 25%, white 0% 50%) 50% / 16px 16px`,
         })}
       />
       <ColorThumb />
