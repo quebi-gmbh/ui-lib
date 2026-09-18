@@ -69,8 +69,10 @@ describe("table chrome", () => {
         defaultPageSize={5}
       />,
     )
-    // The pager's own form, plus the nav buttons that sit beside it.
-    const pager = screen.getByRole("button", { name: "Next page" }).closest("form")
+    // The whole pager, not one of its forms: the page size and the page jump
+    // are separate forms, so that a page size the schema rejects cannot take
+    // `Go` down with it.
+    const pager = screen.getByRole("button", { name: "Next page" }).closest("[data-slot=table-pager]")
     expect(pager).not.toBeNull()
     const controls = Array.from(
       // biome-ignore lint/style/noNonNullAssertion: asserted not null on the line above.
@@ -123,6 +125,90 @@ describe("table chrome", () => {
     await user.type(jump, "3")
     await user.click(screen.getByRole("button", { name: "Go" }))
     expect(screen.getByText(/Showing/).textContent).toContain("21")
+  })
+
+  test("the page jump follows the page you navigated to", async () => {
+    render(
+      <DataTable<Order>
+        aria-label="Orders"
+        columns={columns}
+        data={ORDERS}
+        getRowId={(order) => String(order.id)}
+        defaultPageSize={10}
+      />,
+    )
+    const user = userEvent.setup()
+    // Re-queried every time: the fix remounts the control, so a reference held
+    // across a navigation is a detached node and would pass while the visible
+    // field said something else.
+    const jump = () => screen.getByRole("textbox", { name: "Go to page" })
+
+    expect(jump()).toHaveValue("1")
+    await user.click(screen.getByRole("button", { name: "Next page" }))
+    expect(screen.getByText(/Showing/).textContent).toContain("11")
+    // The whole bug: the table moved and the number box stayed on page 1,
+    // because `defaultValue` on an uncontrolled NumberField is read at mount
+    // and the Conform form id changing is not a mount.
+    expect(jump()).toHaveValue("2")
+
+    await user.click(screen.getByRole("button", { name: "Last page" }))
+    expect(jump()).toHaveValue("3")
+    await user.click(screen.getByRole("button", { name: "First page" }))
+    expect(jump()).toHaveValue("1")
+  })
+
+  test("the page jump keeps the number you typed, and the focus", async () => {
+    render(
+      <DataTable<Order>
+        aria-label="Orders"
+        columns={columns}
+        data={ORDERS}
+        getRowId={(order) => String(order.id)}
+        defaultPageSize={10}
+      />,
+    )
+    const user = userEvent.setup()
+    const jump = screen.getByRole("textbox", { name: "Go to page" })
+    await user.clear(jump)
+    await user.type(jump, "3")
+    await user.click(screen.getByRole("button", { name: "Go" }))
+
+    expect(screen.getByText(/Showing/).textContent).toContain("21")
+    // The user's own jump is not an external change: remounting here would
+    // re-seed the field to the page it already shows and throw the focus away
+    // mid-interaction, which is what `markPushed` exists to prevent.
+    expect(screen.getByRole("textbox", { name: "Go to page" })).toBe(jump)
+    expect(jump).toHaveValue("3")
+  })
+
+  test("the page jump says what it is, and is not offered for one page", () => {
+    const { unmount } = render(
+      <DataTable<Order>
+        aria-label="Orders"
+        columns={columns}
+        data={ORDERS}
+        getRowId={(order) => String(order.id)}
+        defaultPageSize={10}
+      />,
+    )
+    // A visible label, not only an aria-label: the reported row was a bare
+    // number box next to a button reading "Go".
+    expect(screen.getByText("Go to page")).toBeInTheDocument()
+    unmount()
+
+    render(
+      <DataTable<Order>
+        aria-label="Orders"
+        columns={columns}
+        data={ORDERS}
+        getRowId={(order) => String(order.id)}
+        defaultPageSize={50}
+      />,
+    )
+    // One page: "Enter a page between 1 and 1" is the only thing the field
+    // could ever say, so it is not there to say it.
+    expect(screen.queryByRole("textbox", { name: "Go to page" })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Go" })).toBeNull()
   })
 
   test("a page size outside the offered list is still offered, so Go works", async () => {
