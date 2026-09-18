@@ -67,7 +67,7 @@ export const sliderExamples: ComponentExample[] = [
     title: "Vertical",
     description: "Vertical orientation.",
     render: () => (
-      <Slider defaultValue={50} orientation="vertical" className="h-48">
+      <Slider aria-label="Level" defaultValue={50} orientation="vertical" className="h-48">
         <SliderTrack>
           <SliderFill />
           <SliderThumb />
