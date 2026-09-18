@@ -94,6 +94,7 @@ import { loaderExamples } from "./loader.examples"
 import { menuExamples } from "./menu.examples"
 import { meterExamples } from "./meter.examples"
 import { modalExamples } from "./modal.examples"
+import { monthPickerExamples } from "./month-picker.examples"
 import { multipleSelectExamples } from "./multiple-select.examples"
 import { navbarExamples } from "./navbar.examples"
 import { noteExamples } from "./note.examples"
@@ -140,6 +141,8 @@ import { tooltipExamples } from "./tooltip.examples"
 import { trackerExamples } from "./tracker.examples"
 import { treemapExamples } from "./treemap.examples"
 import { treeExamples } from "./tree.examples"
+import { weekPickerExamples } from "./week-picker.examples"
+import { yearPickerExamples } from "./year-picker.examples"
 
 const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "alert-dialog": alertDialogExamples,
@@ -236,6 +239,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "menu": menuExamples,
   "meter": meterExamples,
   "modal": modalExamples,
+  "month-picker": monthPickerExamples,
   "multiple-select": multipleSelectExamples,
   "navbar": navbarExamples,
   "note": noteExamples,
@@ -282,6 +286,8 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "tracker": trackerExamples,
   "treemap": treemapExamples,
   "tree": treeExamples,
+  "week-picker": weekPickerExamples,
+  "year-picker": yearPickerExamples,
 }
 
 export const registry: ComponentEntry[] = metaRegistry.map((meta) => ({
