@@ -24,6 +24,11 @@ import { cn } from "@/lib/utils"
  * opens a Popover (or Modal on mobile) holding the RangeCalendar. Composes
  * @/components/{date-picker,date-field,field}. The Conform date-range-picker
  * variant depends on it.
+ *
+ * Both halves are `DateInput`s, so both format the way `DateField` does:
+ * locale-derived, `30.6.2026` under `de-DE`. `shouldForceLeadingZeros` pads the
+ * day and month of start *and* end to two digits (`30.06.2026`) — it is one
+ * prop on the range, not one per input.
  */
 
 export interface DateRangePickerProps<T extends DateValue>

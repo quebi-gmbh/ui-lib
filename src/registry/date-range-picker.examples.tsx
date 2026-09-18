@@ -61,6 +61,22 @@ export const dateRangePickerExamples: ComponentExample[] = [
     ),
   },
   {
+    title: "Two digits",
+    description:
+      "shouldForceLeadingZeros pads the day and month segments of both inputs to two digits (30.06.2026 rather than the 30.6.2026 de-DE asks for).",
+    render: () => (
+      <DateRangePicker
+        className="max-w-sm"
+        defaultValue={{ start: parseDate("2026-06-30"), end: parseDate("2026-07-07") }}
+        shouldForceLeadingZeros
+      >
+        <Label>Trip</Label>
+        <DateRangePickerTrigger />
+        <Description>Padded regardless of what the locale would do.</Description>
+      </DateRangePicker>
+    ),
+  },
+  {
     title: "Invalid",
     description: "Validation state surfaces a red border and an error message.",
     render: () => (
