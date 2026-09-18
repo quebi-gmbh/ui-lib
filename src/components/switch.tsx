@@ -44,8 +44,13 @@ export function Switch({ children, className, ...props }: SwitchProps) {
             <span
               aria-hidden="true"
               className={cn(
-                // 20x20 thumb, 2px inset from top-left, slides 20px right when on.
-                "pointer-events-none absolute top-0.5 left-0.5 size-5 rounded-full bg-quebi-inverse-bg shadow-quebi-glow",
+                // 20x20 thumb, 2px inset from the track's outer edge, slides 20px
+                // right when on. The offsets resolve against the track's padding
+                // box, which the 1px border has already inset by 1px — so 2px of
+                // visible gap is `px`, not `0.5`. That leaves 44 - 2*2 - 20 = 20px
+                // of travel, which is what `translate-x-5` covers, so the on state
+                // lands 2px from the right edge and the thumb is centered either way.
+                "pointer-events-none absolute top-px left-px size-5 rounded-full bg-quebi-inverse-bg shadow-quebi-glow",
                 "transition-transform duration-200",
                 values.isSelected && "translate-x-5",
               )}
