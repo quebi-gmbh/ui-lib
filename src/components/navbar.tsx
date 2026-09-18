@@ -197,7 +197,7 @@ const Navbar = ({
         className={twMerge(
           "relative isolate hidden py-(--navbar-gutter) [--navbar-gutter:--spacing(2.5)] md:block",
           intent === "float" &&
-            "rounded-quebi-md bg-quebi-bg py-0 *:data-[navbar=content]:max-w-7xl *:data-[navbar=content]:rounded-quebi-md *:data-[navbar=content]:border *:data-[navbar=content]:border-quebi-line/10 *:data-[navbar=content]:bg-quebi-bg *:data-[navbar=content]:px-4 *:data-[navbar=content]:py-(--navbar-gutter) *:data-[navbar=content]:shadow-quebi-glow",
+            "rounded-quebi-md bg-quebi-bg py-0 *:data-[navbar=content]:max-w-7xl *:data-[navbar=content]:rounded-quebi-md *:data-[navbar=content]:border *:data-[navbar=content]:border-quebi-line/10 *:data-[navbar=content]:bg-quebi-bg *:data-[navbar=content]:px-4 *:data-[navbar=content]:py-(--navbar-gutter)",
           ["default", "inset"].includes(intent) && "px-4",
           intent === "default" && "border-b border-quebi-line/10 bg-quebi-bg",
           className,
