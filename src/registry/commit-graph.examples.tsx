@@ -1,5 +1,12 @@
 import { useState } from "react"
-import { CommitGraph, type CommitGraphCommit } from "@/components/commit-graph"
+import {
+  CommitGraph,
+  type CommitGraphCommit,
+  type CommitGraphLaneWidth,
+  type CommitGraphLineWeight,
+  type CommitGraphNodeShape,
+  type CommitGraphNodeSize,
+} from "@/components/commit-graph"
 import type { ComponentExample } from "./types"
 
 /**
@@ -271,6 +278,116 @@ export const commitGraphExamples: ComponentExample[] = [
         aria-label="Empty commit history"
         emptyState="No commits match this filter."
       />
+    ),
+  },
+  {
+    title: "Line weight",
+    description:
+      "How much of the screen the graph is allowed to be. hairline keeps it background behind a dense history; bold makes it the subject.",
+    render: () => (
+      <div className="flex w-full flex-col gap-6">
+        {(["hairline", "regular", "bold"] as CommitGraphLineWeight[]).map((weight) => (
+          <div key={weight} className="flex flex-col gap-2">
+            <p className="font-mono text-quebi-fg-subtle text-xs">lineWeight=&quot;{weight}&quot;</p>
+            <CommitGraph
+              commits={branchedHistory}
+              lineWeight={weight}
+              aria-label={`Commit history, ${weight} lines`}
+            />
+          </div>
+        ))}
+      </div>
+    ),
+  },
+  {
+    title: "Node size",
+    description: "The commit markers, from sm to lg. The lines are unchanged.",
+    render: () => (
+      <div className="flex w-full flex-col gap-6">
+        {(["sm", "md", "lg"] as CommitGraphNodeSize[]).map((size) => (
+          <div key={size} className="flex flex-col gap-2">
+            <p className="font-mono text-quebi-fg-subtle text-xs">nodeSize=&quot;{size}&quot;</p>
+            <CommitGraph
+              commits={branchedHistory}
+              nodeSize={size}
+              aria-label={`Commit history, ${size} markers`}
+            />
+          </div>
+        ))}
+      </div>
+    ),
+  },
+  {
+    title: "Node shape",
+    description:
+      "What a commit is drawn as. Whichever you pick, a merge is drawn as its inverse and a hair larger — the top row of every graph here is the merge — so a merge is never told apart by colour alone. That part is not an option.",
+    render: () => (
+      <div className="flex w-full flex-col gap-6">
+        {(["dot", "ring", "square", "diamond"] as CommitGraphNodeShape[]).map((shape) => (
+          <div key={shape} className="flex flex-col gap-2">
+            <p className="font-mono text-quebi-fg-subtle text-xs">nodeShape=&quot;{shape}&quot;</p>
+            <CommitGraph
+              commits={branchedHistory}
+              nodeShape={shape}
+              aria-label={`Commit history, ${shape} markers`}
+            />
+          </div>
+        ))}
+      </div>
+    ),
+  },
+  {
+    title: "Lane width",
+    description:
+      "How much room the lanes get. Shown on the octopus merge, where three lanes are live at once and the difference is the width of the whole column.",
+    render: () => (
+      <div className="flex w-full flex-col gap-6">
+        {(["tight", "regular", "wide"] as CommitGraphLaneWidth[]).map((width) => (
+          <div key={width} className="flex flex-col gap-2">
+            <p className="font-mono text-quebi-fg-subtle text-xs">laneWidth=&quot;{width}&quot;</p>
+            <CommitGraph
+              commits={octopusHistory}
+              laneWidth={width}
+              aria-label={`Octopus merge, ${width} lanes`}
+            />
+          </div>
+        ))}
+      </div>
+    ),
+  },
+  {
+    title: "Composed",
+    description:
+      "The options are independent, so a dense log can go quiet (hairline, small, tight) or a small history can be the subject of the screen (bold, large, wide).",
+    render: () => (
+      <div className="flex w-full flex-col gap-6">
+        <div className="flex flex-col gap-2">
+          <p className="font-mono text-quebi-fg-subtle text-xs">
+            lineWeight=&quot;hairline&quot; nodeSize=&quot;sm&quot; laneWidth=&quot;tight&quot;
+          </p>
+          <CommitGraph
+            commits={branchedHistory}
+            lineWeight="hairline"
+            nodeSize="sm"
+            laneWidth="tight"
+            aria-label="Quiet commit history"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <p className="font-mono text-quebi-fg-subtle text-xs">
+            lineWeight=&quot;bold&quot; nodeSize=&quot;lg&quot; nodeShape=&quot;ring&quot;
+            laneWidth=&quot;wide&quot;
+          </p>
+          <CommitGraph
+            commits={branchedHistory}
+            lineWeight="bold"
+            nodeSize="lg"
+            nodeShape="ring"
+            laneWidth="wide"
+            aria-label="Prominent commit history"
+          />
+        </div>
+      </div>
     ),
   },
 ]

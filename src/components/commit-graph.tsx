@@ -295,11 +295,44 @@ export function layoutCommitGraph(commits: CommitGraphCommit[]): CommitGraphLayo
   return { rows, lanes }
 }
 
+/** How thick the lane lines are drawn. */
+export type CommitGraphLineWeight = "hairline" | "regular" | "bold"
+/** How big a commit dot is. */
+export type CommitGraphNodeSize = "sm" | "md" | "lg"
+/** What a commit is drawn as. */
+export type CommitGraphNodeShape = "dot" | "ring" | "square" | "diamond"
+/** How far apart the lanes sit. */
+export type CommitGraphLaneWidth = "tight" | "regular" | "wide"
+
+const LINE_WEIGHTS: Record<CommitGraphLineWeight, number> = {
+  hairline: 1,
+  regular: 1.5,
+  bold: 2.5,
+}
+const NODE_RADII: Record<CommitGraphNodeSize, number> = { sm: 3, md: 4, lg: 5.5 }
+const LANE_WIDTHS: Record<CommitGraphLaneWidth, number> = { tight: 12, regular: 16, wide: 22 }
+
 /** Width of one lane, in SVG units — also the row band's horizontal step. */
-const LANE_WIDTH = 16
+const LANE_WIDTH = LANE_WIDTHS.regular
 /** Height of one row's band. Pinned to the row's `h-14` so the lines join up. */
 const ROW_HEIGHT = 56
-const DOT_RADIUS = 4
+/**
+ * Everything about the graph column's appearance, resolved from the props once
+ * so the drawing never reads a prop and a constant in the same breath.
+ *
+ * Row height is deliberately not in here. It is pinned to the row's `h-14` —
+ * the band is drawn at exactly `ROW_HEIGHT` and stretched to the row's content
+ * box, so the two have to move together or the lines stop meeting across rows.
+ * A density option is a real thing to want, but it is a change to that coupling
+ * rather than another entry in this object, so it is not being smuggled in here.
+ */
+interface GraphMetrics {
+  laneWidth: number
+  lineWidth: number
+  nodeRadius: number
+  nodeStroke: number
+  shape: CommitGraphNodeShape
+}
 /**
  * Straight run kept between a dot and the start of a bend.
  *
@@ -366,8 +399,8 @@ export function laneColor(lane: number): string {
 }
 
 /** Horizontal centre of a lane within the band. */
-function laneX(lane: number) {
-  return lane * LANE_WIDTH + LANE_WIDTH / 2
+function laneX(lane: number, laneWidth: number = LANE_WIDTH) {
+  return lane * laneWidth + laneWidth / 2
 }
 
 /**
@@ -384,10 +417,10 @@ function laneX(lane: number) {
  * through `((x1 + x2) / 2, rule)` with the same tangent and the join is
  * invisible even though different rows draw them into different SVGs.
  */
-export function edgePath(edge: CommitGraphEdge): string {
+export function edgePath(edge: CommitGraphEdge, laneWidth: number = LANE_WIDTH): string {
   const middle = ROW_HEIGHT / 2
-  const x1 = laneX(edge.fromLane)
-  const x2 = laneX(edge.toLane)
+  const x1 = laneX(edge.fromLane, laneWidth)
+  const x2 = laneX(edge.toLane, laneWidth)
   const crossing = (x1 + x2) / 2
 
   if (edge.bend === "none" || x1 === x2) {
@@ -425,11 +458,11 @@ const isBlended = (edge: CommitGraphEdge) => edge.bend !== "none" && edge.fromLa
  * restarting. The half outside this band is simply clipped, and `pad` holds the
  * end colours along the straight runs beyond it.
  */
-function gradientVector(edge: CommitGraphEdge) {
+function gradientVector(edge: CommitGraphEdge, laneWidth: number = LANE_WIDTH) {
   const rule = edge.bend === "bottom" ? ROW_HEIGHT : 0
   return {
-    x1: laneX(edge.fromLane),
-    x2: laneX(edge.toLane),
+    x1: laneX(edge.fromLane, laneWidth),
+    x2: laneX(edge.toLane, laneWidth),
     y1: rule - BEND_SPAN,
     y2: rule + BEND_SPAN,
   }
@@ -439,20 +472,63 @@ function gradientVector(edge: CommitGraphEdge) {
 const edgeKey = (edge: CommitGraphEdge) =>
   `${edge.from}:${edge.fromLane}-${edge.to}:${edge.toLane}-${edge.bend}`
 
+/**
+ * One commit's marker.
+ *
+ * Shape is the caller's choice; whether it is filled is not. A merge is always
+ * drawn as the inverse of an ordinary commit — hollow where they are solid, and
+ * solid where they are hollow — plus a hair larger, so "this commit joined two
+ * histories" survives being read in greyscale, at a glance, or by someone who
+ * cannot tell the lane colours apart. That is the one thing a shape option is
+ * not allowed to switch off, so it is derived here rather than exposed.
+ */
+function CommitNode({
+  lane,
+  isMerge,
+  metrics,
+}: {
+  lane: number
+  isMerge: boolean
+  metrics: GraphMetrics
+}) {
+  const color = laneColor(lane)
+  const cx = laneX(lane, metrics.laneWidth)
+  const cy = ROW_HEIGHT / 2
+  const r = isMerge ? metrics.nodeRadius + 1 : metrics.nodeRadius
+  const solid = metrics.shape === "ring" ? isMerge : !isMerge
+  const paint = {
+    fill: solid ? color : "var(--q-bg)",
+    stroke: color,
+    strokeWidth: metrics.nodeStroke,
+  }
+
+  if (metrics.shape === "square") {
+    return <rect x={cx - r} y={cy - r} width={r * 2} height={r * 2} rx={1} {...paint} />
+  }
+  if (metrics.shape === "diamond") {
+    const d = `M ${cx} ${cy - r} L ${cx + r} ${cy} L ${cx} ${cy + r} L ${cx - r} ${cy} Z`
+    return <path d={d} {...paint} />
+  }
+  return <circle cx={cx} cy={cy} r={r} {...paint} />
+}
+
 /** A row's slice of the graph. Decorative — the row's text carries the meaning. */
 function CommitGraphLanes({
   row,
   lanes,
   namespace,
+  metrics,
 }: {
   row: CommitGraphRow
   lanes: number
   namespace: string
+  metrics: GraphMetrics
 }) {
-  const width = Math.max(lanes, 1) * LANE_WIDTH
+  const width = Math.max(lanes, 1) * metrics.laneWidth
   const blended = row.edges.filter(isBlended)
   return (
     <svg
+      data-slot="commit-graph-lanes"
       aria-hidden="true"
       focusable="false"
       width={width}
@@ -462,44 +538,30 @@ function CommitGraphLanes({
     >
       {blended.length > 0 && (
         <defs>
-          {blended.map((edge) => {
-            const vector = gradientVector(edge)
-            return (
-              <linearGradient
-                key={edgeKey(edge)}
-                id={`${namespace}-${edgeKey(edge)}`}
-                gradientUnits="userSpaceOnUse"
-                {...vector}
-              >
-                <stop offset="0%" stopColor={laneColor(edge.fromLane)} />
-                <stop offset="100%" stopColor={laneColor(edge.toLane)} />
-              </linearGradient>
-            )
-          })}
+          {blended.map((edge) => (
+            <linearGradient
+              key={edgeKey(edge)}
+              id={`${namespace}-${edgeKey(edge)}`}
+              gradientUnits="userSpaceOnUse"
+              {...gradientVector(edge, metrics.laneWidth)}
+            >
+              <stop offset="0%" stopColor={laneColor(edge.fromLane)} />
+              <stop offset="100%" stopColor={laneColor(edge.toLane)} />
+            </linearGradient>
+          ))}
         </defs>
       )}
       {row.edges.map((edge) => (
         <path
           key={edgeKey(edge)}
-          d={edgePath(edge)}
+          d={edgePath(edge, metrics.laneWidth)}
           fill="none"
-          stroke={
-            isBlended(edge) ? `url(#${namespace}-${edgeKey(edge)})` : laneColor(edge.toLane)
-          }
-          strokeWidth={1.5}
+          stroke={isBlended(edge) ? `url(#${namespace}-${edgeKey(edge)})` : laneColor(edge.toLane)}
+          strokeWidth={metrics.lineWidth}
           strokeLinecap="round"
         />
       ))}
-      {/* A merge is a hollow dot, so the graph does not rely on colour alone to
-          say which commits joined two histories. */}
-      <circle
-        cx={laneX(row.lane)}
-        cy={ROW_HEIGHT / 2}
-        r={row.isMerge ? DOT_RADIUS + 1 : DOT_RADIUS}
-        fill={row.isMerge ? "var(--q-bg)" : laneColor(row.lane)}
-        stroke={laneColor(row.lane)}
-        strokeWidth={2}
-      />
+      <CommitNode lane={row.lane} isMerge={row.isMerge} metrics={metrics} />
     </svg>
   )
 }
@@ -564,6 +626,25 @@ export interface CommitGraphProps extends Omit<React.ComponentProps<"div">, "onS
   relativeDates?: boolean
   /** Shown in place of the list when `commits` is empty. */
   emptyState?: React.ReactNode
+  /**
+   * Stroke weight of the lane lines. `hairline` suits a dense history where the
+   * graph should stay background; `bold` suits a graph that is the point of the
+   * screen.
+   */
+  lineWeight?: CommitGraphLineWeight
+  /** Size of a commit marker. */
+  nodeSize?: CommitGraphNodeSize
+  /**
+   * Shape of a commit marker. A merge is always drawn as the inverse of this and
+   * a hair larger — that is not switchable, because it is the only thing telling
+   * a merge apart that does not rely on colour.
+   */
+  nodeShape?: CommitGraphNodeShape
+  /**
+   * Horizontal distance between lanes. `tight` keeps a wide history narrow;
+   * `wide` gives the curves more room to read.
+   */
+  laneWidth?: CommitGraphLaneWidth
   "aria-label"?: string
 }
 
@@ -580,6 +661,10 @@ export function CommitGraph({
   shortShaLength = 7,
   relativeDates = false,
   emptyState = "No commits to show.",
+  lineWeight = "regular",
+  nodeSize = "md",
+  nodeShape = "dot",
+  laneWidth = "regular",
   className,
   "aria-label": ariaLabel = "Commit history",
   ...props
@@ -588,6 +673,16 @@ export function CommitGraph({
   // SVG ids are document-global, and a page can hold several of these. The
   // colons React puts in a useId are not safe inside a url(#…) reference.
   const namespace = `commit-graph-${useId().replace(/:/g, "")}`
+  const lineWidth = LINE_WEIGHTS[lineWeight]
+  const metrics: GraphMetrics = {
+    laneWidth: LANE_WIDTHS[laneWidth],
+    lineWidth,
+    nodeRadius: NODE_RADII[nodeSize],
+    // The marker's outline tracks the lines it sits on, so a hairline graph does
+    // not get a dot ringed twice as heavily as its own branch.
+    nodeStroke: lineWidth + 0.5,
+    shape: nodeShape,
+  }
   const isSelectable = onSelectCommit !== undefined || selectedSha !== undefined
 
   return (
@@ -646,6 +741,7 @@ export function CommitGraph({
                 row={row}
                 lanes={lanes}
                 namespace={`${namespace}-${commit.sha}`}
+                metrics={metrics}
               />
               <Snippet
                 text={shortSha}
