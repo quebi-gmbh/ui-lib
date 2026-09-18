@@ -142,6 +142,7 @@
                   "Row",
                   "SearchField",
                   "Select",
+                  "SelectStateContext",
                   "SelectValue",
                   "Separator",
                   "Slider",

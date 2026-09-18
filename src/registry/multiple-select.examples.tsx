@@ -27,7 +27,7 @@ export const multipleSelectExamples: ComponentExample[] = [
   {
     title: "Default",
     description:
-      "Pick several options; each becomes a removable tag. Use the + button to open the searchable list.",
+      "Pick several options; each becomes a removable tag. Clicking the field — or tabbing into it, or pressing ArrowDown on it — opens the searchable list; the + button is the affordance, not the only way in.",
     render: () => (
       <div className="w-80">
         <MultipleSelect aria-label="Frameworks" placeholder="Select frameworks">
