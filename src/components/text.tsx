@@ -20,8 +20,13 @@ export function Text({ className, ...props }: React.ComponentPropsWithoutRef<"p"
   )
 }
 
+/**
+ * What a TextLink adds to a `Link`, which is only the icon layout: the brand
+ * colour and the resting underline are the Link's own base styles now, so the
+ * prose link and every other link cannot drift apart.
+ */
 export const textLinkStyles = tv({
-  base: "text-quebi-brand-text underline decoration-quebi-brand-text/40 transition-colors duration-150 ease-out hover:text-quebi-brand-text-hover hover:decoration-quebi-brand-text-hover has-data-[slot=icon]:inline-flex has-data-[slot=icon]:items-center has-data-[slot=icon]:gap-x-1",
+  base: "has-data-[slot=icon]:inline-flex has-data-[slot=icon]:items-center has-data-[slot=icon]:gap-x-1",
 })
 
 export function TextLink({ className, ...props }: React.ComponentPropsWithoutRef<typeof Link>) {

@@ -3,6 +3,7 @@ import { FileCode } from "lucide-react"
 import { Badge } from "@/components/badge"
 import { Card, CardDescription, CardTitle } from "@/components/card"
 import { CodeBlock } from "@/site/code-block"
+import { ProseLink } from "@/site/prose-link"
 import {
   DescriptionDetails,
   DescriptionList,
@@ -73,12 +74,9 @@ export default function RulesEnforcement() {
           <DescriptionDetails>
             {builtIns.map((rule) => (
               <div key={rule.id}>
-                <Link
-                  to={`/rules/${rule.id}`}
-                  className="font-medium text-quebi-brand-text transition-colors duration-200 hover:text-quebi-brand-text-hover"
-                >
+                <ProseLink to={`/rules/${rule.id}`}>
                   {rule.navTitle ?? rule.title}
-                </Link>{" "}
+                </ProseLink>{" "}
                 <span className="text-quebi-fg-subtle">
                   {rule.enforcement.biome?.via === "rule" ? rule.enforcement.biome.rule : ""}
                 </span>
@@ -95,12 +93,9 @@ export default function RulesEnforcement() {
             <ul className="space-y-2">
               {plugins.map((rule) => (
                 <li key={rule.id}>
-                  <Link
-                    to={`/rules/${rule.id}`}
-                    className="font-medium text-quebi-brand-text transition-colors duration-200 hover:text-quebi-brand-text-hover"
-                  >
+                  <ProseLink to={`/rules/${rule.id}`}>
                     {rule.navTitle ?? rule.title}
-                  </Link>{" "}
+                  </ProseLink>{" "}
                   <UiLink
                     href={`/api/rules/plugins/${rule.id}.grit`}
                     className="inline-flex items-center gap-1 text-xs"

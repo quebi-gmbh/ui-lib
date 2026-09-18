@@ -3,6 +3,7 @@ import { Check, ChevronRight, X } from "lucide-react"
 import { Badge } from "@/components/badge"
 import { Card, CardTitle } from "@/components/card"
 import { CodeBlock } from "@/site/code-block"
+import { ProseLink } from "@/site/prose-link"
 import {
   DescriptionDetails,
   DescriptionList,
@@ -121,12 +122,9 @@ export default function RuleDetail() {
                     {replacement.use.map((target) => (
                       <li key={`${target.from}-${target.name}`}>
                         {target.slug ? (
-                          <Link
-                            to={`/components/${target.slug}`}
-                            className="font-medium text-quebi-brand-text transition-colors duration-200 hover:text-quebi-brand-text-hover"
-                          >
+                          <ProseLink to={`/components/${target.slug}`}>
                             {target.name}
-                          </Link>
+                          </ProseLink>
                         ) : (
                           <span className="font-medium text-quebi-fg">{target.name}</span>
                         )}{" "}
@@ -255,12 +253,9 @@ export default function RuleDetail() {
           </div>
           <p className="mt-6 text-sm leading-relaxed text-quebi-fg-muted">
             Enforcing more than this one rule?{" "}
-            <Link
-              to="/rules/enforcement"
-              className="font-medium text-quebi-brand-text transition-colors duration-200 hover:text-quebi-brand-text-hover"
-            >
+            <ProseLink to="/rules/enforcement">
               Take the whole config
-            </Link>{" "}
+            </ProseLink>{" "}
             instead of collecting snippets.
           </p>
         </section>

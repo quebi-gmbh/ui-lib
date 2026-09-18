@@ -34,11 +34,12 @@ export function Header() {
           >
             Rules
           </NavLink>
+          {/* Nav, not prose: no resting underline, matching the NavLinks beside it. */}
           <UiLink
             href="https://github.com/quebi-gmbh"
             target="_blank"
             rel="noreferrer"
-            className="text-quebi-fg-muted transition-colors duration-200 hover:text-quebi-fg"
+            className="no-underline text-quebi-fg-muted transition-colors duration-200 hover:text-quebi-fg"
           >
             GitHub
           </UiLink>
