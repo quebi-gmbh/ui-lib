@@ -20,6 +20,7 @@ import {
   type CommitGraphEdge,
   type CommitGraphRow,
   LANE_COLORS,
+  edgePath,
   laneColor,
   layoutCommitGraph,
 } from "../src/components/commit-graph"
@@ -51,13 +52,13 @@ describe("a linear history", () => {
   test("the newest commit has no incoming edge and one leaving for its parent", () => {
     expect(incoming(rows[0])).toEqual([])
     expect(outgoing(rows[0])).toEqual([
-      { fromLane: 0, toLane: 0, from: "node", to: "bottom", colorLane: 0 },
+      { fromLane: 0, toLane: 0, from: "node", to: "bottom", bend: "none" },
     ])
   })
 
   test("a middle commit joins the line above to the line below", () => {
     expect(incoming(rows[1])).toEqual([
-      { fromLane: 0, toLane: 0, from: "top", to: "node", colorLane: 0 },
+      { fromLane: 0, toLane: 0, from: "top", to: "node", bend: "none" },
     ])
     expect(outgoing(rows[1])).toHaveLength(1)
   })
@@ -92,8 +93,8 @@ describe("a merge", () => {
   test("draws one edge leaving for each parent", () => {
     expect(at(rows, "m9").isMerge).toBe(true)
     expect(outgoing(at(rows, "m9"))).toEqual([
-      { fromLane: 0, toLane: 0, from: "node", to: "bottom", colorLane: 0 },
-      { fromLane: 0, toLane: 1, from: "node", to: "bottom", colorLane: 1 },
+      { fromLane: 0, toLane: 0, from: "node", to: "bottom", bend: "none" },
+      { fromLane: 0, toLane: 1, from: "node", to: "bottom", bend: "bottom" },
     ])
   })
 
@@ -124,14 +125,18 @@ describe("a branch point", () => {
   test("the second child curves back into the lane that already leads to the parent", () => {
     expect(at(rows, "topic1").lane).toBe(1)
     expect(outgoing(at(rows, "topic1"))).toEqual([
-      { fromLane: 1, toLane: 0, from: "node", to: "bottom", colorLane: 0 },
+      { fromLane: 1, toLane: 0, from: "node", to: "bottom", bend: "bottom" },
     ])
     expect(lanes).toBe(2)
   })
 
-  test("the shared parent is reached by exactly one line, not two", () => {
+  test("the joining branch reaches the parent's dot, not just its lane", () => {
+    // The bend is split across the rule, so the half that lands is a real edge
+    // in the parent's own row: the trunk arrives straight, and topic1's line
+    // arrives beside it as the second half of the same S.
     expect(incoming(at(rows, "base"))).toEqual([
-      { fromLane: 0, toLane: 0, from: "top", to: "node", colorLane: 0 },
+      { fromLane: 0, toLane: 0, from: "top", to: "node", bend: "none" },
+      { fromLane: 1, toLane: 0, from: "top", to: "node", bend: "top" },
     ])
     expect(throughLanes(at(rows, "base"))).toEqual([])
   })
@@ -179,20 +184,35 @@ describe("an octopus merge", () => {
   test("every parent is reached by the lane the merge sent it to", () => {
     expect(at(rows, "p2").lane).toBe(1)
     expect(at(rows, "p3").lane).toBe(2)
+    // The spawn's second half lands on p2's own dot, so the line the merge sent
+    // to lane 1 is the same line that arrives here — one S, two rows.
     expect(incoming(at(rows, "p2"))).toEqual([
-      { fromLane: 1, toLane: 1, from: "top", to: "node", colorLane: 1 },
+      { fromLane: 0, toLane: 1, from: "top", to: "node", bend: "top" },
     ])
   })
 
   test("the three branches converge on the shared parent", () => {
     // p2 and p3 both fold back into lane 0, which is where p1 is waiting.
     expect(outgoing(at(rows, "p2"))).toEqual([
-      { fromLane: 1, toLane: 0, from: "node", to: "bottom", colorLane: 0 },
+      { fromLane: 1, toLane: 0, from: "node", to: "bottom", bend: "bottom" },
     ])
     expect(outgoing(at(rows, "p3"))).toEqual([
-      { fromLane: 2, toLane: 0, from: "node", to: "bottom", colorLane: 0 },
+      { fromLane: 2, toLane: 0, from: "node", to: "bottom", bend: "bottom" },
     ])
-    expect(incoming(at(rows, "p1"))).toHaveLength(1)
+    // Each join lands in the row *below* the one that left, wherever that is:
+    // p2 joins at the p2/p3 rule, so its landing half is drawn in p3's band and
+    // meets the trunk there; p3's lands on p1's dot.
+    expect(incoming(at(rows, "p3"))).toContainEqual({
+      fromLane: 1,
+      toLane: 0,
+      from: "top",
+      to: "node",
+      bend: "top",
+    })
+    expect(incoming(at(rows, "p1"))).toEqual([
+      { fromLane: 0, toLane: 0, from: "top", to: "node", bend: "none" },
+      { fromLane: 2, toLane: 0, from: "top", to: "node", bend: "top" },
+    ])
   })
 
   test("a duplicated parent is drawn once", () => {
@@ -206,7 +226,7 @@ describe("a parent outside the window", () => {
     const { rows } = layoutCommitGraph([commit("only", "notInWindow")])
     expect(rows[0].isRoot).toBe(false)
     expect(outgoing(rows[0])).toEqual([
-      { fromLane: 0, toLane: 0, from: "node", to: "bottom", colorLane: 0 },
+      { fromLane: 0, toLane: 0, from: "node", to: "bottom", bend: "none" },
     ])
   })
 
@@ -241,5 +261,78 @@ describe("the lane palette", () => {
 describe("an empty window", () => {
   test("lays out nothing and asks for no lanes", () => {
     expect(layoutCommitGraph([])).toEqual({ rows: [], lanes: 0 })
+  })
+})
+
+describe("a lane change is one curve, centred on the rule between two rows", () => {
+  // The spawn in `a merge`: the merge commit on lane 0 sends its second parent
+  // to lane 1, so the row above draws the first half and the row below the
+  // second. This is the geometry the model exists for — the halves are cut from
+  // one cubic, so what has to hold is that they meet, and meet smoothly.
+  const leaving: CommitGraphEdge = {
+    fromLane: 0,
+    toLane: 1,
+    from: "node",
+    to: "bottom",
+    bend: "bottom",
+  }
+  const arriving: CommitGraphEdge = {
+    fromLane: 0,
+    toLane: 1,
+    from: "top",
+    to: "node",
+    bend: "top",
+  }
+
+  /** Every coordinate in a path, in order. */
+  const numbers = (d: string) => (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number)
+  const first = (d: string) => numbers(d).slice(0, 2)
+  const last = (d: string) => numbers(d).slice(-2)
+  /** The control point nearest the end, which is what fixes the tangent there. */
+  const lastControl = (d: string) => numbers(d).slice(-4, -2)
+  const firstControl = (d: string) => numbers(d).slice(2, 4)
+
+  test("the halves meet exactly on the rule, halfway between the two lanes", () => {
+    const [outX, outY] = last(edgePath(leaving))
+    const [inX, inY] = first(edgePath(arriving))
+    expect(outX).toBe(inX)
+    // The rule: the bottom of one band is the top of the next.
+    expect(outY).toBe(56)
+    expect(inY).toBe(0)
+    // Halfway across, so the curve is centred on the rule rather than finishing
+    // above it. Lane 0 draws at x=8 and lane 1 at x=24.
+    expect(outX).toBe(16)
+  })
+
+  test("they meet smoothly — same tangent, so the join is invisible", () => {
+    const [cx, cy] = lastControl(edgePath(leaving))
+    const [ex, ey] = last(edgePath(leaving))
+    const [sx, sy] = first(edgePath(arriving))
+    const [dx, dy] = firstControl(edgePath(arriving))
+    expect([ex - cx, ey - cy]).toEqual([dx - sx, dy - sy])
+  })
+
+  test("a straight line is a straight line, not a curve with equal ends", () => {
+    const straight = edgePath({
+      fromLane: 1,
+      toLane: 1,
+      from: "top",
+      to: "bottom",
+      bend: "none",
+    })
+    expect(straight).toBe("M 24 0 L 24 56")
+  })
+
+  test("the arriving half is back on its own lane by the dot line, then runs straight", () => {
+    const passing = edgePath({
+      fromLane: 0,
+      toLane: 1,
+      from: "top",
+      to: "bottom",
+      bend: "top",
+    })
+    // …ends on lane 1 at the bottom, having reached it at the dot line.
+    expect(passing.endsWith("L 24 56")).toBe(true)
+    expect(passing).toContain("24 28")
   })
 })

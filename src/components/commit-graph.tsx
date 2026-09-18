@@ -1,6 +1,7 @@
 "use client"
 
 import { Cloud, GitBranch, GitCommitHorizontal, Tag } from "lucide-react"
+import { useId } from "react"
 import { Avatar } from "@/components/avatar"
 import { Badge } from "@/components/badge"
 import { Button } from "@/components/button"
@@ -40,7 +41,7 @@ import { cn } from "@/lib/utils"
  * keeps its colour for as long as it is alive and a reused lane picks up the
  * colour of its index rather than of its history. The hues are quebi semantic
  * tokens, which are re-declared per theme, so the graph reads in light and dark
- * without a second palette — see `LANE_COLOR_TOKENS` for why that rules out the
+ * without a second palette — see `LANE_COLORS` for why that rules out the
  * brand teal, of all colours.
  */
 
@@ -69,24 +70,48 @@ export interface CommitGraphCommit {
  * dot at the vertical middle. An edge therefore has two endpoints, each of which
  * is either a lane on the band's boundary or the dot itself:
  *
- * - `top` → `bottom`: a lane passing through this row untouched.
+ * - `top` → `bottom`: a lane passing through this row.
  * - `top` → `node`: a child's line arriving at this commit (the commit's own
  *   lane, or a second lane merging into it).
  * - `node` → `bottom`: a line leaving for one of this commit's parents. When
  *   that parent is outside the window the line simply keeps going, row after
  *   row, and runs off the bottom of the last one.
+ *
+ * ## Why a lane change is two half-edges and not one
+ *
+ * A line that changes lane is connecting two *dots*, and those dots are in
+ * different rows — so the transition between them belongs to the rule between
+ * the rows, not to either row's half. Drawn inside one half-band it is both
+ * asymmetric (all of the bend above the rule, nothing below) and too tight (the
+ * full sideways step crammed into half a row), and it arrives at the destination
+ * lane at the rule rather than at the dot it is actually going to.
+ *
+ * So one S-curve, spanning dot to dot and *centred on the rule*, is cut in half
+ * and each row draws its own side: the row above emits `bend: "bottom"` and the
+ * row below `bend: "top"`, both naming the same `fromLane` → `toLane` pair. The
+ * two halves are the exact halves of one cubic, so they meet at the rule with
+ * the same position and the same tangent, and each row still draws only within
+ * its own band.
  */
 export interface CommitGraphEdge {
-  /** Lane the edge occupies at the top of the band. */
+  /**
+   * Lane the whole transition starts on. Equal to `toLane` for a straight line.
+   * Note this is the lane of the *transition*, not necessarily of this half: a
+   * `bend: "top"` half enters the band midway between the two lanes.
+   */
   fromLane: number
-  /** Lane it occupies at the bottom. */
+  /** Lane the whole transition ends on. */
   toLane: number
   /** Where it starts: the top of the band, or this row's dot. */
   from: "top" | "node"
-  /** Where it ends: the bottom of the band, or this row's dot. */
+  /** Where it ends: the bottom of the band, or the dot line. */
   to: "bottom" | "node"
-  /** The lane whose colour the edge takes — the end away from the dot. */
-  colorLane: number
+  /**
+   * Which half of the band carries the lane change, if any. `"bottom"` is the
+   * first half of the S (leaving), `"top"` the second (arriving), `"none"` a
+   * straight line.
+   */
+  bend: "none" | "top" | "bottom"
 }
 
 /** One laid-out commit. */
@@ -106,6 +131,15 @@ export interface CommitGraphLayout {
   /** How many lanes the widest row uses — the graph column's width, in lanes. */
   lanes: number
 }
+
+/** The half of a lane change the row below still owes. */
+interface PendingBend {
+  fromLane: number
+  toLane: number
+  /** The destination lane already carried a line, so this arrives beside it. */
+  isJoin: boolean
+}
+
 
 /**
  * Assign lanes and edges to an already topologically ordered list of commits.
@@ -131,12 +165,21 @@ export interface CommitGraphLayout {
  * Nothing is ever re-indexed: a lane keeps its index for its whole life, which
  * is what makes a pass-through edge a straight vertical line and lets a row be
  * drawn from its own band alone.
+ *
+ * One invariant falls out of step 3 and is worth naming, because it decides what
+ * the drawing has to handle: since a lane is never opened for a parent another
+ * lane already awaits, **no two lanes ever hold the same sha**. So exactly one
+ * line can arrive at a commit from above, and two histories converge by one of
+ * them joining the other's lane from below — never by two lines meeting at the
+ * dot from above. `tests/commit-graph-layout.test.ts` pins that.
  */
 export function layoutCommitGraph(commits: CommitGraphCommit[]): CommitGraphLayout {
   // active[i] === the sha lane i is waiting for, or null when the lane is free.
   const active: (string | null)[] = []
   const rows: CommitGraphRow[] = []
   let lanes = 0
+  /** Second halves owed to the next row, queued as this row emits the first. */
+  let pending: PendingBend[] = []
 
   /** The leftmost free lane, growing the list only when there is none. */
   const claim = () => {
@@ -149,28 +192,54 @@ export function layoutCommitGraph(commits: CommitGraphCommit[]): CommitGraphLayo
   for (const commit of commits) {
     const incoming = active.slice()
 
-    const waiting: number[] = []
-    for (let i = 0; i < incoming.length; i++) {
-      if (incoming[i] === commit.sha) waiting.push(i)
-    }
+    // At most one lane can be waiting: a lane is never opened for a parent that
+    // another lane already awaits, so no two lanes ever hold the same sha.
+    const waiting = incoming.indexOf(commit.sha)
+    const lane = waiting !== -1 ? waiting : claim()
+    // The lane waiting for this commit terminates at it — the first parent
+    // re-claims it below. Freeing it before the parents are placed is what lets
+    // a lane be reused by one of this commit's own parents.
+    if (waiting !== -1) active[waiting] = null
 
-    const lane = waiting.length > 0 ? waiting[0] : claim()
-    // Every lane that was waiting for this commit terminates at it, the
-    // commit's own lane included — the first parent re-claims it below. Freeing
-    // them before the parents are placed is what lets a merged-away lane be
-    // reused by one of this commit's own parents.
-    for (const index of waiting) active[index] = null
+    // Halves the row above left unfinished. A spawn lands *on* the lane's own
+    // line and is folded into it; a join arrives beside a line that is already
+    // there, so it stays a second edge and the two meet on the dot line.
+    const landing = new Map<number, number>()
+    const joining: CommitGraphEdge[] = []
+    for (const half of pending) {
+      if (half.isJoin) {
+        joining.push({
+          fromLane: half.fromLane,
+          toLane: half.toLane,
+          from: "top",
+          to: "node",
+          bend: "top",
+        })
+      } else {
+        landing.set(half.toLane, half.fromLane)
+      }
+    }
+    pending = []
 
     const edges: CommitGraphEdge[] = []
     for (let i = 0; i < incoming.length; i++) {
       const expected = incoming[i]
       if (expected === null) continue
-      if (expected === commit.sha) {
-        edges.push({ fromLane: i, toLane: lane, from: "top", to: "node", colorLane: i })
-      } else {
-        edges.push({ fromLane: i, toLane: i, from: "top", to: "bottom", colorLane: i })
-      }
+      // A lane is never opened for a parent another lane already awaits, so no
+      // two lanes ever hold the same sha and `waiting` is at most one long —
+      // `i` here is the commit's own lane whenever it is waiting for it. Lines
+      // converge by joining a lane from below, never by arriving side by side
+      // from above, which is why there is no case for that here.
+      const landed = landing.get(i)
+      edges.push({
+        fromLane: landed ?? i,
+        toLane: i,
+        from: "top",
+        to: expected === commit.sha ? "node" : "bottom",
+        bend: landed === undefined ? "none" : "top",
+      })
     }
+    edges.push(...joining)
 
     // A commit listing the same parent twice is malformed, but it costs one Set
     // to draw it once rather than to draw two edges on top of each other.
@@ -182,18 +251,30 @@ export function layoutCommitGraph(commits: CommitGraphCommit[]): CommitGraphLayo
 
       const existing = active.indexOf(parent)
       let target: number
+      let isJoin: boolean
       if (existing !== -1) {
         // Another branch already leads to this parent: join it. This is the
         // branch-point case, seen from the younger of the two children.
         target = existing
+        isJoin = true
       } else if (k === 0) {
         target = lane
         active[lane] = parent
+        isJoin = false
       } else {
         target = claim()
         active[target] = parent
+        isJoin = false
       }
-      edges.push({ fromLane: lane, toLane: target, from: "node", to: "bottom", colorLane: target })
+
+      if (target === lane) {
+        edges.push({ fromLane: lane, toLane: lane, from: "node", to: "bottom", bend: "none" })
+      } else {
+        // Only the first half here; the row below draws the rest, so the bend is
+        // centred on the rule and the line ends on the parent's dot.
+        edges.push({ fromLane: lane, toLane: target, from: "node", to: "bottom", bend: "bottom" })
+        pending.push({ fromLane: lane, toLane: target, isJoin })
+      }
     }
 
     let width = lane + 1
@@ -277,24 +358,79 @@ function laneX(lane: number) {
 }
 
 /**
- * The `d` of one edge: a straight line when it stays in its lane, and a
- * symmetric cubic when it changes lane, so a branch leaves and rejoins with the
- * same curve.
+ * The `d` of one edge.
+ *
+ * A straight line stays in its lane. A lane change draws one half of a single
+ * cubic: the whole curve runs dot to dot, from `(fromLane, ROW_HEIGHT/2)` down
+ * to `(toLane, ROW_HEIGHT + ROW_HEIGHT/2)`, with vertical tangents at both ends
+ * and its midpoint exactly on the rule between the rows. Splitting that cubic at
+ * `t = 0.5` (de Casteljau) gives the two halves below — which is why the control
+ * points look asymmetric: they are the halves of a symmetric curve, not two
+ * curves that happen to meet.
+ *
+ * Both halves pass through `((x1 + x2) / 2, rule)` with the same tangent, so the
+ * join is invisible even though the two are drawn by different rows into
+ * different SVGs.
  */
-function edgePath(edge: CommitGraphEdge): string {
+export function edgePath(edge: CommitGraphEdge): string {
   const middle = ROW_HEIGHT / 2
   const x1 = laneX(edge.fromLane)
   const x2 = laneX(edge.toLane)
-  const y1 = edge.from === "top" ? 0 : middle
-  const y2 = edge.to === "bottom" ? ROW_HEIGHT : middle
-  if (x1 === x2) return `M ${x1} ${y1} L ${x2} ${y2}`
-  const bend = (y1 + y2) / 2
-  return `M ${x1} ${y1} C ${x1} ${bend} ${x2} ${bend} ${x2} ${y2}`
+  const crossing = (x1 + x2) / 2
+
+  if (edge.bend === "none" || x1 === x2) {
+    const y1 = edge.from === "top" ? 0 : middle
+    const y2 = edge.to === "bottom" ? ROW_HEIGHT : middle
+    return `M ${x1} ${y1} L ${x1} ${y2}`
+  }
+
+  if (edge.bend === "top") {
+    // Second half: in at the rule, on its lane again by the dot line.
+    const arrive = `M ${crossing} 0 C ${(crossing + x2) / 2} ${middle / 4} ${x2} ${middle / 2} ${x2} ${middle}`
+    return edge.to === "bottom" ? `${arrive} L ${x2} ${ROW_HEIGHT}` : arrive
+  }
+
+  // First half: straight down to the dot line if it started at the top, then out
+  // to the rule, halfway across to its destination.
+  const lead = edge.from === "top" ? `M ${x1} 0 L ${x1} ${middle}` : `M ${x1} ${middle}`
+  return `${lead} C ${x1} ${middle + middle / 2} ${(x1 + crossing) / 2} ${middle + (3 * middle) / 4} ${crossing} ${ROW_HEIGHT}`
 }
 
+/** True when the edge spans two lanes and so needs a colour ramp. */
+const isBlended = (edge: CommitGraphEdge) => edge.bend !== "none" && edge.fromLane !== edge.toLane
+
+/**
+ * The gradient vector for a blended edge: the *whole* transition, including the
+ * half drawn by the other row, so the ramp continues across the rule instead of
+ * restarting. The half outside this band is simply clipped, and `pad` holds the
+ * end colours along the straight runs beyond it.
+ */
+function gradientVector(edge: CommitGraphEdge) {
+  const middle = ROW_HEIGHT / 2
+  return {
+    x1: laneX(edge.fromLane),
+    x2: laneX(edge.toLane),
+    y1: edge.bend === "bottom" ? middle : middle - ROW_HEIGHT,
+    y2: edge.bend === "bottom" ? middle + ROW_HEIGHT : middle,
+  }
+}
+
+/** Unique within the document, which is what an SVG `url(#…)` reference needs. */
+const edgeKey = (edge: CommitGraphEdge) =>
+  `${edge.from}:${edge.fromLane}-${edge.to}:${edge.toLane}-${edge.bend}`
+
 /** A row's slice of the graph. Decorative — the row's text carries the meaning. */
-function CommitGraphLanes({ row, lanes }: { row: CommitGraphRow; lanes: number }) {
+function CommitGraphLanes({
+  row,
+  lanes,
+  namespace,
+}: {
+  row: CommitGraphRow
+  lanes: number
+  namespace: string
+}) {
   const width = Math.max(lanes, 1) * LANE_WIDTH
+  const blended = row.edges.filter(isBlended)
   return (
     <svg
       aria-hidden="true"
@@ -304,12 +440,32 @@ function CommitGraphLanes({ row, lanes }: { row: CommitGraphRow; lanes: number }
       viewBox={`0 0 ${width} ${ROW_HEIGHT}`}
       className="shrink-0 self-stretch"
     >
+      {blended.length > 0 && (
+        <defs>
+          {blended.map((edge) => {
+            const vector = gradientVector(edge)
+            return (
+              <linearGradient
+                key={edgeKey(edge)}
+                id={`${namespace}-${edgeKey(edge)}`}
+                gradientUnits="userSpaceOnUse"
+                {...vector}
+              >
+                <stop offset="0%" stopColor={laneColor(edge.fromLane)} />
+                <stop offset="100%" stopColor={laneColor(edge.toLane)} />
+              </linearGradient>
+            )
+          })}
+        </defs>
+      )}
       {row.edges.map((edge) => (
         <path
-          key={`${edge.from}:${edge.fromLane}-${edge.to}:${edge.toLane}`}
+          key={edgeKey(edge)}
           d={edgePath(edge)}
           fill="none"
-          stroke={laneColor(edge.colorLane)}
+          stroke={
+            isBlended(edge) ? `url(#${namespace}-${edgeKey(edge)})` : laneColor(edge.toLane)
+          }
           strokeWidth={1.5}
           strokeLinecap="round"
         />
@@ -409,6 +565,9 @@ export function CommitGraph({
   ...props
 }: CommitGraphProps) {
   const { rows, lanes } = layoutCommitGraph(commits)
+  // SVG ids are document-global, and a page can hold several of these. The
+  // colons React puts in a useId are not safe inside a url(#…) reference.
+  const namespace = `commit-graph-${useId().replace(/:/g, "")}`
   const isSelectable = onSelectCommit !== undefined || selectedSha !== undefined
 
   return (
@@ -463,7 +622,11 @@ export function CommitGraph({
               // rule still spans the full row rather than stopping at the text.
               className="relative h-14 gap-3 rounded-none border-0 py-0 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-quebi-line/10 last:after:hidden sm:gap-3"
             >
-              <CommitGraphLanes row={row} lanes={lanes} />
+              <CommitGraphLanes
+                row={row}
+                lanes={lanes}
+                namespace={`${namespace}-${commit.sha}`}
+              />
               <Snippet
                 text={shortSha}
                 symbol=""
