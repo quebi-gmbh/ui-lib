@@ -224,9 +224,15 @@ describe("the foreground tokens, on the bare page, in both themes", () => {
   // because they are used as small text far beyond Badge — every `text-quebi-*`
   // in the library resolves to one of them — and a token that is only legible
   // inside a badge is not fixed.
+  //
+  // `q-fg-subtle` was absent from this list until task #98, because it failed:
+  // 4.16:1 on dark and 2.79:1 on light, which is under even the 3:1 large text
+  // would be allowed. It is an ordinary member now, and the assertion that was
+  // interesting about it moved to the ramp below.
   const TEXT_TOKENS = [
     "q-fg",
     "q-fg-muted",
+    "q-fg-subtle",
     "q-brand-text",
     "q-brand-text-hover",
     "q-danger",
@@ -243,30 +249,41 @@ describe("the foreground tokens, on the bare page, in both themes", () => {
       expect(contrast(hex as string, values.get("q-bg") as string)).toBeGreaterThanOrEqual(4.5)
     })
   }
+})
 
-  /**
-   * `q-fg-subtle` is missing from that list, and it is missing because it fails.
-   *
-   * It is "captions / meta" — small text, so 4.5:1 — and it misses in *both*
-   * themes: 4.16:1 on dark, and 2.79:1 on light, which is under even the 3:1
-   * that large text would get. So unlike the eight intents above this is not a
-   * light-mode blind spot; light is just the worse half of it.
-   *
-   * Not fixed here. It is used ~80 times as the caption colour across the
-   * library, so re-tuning it is a visible change to the typographic hierarchy
-   * rather than a re-tune of a state colour, and it was not what this change was
-   * scoped to. Pinned so it is recorded rather than forgotten, and so it fails
-   * the day someone fixes it without updating this file.
-   */
-  test("`q-fg-subtle` still misses 4.5:1 in both themes — see the follow-up task", () => {
-    const [dark, light] = [THEMES[0].values, THEMES[1].values]
-    const on = (v: Map<string, string>) =>
-      contrast(v.get("q-fg-subtle") as string, v.get("q-bg") as string)
+/**
+ * `--q-fg` → `--q-fg-muted` → `--q-fg-subtle` is a three-rung ramp, and the two
+ * things it has to be are both testable.
+ *
+ * Legible: every rung is text, so 4.5:1 against the page — that is the block
+ * above. And *distinguishable*: three greys that cannot be told apart are one
+ * grey with two extra names, which is the failure mode re-tuning `subtle`
+ * upwards walks straight into. There is no WCAG number for the second one —
+ * 1.4.3 is about text against its background, not against other text — so the
+ * floor here is a design decision, recorded rather than derived: 1.4:1 between
+ * adjacent rungs, which the light theme could not have met without also moving
+ * `--q-fg-muted` down to gray-700.
+ *
+ * Monotonic is checked separately from the step size because they fail
+ * differently: a ramp that is out of order is a mistake, a ramp whose steps are
+ * too small is a re-tune that went one shade too far.
+ */
+describe("the three rungs of the type hierarchy stay three", () => {
+  const RAMP = ["q-fg", "q-fg-muted", "q-fg-subtle"] as const
+  const MIN_STEP = 1.4
 
-    expect(on(dark)).toBeLessThan(4.5)
-    expect(on(dark)).toBeGreaterThanOrEqual(3)
-    expect(on(light)).toBeLessThan(3)
-  })
+  for (const { name: theme, values } of THEMES) {
+    const ratios = RAMP.map((token) => contrast(values.get(token) as string, values.get("q-bg") as string))
+
+    test(`${theme}: the ramp descends — fg is the loudest, subtle the quietest`, () => {
+      expect(ratios).toEqual([...ratios].sort((a, b) => b - a))
+    })
+
+    test.each([0, 1])(`${theme}: rung %s and the one below it can be told apart`, (i) => {
+      const step = contrast(values.get(RAMP[i]) as string, values.get(RAMP[i + 1]) as string)
+      expect(step).toBeGreaterThanOrEqual(MIN_STEP)
+    })
+  }
 })
 
 describe("the `ai` intent, which is not fixed here", () => {

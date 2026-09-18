@@ -20,6 +20,13 @@
   --color-quebi-bg:           var(--q-bg);          /* page background */
   --color-quebi-fg:           var(--q-fg);          /* primary foreground */
   --color-quebi-fg-muted:     var(--q-fg-muted);    /* body copy */
+  /* Captions / meta — timestamps, helper text, table meta, placeholders. The
+     third rung of the type hierarchy, and the one that is set smallest, so it
+     is *text* at 4.5:1 and not a decoration at 3:1. Both values are off
+     Tailwind's ladder on purpose: gray-500 is 4.16:1 on the dark surface and
+     4.46:1 on the light one, so the step that looks right misses in both
+     themes and the next step up is already `--q-fg-muted`. See the theme
+     blocks below for the numbers. */
   --color-quebi-fg-subtle:    var(--q-fg-subtle);   /* captions / meta */
 
   /* Brand, as a *fill*: the mint a button, a ring or a tint is painted in.
@@ -99,8 +106,11 @@
 .dark {
   --q-bg:          #030712;
   --q-fg:          #ffffff;
-  --q-fg-muted:    #9ca3af;
-  --q-fg-subtle:   #6b7280;
+  --q-fg-muted:    #9ca3af;  /* gray-400 — 7.93:1 */
+  /* Between gray-500 and gray-400: 5.14:1, and still 4.61:1 once a
+     `bg-quebi-surface/[0.06]` card tint has lightened the backdrop under it.
+     gray-500 itself was 4.16:1 and 3.74:1 on that same tint. */
+  --q-fg-subtle:   #7a818e;
   --q-brand:       #2dd4a8;
   --q-brand-hover: #5eead4;
   /* On dark the fill value is already 10.64:1 as text, so the text token is the
@@ -122,8 +132,17 @@
 .light {
   --q-bg:          #f4f6f6;
   --q-fg:          #0b1120;
-  --q-fg-muted:    #4b5563;
-  --q-fg-subtle:   #8b95a5;
+  /* gray-700, one step down from the gray-600 this was. Body copy gets darker
+     for the same reason the state colours did in #94 — but here it is also what
+     makes room: `--q-fg-subtle` has to rise to 5.51:1 to be legible, and against
+     a 6.97:1 muted that left a 1.31 step between two greys that are read at
+     12px. At 9.50:1 the step is 1.72, close to the 2.50 the hierarchy had while
+     subtle was unreadable. */
+  --q-fg-muted:    #374151;
+  /* Between gray-600 and gray-500: 5.51:1, and 4.87:1 on the ink tint a card
+     paints. The old #8b95a5 was 2.79:1 — under even the 3:1 large text would be
+     allowed, so it failed on any reading of the threshold. */
+  --q-fg-subtle:   #5b6472;
   --q-brand:       #2dd4a8;  /* unchanged — mint fills stay dark-first */
   --q-brand-hover: #14b88f;
   /* teal-700/800. The mint darkened until it is readable *as text* on #f4f6f6
