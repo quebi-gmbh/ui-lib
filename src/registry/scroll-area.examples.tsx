@@ -19,7 +19,8 @@ const TAGS = [
 export const scrollAreaExamples: ComponentExample[] = [
   {
     title: "Vertical",
-    description: "A fixed-height container that scrolls vertically with a slim cyan scrollbar.",
+    description:
+      "A fixed-height container that scrolls vertically. Padding on the ScrollArea insets the content; the scrollbar still hugs the card edge.",
     render: () => (
       <div className="h-56 w-full max-w-sm rounded-quebi-md border border-quebi-line/10">
         <ScrollArea orientation="vertical" className="p-4">
@@ -73,7 +74,8 @@ export const scrollAreaExamples: ComponentExample[] = [
   },
   {
     title: "Scrollbar gutter",
-    description: "scrollbarGutter reserves space so content doesn't shift when the bar appears.",
+    description:
+      "scrollbarGutter sets scrollbar-gutter: stable, holding the bar's space whether or not it shows, so content never shifts.",
     render: () => (
       <div className="h-56 w-full max-w-sm rounded-quebi-md border border-quebi-line/10">
         <ScrollArea orientation="vertical" scrollbarGutter className="p-4">
