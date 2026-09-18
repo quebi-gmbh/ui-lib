@@ -4,7 +4,7 @@ export const calendarMeta: ComponentMeta = {
   slug: "calendar",
   name: "Calendar",
   description:
-    "An accessible month calendar with month and year selects in the header, built on react-aria-components and @internationalized/date. The selected day fills with brand teal and today is ringed — foundational for Range Calendar and Date Picker.",
+    "An accessible month calendar built on react-aria-components and @internationalized/date, with a choice of header: month and year selects (the default) or chevron steppers via the stepper variant. The selected day fills with brand teal and today is ringed — foundational for Range Calendar and Date Picker.",
   category: "Date & time",
   tags: ["calendar", "date", "datepicker", "form", "input", "interactive"],
 }

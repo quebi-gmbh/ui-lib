@@ -7,9 +7,13 @@ import {
   CalendarGridBody,
   type DateValue,
   RangeCalendar as RangeCalendarPrimitive,
-  type RangeCalendarProps,
+  type RangeCalendarProps as RangeCalendarPrimitiveProps,
 } from "react-aria-components"
-import { CalendarGridHeader, CalendarHeader } from "@/components/calendar"
+import {
+  CalendarGridHeader,
+  CalendarHeader,
+  type CalendarHeaderVariant,
+} from "@/components/calendar"
 import { cn } from "@/lib/utils"
 
 /**
@@ -19,19 +23,26 @@ import { cn } from "@/lib/utils"
  * @internationalized/date. Restyled to quebi tokens: the range endpoints fill
  * with brand teal, the days in-between get a faint brand wash, and today is
  * marked with a brand dot. Composes the shared header and grid header from the
- * Calendar component. Foundational — Date Picker and Date Range Picker depend
- * on it.
+ * Calendar component — including its `variant`, so a range calendar can carry
+ * the chevron-stepper header too. Foundational — Date Picker and Date Range
+ * Picker depend on it.
  */
+
+interface RangeCalendarProps<T extends DateValue> extends RangeCalendarPrimitiveProps<T> {
+  /** Header treatment — dropdowns (default) or chevron steppers. */
+  variant?: CalendarHeaderVariant
+}
 
 function RangeCalendar<T extends DateValue>({
   className,
   visibleDuration = { months: 1 },
+  variant,
   ...props
 }: RangeCalendarProps<T>) {
   const now = today(getLocalTimeZone())
   return (
     <RangeCalendarPrimitive data-slot="calendar" visibleDuration={visibleDuration} {...props}>
-      <CalendarHeader />
+      <CalendarHeader variant={variant} />
       <div className="flex snap-x items-start justify-stretch gap-6 overflow-auto sm:gap-10">
         {Array.from({ length: visibleDuration?.months ?? 1 }).map((_, index) => {
           const id = index + 1
@@ -89,4 +100,5 @@ function RangeCalendar<T extends DateValue>({
   )
 }
 
+export type { RangeCalendarProps }
 export { RangeCalendar }

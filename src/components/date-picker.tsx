@@ -10,7 +10,7 @@ import type {
   PopoverProps,
 } from "react-aria-components"
 import { Button, DatePicker as DatePickerPrimitive, Group } from "react-aria-components"
-import { Calendar } from "@/components/calendar"
+import { Calendar, type CalendarHeaderVariant } from "@/components/calendar"
 import { DateInput } from "@/components/date-field"
 import { ModalContent } from "@/components/modal"
 import { PopoverContent } from "@/components/popover"
@@ -80,6 +80,8 @@ export interface DatePickerOverlayProps extends Omit<PopoverProps, "children"> {
   range?: boolean
   visibleDuration?: DateDuration
   pageBehavior?: "visible" | "single"
+  /** Calendar header treatment — dropdowns (default) or chevron steppers. */
+  variant?: CalendarHeaderVariant
 }
 
 export function DatePickerOverlay({
@@ -87,6 +89,7 @@ export function DatePickerOverlay({
   pageBehavior = "visible",
   placement = "bottom",
   range,
+  variant,
   ...props
 }: DatePickerOverlayProps) {
   const isMobile = useIsMobile()
@@ -95,9 +98,13 @@ export function DatePickerOverlay({
     <ModalContent aria-label="Date picker" closeButton={false}>
       <div className="flex justify-center p-6">
         {range ? (
-          <RangeCalendar pageBehavior={pageBehavior} visibleDuration={visibleDuration} />
+          <RangeCalendar
+            pageBehavior={pageBehavior}
+            visibleDuration={visibleDuration}
+            variant={variant}
+          />
         ) : (
-          <Calendar />
+          <Calendar variant={variant} />
         )}
       </div>
     </ModalContent>
@@ -114,9 +121,13 @@ export function DatePickerOverlay({
       {...props}
     >
       {range ? (
-        <RangeCalendar pageBehavior={pageBehavior} visibleDuration={visibleDuration} />
+        <RangeCalendar
+          pageBehavior={pageBehavior}
+          visibleDuration={visibleDuration}
+          variant={variant}
+        />
       ) : (
-        <Calendar />
+        <Calendar variant={variant} />
       )}
     </PopoverContent>
   )
