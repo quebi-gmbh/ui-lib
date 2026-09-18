@@ -39,6 +39,12 @@ function toDefaultValue(value: unknown): CalendarDate | undefined {
  * id, form, required, default, and validity from the field metadata and renders
  * inline errors. The control submits an ISO `YYYY-MM-DD` string via the hidden
  * input react-aria renders for it.
+ *
+ * Every `DateField` prop the field metadata does not own passes straight
+ * through — `granularity`, `minValue` / `maxValue`, and
+ * `shouldForceLeadingZeros`, which pads the day and month to two digits
+ * (`30.06.2026` rather than the `30.6.2026` `de-DE` asks for). The wire value
+ * is the ISO string either way; padding is display only.
  */
 export function ConformDateField({
   field,

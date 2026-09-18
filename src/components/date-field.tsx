@@ -16,6 +16,14 @@ import { cn } from "@/lib/utils"
  * (day / month / year) is an individually editable segment. The wrapper uses
  * the quebi input chrome (translucent fill, cyan-tinted border, brand-teal
  * focus ring); the focused segment lights up with a brand-teal wash.
+ *
+ * Segment padding follows the locale, which is why `de-DE` renders `30.6.2026`
+ * and not `30.06.2026`. Pass `shouldForceLeadingZeros` for the padded form —
+ * it applies to the day, month and hour segments; the year is never padded.
+ * Left unset the locale decides, which is the default on purpose: the same
+ * prop exists on `DatePicker`, `DateRangePicker`, `TimeField` and
+ * `ConformDateField`, so padding is a per-field decision rather than one the
+ * library takes on everyone's behalf.
  */
 export function DateField<T extends DateValue>({ className, ...props }: DateFieldProps<T>) {
   return (

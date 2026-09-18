@@ -28,6 +28,18 @@ export const dateFieldExamples: ComponentExample[] = [
     ),
   },
   {
+    title: "Two digits",
+    description:
+      "shouldForceLeadingZeros pads the day and month segments to two digits (30.06.2026 rather than the 30.6.2026 de-DE asks for). The year is unaffected.",
+    render: () => (
+      <DateField defaultValue={parseDate("2026-06-30")} shouldForceLeadingZeros>
+        <Label>Start date</Label>
+        <DateInput />
+        <Description>Padded regardless of what the locale would do.</Description>
+      </DateField>
+    ),
+  },
+  {
     title: "Invalid",
     description: "Validation state surfaces a red border and error message.",
     render: () => (

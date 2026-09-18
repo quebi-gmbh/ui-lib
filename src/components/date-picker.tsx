@@ -26,6 +26,11 @@ import { cn } from "@/lib/utils"
  * holding the Calendar (or a Modal on mobile). Composes
  * @/components/{calendar,range-calendar,modal,popover,date-field}. Foundational
  * — the Conform date-picker / date-range-picker variants depend on it.
+ *
+ * The trigger's segments are a `DateInput`, so they format the way `DateField`
+ * does: locale-derived, `30.6.2026` under `de-DE`. `shouldForceLeadingZeros`
+ * pads the day and month to two digits (`30.06.2026`); the calendar overlay is
+ * unaffected either way.
  */
 
 const MOBILE_BREAKPOINT = 768

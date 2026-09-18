@@ -16,6 +16,11 @@ import { cn } from "@/lib/utils"
  * cyan-tinted border that lifts to brand teal on focus, plus the quebi teal
  * ring. Each segment highlights with the brand tint while editing; invalid
  * uses red and disabled dims the field.
+ *
+ * `shouldForceLeadingZeros` pads the hour segment to two digits — the same prop
+ * `DateField` takes, doing the one thing a time has to pad. Under a locale
+ * whose clock already pads it changes nothing (`de-DE` renders `09:05` either
+ * way); under `en-US` it turns `9:05 AM` into `09:05 AM`.
  */
 export function TimeField<T extends TimeValue>({ className, ...props }: TimeFieldProps<T>) {
   return (
