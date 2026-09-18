@@ -128,6 +128,12 @@ export const localScopes: LocalScope[] = [
       "A fixture has no server to validate on. The rule reads a useForm call with no `lastResult` as \"nothing on the server parses this schema\", which is the right reading of an app and a false one of a test: the value it asks for is what a route action returned, and a test that mounts a component has no route. Quieting it by passing a hand-built lastResult would be the worse outcome — the fixture would then assert a server round-trip it never made. Its companion, gate-last-result-on-idle-navigation, needs no entry and does not get one: that rule fires on a lastResult that is present and ungated, so a fixture without one never reaches it, and a fixture that grows one still has to gate it.",
   },
   {
+    includes: ["src/registry/og-scene.tsx"],
+    rules: ["validate-on-the-server-with-the-same-schema"],
+    reason:
+      "One file, one rule, for the same reason the tests entry exists: an OG scene is a still life photographed by scripts/screenshot-og.ts, and there is no route action behind it to return a lastResult. Every conform-* scene needs field metadata, which only useForm can produce, so OgForm calls it once here rather than thirty-two times — and this is where that concession is written down. Note that the check does not currently fire on the call anyway: its pattern matches `useForm($options)` and the call here is `useForm<T>(options)`, which the pattern misses. That is an accident, not the argument, and an entry that states the argument is what should survive the accident being fixed.",
+  },
+  {
     includes: ["tests/conform-binding.test.tsx"],
     rules: ["seed-toggles-with-default-selected"],
     reason:
