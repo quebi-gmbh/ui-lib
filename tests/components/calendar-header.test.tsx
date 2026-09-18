@@ -1,12 +1,16 @@
 /**
  * The Calendar's two headers.
  *
- * `variant="select"` is the one that has always been there: month and year
- * dropdowns on the left, and a single prev/next pair on the right that is
+ * `variant="select"` is the default: one control naming the visible month and
+ * year, opening the library's own Month Picker in a popover (task #160 — it was
+ * a pair of dropdowns before), and a single prev/next pair on the right that is
  * react-aria's own (`slot="previous"` / `slot="next"`, disabled for free from
  * `isPreviousVisibleRangeInvalid`). `variant="stepper"` replaces both halves
  * with `‹ Sep ›` and `‹ 2026 ›` and drops the paging pair, or the month would
  * carry two sets of chevrons meaning slightly different things. Task #120.
+ *
+ * What the picker itself offers is `calendar.test.tsx`; this file is about
+ * which header you get and what it is made of.
  *
  * What is worth pinning is the part react-aria does not give away. A step is
  * `setFocusedDate`, and react-aria clamps every focus move to
@@ -35,24 +39,38 @@ const visibleRange = () => document.querySelector("h2")?.textContent ?? ""
 const chevron = (label: string) => screen.getByRole("button", { name: label })
 
 /**
- * The Select triggers carry `aria-label` but are also `aria-labelledby` their
- * own value, so their accessible name is "Jun Month" and a role query by name
- * does not find them. The attribute is the stable thing to ask for.
+ * The picker trigger's accessible name is the month and year it is showing, so
+ * there is nothing constant to query it by. `data-slot` is the stable handle.
  */
-const dropdown = (label: string) => document.querySelector(`button[aria-label="${label}"]`)
+const monthYearTrigger = () => document.querySelector('[data-slot="calendar-month-year"]')
 
 describe("select header (default)", () => {
-  test("renders the month and year dropdowns and the paging pair", () => {
+  test("renders the month/year picker trigger and the paging pair", () => {
     const { container } = render(<Calendar aria-label="Event date" defaultValue={JUNE} />)
 
-    expect(dropdown("Month")).toBeInTheDocument()
-    expect(dropdown("Year")).toBeInTheDocument()
+    expect(monthYearTrigger()).toBeInTheDocument()
+    expect(monthYearTrigger()?.textContent).toContain("June")
     expect(container.querySelector('[slot="previous"]')).toBeInTheDocument()
     expect(container.querySelector('[slot="next"]')).toBeInTheDocument()
     expect(container.querySelector('[data-slot="calendar-header"]')).toHaveAttribute(
       "data-variant",
       "select",
     )
+  })
+
+  test("opens the Month Picker grid rather than a list of months", async () => {
+    const user = userEvent.setup()
+    render(<Calendar aria-label="Event date" defaultValue={JUNE} />)
+
+    expect(screen.queryByRole("option")).toBeNull()
+
+    // The trigger's accessible name is its own text — the month and year it
+    // will open on — which is more use to a screen reader than a constant.
+    await user.click(screen.getByRole("button", { name: "June 2026" }))
+
+    // Twelve cells and a year pager, not two flat lists.
+    expect(screen.getAllByRole("option")).toHaveLength(12)
+    expect(screen.getByRole("button", { name: "Next year" })).toBeInTheDocument()
   })
 
   test("is what a Calendar with no variant gets", () => {
@@ -72,8 +90,7 @@ describe("stepper header", () => {
     for (const label of ["Previous month", "Next month", "Previous year", "Next year"]) {
       expect(chevron(label)).toBeInTheDocument()
     }
-    expect(dropdown("Month")).not.toBeInTheDocument()
-    expect(dropdown("Year")).not.toBeInTheDocument()
+    expect(monthYearTrigger()).not.toBeInTheDocument()
     expect(container.querySelector('[slot="previous"]')).not.toBeInTheDocument()
     expect(container.querySelector('[slot="next"]')).not.toBeInTheDocument()
   })

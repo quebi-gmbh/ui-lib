@@ -19,7 +19,7 @@
  * with the runtime default, and a Monday-first and a Sunday-first machine would
  * disagree about which seven days are a row.
  */
-import { CalendarDate } from "@internationalized/date"
+import { CalendarDate, HebrewCalendar, toCalendar } from "@internationalized/date"
 import { describe, expect, test } from "bun:test"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
@@ -135,6 +135,23 @@ describe("MonthPicker", () => {
     expect(optionNames()[0]).toBe("January 2025")
     // Paging is not selecting: the value has not moved.
     expect(screen.queryByRole("option", { selected: true })).toBeNull()
+  })
+
+  test("counts in the calendar system it is handed", async () => {
+    // Gregorian by default — a standalone picker has no state above it — but
+    // `Calendar`'s header passes `state.focusedDate.calendar` down, and without
+    // that a Hebrew year's thirteenth month would be missing from a header that
+    // names it. 5784 is a leap year in the Hebrew calendar: thirteen months.
+    inLocale(
+      "he-IL-u-ca-hebrew",
+      <MonthPicker
+        aria-label="Month"
+        calendar={new HebrewCalendar()}
+        defaultValue={toCalendar(new CalendarDate(2024, 1, 15), new HebrewCalendar())}
+      />,
+    )
+
+    expect(optionNames()).toHaveLength(13)
   })
 
   test("emits the first of the month, clamped into the bounds", async () => {

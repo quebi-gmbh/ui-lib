@@ -1,10 +1,14 @@
 "use client"
 
 import {
-  CalendarDate,
+  type Calendar,
+  type CalendarDate,
   type DateValue,
   endOfMonth,
   getLocalTimeZone,
+  GregorianCalendar,
+  startOfYear,
+  toCalendar,
   toCalendarDate,
   today,
 } from "@internationalized/date"
@@ -37,12 +41,23 @@ import { cn } from "@/lib/utils"
  * costing twelve `Intl.DateTimeFormat` constructions per render.
  *
  * The value is a `CalendarDate` on the first of the chosen month — clamped into
- * `minValue`/`maxValue` when either lands mid-month. The grid is Gregorian: a
- * standalone picker has no calendar system to inherit, unlike the month select
- * inside `Calendar`, which reads its own state's.
+ * `minValue`/`maxValue` when either lands mid-month.
+ *
+ * The grid counts in whatever `calendar` it is handed, and Gregorian when it is
+ * handed none: a standalone picker has no state above it to inherit one from,
+ * while `Calendar`'s header passes `state.focusedDate.calendar` down. That is
+ * why the page is a `CalendarDate` on the first of the year rather than a plain
+ * number, and why the cell count is `getMonthsInYear` rather than twelve — a
+ * Hebrew leap year has thirteen months, and a number cannot say which year's.
  */
 
 export interface MonthPickerProps {
+  /**
+   * The calendar system the grid counts in. Gregorian by default; `Calendar`'s
+   * header passes its own state's, so a Hebrew or Japanese calendar keeps
+   * counting its own months and naming its own years.
+   */
+  calendar?: Calendar
   /** The selected month, as a date inside it. Makes the picker controlled. */
   value?: CalendarDate | null
   /** The initially selected month, as a date inside it. */
@@ -64,6 +79,7 @@ export interface MonthPickerProps {
 }
 
 export function MonthPicker({
+  calendar: calendarProp,
   value,
   defaultValue,
   onChange,
@@ -78,27 +94,39 @@ export function MonthPicker({
   "aria-describedby": ariaDescribedBy,
 }: MonthPickerProps) {
   const { locale } = useLocale()
-  const now = today(getLocalTimeZone())
+  const calendar = calendarProp ?? GREGORIAN
+  const now = toCalendar(today(getLocalTimeZone()), calendar)
   const isControlled = value !== undefined
 
   const [uncontrolled, setUncontrolled] = useState<CalendarDate | null>(defaultValue ?? null)
-  const selected = isControlled ? (value ?? null) : uncontrolled
+  const given = isControlled ? (value ?? null) : uncontrolled
+  // A value handed in from another calendar system is still about one month;
+  // converting is what lets `keyOf` compare it against the cells on screen.
+  const selected = given ? toCalendar(given, calendar) : null
 
-  const [visibleYear, setVisibleYear] = useState(() => (selected ?? now).year)
+  // The page, as the first day of the year on screen. `startOfYear` rather than
+  // "month 1" because an era can begin mid-year: in the Japanese calendar the
+  // first year of an era starts at the month the era did.
+  const [page, setPage] = useState(() => startOfYear(selected ?? now))
+  // A locale switch can change the calendar system under a mounted picker, and
+  // a page left in the old one would count its months with the new one's rules.
+  const visible = page.calendar.identifier === calendar.identifier ? page : startOfYear(now)
 
   // Follow the value when it moves from outside; paging by hand does not go
   // through here, so the user's own navigation is never yanked back.
   const [lastSelected, setLastSelected] = useState(selected?.toString())
   if (selected?.toString() !== lastSelected) {
     setLastSelected(selected?.toString())
-    if (selected) setVisibleYear(selected.year)
+    if (selected) setPage(startOfYear(selected))
   }
 
   const monthFormatter = getDateTimeFormat(locale, { month: "short", timeZone: "UTC" })
   const longMonthFormatter = getDateTimeFormat(locale, { month: "long", timeZone: "UTC" })
   const yearFormatter = getDateTimeFormat(locale, { year: "numeric", timeZone: "UTC" })
 
-  const months = Array.from({ length: 12 }, (_, index) => monthStart(visibleYear, index + 1))
+  const months = Array.from({ length: calendar.getMonthsInYear(visible) }, (_, index) =>
+    visible.set({ month: index + 1 }),
+  )
   // react-aria's ListBox has no `isDisabled` of its own — a disabled grid is one
   // where every cell is disabled, which is also what stops it taking focus.
   const disabledMonths = isDisabled
@@ -117,12 +145,12 @@ export function MonthPicker({
   return (
     <div data-slot="month-picker" className={cn("w-fit", isDisabled && "opacity-50", className)}>
       <PagerHeader
-        label={yearFormatter.format(monthStart(visibleYear, 1).toDate("UTC"))}
+        label={yearFormatter.format(visible.toDate("UTC"))}
         isDisabled={isDisabled}
         previousLabel="Previous year"
         nextLabel="Next year"
-        onPrevious={() => setVisibleYear(visibleYear - 1)}
-        onNext={() => setVisibleYear(visibleYear + 1)}
+        onPrevious={() => setPage(startOfYear(visible.subtract({ years: 1 })))}
+        onNext={() => setPage(startOfYear(visible.add({ years: 1 })))}
       />
       <ListBoxPrimitive
         aria-label={ariaLabel ?? (ariaLabelledBy ? undefined : "Month")}
@@ -147,7 +175,10 @@ export function MonthPicker({
       >
         {months.map((month) => {
           const date = month.toDate("UTC")
-          const isCurrent = month.year === now.year && month.month === now.month
+          // `era` is part of the answer: in an era calendar `year` counts from
+          // the start of the era, so two different years can both be year 1.
+          const isCurrent =
+            month.era === now.era && month.year === now.year && month.month === now.month
           return (
             <ListBoxItemPrimitive
               key={keyOf(month)}
@@ -256,6 +287,12 @@ interface PagerHeaderProps {
  * `slot="previous"` / `slot="next"`, which only resolve inside a react-aria
  * Calendar. These page local state instead. `aria-live` on the label is what
  * announces the new year, since paging moves nothing into focus.
+ *
+ * Both carry `slot={null}`, because this grid *is* rendered inside a react-aria
+ * Calendar — `CalendarHeader`'s `select` variant opens it in a popover, and a
+ * `Button` under a Calendar reads a `ButtonContext` that is a slot map. Without
+ * a `slot` it throws ("A slot prop is required"); with `previous` or `next` it
+ * would page the calendar's visible range instead of this grid's year.
  */
 function PagerHeader({
   label,
@@ -284,6 +321,7 @@ function PagerHeader({
           className="size-8 sm:size-7 **:data-[slot=icon]:text-quebi-fg-muted"
           isCircle
           intent="ghost"
+          slot={null}
           isDisabled={isDisabled}
           onPress={onPrevious}
         >
@@ -295,6 +333,7 @@ function PagerHeader({
           className="size-8 sm:size-7 **:data-[slot=icon]:text-quebi-fg-muted"
           isCircle
           intent="ghost"
+          slot={null}
           isDisabled={isDisabled}
           onPress={onNext}
         >
@@ -305,11 +344,15 @@ function PagerHeader({
   )
 }
 
-/** The first of `month` in `year`. */
-const monthStart = (year: number, month: number) => new CalendarDate(year, month, 1)
+/** What a picker with no calendar system of its own counts in. */
+const GREGORIAN = new GregorianCalendar()
 
-/** A stable collection key for a month — `2026-09`, not an index into a page. */
-const keyOf = (date: CalendarDate) => `${date.year}-${String(date.month).padStart(2, "0")}`
+/**
+ * A stable collection key for a month — `AD-2026-09`, not an index into a page.
+ * Era-qualified for the reason `isCurrent` is: year 1 of two eras is two years.
+ */
+const keyOf = (date: CalendarDate) =>
+  `${date.era}-${date.year}-${String(date.month).padStart(2, "0")}`
 
 /** True if any day of `month` falls inside `[minValue, maxValue]`. */
 function isMonthAvailable(month: CalendarDate, minValue?: DateValue, maxValue?: DateValue) {
@@ -326,7 +369,11 @@ function isMonthAvailable(month: CalendarDate, minValue?: DateValue, maxValue?: 
  * that only shows up in their validation.
  */
 function clamp(date: CalendarDate, minValue?: DateValue, maxValue?: DateValue) {
-  if (minValue && date.compare(minValue) < 0) return toCalendarDate(minValue)
-  if (maxValue && date.compare(maxValue) > 0) return toCalendarDate(maxValue)
+  // Back into `date`'s calendar on the way out: `compare` is absolute, so a
+  // bound given in another system compares fine but must not be handed on raw.
+  if (minValue && date.compare(minValue) < 0)
+    return toCalendar(toCalendarDate(minValue), date.calendar)
+  if (maxValue && date.compare(maxValue) > 0)
+    return toCalendar(toCalendarDate(maxValue), date.calendar)
   return date
 }

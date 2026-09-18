@@ -12,8 +12,8 @@ import {
   toCalendarDate,
   today,
 } from "@internationalized/date"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { use, useRef } from "react"
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { use, useRef, useState } from "react"
 import {
   CalendarCell,
   CalendarGrid,
@@ -30,6 +30,8 @@ import {
   useLocale,
 } from "react-aria-components"
 import { Button } from "@/components/button"
+import { MonthPicker } from "@/components/month-picker"
+import { Popover, PopoverContent } from "@/components/popover"
 import { Select, SelectContent, SelectItem, SelectLabel, SelectTrigger } from "@/components/select"
 import { getDateTimeFormat } from "@/lib/intl"
 import { cn } from "@/lib/utils"
@@ -39,18 +41,19 @@ import { cn } from "@/lib/utils"
  *
  * An accessible month calendar built on react-aria-components and
  * @internationalized/date, with a choice of header: `variant="select"` (the
- * default) picks the month and year from dropdowns, `variant="stepper"` walks
- * them with a chevron on each side. Restyled to quebi tokens: the selected day
- * fills with brand teal, today is ringed in brand teal, and days hover with a
- * faint white wash. Foundational — Range Calendar and Date Picker compose this.
+ * default) opens the Month Picker grid from one control naming the visible
+ * month, `variant="stepper"` walks them with a chevron on each side. Restyled
+ * to quebi tokens: the selected day fills with brand teal, today is ringed in
+ * brand teal, and days hover with a faint white wash. Foundational — Range
+ * Calendar and Date Picker compose this.
  */
 
 /**
  * Which header the calendar draws.
  *
- * - `select` — month and year dropdowns on the left, one prev/next pair on the
- *   right that pages the visible range. The dropdowns offer only the months and
- *   years `minValue`/`maxValue` can reach.
+ * - `select` — one control reading `September 2026` on the left, opening the
+ *   library's own Month Picker in a popover; one prev/next pair on the right
+ *   that pages the visible range.
  * - `stepper` — `‹ Sep ›` and `‹ 2026 ›`. The paging pair is dropped, or the
  *   month would carry two sets of chevrons meaning slightly different things.
  */
@@ -59,7 +62,7 @@ type CalendarHeaderVariant = "select" | "stepper"
 interface CalendarProps<T extends DateValue>
   extends Omit<CalendarPrimitiveProps<T>, "visibleDuration"> {
   className?: string
-  /** Header treatment — dropdowns (default) or chevron steppers. */
+  /** Header treatment — the month-picker popover (default) or chevron steppers. */
   variant?: CalendarHeaderVariant
 }
 
@@ -96,7 +99,7 @@ const Calendar = <T extends DateValue>({ className, variant, ...props }: Calenda
 }
 
 interface CalendarHeaderProps extends React.ComponentProps<"header"> {
-  /** Header treatment — dropdowns (default) or chevron steppers. */
+  /** Header treatment — the month-picker popover (default) or chevron steppers. */
   variant?: CalendarHeaderVariant
 }
 
@@ -117,10 +120,7 @@ const CalendarHeader = ({ className, variant = "select", ...props }: CalendarHea
         </>
       ) : (
         <>
-          <div className="flex items-center gap-1.5">
-            <SelectMonth />
-            <SelectYear />
-          </div>
+          <SelectMonthYear />
           <Heading className="sr-only" />
           <div className="flex items-center gap-1">
             <Button
@@ -224,6 +224,99 @@ const isUnitReachable = (
 }
 
 /**
+ * The `select` header's one control: `September 2026`, opening the library's
+ * own `MonthPicker` in a popover.
+ *
+ * It replaced a month `Select` beside a year `Select` (task #160). Two flat
+ * lists — the year one forty-one rows of `2006 … 2046` — asked the user to
+ * scroll for something a 3×4 grid says in one glance, and that grid is a
+ * component this library already publishes: the header had been rebuilding a
+ * worse one out of dropdowns. `SelectMonth` and `SelectYear` are still exported
+ * for anyone who had composed a header of their own out of them.
+ *
+ * Three wiring details:
+ *
+ * - **The calendar system comes from the state.** `MonthPicker` is Gregorian
+ *   where it is handed nothing, so `state.focusedDate.calendar` goes down with
+ *   the value. Without it a Japanese or Hebrew calendar's header would name
+ *   months its own grid does not have.
+ * - **The day survives.** `MonthPicker` reports the first of the month, but the
+ *   thing being chosen is a month, not a date: focus moves to the same day of
+ *   it, exactly as `SelectMonth`'s `set({ month })` did. `constrain` then does
+ *   what it does for the steppers — react-aria clamps every focus move anyway,
+ *   and asking first is what keeps the control from appearing to ignore a click.
+ * - **The trigger opts out of the calendar's `ButtonContext`.** See the note in
+ *   `CalendarStepper`; `slot={null}` is the same fix for the same reason.
+ *
+ * Reaching a distant year is the year chevrons, one at a time — deliberately,
+ * and not what the old year dropdown did with its ±20-year window. A calendar
+ * is for dates near the one you are looking at; a birth year belongs in a date
+ * field you can type into, or in `YearPickerField`, which is the whole grid.
+ */
+const SelectMonthYear = () => {
+  const state = useCalendarHeaderState("SelectMonthYear")
+  const { locale } = useLocale()
+  const [isOpen, setIsOpen] = useState(false)
+  const formatter = getDateTimeFormat(locale, {
+    month: "long",
+    year: "numeric",
+    timeZone: state.timeZone,
+  })
+
+  return (
+    <Popover isOpen={isOpen} onOpenChange={setIsOpen}>
+      {/*
+        No `aria-label`: it would *replace* the button's own text as the
+        accessible name, and "September 2026" is the more useful of the two —
+        the trigger's own `aria-expanded` already says it opens something. What
+        that costs is a constant to query it by, so the stable handle for tests
+        and for a consumer restyling the header is the `data-slot`, the way it
+        is everywhere else in this library.
+      */}
+      <Button
+        data-slot="calendar-month-year"
+        intent="outline"
+        size="sm"
+        slot={null}
+        isDisabled={state.isDisabled}
+        // The old dropdown pair's own padding, so the header keeps its height:
+        // `Button`'s `sm` is a form control's, and this is a calendar's title.
+        className="px-3 py-2.5 text-sm/5 tabular-nums sm:px-2.5 sm:py-1.5"
+      >
+        {formatter.format(state.focusedDate.toDate(state.timeZone))}
+        <ChevronDown data-slot="icon" className="text-quebi-fg-muted" />
+      </Button>
+      <PopoverContent placement="bottom start" className="w-auto max-w-none p-3">
+        <MonthPicker
+          autoFocus
+          aria-label="Month and year"
+          calendar={state.focusedDate.calendar}
+          value={state.focusedDate}
+          minValue={state.minValue ?? undefined}
+          maxValue={state.maxValue ?? undefined}
+          isDisabled={state.isDisabled}
+          onChange={(next) => {
+            setIsOpen(false)
+            state.setFocusedDate(
+              constrain(
+                state.focusedDate.set({ era: next.era, year: next.year, month: next.month }),
+                state.minValue,
+                state.maxValue,
+              ),
+            )
+          }}
+        />
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+/**
+ * @deprecated Since task #160 the `select` header is `SelectMonthYear`, and
+ * these two are exported only for a consumer who built a header out of them.
+ * New code wants `MonthPicker` (in a popover, as `SelectMonthYear` does it) or
+ * the `stepper` variant. They still work, and everything below still holds.
+ *
  * Both dropdowns offer only what the bounds can reach, for the reason the
  * stepper chevrons disable themselves: `setFocusedDate` runs through react-aria's
  * `focusCell`, which clamps to `minValue`/`maxValue`. An out-of-range entry is
@@ -510,6 +603,7 @@ export {
   CalendarGridHeader,
   CalendarHeader,
   SelectMonth,
+  SelectMonthYear,
   SelectYear,
   StepMonth,
   StepYear,
