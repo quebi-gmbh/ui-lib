@@ -1,5 +1,5 @@
 import { I18nProvider } from "react-aria-components"
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router"
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLocation } from "react-router"
 import { Header } from "@/site/site-header"
 import { Footer } from "@/site/site-footer"
 import { BodyScrollbar } from "@/site/body-scrollbar"
@@ -64,6 +64,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
 const SITE_LOCALE = "de-DE"
 
 export default function App() {
+  // /og/<slug> is a screenshot canvas, not a page: it renders the 1200×630
+  // share image and nothing else, so the chrome that frames every real route
+  // would land inside the picture. It still sits under the I18nProvider — the
+  // dates and numbers in a scene have to be formatted the way the gallery
+  // formats them, or the share image shows a component the site does not.
+  const isOgCanvas = useLocation().pathname.startsWith("/og/")
+
+  if (isOgCanvas) {
+    return (
+      <I18nProvider locale={SITE_LOCALE}>
+        <Outlet />
+      </I18nProvider>
+    )
+  }
+
   return (
     <I18nProvider locale={SITE_LOCALE}>
       <div className="flex min-h-screen flex-col bg-quebi-bg text-quebi-fg">

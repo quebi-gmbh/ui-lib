@@ -28,7 +28,7 @@ export function meta({ loaderData: d }: Route.MetaArgs) {
     title: d.name,
     description: d.description,
     path: `/components/${d.slug}`,
-    image: `/og/${d.slug}.png`,
+    image: `/og/${d.slug}.jpg`,
   })
 }
 

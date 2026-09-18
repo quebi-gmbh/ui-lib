@@ -9,15 +9,16 @@ This repo is a copy-paste React component library. Each component is **self-cont
 (no dangling shared imports), styled with the **quebi design system**, rendered live in a
 gallery, and auto-published to a static AI-discovery API at build time.
 
-Adding a component is four files + one line, then a build. Follow this exactly so the
-gallery, the dependency graph, and the generated API all stay correct.
+Adding a component is five files + two lines, then a build. Follow this exactly so the
+gallery, the dependency graph, the share image and the generated API all stay correct.
 
 ## Architecture in one breath
 
 - `src/components/<slug>.tsx` — the component source (what gets copy-pasted / shipped).
 - `src/registry/<slug>.meta.ts` — curated metadata (name, description, category, tags).
 - `src/registry/<slug>.examples.tsx` — live gallery examples (JSX).
-- `src/registry/meta.ts` + `src/registry/index.ts` — register the above.
+- `src/registry/<slug>.og.tsx` — the 1200×630 share-image scene (JSX). A test fails without it.
+- `src/registry/meta.ts` + `src/registry/index.ts` + `src/registry/og.ts` — register the above.
 - `scripts/generate-api.ts` — reads metadata + source, emits `public/api/**`, `public/r/**`,
   `llms.txt`. **Never hand-write JSON.** Runs automatically on `bun run build` / `bun run dev`.
 
@@ -123,20 +124,62 @@ export const <camelSlug>Examples: ComponentExample[] = [
 Cover the meaningful states (variants, sizes, disabled, invalid, grouped, controlled) — see
 `src/registry/checkbox.examples.tsx` for the pattern.
 
-### 4. Register — two edits
+### 4. Share image — `src/registry/<slug>.og.tsx`
+
+The OG image for `/components/<slug>` is a screenshot of this scene, taken by Playwright in the
+deploy build (`scripts/screenshot-og.ts` → `/og/<slug>` → `build/client/og/<slug>.jpg`). It is not
+`examples[0]`: a gallery example is read at full size next to its own prose, and this is read as a
+thumbnail in a Slack unfurl with no caption at all.
+
+```tsx
+import { <Component> } from "@/components/<slug>"
+import type { OgScene } from "./types"
+
+/** One line on what the scene shows and why that is the thing to show. */
+export const <camelSlug>OgScene: OgScene = {
+  scale: 1.8,          // the stage magnifies; 1.5 is the default, raise it for small parts
+  render: () => <Component />,
+}
+```
+
+Rules of thumb:
+
+- One or two instances, short labels, no long prose, nothing that scrolls or clips. The stage is
+  1072×372 CSS pixels, so a scene has about 715×248 of natural room at the default scale.
+- Show the state that makes the component recognisable: a value in the field, one item selected,
+  the overlay already open (`defaultOpen`, `isOpen`, or a focus on mount — see `./og-scene.tsx`).
+- `align: "top"` for a scene that opens a popover, so the overlay has the stage to fall into
+  rather than landing on the component's name.
+- **Deterministic.** No `new Date()`, no `today()`, no `Math.random()`, and no animation: a
+  recharts series needs `isAnimationActive: false` through its escape prop
+  (`barProps`, `lineProps`, …). `tests/og-scenes.test.ts` fails on all four.
+- A conform variant wraps its field in `OgForm` from `./og-scene`; the calendars share the pinned
+  fixtures in `./og-calendar-data`, the charts the ones in `./og-chart-data`.
+- If the component genuinely has nothing to photograph, write why in `noOgScene` on its `.meta.ts`
+  instead (see `container.meta.ts`) — the share image falls back to a text card. The test accepts a
+  scene or a reason, and nothing else.
+
+Look at it while you work: `bun run dev` and open `/og/<slug>`.
+
+### 5. Register — three edits
 
 In `src/registry/meta.ts`: import the meta and add it to `metaRegistry`.
 In `src/registry/index.ts`: import the examples and add a `examplesBySlug["<slug>"]` entry.
+In `src/registry/og.ts`: import the scene and add an `ogScenes["<slug>"]` entry.
 
-### 5. Build & verify
+### 6. Build & verify
 
 ```bash
-bun run build        # regenerates the API and type-checks; must be clean
+bun run build        # regenerates the API, builds the site, photographs the share images
 ```
+
+The last step of `build` is Playwright, so a first run needs `bunx playwright install chromium`.
+Without a browser to hand, `bun run typecheck && bun run lint && bun run test` is the same coverage
+minus the screenshots.
 
 Then check the verification list below.
 
-### 6. A behaviour test, if the component has behaviour
+### 7. A behaviour test, if the component has behaviour
 
 `bun test` renders: `bunfig.toml` preloads `tests/dom.ts`, which installs happy-dom's globals,
 React Testing Library's cleanup and the jest-dom matchers. A test file in `tests/components/`
@@ -215,6 +258,8 @@ const isRequired = field.required ?? false
 - [ ] No Cellestial tokens (`brand-*`, `ink-*`, `text-body-*`) remain — quebi tokens only.
 - [ ] Visit `/components/<slug>` (run `bun run dev`): examples render on-brand, the source block
       shows highlighted source, the sidebar lists it under the right category, breadcrumbs read right.
+- [ ] Visit `/og/<slug>`: the scene reads at a glance, nothing clips, the name is legible.
+      `bun run screenshot:og --base http://localhost:5173 --only <slug>` writes the real file.
 - [ ] For a conform variant: it appears under the **Conform** nav group and its form validates.
 - [ ] If the component has state, an input-dependent branch, or an accessibility guarantee:
       a test in `tests/components/`, and `bun test` is clean.
@@ -227,6 +272,8 @@ const isRequired = field.required ?? false
 - ❌ Don't set a radius in `base` and override it from a variant — see the radii note above.
 - ❌ Don't set a conform variant's `category` to "Conform" (the nav derives that).
 - ❌ Don't invent a new `category` string when an existing one fits.
+- ❌ Don't copy `examples[0]` into the OG scene — it is too detailed to read at thumbnail size,
+      which is the whole reason the scenes are separate files.
 
 ## Promote to the marketplace (later)
 

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- See tile-1.svg. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="g3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0d2438"/>
+      <stop offset="1" stop-color="#3fa9f5"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#g3)"/>
+  <path d="M0 220 L120 250 L240 200 L400 260 L400 300 L0 300 Z" fill="#02121c" fill-opacity="0.55"/>
+  <rect x="250" y="40" width="110" height="70" rx="10" fill="#ffffff" fill-opacity="0.14"/>
+</svg>

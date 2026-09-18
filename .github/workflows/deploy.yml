@@ -27,6 +27,18 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
+      # The share images are photographs of the built site, taken by
+      # scripts/screenshot-og.ts, so the build needs a browser. It is the only
+      # one in the repo — the test suite renders in happy-dom — and it is only
+      # needed here, which is why CI does not install it.
+      - name: Cache Playwright's Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+
+      - run: bunx playwright install --with-deps chromium
+
       - run: bun run build
 
       # GitHub Pages serves 404.html for any unknown path. React Router emits a
