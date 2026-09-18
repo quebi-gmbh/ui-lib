@@ -23,6 +23,11 @@
  * card. So the bare page background is checked too, and the intent has to clear
  * 4.5:1 on both.
  *
+ * `ai` is the one intent that is not a tint — an opaque gradient, which lets
+ * nothing through — so the page is not one of its surfaces and the sweep is
+ * read at three points instead of one. See `backdrops` and the block at the
+ * bottom of this file.
+ *
  * ## Why the intent map is parsed rather than listed
  *
  * The thing under test is the pairing — *this* foreground against *that* fill —
@@ -48,6 +53,7 @@ const THEME = readFileSync(join(ROOT, "src", "quebi-theme.css"), "utf8")
  * failure, not a skip, so the map cannot fall behind the component.
  */
 const TAILWIND = {
+  "purple-400": "#c084fc",
   "purple-500": "#a855f7",
   "emerald-500": "#10b981",
   "amber-500": "#f59e0b",
@@ -130,52 +136,64 @@ function parseColorClass(classes: string, prefix: string) {
   return { name, alpha }
 }
 
+/** The colour halfway along a CSS gradient, which interpolates in sRGB. */
+function midpoint(a: string, b: string) {
+  const [x, y] = [rgb(a), rgb(b)]
+  return `#${x.map((v, i) => Math.round((v + y[i]) / 2).toString(16).padStart(2, "0")).join("")}`
+}
+
 /**
  * The surfaces an intent's label is read against, in one theme: the bare page,
  * and the page with the intent's own fill composited over it.
  *
  * `bg-transparent` and a gradient are the two shapes that are not one flat
  * fill. `outline` is the first; `ai` is the second, and a gradient is read at
- * both ends because the worst end is the one that decides.
+ * both ends *and in the middle*: the ends are not the bounds of the sweep,
+ * because sRGB interpolation moves the channels independently and mint→purple
+ * moves green down while it moves red and blue up. The midpoint of a sweep
+ * between two legible ends can be less legible than either.
+ *
+ * The bare page is a surface only while the fill lets it through. Eight intents
+ * paint a 10% tint, so their label really is read against the page underneath;
+ * `ai` paints an opaque gradient, which does not, and asking it to clear 4.5:1
+ * against a page it covers would be asking the dark ink to be legible on the
+ * dark page — a test of nothing, failing forever.
  */
 function backdrops(classes: string, values: Map<string, string>): string[] {
   const page = values.get("q-bg") as string
-  const fills: { name: string; alpha: number }[] = []
+  const composite = ({ name, alpha }: { name: string; alpha: number }) => {
+    const hex = resolve(name, values)
+    expect(hex, `no value for the fill \`${name}\` — add it to TAILWIND or the theme`).toBeString()
+    return over(hex as string, page, alpha)
+  }
 
   const flat = parseColorClass(classes, "bg")
   // `bg-transparent` is not a colour, and `bg-gradient-to-r` is a direction —
   // the gradient's colours arrive as `from-`/`to-` below.
-  if (flat && flat.name !== "transparent" && !flat.name.startsWith("gradient-")) fills.push(flat)
-  for (const prefix of ["from", "to"]) {
-    const stop = parseColorClass(classes, prefix)
-    if (stop) fills.push(stop)
-  }
+  const isFill = flat && flat.name !== "transparent" && !flat.name.startsWith("gradient-")
+  const stops = ["from", "to"]
+    .map((prefix) => parseColorClass(classes, prefix))
+    .filter((stop) => stop !== undefined)
 
-  return [
-    page,
-    ...fills.map(({ name, alpha }) => {
-      const hex = resolve(name, values)
-      expect(hex, `no value for the fill \`${name}\` — add it to TAILWIND or the theme`).toBeString()
-      return over(hex as string, page, alpha)
-    }),
-  ]
+  const fills = [...(isFill ? [flat] : []), ...stops]
+  const surfaces = fills.map(composite)
+  // Only a sweep with both ends has a middle to read.
+  if (stops.length === 2) surfaces.push(midpoint(composite(stops[0]), composite(stops[1])))
+
+  return fills.some(({ alpha }) => alpha === 1) ? surfaces : [page, ...surfaces]
 }
 
 const INTENTS = Object.entries(badgeIntents)
 
 describe("every Badge intent is legible as 12px text", () => {
-  // `ai` is the one exception, and it is stated rather than skipped — see the
-  // block at the bottom of this file for what is wrong with it and why fixing
-  // it is not this change.
-  const checked = INTENTS.filter(([name]) => name !== "ai")
-
-  test("the map is the nine intents, and `ai` is the only one excused", () => {
+  test("the map is the nine intents, and none of them is excused", () => {
+    // `ai` was, until task #99. Nothing here is skipped now, so an intent that
+    // this file cannot decode or cannot pass is a failure rather than a gap.
     expect(INTENTS).toHaveLength(9)
-    expect(checked).toHaveLength(8)
   })
 
   for (const { name: theme, values } of THEMES) {
-    test.each(checked)(`${theme}: %s clears 4.5:1 on every surface it is drawn on`, (_n, classes) => {
+    test.each(INTENTS)(`${theme}: %s clears 4.5:1 on every surface it is drawn on`, (_n, classes) => {
       const fg = parseColorClass(classes, "text")
       expect(fg, `no \`text-\` class in \`${classes}\``).toBeDefined()
       const hex = resolve((fg as { name: string }).name, values)
@@ -269,30 +287,51 @@ describe("the foreground tokens, on the bare page, in both themes", () => {
   })
 })
 
-describe("the `ai` intent, which is not fixed here", () => {
+describe("the `ai` intent, which is the one gradient", () => {
   /**
-   * `ai` is the teal→purple gradient with `text-quebi-on-brand` (dark ink) on
-   * top, and it is the same in both themes — so unlike the other eight this is
-   * not a light-mode defect, it is a defect. The ink reads 7.81:1 over the mint
-   * end and 3.74:1 over the purple end: the label fades out as it crosses its
-   * own badge.
+   * `ai` is the teal→purple sweep with `text-quebi-on-brand` (dark ink) on top,
+   * and it is the same in both themes — so unlike the other eight its defect
+   * was never a light-mode defect. The ink read 7.81:1 over the mint end and
+   * 3.74:1 over `purple-500` at the far end: the label faded out as it crossed
+   * its own badge.
    *
-   * Left alone on purpose. Every fix — a lighter foreground, a darker purple, a
-   * shorter gradient — changes the look of the one intent whose look is the
-   * point, and that is a design decision rather than a re-tune of a token.
-   * Pinned here so it is recorded rather than hidden, and so it fails the day
-   * someone fixes it without updating this file.
+   * Fixed in task #99 by lightening the far stop to `purple-400`, which is the
+   * direction the ink dictates and not the one that reads as "more contrast":
+   * the ink is dark, so a *darker* purple makes it worse, and the `purple-700`
+   * the report suggested would have read 2.12:1. The loop above now covers this
+   * intent like any other; what is left here is the part a ratio assertion does
+   * not say — that the fix has to keep going the way it went.
    */
-  test("the ink still fails 4.5:1 over the purple end of the gradient", () => {
-    const { values } = THEMES[1]
-    const ink = values.get("q-on-brand") as string
-    const surfaces = backdrops(badgeIntents.ai, values)
-    const worst = Math.min(...surfaces.map((s) => contrast(ink, s)))
-    expect(worst).toBeLessThan(4.5)
-    expect(worst).toBeGreaterThanOrEqual(3)
+  const { values } = THEMES[1]
+  const ink = values.get("q-on-brand") as string
+
+  test("the far stop is lighter than the ink needs it to be, not darker", () => {
+    // The trap. `to-purple-500` → `to-purple-700` looks like a fix, halves the
+    // ratio, and passes a review that never re-measures. Stated as a property
+    // of the sweep rather than as a class name: any far stop is fine as long as
+    // the dark ink can still be read on it.
+    const [, far] = backdrops(badgeIntents.ai, values)
+    expect(contrast(ink, far)).toBeGreaterThanOrEqual(4.5)
+    expect(relativeLuminance(far)).toBeGreaterThan(relativeLuminance(ink))
   })
 
-  test("both themes draw it identically, so this is not a light-mode bug", () => {
+  test("the middle of the sweep is read too, and it is not between the ends", () => {
+    // sRGB interpolation moves the channels independently — mint→purple takes
+    // green down while it takes red and blue up — so the midpoint's luminance
+    // is not bounded by the two ends and checking only the ends would be
+    // checking the wrong two colours.
+    const surfaces = backdrops(badgeIntents.ai, values)
+    expect(surfaces).toHaveLength(3)
+    expect(Math.min(...surfaces.map((s) => contrast(ink, s)))).toBeGreaterThanOrEqual(4.5)
+  })
+
+  test("the page is not one of its surfaces, because the gradient is opaque", () => {
+    // The dark ink on the dark page is 1.36:1 and always will be. A badge whose
+    // fill lets nothing through is not read against what is behind it.
+    expect(backdrops(badgeIntents.ai, values)).not.toContain(values.get("q-bg") as string)
+  })
+
+  test("both themes draw it identically, so this was never a light-mode bug", () => {
     expect(THEMES[0].values.get("q-on-brand")).toBe(THEMES[1].values.get("q-on-brand") as string)
     expect(THEMES[0].values.get("q-brand")).toBe(THEMES[1].values.get("q-brand") as string)
   })
