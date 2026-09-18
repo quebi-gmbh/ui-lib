@@ -23,6 +23,12 @@ export const rangeCalendarExamples: ComponentExample[] = [
     },
   },
   {
+    title: "Chevron steppers",
+    description:
+      "The shared header's stepper variant reaches the range calendar too — a chevron on each side of the month and the year.",
+    render: () => <RangeCalendar aria-label="Trip dates" variant="stepper" />,
+  },
+  {
     title: "Two months",
     description: "Show two months side by side with visibleDuration.",
     render: () => <RangeCalendar aria-label="Booking range" visibleDuration={{ months: 2 }} />,

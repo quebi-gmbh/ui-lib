@@ -9,6 +9,12 @@ export const calendarExamples: ComponentExample[] = [
     render: () => <Calendar aria-label="Event date" />,
   },
   {
+    title: "Chevron steppers",
+    description:
+      "The stepper variant swaps the month and year dropdowns for a chevron on each side; the paging pair on the right is dropped, so the month keeps one set of controls.",
+    render: () => <Calendar aria-label="Event date" variant="stepper" />,
+  },
+  {
     title: "Preselected date",
     description: "Set the selected day with defaultValue — it fills with brand teal.",
     render: () => (
@@ -21,6 +27,22 @@ export const calendarExamples: ComponentExample[] = [
     render: () => (
       <Calendar aria-label="Booking date" minValue={today(getLocalTimeZone())} />
     ),
+  },
+  {
+    title: "Stepper within bounds",
+    description:
+      "The stepper chevrons respect minValue and maxValue — a step that would land outside the range disables its own button.",
+    render: () => {
+      const now = today(getLocalTimeZone())
+      return (
+        <Calendar
+          aria-label="Booking date"
+          variant="stepper"
+          minValue={now}
+          maxValue={now.add({ months: 2 })}
+        />
+      )
+    },
   },
   {
     title: "Disabled",
