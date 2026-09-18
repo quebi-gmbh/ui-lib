@@ -93,6 +93,7 @@ import { loaderMeta } from "./loader.meta"
 import { menuMeta } from "./menu.meta"
 import { meterMeta } from "./meter.meta"
 import { modalMeta } from "./modal.meta"
+import { monthPickerMeta } from "./month-picker.meta"
 import { multipleSelectMeta } from "./multiple-select.meta"
 import { navbarMeta } from "./navbar.meta"
 import { noteMeta } from "./note.meta"
@@ -139,6 +140,8 @@ import { tooltipMeta } from "./tooltip.meta"
 import { trackerMeta } from "./tracker.meta"
 import { treemapMeta } from "./treemap.meta"
 import { treeMeta } from "./tree.meta"
+import { weekPickerMeta } from "./week-picker.meta"
+import { yearPickerMeta } from "./year-picker.meta"
 
 export const metaRegistry: ComponentMeta[] = [
   alertDialogMeta,
@@ -235,6 +238,7 @@ export const metaRegistry: ComponentMeta[] = [
   menuMeta,
   meterMeta,
   modalMeta,
+  monthPickerMeta,
   multipleSelectMeta,
   navbarMeta,
   noteMeta,
@@ -281,4 +285,6 @@ export const metaRegistry: ComponentMeta[] = [
   trackerMeta,
   treemapMeta,
   treeMeta,
+  weekPickerMeta,
+  yearPickerMeta,
 ]
