@@ -323,7 +323,24 @@ describe("a lane change is one curve, centred on the rule between two rows", () 
     expect(straight).toBe("M 24 0 L 24 56")
   })
 
-  test("the arriving half is back on its own lane by the dot line, then runs straight", () => {
+  test("a dot is never the end of a curve — a straight stem runs out of it and into it", () => {
+    // The property this geometry exists for. A curve that starts on the dot
+    // reads as the line being swallowed by it; the line has to be plainly *on*
+    // its lane for a moment either side.
+    //
+    // Leaving lane 0 (x=8): out of the dot at y=28, straight to y=40, then bend.
+    expect(edgePath(leaving).startsWith("M 8 28 L 8 40 C")).toBe(true)
+    // Arriving on lane 1 (x=24): bend ends at y=16, then straight into the dot.
+    expect(edgePath(arriving).endsWith("24 16 L 24 28")).toBe(true)
+  })
+
+  test("the stem is the same length on both sides of a dot", () => {
+    const leavingStem = 40 - 28
+    const arrivingStem = 28 - 16
+    expect(leavingStem).toBe(arrivingStem)
+  })
+
+  test("an arriving half that is only passing through keeps running to the bottom", () => {
     const passing = edgePath({
       fromLane: 0,
       toLane: 1,
@@ -331,8 +348,8 @@ describe("a lane change is one curve, centred on the rule between two rows", () 
       to: "bottom",
       bend: "top",
     })
-    // …ends on lane 1 at the bottom, having reached it at the dot line.
-    expect(passing.endsWith("L 24 56")).toBe(true)
-    expect(passing).toContain("24 28")
+    // Same bend, but the straight run continues past the dot line to the rule
+    // below instead of stopping on it.
+    expect(passing.endsWith("24 16 L 24 56")).toBe(true)
   })
 })

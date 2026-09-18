@@ -300,6 +300,19 @@ const LANE_WIDTH = 16
 /** Height of one row's band. Pinned to the row's `h-14` so the lines join up. */
 const ROW_HEIGHT = 56
 const DOT_RADIUS = 4
+/**
+ * Straight run kept between a dot and the start of a bend.
+ *
+ * A curve that begins on the dot reads as though the line is being swallowed by
+ * it: there is no moment where the line is simply *on* its lane, so the dot
+ * looks like a junction rather than a point the lane passes through. A short
+ * stem either side fixes that, and it tightens the bend for free — the same
+ * sideways step now happens over a shorter run, which is the smaller radius the
+ * shape wants.
+ */
+const NODE_STEM = 12
+/** Half the bend's vertical span: what is left of a half-band after the stem. */
+const BEND_SPAN = ROW_HEIGHT / 2 - NODE_STEM
 
 /**
  * The lane palette, written as whole `var(…)` literals on the theme's *runtime*
@@ -360,17 +373,16 @@ function laneX(lane: number) {
 /**
  * The `d` of one edge.
  *
- * A straight line stays in its lane. A lane change draws one half of a single
- * cubic: the whole curve runs dot to dot, from `(fromLane, ROW_HEIGHT/2)` down
- * to `(toLane, ROW_HEIGHT + ROW_HEIGHT/2)`, with vertical tangents at both ends
- * and its midpoint exactly on the rule between the rows. Splitting that cubic at
- * `t = 0.5` (de Casteljau) gives the two halves below — which is why the control
- * points look asymmetric: they are the halves of a symmetric curve, not two
- * curves that happen to meet.
+ * A straight line stays in its lane. A lane change is a stem, then half of a
+ * single cubic: the line runs straight for `NODE_STEM` out of the dot, bends
+ * across `BEND_SPAN` either side of the rule, and runs straight again into the
+ * next dot. Splitting that cubic at `t = 0.5` (de Casteljau) gives the two
+ * halves below — which is why the control points look asymmetric: they are the
+ * halves of a symmetric curve, not two curves that happen to meet.
  *
- * Both halves pass through `((x1 + x2) / 2, rule)` with the same tangent, so the
- * join is invisible even though the two are drawn by different rows into
- * different SVGs.
+ * The two halves are a 180° rotation of each other about the rule, so they pass
+ * through `((x1 + x2) / 2, rule)` with the same tangent and the join is
+ * invisible even though different rows draw them into different SVGs.
  */
 export function edgePath(edge: CommitGraphEdge): string {
   const middle = ROW_HEIGHT / 2
@@ -385,15 +397,23 @@ export function edgePath(edge: CommitGraphEdge): string {
   }
 
   if (edge.bend === "top") {
-    // Second half: in at the rule, on its lane again by the dot line.
-    const arrive = `M ${crossing} 0 C ${(crossing + x2) / 2} ${middle / 4} ${x2} ${middle / 2} ${x2} ${middle}`
-    return edge.to === "bottom" ? `${arrive} L ${x2} ${ROW_HEIGHT}` : arrive
+    // Second half: in at the rule, back on its lane a stem short of the dot
+    // line, then straight — through the dot, or on down the band.
+    const settled = edge.to === "bottom" ? ROW_HEIGHT : middle
+    return (
+      `M ${crossing} 0` +
+      ` C ${(crossing + x2) / 2} ${BEND_SPAN / 4} ${x2} ${BEND_SPAN / 2} ${x2} ${BEND_SPAN}` +
+      ` L ${x2} ${settled}`
+    )
   }
 
-  // First half: straight down to the dot line if it started at the top, then out
-  // to the rule, halfway across to its destination.
-  const lead = edge.from === "top" ? `M ${x1} 0 L ${x1} ${middle}` : `M ${x1} ${middle}`
-  return `${lead} C ${x1} ${middle + middle / 2} ${(x1 + crossing) / 2} ${middle + (3 * middle) / 4} ${crossing} ${ROW_HEIGHT}`
+  // First half: straight out of the dot for a stem, then away to the rule,
+  // halfway across to its destination.
+  const start = edge.from === "top" ? 0 : middle
+  return (
+    `M ${x1} ${start} L ${x1} ${ROW_HEIGHT - BEND_SPAN}` +
+    ` C ${x1} ${ROW_HEIGHT - BEND_SPAN / 2} ${(x1 + crossing) / 2} ${ROW_HEIGHT - BEND_SPAN / 4} ${crossing} ${ROW_HEIGHT}`
+  )
 }
 
 /** True when the edge spans two lanes and so needs a colour ramp. */
@@ -406,12 +426,12 @@ const isBlended = (edge: CommitGraphEdge) => edge.bend !== "none" && edge.fromLa
  * end colours along the straight runs beyond it.
  */
 function gradientVector(edge: CommitGraphEdge) {
-  const middle = ROW_HEIGHT / 2
+  const rule = edge.bend === "bottom" ? ROW_HEIGHT : 0
   return {
     x1: laneX(edge.fromLane),
     x2: laneX(edge.toLane),
-    y1: edge.bend === "bottom" ? middle : middle - ROW_HEIGHT,
-    y2: edge.bend === "bottom" ? middle + ROW_HEIGHT : middle,
+    y1: rule - BEND_SPAN,
+    y2: rule + BEND_SPAN,
   }
 }
 
