@@ -451,10 +451,10 @@ function BulkEditProducts() {
         </ModalBody>
       </ModalContent>
       <Note intent="info">
-        The component that draws this modal is the one that draws the inline row
-        editor, and the argument for it being the same component is the schema:
+        The modal and the cells above are the same shape over the same schema:
         one valibot object decides what a valid product is, whether you are
-        editing one cell, one row, or five rows at once.
+        editing one cell, one row, or five rows at once. That is the argument
+        for a bulk edit needing no component of its own.
       </Note>
     </div>
   )

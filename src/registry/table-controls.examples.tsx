@@ -1,16 +1,13 @@
 import { useState } from "react"
-import * as v from "valibot"
 import { Button } from "@/components/button"
 import { Note } from "@/components/note"
 import {
-  type TableEditField,
   TableBulkBar,
   TableColumnChooser,
   TableDensityToggle,
   TableFilterChips,
   TableFilterPanel,
   TablePager,
-  TableRowEditor,
   TableSearch,
   TableToolbar,
   describeFilter,
@@ -21,7 +18,7 @@ import type {
   DataTableSelection,
 } from "@/lib/data-table"
 import { emptySelection, selectionCount } from "@/lib/data-table"
-import { COUNTRIES, ORDERS, STATUSES } from "./table-fixtures.examples"
+import { ORDERS, STATUSES } from "./table-fixtures.examples"
 import type { ComponentExample } from "./types"
 
 /**
@@ -267,88 +264,6 @@ const PagerAndSelection = () => {
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/*                               the bulk editor                              */
-/* -------------------------------------------------------------------------- */
-
-const editSchema = v.object({
-  customer: v.pipe(v.string(), v.minLength(2, "Who is this order for?")),
-  country: v.picklist(COUNTRIES),
-  amount: v.pipe(v.number("A number, please"), v.minValue(0, "Not less than nothing")),
-  date: v.pipe(v.string(), v.minLength(1, "When was it placed?")),
-  isPriority: v.optional(v.boolean(), false),
-})
-
-const editFields: TableEditField[] = [
-  { name: "customer", label: "Customer", kind: "text" },
-  {
-    name: "country",
-    label: "Country",
-    kind: "select",
-    options: COUNTRIES.map((country) => ({ id: country, label: country })),
-  },
-  { name: "amount", label: "Amount", kind: "number" },
-  { name: "date", label: "Date", kind: "date" },
-  { name: "isPriority", label: "Priority", kind: "boolean" },
-]
-
-const RowEditor = () => {
-  const order = ORDERS[0]
-  const [row, setRow] = useState({
-    customer: order.customer,
-    country: order.country,
-    amount: order.amount,
-    date: order.date,
-    isPriority: order.isPriority,
-  })
-  const [isEditing, setIsEditing] = useState(true)
-  const [saved, setSaved] = useState<Record<string, unknown> | null>(null)
-
-  return (
-    <div className="flex w-full flex-col gap-3">
-      <div className="rounded-quebi-md border border-quebi-line/10 bg-quebi-brand/5 p-3">
-        {isEditing ? (
-          <TableRowEditor
-            // Remounting on the values is what a table does too: the editor
-            // binds Conform's uncontrolled defaults, so a row that changed
-            // underneath needs a new form rather than a new prop.
-            key={JSON.stringify(row)}
-            title={`Editing ${order.reference}`}
-            schema={editSchema}
-            fields={editFields}
-            defaultValue={row}
-            onSave={(value) => {
-              setRow(value as typeof row)
-              setSaved(value)
-              setIsEditing(false)
-            }}
-            onCancel={() => setIsEditing(false)}
-          />
-        ) : (
-          <Button intent="outline" size="sm" onPress={() => setIsEditing(true)}>
-            Edit {order.reference}
-          </Button>
-        )}
-      </div>
-      {saved && (
-        <Note intent="success">
-          Saved <code>{JSON.stringify(saved)}</code> — note the types: the form
-          gave back strings, and the schema turned them into a number and a
-          boolean on the way out.
-        </Note>
-      )}
-      <Note intent="info">
-        Clear the customer, or put a letter in the amount, and the error is
-        beside the field rather than a rejected save you have to reconstruct.
-        It takes a schema, a field list and a default value and knows nothing
-        about where it is drawn, which is what lets it back a bulk edit inside a
-        Modal — the one job it has beside a table, now that a table's rows are
-        edited a cell at a time.
-      </Note>
-    </div>
-  )
-}
-
 export const tableControlsExamples: ComponentExample[] = [
   {
     title: "Toolbar, search, columns and density",
@@ -367,11 +282,5 @@ export const tableControlsExamples: ComponentExample[] = [
     description:
       "TablePager over 300 imaginary rows: page size, a validated page jump, and first/previous/next/last. Beside it, TableBulkBar reading one selection model — select the whole page and it offers \"select all 300 matching\", which is the only claim that can be made about rows the browser has never seen.",
     render: () => <PagerAndSelection />,
-  },
-  {
-    title: "The row editor on its own",
-    description:
-      "TableRowEditor takes a valibot schema, a field list and a default value, and gives back a parsed object. This is where the library's Conform story and its table story meet: a row edit is a form, so a bad edit is a field error beside the field. Beside a table it backs a bulk edit inside a Modal — several rows, a few fields — because a single row of a table is edited one cell at a time.",
-    render: () => <RowEditor />,
   },
 ]
