@@ -104,3 +104,81 @@ describe("CommitGraph", () => {
     expect(screen.getByText("No commits match this filter.")).toBeInTheDocument()
   })
 })
+
+describe("the graph's appearance options", () => {
+  // The row also holds a Copy button whose icon is an <svg> full of <path>s, so
+  // every query here is scoped to the band rather than to "an svg".
+  const BAND = '[data-slot="commit-graph-lanes"]'
+
+  const branched: CommitGraphCommit[] = [
+    { ...commits[0], parents: [commits[1].sha, "beef".repeat(10)] },
+    commits[1],
+  ]
+
+  test.each([
+    ["dot", "circle"],
+    ["ring", "circle"],
+    ["square", "rect"],
+    ["diamond", "path"],
+  ] as const)("nodeShape=%s draws a %s", (nodeShape, tag) => {
+    const { container } = render(<CommitGraph commits={commits} nodeShape={nodeShape} />)
+
+    // The marker is the last element of each row's band, after the lines.
+    const markers = Array.from(container.querySelectorAll(`${BAND} > ${tag}:last-child`))
+    expect(markers).toHaveLength(commits.length)
+  })
+
+  test.each(["dot", "ring", "square", "diamond"] as const)(
+    "a merge stays distinguishable with nodeShape=%s, without relying on colour",
+    (nodeShape) => {
+      const { container } = render(<CommitGraph commits={branched} nodeShape={nodeShape} />)
+
+      const markers = Array.from(container.querySelectorAll(`${BAND} > :last-child`))
+      const [merge, ordinary] = markers
+      // Whatever the shape, the merge is the inverse of the ordinary commit —
+      // one is painted with the lane colour and the other with the page — and a
+      // touch larger. Neither signal is a hue.
+      expect(merge.getAttribute("fill")).not.toBe(ordinary.getAttribute("fill"))
+      expect([merge.getAttribute("fill"), ordinary.getAttribute("fill")]).toContain("var(--q-bg)")
+      expect(merge.getAttribute("stroke")).toBe(ordinary.getAttribute("stroke"))
+    },
+  )
+
+  test.each([
+    ["hairline", "1"],
+    ["regular", "1.5"],
+    ["bold", "2.5"],
+  ] as const)("lineWeight=%s strokes the lanes at %s", (lineWeight, width) => {
+    const { container } = render(<CommitGraph commits={commits} lineWeight={lineWeight} />)
+
+    const line = container.querySelector(`${BAND} path`)
+    expect(line).toHaveAttribute("stroke-width", width)
+  })
+
+  test("the marker's outline tracks the line weight rather than fighting it", () => {
+    const { container } = render(<CommitGraph commits={commits} lineWeight="hairline" />)
+
+    const marker = container.querySelector(`${BAND} circle`)
+    expect(marker).toHaveAttribute("stroke-width", "1.5")
+  })
+
+  test.each([
+    ["tight", "12"],
+    ["regular", "16"],
+    ["wide", "22"],
+  ] as const)("laneWidth=%s gives a one-lane graph a %spx column", (laneWidth, width) => {
+    const { container } = render(<CommitGraph commits={commits} laneWidth={laneWidth} />)
+
+    expect(container.querySelector(BAND)).toHaveAttribute("width", width)
+  })
+
+  test("a wider lane moves the geometry with it, not just the box", () => {
+    const { container } = render(<CommitGraph commits={commits} laneWidth="wide" />)
+
+    // Lane 0's centre is half a lane in, so the line is drawn at x=11, not x=8.
+    expect(container.querySelector(`${BAND} path`)).toHaveAttribute(
+      "d",
+      expect.stringContaining("11"),
+    )
+  })
+})
