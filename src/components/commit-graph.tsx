@@ -221,36 +221,54 @@ const ROW_HEIGHT = 56
 const DOT_RADIUS = 4
 
 /**
- * The lane palette, as quebi semantic token names.
+ * The lane palette, written as whole `var(…)` literals on the theme's *runtime*
+ * variables.
  *
- * Every entry is a token the theme re-declares per mode, so the SVG re-themes
- * with everything else and a lane is legible on both surfaces. Which is the
- * whole reason the list is five and not the six it reads like it wants to be:
- * a lane line is a graphical object carrying meaning, so WCAG 1.4.11 asks 3:1
- * of it, and two otherwise obvious candidates do not clear that on the light
- * surface — `--q-brand` is deliberately the *same* teal in both modes and
- * measures 1.74:1 there, and `--q-warn` misses at 2.94:1. `--q-success` is
- * within a shade of the brand teal on dark, so lane 0 still looks like quebi
- * without being the one colour that cannot flip.
+ * Both of those are deliberate, and neither is a style preference.
  *
- * `tests/commit-graph-contrast.test.ts` re-derives those numbers from
- * `src/quebi-theme.css` rather than trusting this comment, so re-tuning a token
- * fails a test here instead of washing a lane out in someone's light mode.
+ * **Why `--q-*` and not the `--color-quebi-*` alias.** quebi declares the
+ * aliases inside `@theme inline`, which makes emitting them Tailwind's job, and
+ * Tailwind only emits a theme variable it can see used — by scanning source text
+ * for the name. A colour that reaches the DOM through an SVG `stroke` attribute
+ * is not a utility class, so the only thing that can keep the variable alive is
+ * the literal name appearing in a file Tailwind scans. The `--q-*` variables are
+ * declared in ordinary `:root` / `.light` rules, so they exist no matter what a
+ * scanner concludes.
+ *
+ * **Why whole literals rather than a built string.** This list used to hold bare
+ * token names and `laneColor` assembled `var(--color-${name})`. That reads
+ * tidier and it silently broke three of the five lanes: the assembled name never
+ * appears in the source, Tailwind never emitted `--color-quebi-accent`,
+ * `-info` or `-danger`, and those lanes fell back to SVG's own defaults — black
+ * dots and, because SVG's default stroke is `none`, no line at all. Nothing
+ * failed; the graph just quietly lost its branches. Keep these as literals.
+ *
+ * The list is five and not the six it reads like it wants to be because a lane
+ * line is a graphical object carrying meaning, so WCAG 1.4.11 asks 3:1 of it,
+ * and two otherwise obvious candidates miss on the light surface: `--q-brand` is
+ * deliberately the *same* teal in both modes and measures 1.74:1 there, and
+ * `--q-warn` misses at 2.94:1. `--q-success` is within a shade of the brand teal
+ * on dark, so lane 0 still looks like quebi without being the one colour that
+ * cannot flip.
+ *
+ * `tests/commit-graph-contrast.test.ts` checks both halves against
+ * `src/quebi-theme.css`: that every variable named here is really declared by
+ * both themes, and that each clears 3:1 against its own background.
  *
  * Ordered so no two adjacent lanes are neighbouring hues.
  */
-export const LANE_COLOR_TOKENS = [
-  "quebi-success",
-  "quebi-accent",
-  "quebi-info",
-  "quebi-danger",
-  "quebi-fg-muted",
+export const LANE_COLORS = [
+  "var(--q-success)",
+  "var(--q-accent)",
+  "var(--q-info)",
+  "var(--q-danger)",
+  "var(--q-fg-muted)",
 ] as const
 
 /** The colour a lane index draws in. Stable, and defined for every integer. */
 export function laneColor(lane: number): string {
-  const count = LANE_COLOR_TOKENS.length
-  return `var(--color-${LANE_COLOR_TOKENS[((lane % count) + count) % count]})`
+  const count = LANE_COLORS.length
+  return LANE_COLORS[((lane % count) + count) % count]
 }
 
 /** Horizontal centre of a lane within the band. */
@@ -302,7 +320,7 @@ function CommitGraphLanes({ row, lanes }: { row: CommitGraphRow; lanes: number }
         cx={laneX(row.lane)}
         cy={ROW_HEIGHT / 2}
         r={row.isMerge ? DOT_RADIUS + 1 : DOT_RADIUS}
-        fill={row.isMerge ? "var(--color-quebi-bg)" : laneColor(row.lane)}
+        fill={row.isMerge ? "var(--q-bg)" : laneColor(row.lane)}
         stroke={laneColor(row.lane)}
         strokeWidth={2}
       />
@@ -427,11 +445,23 @@ export function CommitGraph({
               key={commit.sha}
               id={commit.sha}
               textValue={`${shortSha} ${commit.message}`}
+              // Two overrides here, and only one of them is a matter of taste.
+              //
+              // `py-0` is load-bearing: the band is drawn at exactly ROW_HEIGHT
+              // and stretched to the row's content box, so vertical padding
+              // would squash it below the row's own pitch and the lines would
+              // stop meeting across rows. The horizontal padding is *not*
+              // overridden — GridListItem's `px-3` is what every other row in
+              // the library sits on, and the graph column needs that gutter as
+              // much as the text does.
+              //
               // The row separator is a pseudo-element rather than a bottom
               // border: GridListItem's own `border` is a four-sided one, and
               // killing it needs `border-0`, which then has to out-order a
               // `border-b` in the generated sheet rather than simply beating it.
-              className="relative h-14 gap-3 rounded-none border-0 px-0 py-0 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-quebi-line/10 last:after:hidden sm:gap-3"
+              // Absolute + `inset-x-0` resolves against the padding box, so the
+              // rule still spans the full row rather than stopping at the text.
+              className="relative h-14 gap-3 rounded-none border-0 py-0 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-quebi-line/10 last:after:hidden sm:gap-3"
             >
               <CommitGraphLanes row={row} lanes={lanes} />
               <Snippet
@@ -464,7 +494,7 @@ export function CommitGraph({
                 date={commit.date}
                 dateStyle="medium"
                 relative={relativeDates}
-                className="shrink-0 pr-3 text-quebi-fg-subtle text-xs tabular-nums"
+                className="shrink-0 text-quebi-fg-subtle text-xs tabular-nums"
               />
             </GridListItem>
           )
