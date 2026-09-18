@@ -147,15 +147,43 @@ const choiceBoxItemStyles = tv({
       true: "col-span-full",
     },
     isActive: {
-      true: ["z-20 border-quebi-brand-mark bg-quebi-brand/5"],
+      true: ["border-quebi-brand-mark bg-quebi-brand/5"],
     },
     isDisabled: {
-      true: "z-10 opacity-50 **:data-[slot=label]:text-quebi-fg-muted forced-colors:text-[GrayText] **:[[slot=description]]:text-quebi-fg-muted/70",
+      true: "opacity-50 **:data-[slot=label]:text-quebi-fg-muted forced-colors:text-[GrayText] **:[[slot=description]]:text-quebi-fg-muted/70",
+    },
+    /**
+     * Which layer of the stack the card is painted on.
+     *
+     * In the collapsed one-column layout the cards overlap by a pixel
+     * (`*:data-[slot=choice-box-item]:-mt-px` above) so they share a hairline,
+     * and each card is opaque — so a card paints over the bottom edge of the
+     * one before it, and over anything that card draws outside its border box,
+     * unless that card is lifted. Every state that draws outward needs a layer.
+     *
+     * They live in one variant rather than as a `z-*` on each state because
+     * `tv` emits variants in the order of the keys above and tailwind-merge
+     * keeps the last `z-*` it sees: a card that is both focused and selected
+     * would otherwise take whichever of the two happened to be declared lower
+     * down, which is how the focus ring of a card that had just been deselected
+     * ended up under its neighbour (task #113).
+     */
+    elevation: {
+      /** A ring, drawn outside the border: has to clear a *selected* neighbour. */
+      ring: "z-30",
+      /** A brand border on all four edges: has to clear a plain neighbour. */
+      selected: "z-20",
+      /** Faded, but still its own edges rather than the next card's. */
+      disabled: "z-10",
     },
   },
 })
 
-interface ChoiceBoxItemProps extends GridListItemProps, VariantProps<typeof choiceBoxItemStyles> {
+interface ChoiceBoxItemProps
+  extends GridListItemProps,
+    // `elevation` is derived from the item's own state below rather than chosen
+    // by the caller, so it is not part of the prop surface.
+    Omit<VariantProps<typeof choiceBoxItemStyles>, "elevation"> {
   label?: string
   description?: string
 }
@@ -165,6 +193,7 @@ const ChoiceBoxItem = ({
   label,
   description,
   children,
+  isInvalid,
   textValue: textValueProp,
   ...props
 }: ChoiceBoxItemProps) => {
@@ -186,15 +215,27 @@ const ChoiceBoxItem = ({
       {...props}
       className={composeRenderProps(
         className,
-        (className, { isFocusVisible, isSelected, ...renderProps }) =>
-          choiceBoxItemStyles({
+        (className, { isFocusVisible, isSelected, ...renderProps }) => {
+          const isFocused = !isReadOnly && renderProps.isFocused
+          const isActive = (!isReadOnly && isSelected) || isFocusVisible
+          const drawsRing = isFocused || isInvalid
+          return choiceBoxItemStyles({
             ...renderProps,
             isOneColumn: columns === 1,
             isLink: "href" in props,
-            isFocused: !isReadOnly && renderProps.isFocused,
-            isActive: (!isReadOnly && isSelected) || isFocusVisible,
+            isFocused,
+            isInvalid,
+            isActive,
+            elevation: drawsRing
+              ? "ring"
+              : isActive
+                ? "selected"
+                : renderProps.isDisabled
+                  ? "disabled"
+                  : undefined,
             className,
-          }),
+          })
+        },
       )}
     >
       {composeRenderProps(children, (children, { selectionMode }) => {
