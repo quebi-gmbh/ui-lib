@@ -80,7 +80,7 @@ describe("documented exceptions reach Biome", () => {
     expect(rulesFiredOn(VIOLATION, "app/routes/signup.tsx")).toContain("no-raw-interactive-elements")
   })
 
-  test("vendored library source is exempt from the plugin rules (via $filename)", () => {
+  test("vendored library source is exempt from the plugin rules (via the override)", () => {
     const surface = component(
       `    <div className="rounded-quebi-md border border-quebi-line/10 p-6">{props.children}</div>`,
     )
@@ -225,19 +225,25 @@ describe("a plugin fires only where its record says it applies", () => {
   })
 
   test("a decoy directory above the project root changes nothing", () => {
-    // Task #93. `$filename` is the file's absolute path, so the old guards let
-    // any prefix stand in front of a record's glob — and an unanchored prefix
-    // cannot tell the project root from an ancestor of the same name. The
-    // harness materialises its project under `…/src/components/project/` for
-    // exactly this reason, which makes the whole suite the regression test and
-    // this case the statement of what it is testing.
+    // Tasks #93 and #97. `$filename` is the file's absolute path, so the old
+    // guards let any prefix stand in front of a record's glob — and an
+    // unanchored prefix cannot tell the project root from an ancestor of the
+    // same name. The harness materialises its project under
+    // `…/src/components/app/project/` for exactly this reason, which makes the
+    // whole suite the regression test and this case the statement of what it is
+    // testing. Every segment of that path is a decoy for a glob a record really
+    // declares: `src` and `app` are the two roots an `appliesTo` starts from,
+    // and `src/components` is the exception that carves the library layer out.
     expect(projectRoot).toContain(`${sep}src${sep}components${sep}`)
+    expect(projectRoot).toContain(`${sep}app${sep}`)
 
-    // The appliesTo direction: `tests/` is not `src/`, however many `src/`
-    // segments the checkout path contains. This is the diagnostic the bug
-    // reported — a hardcoded design value in a test fixture, read as app code.
+    // The appliesTo direction: `tests/` is not `src/` and is not `app/`, however
+    // many segments of either name the checkout path contains. This is the
+    // diagnostic the bug reported — a hardcoded design value in a test fixture,
+    // read as app code.
     const hardcoded = `export const cls = "py-[3px]"\n`
     expect(rulesFiredOn(hardcoded, "src/routes/x.tsx")).toContain("no-hardcoded-design-values")
+    expect(rulesFiredOn(hardcoded, "app/routes/x.tsx")).toContain("no-hardcoded-design-values")
     expect(rulesFiredOn(hardcoded, "tests/components/x.test.tsx")).toEqual([])
 
     // And the exception direction, which is the one that failed silently: an
@@ -248,6 +254,9 @@ describe("a plugin fires only where its record says it applies", () => {
       `    <div className="rounded-quebi-md border border-quebi-line/10 p-6">{props.children}</div>`,
     )
     expect(rulesFiredOn(surface, "src/routes/page.tsx")).toContain(
+      "no-appearance-classes-on-layout-elements",
+    )
+    expect(rulesFiredOn(surface, "app/routes/page.tsx")).toContain(
       "no-appearance-classes-on-layout-elements",
     )
   })
