@@ -1,5 +1,6 @@
 "use client"
 
+import { createContext, use } from "react"
 import {
   composeRenderProps,
   TabList as TabListPrimitive,
@@ -19,29 +20,40 @@ import { cn } from "@/lib/utils"
  * Tabs — quebi design system
  *
  * Built on react-aria-components. A quiet tab strip: inactive tabs are muted,
- * the active tab shifts to brand teal with a 2px teal underline that sits on the
- * list's bottom border. Supports horizontal and vertical orientation. Keyboard
- * and focus handling come from react-aria.
+ * the active tab shifts to brand teal with a 2px teal indicator that sits on the
+ * list's rail — an underline along the bottom border when horizontal, a bar on
+ * the inline-start border when vertical. Orientation reaches `Tab` through
+ * `TabsContext`, since react-aria exposes it to `TabList` but not to `Tab`.
+ * Keyboard and focus handling come from react-aria.
  */
+
+type TabsOrientation = NonNullable<TabsPrimitiveProps["orientation"]>
+
+const TabsContext = createContext<{ orientation: TabsOrientation }>({
+  orientation: "horizontal",
+})
+
 interface TabsProps extends TabsPrimitiveProps {
   ref?: React.RefObject<HTMLDivElement>
 }
 
 export function Tabs({ className, ref, orientation = "horizontal", ...props }: TabsProps) {
   return (
-    <TabsPrimitive
-      ref={ref}
-      orientation={orientation}
-      data-slot="tabs"
-      className={composeRenderProps(className, (className) =>
-        cn(
-          "group/tabs flex gap-4 self-start forced-color-adjust-none",
-          orientation === "vertical" ? "w-full flex-row" : "flex-col",
-          className,
-        ),
-      )}
-      {...props}
-    />
+    <TabsContext.Provider value={{ orientation }}>
+      <TabsPrimitive
+        ref={ref}
+        orientation={orientation}
+        data-slot="tabs"
+        className={composeRenderProps(className, (className) =>
+          cn(
+            "group/tabs flex gap-4 self-start forced-color-adjust-none",
+            orientation === "vertical" ? "w-full flex-row" : "flex-col",
+            className,
+          ),
+        )}
+        {...props}
+      />
+    </TabsContext.Provider>
   )
 }
 
@@ -59,7 +71,7 @@ export function TabList<T extends object>({ className, ref, ...props }: TabListP
           "relative flex forced-color-adjust-none",
           orientation === "horizontal" && "flex-row gap-6 border-b border-quebi-line/10",
           orientation === "vertical" &&
-            "min-w-56 shrink-0 flex-col items-start gap-y-2 border-l border-quebi-line/10",
+            "min-w-56 shrink-0 flex-col items-start gap-y-2 border-s border-quebi-line/10",
           className,
         ),
       )}
@@ -73,6 +85,8 @@ interface TabProps extends TabPrimitiveProps {
 }
 
 export function Tab({ className, ref, ...props }: TabProps) {
+  const { orientation } = use(TabsContext)
+
   return (
     <TabPrimitive
       ref={ref}
@@ -80,6 +94,9 @@ export function Tab({ className, ref, ...props }: TabProps) {
       className={composeRenderProps(className, (className, { isSelected }) =>
         cn(
           "group/tab relative flex items-center whitespace-nowrap py-2.5 text-sm font-semibold outline-hidden transition-colors duration-150 [-webkit-tap-highlight-color:transparent]",
+          // Vertical tabs sit against the list's inline-start rail, so they need
+          // the inline padding that `py-2.5` alone gives the horizontal strip.
+          orientation === "vertical" && "ps-4",
           // Quiet until selected: muted text, brand teal when active.
           "text-quebi-fg-muted selected:text-quebi-brand-text hover:text-quebi-fg selected:hover:text-quebi-brand-text",
           "focus-visible:ring-2 focus-visible:ring-quebi-brand/50 focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg rounded-quebi-sm",
@@ -89,7 +106,9 @@ export function Tab({ className, ref, ...props }: TabProps) {
           "href" in props ? "cursor-pointer" : "cursor-default",
           // Brand teal indicator overlapping the list border. 2px radius cap.
           "after:absolute after:bg-quebi-brand after:rounded-[2px] after:duration-200 after:opacity-0 selected:after:opacity-100",
-          "after:inset-x-0 after:-bottom-px after:h-[2px]",
+          orientation === "vertical"
+            ? "after:inset-y-0 after:-start-px after:w-[2px]"
+            : "after:inset-x-0 after:-bottom-px after:h-[2px]",
           isSelected && "after:opacity-100",
           className,
         ),
