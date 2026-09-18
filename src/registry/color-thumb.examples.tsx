@@ -20,14 +20,15 @@ export const colorThumbExamples: ComponentExample[] = [
   },
   {
     title: "Disabled",
-    description: "A disabled color area dims the thumb and makes it non-interactive.",
+    description:
+      "A disabled color area mutes the whole surface — gradient and thumb — and makes it non-interactive.",
     render: () => (
       <ColorArea
         isDisabled
         defaultValue="hsb(120, 80%, 90%)"
         xChannel="saturation"
         yChannel="brightness"
-        className="relative size-40 rounded-quebi-md border border-quebi-line/20 bg-quebi-bg"
+        className="relative size-40 rounded-quebi-md border border-quebi-line/20"
       >
         <ColorThumb />
       </ColorArea>
