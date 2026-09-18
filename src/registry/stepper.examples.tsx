@@ -20,7 +20,7 @@ export const stepperExamples: ComponentExample[] = [
   {
     title: "Admin",
     description:
-      "Labelled bullets connected by progress lines. Completed steps fill teal; the active step glows.",
+      "Labelled bullets connected by progress lines. Completed steps fill teal; the active step is a teal ring on the page background.",
     render: () => <Stepper steps={adminSteps} aria-label="Onboarding progress" />,
   },
   {
@@ -29,6 +29,12 @@ export const stepperExamples: ComponentExample[] = [
     render: () => (
       <Stepper variant="kiosk" steps={kioskSteps} aria-label="Wizard progress" />
     ),
+  },
+  {
+    title: "Glow",
+    description:
+      "Opt in with `glow` for a kiosk or hero surface where the stepper is the subject. It is off by default: on an admin form, every completed bullet haloed at once reads as noise rather than progress.",
+    render: () => <Stepper glow steps={adminSteps} aria-label="Onboarding progress" />,
   },
   {
     title: "First step active",
