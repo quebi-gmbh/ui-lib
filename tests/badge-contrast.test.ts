@@ -297,3 +297,56 @@ describe("the `ai` intent, which is not fixed here", () => {
     expect(THEMES[0].values.get("q-brand")).toBe(THEMES[1].values.get("q-brand") as string)
   })
 })
+
+/**
+ * A link inside body copy, where the second cue is not optional.
+ *
+ * WCAG 1.4.1 asks for 3:1 between link text and the text it sits inside when
+ * colour is the only thing telling them apart. `--q-brand-text` against
+ * `--q-fg-muted` is 1.38:1 on light and 1.34:1 on dark — the same darkness, a
+ * different hue — and that cannot be re-tuned away: a `--q-brand-text` that
+ * clears 4.5:1 on `--q-bg` (#f4f6f6) needs luminance ≤ 0.1651, and sitting 3:1
+ * either side of `--q-fg-muted` (#4b5563) needs ≥ 0.3668 or ≤ −0.004, i.e.
+ * darker than black. No colour satisfies both while body copy stays gray-600.
+ *
+ * So `Link` carries a resting underline instead, and both halves are pinned
+ * here: the arithmetic that forces it, and the class that provides it. Re-tune
+ * the tokens until the ratio does clear 3:1 and the first test fails, which is
+ * the moment the underline becomes a choice rather than a requirement.
+ */
+describe("an inline link against the prose around it", () => {
+  const LINK_SOURCE = readFileSync(join(ROOT, "src", "components", "link.tsx"), "utf8")
+
+  for (const { name: theme, values } of THEMES) {
+    test(`${theme}: --q-brand-text is under 3:1 against --q-fg-muted, so colour cannot be the only cue`, () => {
+      const ratio = contrast(values.get("q-brand-text") as string, values.get("q-fg-muted") as string)
+      expect(ratio).toBeLessThan(3)
+    })
+  }
+
+  test("light: no --q-brand-text can clear 4.5:1 on the page and 3:1 against the body copy at once", () => {
+    const { values } = THEMES[1]
+    const bg = relativeLuminance(values.get("q-bg") as string)
+    const muted = relativeLuminance(values.get("q-fg-muted") as string)
+    // Darkest a 4.5:1-on-background link may be, and the lightest/darkest a
+    // 3:1-from-body-copy one would have to be.
+    const darkEnoughForBg = (bg + 0.05) / 4.5 - 0.05
+    const lighterThanMuted = 3 * (muted + 0.05) - 0.05
+    const darkerThanMuted = (muted + 0.05) / 3 - 0.05
+
+    expect(lighterThanMuted).toBeGreaterThan(darkEnoughForBg)
+    expect(darkerThanMuted).toBeLessThan(0)
+  })
+
+  test("Link underlines at rest, and says so in one place", () => {
+    const base = LINK_SOURCE.slice(
+      LINK_SOURCE.indexOf("const BASE_CLASSES"),
+      LINK_SOURCE.indexOf("export interface LinkProps"),
+    )
+    expect(base).toInclude("underline decoration-quebi-brand-text/40")
+    // `no-underline` in the base would put it back to colour-only. The opt-out
+    // is a caller's `className`, not a default.
+    expect(base).not.toInclude('"font-sans font-medium text-quebi-brand-text no-underline')
+    expect(base.match(/(?<!data-disabled:|disabled:|hover:)no-underline/)).toBeNull()
+  })
+})

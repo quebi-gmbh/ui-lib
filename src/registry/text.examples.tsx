@@ -24,7 +24,7 @@ export const textExamples: ComponentExample[] = [
   },
   {
     title: "With a link",
-    description: "Inline TextLink uses the brand-teal underline treatment.",
+    description: "Inline TextLink carries the brand-teal underline every Link has at rest.",
     render: () => (
       <Text>
         Need the full breakdown? Read the{" "}
