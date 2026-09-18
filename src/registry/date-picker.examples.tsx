@@ -1,9 +1,25 @@
-import { parseDate } from "@internationalized/date"
+import { parseDate, toZoned } from "@internationalized/date"
 import { useState } from "react"
 import type { DateValue } from "react-aria-components"
 import { DatePicker, DatePickerTrigger } from "@/components/date-picker"
 import { Description, FieldError, Label } from "@/components/field"
+import { FormattedDate } from "@/components/formatted-date"
 import type { ComponentExample } from "./types"
+
+/**
+ * A `CalendarDate` has no time of day and no time zone, so rendering one
+ * through `Intl` means choosing both. `toString()` dodges the choice by
+ * emitting the ISO 8601 wire format — which is what the reader sees sitting a
+ * few pixels under a trigger that spells the same day `30.6.2026`.
+ *
+ * `FormattedDate` is the library's answer, and it formats in `Europe/Berlin`
+ * unless told otherwise. So the date has to be *anchored* in that same zone:
+ * `toZoned(value, getLocalTimeZone())` would build the instant in the viewer's
+ * zone, and for a viewer west of Berlin that instant lands on the previous
+ * Berlin day — the description would then disagree with the segments by one.
+ * One constant, used on both sides, is what keeps them in step.
+ */
+const DISPLAY_TIME_ZONE = "Europe/Berlin"
 
 export const datePickerExamples: ComponentExample[] = [
   {
@@ -56,7 +72,17 @@ export const datePickerExamples: ComponentExample[] = [
           <DatePicker className="max-w-xs" value={value} onChange={setValue}>
             <Label>Pick a date</Label>
             <DatePickerTrigger />
-            <Description>{value ? value.toString() : "No date selected"}</Description>
+            <Description>
+              {value ? (
+                <FormattedDate
+                  date={toZoned(value, DISPLAY_TIME_ZONE).toDate()}
+                  timeZone={DISPLAY_TIME_ZONE}
+                  dateStyle="medium"
+                />
+              ) : (
+                "No date selected"
+              )}
+            </Description>
           </DatePicker>
         )
       }
