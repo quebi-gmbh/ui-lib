@@ -168,28 +168,55 @@ export interface DaySegment<E extends CalendarEvent = CalendarEvent> {
   event: E
   /** Index into the `days` array the segment was cut against. */
   dayIndex: number
-  /** Clock minutes from midnight, clamped to 0–1440. */
+  /** Clock minutes from midnight, clamped to the visible window. */
   start: number
-  /** Clock minutes from midnight, clamped to 0–1440. */
+  /** Clock minutes from midnight, clamped to the visible window. */
   end: number
-  /** The event started before this day — draw a flat top edge. */
+  /** The event started before the window — draw a flat top edge. */
   continuesBefore: boolean
-  /** The event runs past this day — draw a flat bottom edge. */
+  /** The event runs past the window — draw a flat bottom edge. */
   continuesAfter: boolean
 }
 
 /**
- * Cut timed events into per-day segments against `days`.
+ * The slice of a day an axis actually draws, in clock minutes from midnight.
+ *
+ * A grid that starts at 09:00 is not showing the first 540 minutes of the day,
+ * so an event inside them is not something it can draw — and a segment cut
+ * against the whole day would be positioned outside the grid by whatever it is
+ * asked to turn minutes into pixels. Defaults to the whole day.
+ */
+export interface DayWindow {
+  /** First minute on the axis. Default 0. */
+  startMinute?: number
+  /** Last minute on the axis, exclusive. Default 1440. */
+  endMinute?: number
+}
+
+/**
+ * Cut timed events into per-day segments against `days`, inside `visible`.
  *
  * All-day events are skipped — `packBands` places those. An event ending exactly
- * at midnight produces no zero-height segment on the following day, which is the
- * case that otherwise leaves a one-pixel ghost at the top of every Tuesday.
+ * at the start of the window produces no zero-height segment inside it, which is
+ * the case that otherwise leaves a one-pixel ghost at the top of every Tuesday.
+ *
+ * The window is the same clamp as midnight, applied to a narrower day: an event
+ * reaching across either edge is cut at it and flagged `continuesBefore` /
+ * `continuesAfter`, so the block draws the flat edge that says "this is one
+ * thing cut", and an event wholly outside contributes nothing. Without it a
+ * 21:00 meeting on a 09:00–13:00 axis is not merely invisible — it is drawn
+ * hundreds of pixels below the last gridline, where it inflates the scroll area
+ * of whichever ancestor scrolls and gives the reader empty space to scroll
+ * through (task #161).
  */
 export function segmentByDay<E extends CalendarEvent>(
   events: readonly E[],
   days: readonly CalendarDate[],
   timeZone: string,
+  visible: DayWindow = {},
 ): DaySegment<E>[] {
+  const windowStart = clamp(visible.startMinute ?? 0, 0, MINUTES_PER_DAY)
+  const windowEnd = clamp(visible.endMinute ?? MINUTES_PER_DAY, windowStart, MINUTES_PER_DAY)
   const segments: DaySegment<E>[] = []
 
   for (const event of events) {
@@ -202,19 +229,19 @@ export function segmentByDay<E extends CalendarEvent>(
       const rawEnd = wallMinutes(event.end, day, timeZone)
 
       // Half-open, with one carve-out: a zero-length event has no interior to
-      // overlap the day with, so it is placed by its start alone.
-      const overlaps = rawStart < MINUTES_PER_DAY && rawEnd > 0
+      // overlap the window with, so it is placed by its start alone.
+      const overlaps = rawStart < windowEnd && rawEnd > windowStart
       const zeroLength = rawEnd === rawStart
-      const startsWithin = rawStart >= 0 && rawStart < MINUTES_PER_DAY
+      const startsWithin = rawStart >= windowStart && rawStart < windowEnd
       if (!overlaps && !(zeroLength && startsWithin)) continue
 
       segments.push({
         event,
         dayIndex,
-        start: clamp(rawStart, 0, MINUTES_PER_DAY),
-        end: clamp(rawEnd, 0, MINUTES_PER_DAY),
-        continuesBefore: rawStart < 0,
-        continuesAfter: rawEnd > MINUTES_PER_DAY,
+        start: clamp(rawStart, windowStart, windowEnd),
+        end: clamp(rawEnd, windowStart, windowEnd),
+        continuesBefore: rawStart < windowStart,
+        continuesAfter: rawEnd > windowEnd,
       })
     }
   }

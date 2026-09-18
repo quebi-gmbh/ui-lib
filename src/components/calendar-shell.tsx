@@ -223,9 +223,17 @@ export interface CalendarShellProps<E extends CalendarEvent = CalendarEvent> {
   timeZone?: string
   /** BCP 47 tag. Defaults to the nearest `I18nProvider`'s locale. */
   locale?: string
-  /** First hour on the axis. Default 0. */
+  /**
+   * First hour on the axis. Default 0.
+   *
+   * The axis is the grid's extent, not a scroll position: an event outside
+   * `[startHour, endHour)` is not drawn, and one reaching across either edge is
+   * cut at it and gets the same flat edge a midnight crossing does. Narrow the
+   * axis and you are choosing what the grid shows, so pair it with a filter the
+   * reader can see if events can fall outside it.
+   */
   startHour?: number
-  /** Last hour on the axis, exclusive. Default 24. */
+  /** Last hour on the axis, exclusive. Default 24. See `startHour`. */
   endHour?: number
   /** Pixels per hour. Default 48. */
   hourHeight?: number
@@ -303,9 +311,16 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
   const axisMinutes = (axisEnd - axisStart) * 60
   const gridHeight = (axisEnd - axisStart) * hourHeight
 
+  // Cut against the axis, not against midnight: `toTop` is a linear map with no
+  // clamp in it, so a segment the window does not contain is drawn outside the
+  // grid rather than not at all — see `DayWindow`.
   const segments = useMemo(
-    () => segmentByDay(events, days, timeZone),
-    [events, days, timeZone],
+    () =>
+      segmentByDay(events, days, timeZone, {
+        startMinute: axisStart * 60,
+        endMinute: axisEnd * 60,
+      }),
+    [events, days, timeZone, axisStart, axisEnd],
   )
   const packed = useMemo(() => packColumns(segments), [segments])
   const bands = useMemo(() => packBands(events, days, timeZone), [events, days, timeZone])
@@ -317,6 +332,17 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
   const toTop = (minutes: number) => ((minutes - axisStart * 60) / axisMinutes) * gridHeight
   const hours = Array.from({ length: axisEnd - axisStart }, (_, index) => axisStart + index)
   const firstDay = days[0]
+
+  // Where the now-marker goes, or `null` when there is no line to draw on any
+  // column: no clock read yet, or a reading this axis does not cover. The second
+  // half is the guard `CalendarTimeline` has always had — without it 19:04 on a
+  // 09:00–13:00 axis is placed 388px below the last gridline, which is scrollable
+  // space the grid never drew (task #161).
+  const markerMinutes = currentInstant ? currentInstant.hour * 60 + currentInstant.minute : null
+  const markerTop =
+    markerMinutes !== null && markerMinutes >= axisStart * 60 && markerMinutes <= axisEnd * 60
+      ? toTop(markerMinutes)
+      : null
 
   const columns = { gridTemplateColumns: `repeat(${Math.max(1, days.length)}, minmax(0, 1fr))` }
 
@@ -436,17 +462,16 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
                       color={resolveEventColor(segment.event, calendars)}
                       top={toTop(segment.start)}
                       bottom={toTop(segment.end)}
+                      gridHeight={gridHeight}
                       locale={locale}
                       timeZone={timeZone}
                       isSelected={selection.value === segment.event.id}
                       onActivate={activate}
                     />
                   ))}
-                {isSameDayAs(currentInstant, day) && currentInstant ? (
+                {markerTop !== null && currentInstant && isSameDayAs(currentInstant, day) ? (
                   <NowMarker
-                    top={toTop(
-                      currentInstant.hour * 60 + currentInstant.minute,
-                    )}
+                    top={markerTop}
                     label={formatEventTime(currentInstant, locale, timeZone)}
                   />
                 ) : null}
@@ -523,6 +548,8 @@ interface TimedBlockProps<E extends CalendarEvent> {
   color: CalendarColorName
   top: number
   bottom: number
+  /** The axis's full height, so a block short enough to need padding stays in it. */
+  gridHeight: number
   locale: string
   timeZone: string
   isSelected: boolean
@@ -537,6 +564,7 @@ function TimedBlock<E extends CalendarEvent>({
   color,
   top,
   bottom,
+  gridHeight,
   locale,
   timeZone,
   isSelected,
@@ -544,6 +572,10 @@ function TimedBlock<E extends CalendarEvent>({
 }: TimedBlockProps<E>) {
   const palette = CALENDAR_COLORS[color]
   const height = Math.max(MIN_BLOCK_HEIGHT, bottom - top)
+  // The minimum grows a short block downwards, so a five-minute event against
+  // the end of the axis would hang past the last gridline — the same escape the
+  // now-marker used to make, in miniature. Push it up onto the axis instead.
+  const y = Math.max(0, Math.min(top, gridHeight - height))
   const left = (segment.column / segment.columns) * 100
   const width = (segment.span / segment.columns) * 100
 
@@ -555,7 +587,7 @@ function TimedBlock<E extends CalendarEvent>({
       // The 2px inset is the negative space that separates touching blocks. A
       // border round each one would be ink that is not data — see the palette
       // note above — and two adjacent borders read as one thick divider.
-      style={{ top, height, left: `${left}%`, width: `calc(${width}% - 2px)` }}
+      style={{ top: y, height, left: `${left}%`, width: `calc(${width}% - 2px)` }}
       className={cn(
         "absolute cursor-pointer overflow-hidden text-left",
         "border-l-2 px-1.5 py-0.5 transition-colors duration-150",

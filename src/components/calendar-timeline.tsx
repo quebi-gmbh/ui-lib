@@ -61,9 +61,14 @@ export interface CalendarTimelineProps<E extends CalendarEvent = CalendarEvent> 
   onDateChange?: (date: CalendarDate) => void
   timeZone?: string
   locale?: string
-  /** First hour on the axis. Default 6 — a resource view rarely starts at midnight. */
+  /**
+   * First hour on the axis. Default 6 — a resource view rarely starts at midnight.
+   *
+   * As in `CalendarShell`, the axis is the grid's extent: a bar outside
+   * `[startHour, endHour)` is not drawn, and one crossing an edge is cut at it.
+   */
   startHour?: number
-  /** Last hour on the axis, exclusive. Default 22. */
+  /** Last hour on the axis, exclusive. Default 22. See `startHour`. */
   endHour?: number
   /** Pixels per hour. Default 72. */
   hourWidth?: number
@@ -231,6 +236,10 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                   const palette = CALENDAR_COLORS[resolveEventColor(bar.segment.event, calendars)]
                   const left = toLeft(bar.segment.start)
                   const right = toLeft(bar.segment.end)
+                  // The minimum grows a short bar rightwards; against the end of
+                  // the axis that would put it past the last hour line, so it is
+                  // pushed back onto the grid instead.
+                  const width = Math.max(18, right - left - 2)
                   return (
                     <Button
                       key={`${bar.segment.event.id}:${bar.lane}`}
@@ -238,8 +247,8 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                       data-event-id={bar.segment.event.id}
                       onPress={() => activate(bar.segment.event)}
                       style={{
-                        left,
-                        width: Math.max(18, right - left - 2),
+                        left: Math.max(0, Math.min(left, gridWidth - width)),
+                        width,
                         top: 4 + bar.lane * laneHeight,
                         height: laneHeight - 4,
                       }}
@@ -310,7 +319,14 @@ function buildRows<E extends CalendarEvent>(
   windowStart: number,
   windowEnd: number,
 ): TimelineRow<E>[] {
-  const timed = segmentByDay(events, days, timeZone)
+  // Cut against the axis, for the same reason `CalendarShell` does: `toLeft` has
+  // no clamp in it, so an event the window does not cover is drawn past the end
+  // of the grid, where it inflates the horizontal scroll instead of being absent
+  // (task #161).
+  const timed = segmentByDay(events, days, timeZone, {
+    startMinute: windowStart,
+    endMinute: windowEnd,
+  })
   const allDay = packBands(events, days, timeZone).map(
     (band): DaySegment<E> => ({
       event: band.event,

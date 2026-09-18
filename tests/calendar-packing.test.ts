@@ -253,6 +253,78 @@ describe("segmentByDay", () => {
     expect(wallMinutes(start, dstDay, ZONE)).toBe(540)
   })
 
+  test("a window is the same clamp as midnight, applied to a narrower day", () => {
+    // Task #161: a 09:00–13:00 axis draws 540–780, so what the segments say has
+    // to be what the grid can hold. 08:00–20:00 is one full-height block cut at
+    // both edges, and the flags are what makes those edges read as cuts.
+    const window = { startMinute: 9 * 60, endMinute: 13 * 60 }
+    const [segment] = segmentByDay(
+      [ev("all-day-ish", "2026-09-21T08:00", "2026-09-21T20:00")],
+      days(1),
+      ZONE,
+      window,
+    )
+    expect(segment).toMatchObject({
+      start: 540,
+      end: 780,
+      continuesBefore: true,
+      continuesAfter: true,
+    })
+  })
+
+  test("an event wholly outside the window contributes nothing", () => {
+    // The whole of the reported bug: 21:00 on a 09:00–13:00 axis used to become
+    // a block hundreds of pixels below the last gridline, because `toTop` has no
+    // clamp in it and nothing above it clips.
+    const window = { startMinute: 9 * 60, endMinute: 13 * 60 }
+    expect(
+      segmentByDay([ev("evening", "2026-09-21T21:00", "2026-09-21T22:00")], days(1), ZONE, window),
+    ).toHaveLength(0)
+    expect(
+      segmentByDay([ev("dawn", "2026-09-21T06:00", "2026-09-21T07:00")], days(1), ZONE, window),
+    ).toHaveLength(0)
+  })
+
+  test("an event ending at the window's start leaves no ghost inside it", () => {
+    // The midnight-ghost rule, at the other edge the window introduces.
+    const window = { startMinute: 9 * 60, endMinute: 13 * 60 }
+    expect(
+      segmentByDay([ev("before", "2026-09-21T08:00", "2026-09-21T09:00")], days(1), ZONE, window),
+    ).toHaveLength(0)
+    // …and one starting exactly at the end is outside it, because the axis's
+    // last hour is exclusive.
+    expect(
+      segmentByDay([ev("after", "2026-09-21T13:00", "2026-09-21T14:00")], days(1), ZONE, window),
+    ).toHaveLength(0)
+  })
+
+  test("the default window is the whole day, so every other case is unchanged", () => {
+    expect(segmentByDay([ev("a", "2026-09-21T09:00", "2026-09-21T10:00")], days(1), ZONE)).toEqual(
+      segmentByDay([ev("a", "2026-09-21T09:00", "2026-09-21T10:00")], days(1), ZONE, {
+        startMinute: 0,
+        endMinute: 1440,
+      }),
+    )
+  })
+
+  test("packing runs over what is visible, so an off-axis clash does not narrow a block", () => {
+    // Two events that only overlap before 09:00 are not a conflict on a
+    // 09:00–13:00 axis, and the surviving one keeps its full width.
+    const packed = packColumns(
+      segmentByDay(
+        [
+          ev("early", "2026-09-21T07:00", "2026-09-21T09:30"),
+          ev("earlier", "2026-09-21T07:15", "2026-09-21T08:00"),
+        ],
+        days(1),
+        ZONE,
+        { startMinute: 9 * 60, endMinute: 13 * 60 },
+      ),
+    )
+    expect(packed).toHaveLength(1)
+    expect(packed[0]).toMatchObject({ start: 540, end: 570, columns: 1, continuesBefore: true })
+  })
+
   test("an instant is placed by the zone the grid is drawn in", () => {
     // 23:30 in Berlin is 22:30 in London — the previous evening either way, but
     // 00:30 Berlin is still the 21st in London. The zone decides the day.

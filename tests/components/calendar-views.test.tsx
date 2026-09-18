@@ -397,6 +397,110 @@ describe("CalendarTimeline", () => {
  * (a month that needs six rows, a week that straddles two months) arrive on
  * their own.
  */
+/**
+ * The axis is the grid's extent (task #161).
+ *
+ * `toTop` and `toLeft` are unclamped linear maps, and every ancestor between an
+ * event block and the scroll box is `overflow: visible` — so anything handed a
+ * minute the axis does not cover is not invisible, it is *drawn outside*, where
+ * it extends the scrollable area and the reader can scroll through empty space
+ * to reach it. That was reported as "the time grid is cut off at 13 o'clock but
+ * I can scroll much further to the red line".
+ *
+ * The fix is geometric rather than a clip: what the axis cannot hold is not
+ * given a position at all. These assertions are on `top`/`left` in pixels
+ * because that is the thing that was wrong.
+ */
+describe("nothing is drawn outside the axis", () => {
+  /** The reported case: 09:00–13:00 at 64px/hour, so the grid is 256px tall. */
+  const bare = (extra: Partial<React.ComponentProps<typeof DayView>> = {}) =>
+    render(
+      <DayView
+        date={MONDAY}
+        events={[]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        startHour={9}
+        endHour={13}
+        hourHeight={64}
+        now={null}
+        {...extra}
+      />,
+    )
+
+  test("a now outside the axis draws no marker", () => {
+    const { container } = bare({ now: at(MONDAY, 19, 4) })
+    expect(container.querySelector('[data-slot="calendar-now-marker"]')).toBeNull()
+  })
+
+  test("a now before the axis draws no marker either", () => {
+    const { container } = bare({ now: at(MONDAY, 6, 30) })
+    expect(container.querySelector('[data-slot="calendar-now-marker"]')).toBeNull()
+  })
+
+  test("a now inside the axis still lands on its minute", () => {
+    const { container } = bare({ now: at(MONDAY, 10, 30) })
+    const marker = container.querySelector<HTMLElement>('[data-slot="calendar-now-marker"]')
+    // 90 minutes into a 240-minute axis drawn 256px tall.
+    expect(marker?.style.top).toBe("96px")
+  })
+
+  test("the closing hour is on the axis, where it is the last gridline", () => {
+    const { container } = bare({ now: at(MONDAY, 13) })
+    const marker = container.querySelector<HTMLElement>('[data-slot="calendar-now-marker"]')
+    expect(marker?.style.top).toBe("256px")
+  })
+
+  test("an event outside the axis is not drawn", () => {
+    const { container } = bare({
+      events: [{ id: "evening", title: "Dinner", start: at(MONDAY, 21), end: at(MONDAY, 22) }],
+    })
+    expect(blocks(container).size).toBe(0)
+  })
+
+  test("an event crossing the axis is cut at it, not drawn past it", () => {
+    const { container } = bare({
+      events: [{ id: "long", title: "Offsite", start: at(MONDAY, 8), end: at(MONDAY, 20) }],
+    })
+    const block = blocks(container).get("long")
+    expect(block?.style.top).toBe("0px")
+    expect(block?.style.height).toBe("256px")
+  })
+
+  test("a block too short to draw is pushed onto the axis, not past its foot", () => {
+    // 12:55–13:00 computes to 5.33px and is drawn at the 18px minimum, which
+    // grows downwards — off the end of a 256px grid unless it is pushed back.
+    const { container } = bare({
+      events: [{ id: "tiny", title: "Ping", start: at(MONDAY, 12, 55), end: at(MONDAY, 13) }],
+    })
+    const block = blocks(container).get("tiny")
+    expect(block?.style.height).toBe("18px")
+    expect(block?.style.top).toBe("238px")
+  })
+
+  test("the timeline draws no bar for an event off its axis either", () => {
+    const { container } = render(
+      <CalendarTimeline
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[
+          { id: "night", title: "On call", start: at(MONDAY, 21), end: at(MONDAY, 22), calendarId: "me" },
+          { id: "day", title: "Planning", start: at(MONDAY, 9), end: at(MONDAY, 10), calendarId: "me" },
+        ]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+        startHour={8}
+        endHour={18}
+        hourWidth={60}
+      />,
+    )
+    const bars = blocks(container, "calendar-bar")
+    expect(bars.has("night")).toBe(false)
+    expect(bars.get("day")?.style.left).toBe("60px")
+  })
+})
+
 describe("the published examples", () => {
   const sets: [string, ComponentExample[]][] = [
     ["calendar-shell", calendarShellExamples],
