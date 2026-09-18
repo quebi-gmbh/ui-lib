@@ -2,6 +2,14 @@
 // AUTO-GENERATED from https://ui-lib.quebi.de/api/rules/intent-buttons-must-not-be-type-button.json — do not edit by hand.
 //
 // https://ui-lib.quebi.de/rules/intent-buttons-must-not-be-type-button
+//
+// This file says nothing about where the rule applies. Load it from an
+// `overrides` entry in biome.jsonc whose `includes` are:
+//   ["app/**/*.{tsx,jsx}","src/**/*.{tsx,jsx}"]
+// Biome matches those globs against your project root. A guard inside this
+// file could not: GritQL's $filename is absolute, so a relative glob would
+// also be satisfied by a directory above the checkout — a tree kept under
+// ~/src would put every file in it in scope, and every exception too.
 
 language js;
 
@@ -13,8 +21,6 @@ or {
   $spread <: r".*\.(?:insert|remove|reorder|reset|update|validate)\.getButtonProps\(.*",
   $attrs <: contains JsxAttribute(name = `type`, initializer = $init),
   $init <: r".*button.*",
-  // applies to: app/**/*.{tsx,jsx}, src/**/*.{tsx,jsx}
-  $filename <: r"(?:(?:.*/)?app/(?:.*/)?[^/]*\.(?:tsx|jsx)$|(?:.*/)?src/(?:.*/)?[^/]*\.(?:tsx|jsx)$)",
   register_diagnostic(
     span = $node,
     message = "A Conform intent button has to be type='submit': getButtonProps supplies name, value, form and formNoValidate but never the type, and a type='button' control fires no submit event, so the insert/remove/reorder is dropped silently. Change it to type='submit', or call form.insert(...) from onPress instead of spreading the props. See https://ui-lib.quebi.de/rules/intent-buttons-must-not-be-type-button",

@@ -11,7 +11,7 @@
  * reasons CI says it is.
  */
 import { describe, expect, test } from "bun:test"
-import { readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
+import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import {
   buildBiomeConfig,
@@ -91,9 +91,7 @@ describe("the generated config is the one the rule records describe", () => {
     const expected = pluginRules(rulesRegistry)
     for (const rule of expected) {
       const path = join(ROOT, PLUGIN_DIR, `${rule.id}.grit`)
-      expect(readFileSync(path, "utf8")).toBe(
-        renderGritPlugin(rule, undefined, localIgnoresFor(rule.id)),
-      )
+      expect(readFileSync(path, "utf8")).toBe(renderGritPlugin(rule))
     }
     // An orphan is the dangerous case: a rule deleted from the registry leaves a
     // plugin behind that biome.jsonc no longer loads, or worse, still does.
@@ -117,6 +115,26 @@ describe("the generated config is the one the rule records describe", () => {
     expect(JSON.stringify(after)).not.toContain('"button"')
   })
 
+  test("a local scope on a plugin rule reaches the entry that loads it", async () => {
+    // A local scope on a built-in rule is an ordinary override, and the
+    // comparison above would catch it going missing. On a plugin rule it is a
+    // negated pattern on the entry that loads the plugin, which is the only
+    // place a plugin's scope can be stated — there is no `overrides` entry that
+    // unloads one, and no suppression comment for a plugin diagnostic either.
+    // Lose it and the rule fires on a fixture that renders its counter-example
+    // on purpose.
+    const config = await buildRepoConfig()
+    for (const rule of pluginRules(rulesRegistry)) {
+      const entry = config.overrides.find((o) =>
+        o.plugins?.some((p) => p.endsWith(`/${rule.id}.grit`)),
+      )
+      expect(entry).toBeTruthy()
+      for (const { glob } of localIgnoresFor(rule.id)) {
+        expect(entry?.includes).toContain(`!${glob}`)
+      }
+    }
+  })
+
   test("every local scope names real rules and says why", () => {
     for (const scope of localScopes) {
       expect(scope.includes.length).toBeGreaterThan(0)
@@ -127,6 +145,121 @@ describe("the generated config is the one the rule records describe", () => {
       for (const id of scope.rules) {
         expect(rulesRegistry.map((r) => r.id)).toContain(id)
       }
+    }
+  })
+})
+
+/**
+ * Lint an identical little tree from several checkout paths and return what each
+ * one reported, keyed by the path it was checked out to.
+ *
+ * The tree is two files, one for each direction the bug ran in: a `src/routes/`
+ * file that every rule claims, and a `tests/` file that no plugin rule does. The
+ * config and the plugins are the committed ones, copied rather than rebuilt —
+ * the question is what a consumer of these artifacts gets, not what the
+ * generator thinks it emitted.
+ */
+function lintFromCheckouts(paths: string[]): Record<string, string[]> {
+  const sandbox = join("/tmp", `quebi-checkout-path-${process.pid}`)
+  rmSync(sandbox, { recursive: true, force: true })
+  const reported: Record<string, string[]> = {}
+
+  try {
+    for (const relative of paths) {
+      const root = join(sandbox, relative)
+      mkdirSync(join(root, "src", "routes"), { recursive: true })
+      mkdirSync(join(root, "tests"), { recursive: true })
+      cpSync(join(ROOT, CONFIG_FILE), join(root, CONFIG_FILE))
+      cpSync(join(ROOT, PLUGIN_DIR), join(root, PLUGIN_DIR), { recursive: true })
+      // The config reads .gitignore, so Biome wants a git checkout to read it
+      // from and refuses to run at all without one.
+      writeFileSync(join(root, ".gitignore"), "")
+      Bun.spawnSync(["git", "init", "-q"], { cwd: root })
+
+      // An arbitrary spacing value in a test fixture: outside every plugin
+      // rule's appliesTo, and the false positive that started this.
+      writeFileSync(
+        join(root, "tests", "probe.test.tsx"),
+        'export const Probe = () => <div className="p-2">{"py-[3px]"}</div>\n',
+      )
+      // A hardcoded colour in app code: inside every plugin rule's appliesTo,
+      // and the diagnostic an over-matching exception guard used to swallow.
+      writeFileSync(
+        join(root, "src", "routes", "probe.tsx"),
+        'export const Probe = () => <div className="bg-[#f00]">x</div>\n',
+      )
+
+      const run = Bun.spawnSync(
+        [BIOME, "lint", "--reporter=json", "--max-diagnostics=none"],
+        { cwd: root, stdout: "pipe", stderr: "pipe" },
+      )
+      const stdout = run.stdout.toString()
+      let diagnostics: Diagnostic[]
+      try {
+        diagnostics = (JSON.parse(stdout) as { diagnostics?: Diagnostic[] }).diagnostics ?? []
+      } catch {
+        throw new Error(
+          `Biome produced no JSON in ${root}.\nstderr:\n${run.stderr.toString()}\nstdout:\n${stdout.slice(0, 600)}`,
+        )
+      }
+      // Path and category only: the message is the same either way, and the
+      // absolute path differs by construction.
+      reported[relative] = diagnostics
+        .map((d) => {
+          const file = typeof d.location?.path === "string" ? d.location.path : d.location?.path?.file
+          return `${file ?? "?"} — ${d.category ?? "?"}`
+        })
+        .sort()
+    }
+  } finally {
+    rmSync(sandbox, { recursive: true, force: true })
+  }
+
+  return reported
+}
+
+describe("a rule's scope does not depend on where the repo is checked out", () => {
+  // The bug this pins, found in this repo's own `.worktrees/` layout: a plugin's
+  // scope used to be a regex over GritQL's `$filename`, which is absolute, while
+  // a rule record's globs are relative to the project. The compiled guard let any
+  // prefix stand in front, so a directory *above* the checkout could satisfy it,
+  // and both halves of a rule's scope broke in opposite directions:
+  //
+  //   ~/src/…/repo             — `appliesTo: src/**` matched the whole tree,
+  //                              so plugin rules fired on tests/** as well;
+  //   ~/src/components/…/repo  — the `!src/components/**` exception matched the
+  //                              whole tree, so the rule reported nothing at all.
+  //
+  // The second is the one that matters: it points at green. "`bun run lint` is
+  // clean" below passes just as happily against a rule that has been silently
+  // switched off, which is why this case lints the same tree from several places
+  // and compares, rather than asserting a count from any one of them.
+  const reported = lintFromCheckouts([
+    "plain/repo",
+    "src/repo",
+    "src/components/repo",
+    "app/repo",
+  ])
+
+  test("the same tree reports the same thing from every checkout path", () => {
+    const [control, ...rest] = Object.keys(reported)
+    for (const path of rest) {
+      expect({ path, diagnostics: reported[path] }).toEqual({
+        path,
+        diagnostics: reported[control],
+      })
+    }
+  })
+
+  test("...and what they all report is the app-code violation, and only it", () => {
+    // The positive control the comparison needs: four identical empty lists
+    // would satisfy it too, and that is exactly what a config that failed to
+    // load looks like.
+    for (const [path, diagnostics] of Object.entries(reported)) {
+      expect({ path, diagnostics }).toEqual({
+        path,
+        diagnostics: ["src/routes/probe.tsx — plugin"],
+      })
     }
   })
 })

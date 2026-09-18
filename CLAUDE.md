@@ -148,16 +148,27 @@ register, plus the quebi styling and self-contained-dependency conventions.
   `src/registry/meta.ts`. The site's own chrome lives in `src/site/` (header, footer, sidebars,
   theme toggle, code block) and is linted at full strength, exactly like `src/routes/`. Put new
   app-side UI there; do not park it next to the library source.
-- The plugin rules are about JSX, and each `.grit` plugin says so itself: the generator compiles
-  the record's `appliesTo` into a `$filename` guard alongside the exception guards, because Biome
-  loads plugins globally and `overrides` cannot scope them. That is what lets the file list above
-  be the repo's code rather than only its TSX — a `.ts` file is linted by Biome's recommended set
-  and by the built-in rules the records configure, and the plugin rules stay quiet about a file no
-  record claims. Widen a record's `appliesTo` and its plugin widens with it; there is no per-plugin
-  guard to hand-edit. A built-in is scoped by the config that switches it on instead, so its
-  `appliesTo` is documentation — which is why `no-browser-dialogs` names `.ts` and `.js` too: a
-  `confirm()` in a helper module is the same bug as one in a component, and the rule really does
-  fire there.
+- **A rule's scope lives in `biome.jsonc`, never in the `.grit` file.** Each plugin is loaded by
+  an `overrides` entry whose `includes` are the record's `appliesTo` followed by everything it
+  excepts, negated. That entry is the whole of the scope: Biome loads a plugin for the paths an
+  override matches and there is no override that unloads one, so "applies here" and "except here"
+  cannot be two entries. It is also what lets the file list above be the repo's code rather than
+  only its TSX — a `.ts` file is linted by Biome's recommended set and by the built-in rules the
+  records configure, and a plugin no record points at that file is simply not loaded for it.
+  Widen a record's `appliesTo` and its entry widens with it; there is nothing per-plugin to
+  hand-edit. A built-in is scoped by the config that switches it on, so its `appliesTo` is
+  documentation — which is why `no-browser-dialogs` names `.ts` and `.js` too: a `confirm()` in a
+  helper module is the same bug as one in a component, and the rule really does fire there.
+- Scope used to be a `$filename` regex compiled into each plugin, and that was wrong in a way
+  worth remembering, because the failure mode pointed at green. GritQL's `$filename` is
+  **absolute** and a record's globs are **relative**, so the compiled guard let any prefix stand
+  in front of them — and a directory above the checkout could satisfy one. In a worktree under
+  `~/src/…` the `appliesTo` guard matched the whole tree and plugin rules fired on `tests/**`; in
+  one under a path containing `src/components/` the exception guard matched the whole tree and the
+  rule reported *nothing*, which is indistinguishable from a clean run. `bun run lint` was red
+  here and green in CI for that reason alone. `tests/repo-lint.test.ts` now lints one identical
+  tree from four checkout paths and asserts the diagnostics are identical, so nothing can go back
+  to inferring a project-relative scope from an absolute path.
 - CSS is still outside the file list: Biome cannot parse Tailwind v4's at-rules. The
   `no-hardcoded-design-values` record documents that gap.
 - `src/registry/*.examples.tsx` is copied verbatim by agents through

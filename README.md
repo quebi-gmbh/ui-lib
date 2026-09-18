@@ -71,9 +71,12 @@ The checks are generated from those same records rather than written alongside t
 carries them two ways: the element rule is its built-in `noRestrictedElements`, configured from the
 same replacement table the page renders, and the rest ship as **GritQL plugins**. Everything is
 published ready to drop in — [`/api/rules/biome.jsonc`](https://ui-lib.quebi.de/api/rules/biome.jsonc)
-plus one `.grit` file per plugin rule — with each documented exception applied: `overrides` for the
-built-in rule, `$filename` guards inside the pattern for the plugins, because Biome's overrides do
-not scope plugins.
+plus one `.grit` file per plugin rule — with each documented exception applied. Both mechanisms are
+scoped the same way, by an `overrides` entry: it switches a built-in rule off for the paths a rule
+excepts, and for a plugin it is what loads the file at all, so its `includes` are the rule's whole
+scope — where it applies, then what it excepts, negated. Biome matches those globs against your
+project root, which is why none of it is written into the `.grit` file: a plugin sees an absolute
+path and cannot tell where your project starts.
 
 ui-lib runs the rules on itself. `bun run lint` checks this repo with a config generated from the
 same records (`biome.jsonc` + `ui-lib-rules/*.grit`, both committed and both rebuilt by

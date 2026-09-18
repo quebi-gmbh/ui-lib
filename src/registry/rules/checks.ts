@@ -6,33 +6,31 @@
  * output into `public/api/rules/**`; the test suite feeds the same output to the
  * Biome CLI, so what is tested is what ships.
  *
- * Biome carries a rule one of two ways, and the difference decides how the
- * rule's documented exceptions are applied:
+ * Biome carries a rule one of two ways, and both are scoped by the same
+ * mechanism — `overrides`, whose globs Biome matches against the project root:
  *
- *  - a **built-in rule** (`correctness/noRestrictedElements`) is configured in
- *    `biome.jsonc`, so its exceptions are `overrides` entries — Biome's own
- *    path-scoping mechanism;
- *  - a **GritQL plugin** is loaded globally (`overrides` cannot scope plugins,
- *    which is verified in the test suite), so its exceptions are compiled into
- *    the pattern as `$filename` guards — and so is its `appliesTo`, because a
- *    globally loaded plugin has no other way to say which files it is about.
+ *  - a **built-in rule** (`correctness/noRestrictedElements`) is switched on in
+ *    `biome.jsonc` and switched off again by an `overrides` entry per exception;
+ *  - a **GritQL plugin** is *loaded* by an `overrides` entry, and that entry is
+ *    also its whole scope: the paths the rule applies to, with its exceptions
+ *    negated behind them. A plugin cannot be unloaded by a later override, so
+ *    there is nowhere else for a plugin's scope to live.
  *
  * Both come from the same `exceptions[].paths`. Nothing here is hand-written per
  * rule: a check that cannot be derived from a record is a check that can drift
  * away from the rule it claims to enforce.
  */
 import {
-  appliesToFilenameRegex,
   exceptionPaths,
   firstSentence,
-  globToFilenameRegex,
   grepGlob,
+  pluginScopeIncludes,
 } from "./scope"
 import type { RuleCheck, RuleMeta } from "./types"
 
 // Path-scope translation lives in ./scope, and is re-exported here so that the
 // generators and the tests keep one import for the whole of a rule's checks.
-export { appliesToFilenameRegex, exceptionPaths, firstSentence, globToFilenameRegex, grepGlob }
+export { exceptionPaths, firstSentence, grepGlob, pluginScopeIncludes }
 
 const DEFAULT_BASE_URL = "https://ui-lib.quebi.de"
 
@@ -92,46 +90,41 @@ function assertMessageHasNoDoubleQuotes(rule: RuleMeta, message: string): void {
 }
 
 /**
- * An extra `$filename` guard that is not one of the rule's published exceptions.
+ * A path a project switches a plugin rule off for, that is not one of the rule's
+ * published exceptions.
  *
- * Biome's `overrides` cannot scope plugins, so a project that needs a plugin
- * rule switched off somewhere has to compile the guard into its own copy of the
- * plugin. `reason` is written into the file next to the guard, so a carve-out
- * and the argument for it stay together — the same discipline the published
- * exceptions follow.
+ * It becomes a negated pattern on the `overrides` entry that loads the plugin,
+ * and `reason` is written into `biome.jsonc` beside it, so a carve-out and the
+ * argument for it stay together — the same discipline the published exceptions
+ * follow.
  */
 export interface ExtraPluginIgnore {
   glob: string
   reason: string
 }
 
-/** The plugin file for one rule: the pattern, its exception guards, its diagnostic. */
-export function renderGritPlugin(
-  rule: RuleMeta,
-  baseUrl = DEFAULT_BASE_URL,
-  extraIgnores: ExtraPluginIgnore[] = [],
-): string {
+/**
+ * The plugin file for one rule: the pattern and its diagnostic, and nothing
+ * about where it applies.
+ *
+ * Scope is deliberately absent. It used to be here, as `$filename` guards
+ * compiled from the record's globs, and that was wrong in a way no guard can
+ * fix: `$filename` is absolute, a record's globs are project-relative, and
+ * nothing in an absolute path says where the project root is. See `./scope`.
+ * The file names the include list it expects instead, so a reader who finds the
+ * plugin on its own knows what is missing.
+ */
+export function renderGritPlugin(rule: RuleMeta, baseUrl = DEFAULT_BASE_URL): string {
   const enforcement = rule.enforcement.biome
   if (enforcement?.via !== "plugin") {
     throw new Error(`Rule "${rule.id}" is not carried by a GritQL plugin`)
   }
   assertRegexLiteralsClose(rule, enforcement.pattern)
   assertMessageHasNoDoubleQuotes(rule, rule.enforcement.message ?? rule.summary)
-  // The pattern ends with its last `where` clause; guards and the diagnostic are
-  // further clauses, so everything is joined with a comma rather than glued on.
+  // The pattern ends with its last `where` clause; the diagnostic is a further
+  // clause, so the two are joined with a comma rather than glued on.
   const clauses = [
     enforcement.pattern,
-    // Scope first, exceptions second: the rule says where it applies before it
-    // says where it does not.
-    `  // applies to: ${rule.appliesTo.join(", ")}\n  $filename <: r"${appliesToFilenameRegex(rule)}"`,
-    ...exceptionPaths(rule).map(
-      (glob) =>
-        `  // documented exception: ${glob}\n  not $filename <: r"${globToFilenameRegex(glob)}"`,
-    ),
-    ...extraIgnores.map(
-      ({ glob, reason }) =>
-        `  // local scope: ${glob} — ${reason}\n  not $filename <: r"${globToFilenameRegex(glob)}"`,
-    ),
     [
       "  register_diagnostic(",
       `    span = $${patternBinding(enforcement.pattern)},`,
@@ -146,6 +139,14 @@ export function renderGritPlugin(
     `// AUTO-GENERATED from ${baseUrl}/api/rules/${rule.id}.json — do not edit by hand.`,
     "//",
     `// ${baseUrl}/rules/${rule.id}`,
+    "//",
+    "// This file says nothing about where the rule applies. Load it from an",
+    "// `overrides` entry in biome.jsonc whose `includes` are:",
+    `//   ${JSON.stringify(pluginScopeIncludes(rule))}`,
+    "// Biome matches those globs against your project root. A guard inside this",
+    "// file could not: GritQL's $filename is absolute, so a relative glob would",
+    "// also be satisfied by a directory above the checkout — a tree kept under",
+    "// ~/src would put every file in it in scope, and every exception too.",
     "",
     "language js;",
     "",
@@ -223,14 +224,31 @@ interface BiomeRuleConfig {
     | Record<string, unknown>
 }
 
-/** The generated config as data: what goes in `biome.jsonc`. */
+type BiomeRules = Record<string, Record<string, BiomeRuleConfig | "off">>
+
+/**
+ * One `overrides` entry. Either it loads a plugin for the paths a rule claims,
+ * or it relaxes a built-in rule for the paths a rule excepts — never both, so
+ * that each entry reads as one decision.
+ */
+export interface BiomeOverride {
+  includes: string[]
+  plugins?: string[]
+  linter?: { rules: BiomeRules }
+}
+
+/**
+ * The generated config as data: what goes in `biome.jsonc`.
+ *
+ * There is no top-level `plugins` key, and its absence is the fix for a real
+ * bug rather than a tidying: a plugin listed there is loaded for every file the
+ * project lints, which left its scope to be guessed from an absolute path
+ * inside the pattern. Loading it from an `overrides` entry makes the scope
+ * Biome's job, and Biome knows where the project root is.
+ */
 export interface BiomeConfig {
-  plugins: string[]
-  linter: { rules: Record<string, Record<string, BiomeRuleConfig | "off">> }
-  overrides: {
-    includes: string[]
-    linter: { rules: Record<string, Record<string, BiomeRuleConfig | "off">> }
-  }[]
+  linter: { rules: BiomeRules }
+  overrides: BiomeOverride[]
 }
 
 const PLUGIN_DIR = "./ui-lib-rules"
@@ -277,12 +295,17 @@ function ruleOptions(rule: RuleMeta, primitives: string[]): { options?: BiomeRul
   return {}
 }
 
+/**
+ * @param pluginIgnores extra paths to switch a plugin rule off for, beyond its
+ *   published exceptions — a project's own carve-outs, keyed by rule id.
+ */
 export function buildBiomeConfig(
   rules: RuleMeta[],
   pluginDir = PLUGIN_DIR,
   primitives: string[] = [],
+  pluginIgnores: (ruleId: string) => string[] = () => [],
 ): BiomeConfig {
-  const linterRules: BiomeConfig["linter"]["rules"] = {}
+  const linterRules: BiomeRules = {}
   for (const rule of builtInRules(rules)) {
     const biome = rule.enforcement.biome
     if (biome?.via !== "rule") continue
@@ -291,9 +314,19 @@ export function buildBiomeConfig(
     linterRules[group][name] = { level: severityOf(rule), ...ruleOptions(rule, primitives) }
   }
 
-  // One override per distinct path set, switching off the built-in rules that
-  // except it. Plugin rules carry their own exceptions inside the pattern.
-  const overrides: BiomeConfig["overrides"] = []
+  // Plugin rules first: one entry each, loading the plugin for exactly the paths
+  // the record claims. This is the only place a plugin's scope is stated, so the
+  // entry carries both halves of it — `appliesTo`, then everything negated.
+  // `plugins` before `includes` so that the rendered JSONC reads in that order
+  // too: which rule this entry is about, then where it applies. The annotator
+  // puts the rule's title above the first line of the entry it can find.
+  const overrides: BiomeOverride[] = pluginRules(rules).map((rule) => ({
+    plugins: [`${pluginDir}/${rule.id}.grit`],
+    includes: pluginScopeIncludes(rule, pluginIgnores(rule.id)),
+  }))
+
+  // Then one override per distinct path set, switching off the built-in rules
+  // that except it.
   for (const rule of builtInRules(rules)) {
     const biome = rule.enforcement.biome
     if (biome?.via !== "rule") continue
@@ -301,7 +334,13 @@ export function buildBiomeConfig(
     if (!paths.length) continue
     const [group, name] = biome.rule.split("/")
     const key = [...paths].sort().join("|")
-    let override = overrides.find((o) => [...o.includes].sort().join("|") === key)
+    // Only among the built-in entries: a plugin entry can never share a path set
+    // with one of these (it leads with `appliesTo`), but merging a rule relaxation
+    // into an entry whose job is to load a plugin would read as one decision when
+    // it is two.
+    let override = overrides.find(
+      (o) => o.linter && [...o.includes].sort().join("|") === key,
+    ) as (BiomeOverride & { linter: { rules: BiomeRules } }) | undefined
     if (!override) {
       override = { includes: [...paths].sort(), linter: { rules: {} } }
       overrides.push(override)
@@ -324,11 +363,7 @@ export function buildBiomeConfig(
         : "off"
   }
 
-  return {
-    plugins: pluginRules(rules).map((r) => `${pluginDir}/${r.id}.grit`),
-    linter: { rules: linterRules },
-    overrides,
-  }
+  return { linter: { rules: linterRules }, overrides }
 }
 
 /** `biome.jsonc` — JSONC so each carve-out can say why it exists, in place. */
@@ -343,15 +378,34 @@ export function renderBiomeConfig(
 
   // Annotate the generated JSON: every plugin line names its rule, and every
   // override names the exception it applies.
+  //
+  // An entry is annotated with the reasons *it* encodes. `src/components/**` is
+  // excepted by nine rules, and each plugin now has an entry naming it, so
+  // "every reason that mentions this path" would print all nine on all of them
+  // and bury the one the reader is looking at. A plugin's entry therefore speaks
+  // only for its own rule, and a built-in exception entry only for the built-ins
+  // it switches off.
+  const builtInIds = new Set(builtInRules(rules).map((r) => r.id))
+  let entryRule: string | null = null
+
   const annotated = body.map((line) => {
+    if (/^ {4}\{$/.test(line)) entryRule = null
     const plugin = plugins.find((r) => line.includes(`/${r.id}.grit`))
-    if (plugin) return `${line} // ${plugin.title}`
+    if (plugin) {
+      entryRule = plugin.id
+      return `${line} // ${plugin.title}`
+    }
     // Each exception path appears on its own line inside "includes"; annotate the
-    // path itself, so a carve-out and the reason for it cannot be separated.
+    // path itself, so a carve-out and the reason for it cannot be separated. On a
+    // plugin's entry the same path is written `!…`, because there the exception
+    // is a pattern that subtracts rather than an override that switches off —
+    // same carve-out, same reason, so the `!` is stripped before looking it up.
     const match = line.match(/^(\s*)"([^"]+)",?$/)
-    const path = match?.[2]
-    if (path && config.overrides.some((o) => o.includes.includes(path))) {
+    const path = match?.[2]?.replace(/^!/, "")
+    if (path && config.overrides.some((o) => o.includes.some((i) => i.replace(/^!/, "") === path))) {
+      const speakingFor = entryRule ? new Set([entryRule]) : builtInIds
       const reasons = rules
+        .filter((r) => speakingFor.has(r.id))
         .flatMap((r) => r.exceptions.map((e) => ({ rule: r, exception: e })))
         .filter(({ exception }) => exception.paths?.includes(path))
         .map(({ rule, exception }) => `${rule.id} — ${firstSentence(exception.reason)}`)
@@ -366,16 +420,20 @@ export function renderBiomeConfig(
     "// Every rule, message, and exception below comes from a rule record in quebi",
     `// ui-lib, so this file and ${baseUrl}/rules cannot drift apart.`,
     "//",
-    "// Merge these keys into your own biome.jsonc. The `plugins` entries are",
-    `// GritQL files served alongside this one — fetch them into ${PLUGIN_DIR}/:`,
+    "// Merge these keys into your own biome.jsonc. The plugins are GritQL files",
+    `// served alongside this one — fetch them into ${PLUGIN_DIR}/:`,
     ...plugins.map((r) => `//   curl -o ${PLUGIN_DIR.slice(2)}/${r.id}.grit ${baseUrl}/api/rules/plugins/${r.id}.grit`),
     "//",
-    "// Biome's overrides do not scope plugins, so each plugin carries its own",
-    "// scope as $filename guards inside the pattern: the paths the rule applies",
-    "// to, and the paths its exceptions carve back out. The overrides below",
-    "// therefore only cover the built-in rules. If your project lays its source",
-    "// out differently from app/ or src/, widen the `applies to` guard in each",
-    "// .grit file to match — otherwise the plugin rules report nothing.",
+    "// Each plugin is loaded by an `overrides` entry rather than by a top-level",
+    "// `plugins` list, because that entry is also the rule's scope: the paths it",
+    "// applies to, then the paths its exceptions carve back out, negated. Biome",
+    "// matches those globs against your project root, which is the one thing a",
+    "// guard inside the .grit file could not do — GritQL's $filename is absolute,",
+    "// so `src/**` there is also satisfied by a checkout kept under ~/src.",
+    "//",
+    "// If your project lays its source out differently from app/ or src/, widen",
+    "// the `includes` on the entry that loads the plugin — that is the only place",
+    "// its scope is stated, so nothing else has to be changed to match.",
     "",
     ...annotated,
     "",
@@ -447,9 +505,27 @@ export function buildRuleChecks(
     checks.push({
       tool: "biome",
       title: `Biome — GritQL plugin`,
-      description: `Biome has no built-in rule for this one, so it ships as a GritQL plugin. Save it as ${PLUGIN_DIR.slice(2)}/${rule.id}.grit and add that path to \`plugins\` in your biome.jsonc. Because Biome's overrides do not scope plugins, both halves of this rule's scope are compiled in as \`$filename\` guards: the paths it applies to (${rule.appliesTo.join(", ")}) and the paths its documented exceptions carve back out. If your project keeps its components somewhere else, widen the first guard to match.`,
+      description: `Biome has no built-in rule for this one, so it ships as a GritQL plugin. Save it as ${PLUGIN_DIR.slice(2)}/${rule.id}.grit. The file is the pattern and the message only — where the rule applies is the config entry below, because a plugin sees an absolute path and a rule's scope is written relative to your project root.`,
       language: "js",
       code: renderGritPlugin(rule, baseUrl),
+    })
+    checks.push({
+      tool: "biome",
+      title: "Biome — loading the plugin, and its scope",
+      description: `An \`overrides\` entry loads the plugin, and its \`includes\` are the whole of this rule's scope: the paths it applies to (${rule.appliesTo.join(", ")})${ignores.length ? `, with its documented exceptions negated behind them` : ""}. Biome cannot unload a plugin in a later override, so there is nowhere else for that to be said. If your project keeps its components somewhere else, widen the \`includes\`.`,
+      language: "json",
+      code: `// biome.jsonc\n${JSON.stringify(
+        {
+          overrides: [
+            {
+              plugins: [`${PLUGIN_DIR}/${rule.id}.grit`],
+              includes: pluginScopeIncludes(rule),
+            },
+          ],
+        },
+        null,
+        2,
+      )}\n`,
     })
   }
 

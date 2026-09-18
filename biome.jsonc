@@ -29,28 +29,6 @@
   "assist": {
     "enabled": false
   },
-  "plugins": [
-    // Layout elements are yours — until their classes describe appearance
-    "./ui-lib-rules/no-appearance-classes-on-layout-elements.grit",
-    // Design values come from quebi tokens, never from literals
-    "./ui-lib-rules/no-hardcoded-design-values.grit",
-    // Format numbers and dates through the library, with an explicit locale
-    "./ui-lib-rules/format-values-through-the-library.grit",
-    // Bind fields through Conform, never by hand
-    "./ui-lib-rules/bind-fields-through-conform.grit",
-    // Label, description and error come from the field — not from markup beside it
-    "./ui-lib-rules/render-field-text-through-the-field.grit",
-    // Validate on the server with the same schema
-    "./ui-lib-rules/validate-on-the-server-with-the-same-schema.grit",
-    // Never spread getInputProps onto a Checkbox or Switch
-    "./ui-lib-rules/seed-toggles-with-default-selected.grit",
-    // Gate lastResult on an idle navigation
-    "./ui-lib-rules/gate-last-result-on-idle-navigation.grit",
-    // An intent button submits — never type="button"
-    "./ui-lib-rules/intent-buttons-must-not-be-type-button.grit",
-    // Sorting a server-driven table is a query, not an array method
-    "./ui-lib-rules/no-client-sorting-on-a-server-driven-table.grit"
-  ],
   "linter": {
     "enabled": true,
     "rules": {
@@ -222,26 +200,158 @@
   },
   "overrides": [
     {
+      "plugins": [
+        // Layout elements are yours — until their classes describe appearance
+        "./ui-lib-rules/no-appearance-classes-on-layout-elements.grit"
+      ],
+      "includes": [
+        "app/**/*.{tsx,jsx}",
+        "src/**/*.{tsx,jsx}",
+        // no-appearance-classes-on-layout-elements — Components are made of appearance-styled divs — that is what a component is.
+        "!src/components/**",
+        // no-appearance-classes-on-layout-elements — Components are made of appearance-styled divs — that is what a component is.
+        "!components/ui/**",
+        // local scope, no-appearance-classes-on-layout-elements — An example shows one component in isolation, so it has to hand-build the scaffolding around it — the fixed-height box a ScrollArea scrolls inside, the bordered chip a ColorThumb sits on, the status colours a Tracker renders as data.
+        "!src/registry/*.examples.tsx"
+      ]
+    },
+    {
+      "plugins": [
+        // Design values come from quebi tokens, never from literals
+        "./ui-lib-rules/no-hardcoded-design-values.grit"
+      ],
+      "includes": [
+        "app/**/*.{tsx,jsx,css}",
+        "src/**/*.{tsx,jsx,css}",
+        // no-hardcoded-design-values — The components resolve palette scales deliberately — a danger state on red-500, a Badge intent on emerald-500 — and they are not yours to re-token.
+        "!components/ui/**",
+        // no-hardcoded-design-values — The components resolve palette scales deliberately — a danger state on red-500, a Badge intent on emerald-500 — and they are not yours to re-token.
+        "!src/components/**",
+        // no-hardcoded-design-values — The EU energy-label colour scale is specified by regulation.
+        "!src/components/energy-class-badge.tsx",
+        // no-hardcoded-design-values — The EU energy-label colour scale is specified by regulation.
+        "!components/ui/energy-class-badge.tsx",
+        // local scope, no-hardcoded-design-values — An example shows one component in isolation, so it has to hand-build the scaffolding around it — the fixed-height box a ScrollArea scrolls inside, the bordered chip a ColorThumb sits on, the status colours a Tracker renders as data.
+        "!src/registry/*.examples.tsx"
+      ]
+    },
+    {
+      "plugins": [
+        // Format numbers and dates through the library, with an explicit locale
+        "./ui-lib-rules/format-values-through-the-library.grit"
+      ],
+      "includes": [
+        "app/**/*.{tsx,jsx}",
+        "src/**/*.{tsx,jsx}",
+        // format-values-through-the-library — The formatters this rule points at are implemented there: FormattedNumber, FormattedDate and the Calendar's month/year labels format through Intl themselves — via the cached constructors in `@/lib/intl`, which build one formatter per (locale, options) pair instead of one per rendered value — which is what makes the rest of the codebase able not to.
+        "!src/components/**",
+        // format-values-through-the-library — The formatters this rule points at are implemented there: FormattedNumber, FormattedDate and the Calendar's month/year labels format through Intl themselves — via the cached constructors in `@/lib/intl`, which build one formatter per (locale, options) pair instead of one per rendered value — which is what makes the rest of the codebase able not to.
+        "!components/ui/**"
+      ]
+    },
+    {
+      "plugins": [
+        // Bind fields through Conform, never by hand
+        "./ui-lib-rules/bind-fields-through-conform.grit"
+      ],
+      "includes": [
+        "app/**/*.{tsx,jsx}",
+        "src/**/*.{tsx,jsx}",
+        // bind-fields-through-conform — The conform-* variants are where the metadata is read off the field and put onto a control.
+        "!components/ui/**",
+        // bind-fields-through-conform — The conform-* variants are where the metadata is read off the field and put onto a control.
+        "!src/components/**"
+      ]
+    },
+    {
+      "plugins": [
+        // Label, description and error come from the field — not from markup beside it
+        "./ui-lib-rules/render-field-text-through-the-field.grit"
+      ],
+      "includes": [
+        "app/**/*.{tsx,jsx}",
+        "src/**/*.{tsx,jsx}",
+        // render-field-text-through-the-field — The conform-* variants and the field primitives are where this markup is supposed to live — they are the layer that renders the label, the description, and the error, and wires the ids between them.
+        "!components/ui/**",
+        // render-field-text-through-the-field — The conform-* variants and the field primitives are where this markup is supposed to live — they are the layer that renders the label, the description, and the error, and wires the ids between them.
+        "!src/components/**"
+      ]
+    },
+    {
+      "plugins": [
+        // Validate on the server with the same schema
+        "./ui-lib-rules/validate-on-the-server-with-the-same-schema.grit"
+      ],
+      "includes": [
+        "app/**/*.{tsx,jsx}",
+        "src/**/*.{tsx,jsx}",
+        // validate-on-the-server-with-the-same-schema — A rendered example has no route action to post to, so it validates client-side by definition.
+        "!**/*.stories.{tsx,jsx}",
+        // validate-on-the-server-with-the-same-schema — A rendered example has no route action to post to, so it validates client-side by definition.
+        "!**/*.examples.{tsx,jsx}",
+        // local scope, validate-on-the-server-with-the-same-schema — A fixture has no server to validate on.
+        "!tests/**/*.tsx"
+      ]
+    },
+    {
+      "plugins": [
+        // Never spread getInputProps onto a Checkbox or Switch
+        "./ui-lib-rules/seed-toggles-with-default-selected.grit"
+      ],
+      "includes": [
+        "app/**/*.{tsx,jsx}",
+        "src/**/*.{tsx,jsx}",
+        // seed-toggles-with-default-selected — That is the layer that reads the metadata off the field and names it onto a control.
+        "!src/components/**",
+        // seed-toggles-with-default-selected — That is the layer that reads the metadata off the field and names it onto a control.
+        "!components/ui/**",
+        // local scope, seed-toggles-with-default-selected — One file, one rule, because that file renders the banned shape on purpose: <Switch {...getInputProps(field, { type: "checkbox" })}> is the spread this rule exists to stop, and the two tests around it measure what it costs — the switch renders off, and nothing in the DOM records the loss.
+        "!tests/conform-binding.test.tsx"
+      ]
+    },
+    {
+      "plugins": [
+        // Gate lastResult on an idle navigation
+        "./ui-lib-rules/gate-last-result-on-idle-navigation.grit"
+      ],
+      "includes": [
+        "app/**/*.{tsx,jsx}",
+        "src/**/*.{tsx,jsx}",
+        // gate-last-result-on-idle-navigation — A rendered example has no route action and no navigation to be idle, so there is nothing to gate.
+        "!**/*.stories.{tsx,jsx}",
+        // gate-last-result-on-idle-navigation — A rendered example has no route action and no navigation to be idle, so there is nothing to gate.
+        "!**/*.examples.{tsx,jsx}"
+      ]
+    },
+    {
+      "plugins": [
+        // An intent button submits — never type="button"
+        "./ui-lib-rules/intent-buttons-must-not-be-type-button.grit"
+      ],
+      "includes": [
+        "app/**/*.{tsx,jsx}",
+        "src/**/*.{tsx,jsx}"
+      ]
+    },
+    {
+      "plugins": [
+        // Sorting a server-driven table is a query, not an array method
+        "./ui-lib-rules/no-client-sorting-on-a-server-driven-table.grit"
+      ],
+      "includes": [
+        "app/**/*.{tsx,jsx}",
+        "src/**/*.{tsx,jsx}"
+      ]
+    },
+    {
       "includes": [
         // no-raw-interactive-elements — Only <input>, and only there.
-        // no-appearance-classes-on-layout-elements — Components are made of appearance-styled divs — that is what a component is.
-        // no-hardcoded-design-values — The components resolve palette scales deliberately — a danger state on red-500, a Badge intent on emerald-500 — and they are not yours to re-token.
         // import-components-not-primitives — This is the layer that imports the primitives — it is what makes the components components.
         // keep-files-readable — You did not write it and cannot split it without forking it.
-        // format-values-through-the-library — The formatters this rule points at are implemented there: FormattedNumber, FormattedDate and the Calendar's month/year labels format through Intl themselves — via the cached constructors in `@/lib/intl`, which build one formatter per (locale, options) pair instead of one per rendered value — which is what makes the rest of the codebase able not to.
-        // bind-fields-through-conform — The conform-* variants are where the metadata is read off the field and put onto a control.
-        // render-field-text-through-the-field — The conform-* variants and the field primitives are where this markup is supposed to live — they are the layer that renders the label, the description, and the error, and wires the ids between them.
-        // seed-toggles-with-default-selected — That is the layer that reads the metadata off the field and names it onto a control.
         "components/ui/**",
         // no-raw-interactive-elements — Only <input>, and only there.
-        // no-appearance-classes-on-layout-elements — Components are made of appearance-styled divs — that is what a component is.
-        // no-hardcoded-design-values — The components resolve palette scales deliberately — a danger state on red-500, a Badge intent on emerald-500 — and they are not yours to re-token.
         // import-components-not-primitives — This is the layer that imports the primitives — it is what makes the components components.
         // keep-files-readable — You did not write it and cannot split it without forking it.
-        // format-values-through-the-library — The formatters this rule points at are implemented there: FormattedNumber, FormattedDate and the Calendar's month/year labels format through Intl themselves — via the cached constructors in `@/lib/intl`, which build one formatter per (locale, options) pair instead of one per rendered value — which is what makes the rest of the codebase able not to.
-        // bind-fields-through-conform — The conform-* variants are where the metadata is read off the field and put onto a control.
-        // render-field-text-through-the-field — The conform-* variants and the field primitives are where this markup is supposed to live — they are the layer that renders the label, the description, and the error, and wires the ids between them.
-        // seed-toggles-with-default-selected — That is the layer that reads the metadata off the field and names it onto a control.
         "src/components/**"
       ],
       "linter": {
@@ -286,7 +396,6 @@
     {
       "includes": [
         // local scope, no-raw-interactive-elements — The <form> element, and nothing else on the tier-1 list.
-        // local scope, validate-on-the-server-with-the-same-schema — A fixture has no server to validate on.
         "tests/**/*.tsx"
       ],
       "linter": {

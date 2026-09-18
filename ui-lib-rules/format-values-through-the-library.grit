@@ -2,6 +2,14 @@
 // AUTO-GENERATED from https://ui-lib.quebi.de/api/rules/format-values-through-the-library.json — do not edit by hand.
 //
 // https://ui-lib.quebi.de/rules/format-values-through-the-library
+//
+// This file says nothing about where the rule applies. Load it from an
+// `overrides` entry in biome.jsonc whose `includes` are:
+//   ["app/**/*.{tsx,jsx}","src/**/*.{tsx,jsx}","!src/components/**","!components/ui/**"]
+// Biome matches those globs against your project root. A guard inside this
+// file could not: GritQL's $filename is absolute, so a relative glob would
+// also be satisfied by a directory above the checkout — a tree kept under
+// ~/src would put every file in it in scope, and every exception too.
 
 language js;
 
@@ -14,12 +22,6 @@ or {
   `new Intl.RelativeTimeFormat($args)`
 } as $call where {
   $call <: not within JsFunctionDeclaration(id = r"^(?:format[A-Z]|use[A-Z]).*"),
-  // applies to: app/**/*.{tsx,jsx}, src/**/*.{tsx,jsx}
-  $filename <: r"(?:(?:.*/)?app/(?:.*/)?[^/]*\.(?:tsx|jsx)$|(?:.*/)?src/(?:.*/)?[^/]*\.(?:tsx|jsx)$)",
-  // documented exception: src/components/**
-  not $filename <: r"(?:.*/)?src/components/.*",
-  // documented exception: components/ui/**
-  not $filename <: r"(?:.*/)?components/ui/.*",
   register_diagnostic(
     span = $call,
     message = "This formats a value against whatever locale the runtime has, which differs between the prerender and the browser. Render <FormattedNumber>, <FormattedCurrency> or <FormattedDate> from @/components/formatted-number and @/components/formatted-date, or call formatNumber(value, locale) / formatCurrency(value, locale) where a string is needed. See https://ui-lib.quebi.de/rules/format-values-through-the-library",

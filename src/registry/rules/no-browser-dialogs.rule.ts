@@ -27,9 +27,9 @@ export const noBrowserDialogsRule: RuleMeta = {
     "Both replacements now name themselves, which is why this rule fails rather than warns. `toast` is not exported; the queue is reached through `useToast()` under a `<ToastProvider>`. `confirm()` is reached through `useConfirm()` under a `<ConfirmProvider>` — and because it returns `Promise<boolean>`, the handler that asked the question keeps its shape and gains one `await`, rather than being split in two around a Modal's button. Each replacement is one import plus a provider mounted once at the root; the declarative shape, `<AlertDialog>` with `isOpen` and `onConfirm`, is still there for the cases that want it. Nothing left here is a refactor of the call site, so nothing left here is a judgement call.",
   ],
   // The one rule here that is not about JSX. `confirm()` in a `.ts` helper is
-  // the same bug as `confirm()` in a component, and because a built-in Biome
-  // rule is scoped by the config that switches it on rather than by a compiled
-  // `$filename` guard, it really does fire there — so the record says so.
+  // the same bug as `confirm()` in a component, and a built-in Biome rule is
+  // scoped by the config that switches it on, so it really does fire there —
+  // so the record says so.
   appliesTo: ["app/**/*.{ts,tsx,js,jsx}", "src/**/*.{ts,tsx,js,jsx}"],
   examples: [
     {

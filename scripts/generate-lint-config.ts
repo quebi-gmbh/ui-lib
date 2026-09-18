@@ -27,8 +27,10 @@ import { mkdir, readFile, readdir, writeFile } from "node:fs/promises"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import {
+  type BiomeOverride,
   type ExtraPluginIgnore,
   buildBiomeConfig,
+  builtInRules,
   deriveRacPrimitives,
   firstSentence,
   pluginRules,
@@ -141,12 +143,13 @@ export const localScopes: LocalScope[] = [
  * This list used to be the rules' `appliesTo` and nothing else — `src/**\/*.tsx`
  * — which quietly meant that every `.ts` file in the repo went unchecked:
  * `scripts/`, `tests/`, the rule records themselves, `src/lib/`. That was not the
- * rules' doing. It was a plugin-loading detail leaking into the file list: Biome
- * loads GritQL plugins globally, so before each plugin carried its record's
- * `appliesTo` as a `$filename` guard, the only way to keep a JSX rule from
- * answering questions about a `.ts` file was to keep the `.ts` file out of the
- * run. `renderGritPlugin` compiles that guard now, so the file list is free to be
- * what it should have been: the code in this repo.
+ * rules' doing. It was a plugin-loading detail leaking into the file list: a
+ * GritQL plugin named in the top-level `plugins` is run against every file the
+ * project lints, so while that was how they were loaded, the only way to keep a
+ * JSX rule from answering questions about a `.ts` file was to keep the `.ts`
+ * file out of the run. Each plugin is loaded by an `overrides` entry carrying
+ * its record's `appliesTo` now, so the file list is free to be what it should
+ * have been: the code in this repo.
  *
  * Which matters because most of what runs here is Biome's recommended set, and
  * a `noAssignInExpressions` in a generator is the same defect as one in a
@@ -242,7 +245,7 @@ function elementScopedOverride(ruleId: string, elements: string[] | undefined): 
     : "off"
 }
 
-/** Repo-local guards for one plugin rule, pulled out of the scope table. */
+/** Repo-local carve-outs for one plugin rule, pulled out of the scope table. */
 export function localIgnoresFor(ruleId: string): ExtraPluginIgnore[] {
   return localScopes
     .filter((scope) => scope.rules.includes(ruleId))
@@ -259,12 +262,15 @@ export async function buildRepoConfig() {
     ),
   )
 
-  const generated = buildBiomeConfig(rulesRegistry, `./${PLUGIN_DIR}`, primitives)
+  // A local scope on a built-in rule becomes an ordinary override, below. On a
+  // plugin rule it becomes a negated pattern on the entry that loads the plugin
+  // — the only place a plugin's scope can be stated, since a later override
+  // cannot unload one.
+  const generated = buildBiomeConfig(rulesRegistry, `./${PLUGIN_DIR}`, primitives, (ruleId) =>
+    localIgnoresFor(ruleId).map((ignore) => ignore.glob),
+  )
 
-  // A local scope on a built-in rule becomes an ordinary override. On a plugin
-  // rule it cannot: Biome's overrides do not scope plugins, so those guards are
-  // compiled into the plugin by `localIgnoresFor` instead.
-  const localOverrides = localScopes.flatMap((scope) => {
+  const localOverrides: BiomeOverride[] = localScopes.flatMap((scope) => {
     const rules: Record<string, Record<string, BuiltInOverride>> = {}
     for (const ruleId of scope.rules) {
       const key = biomeRuleKey(ruleId)
@@ -292,7 +298,6 @@ export async function buildRepoConfig() {
     // by accident would rewrite every file.
     formatter: { enabled: false },
     assist: { enabled: false },
-    plugins: generated.plugins,
     linter: {
       enabled: true,
       rules: {
@@ -330,39 +335,71 @@ function header(): string {
  * override says which carve-out put it there and why. Annotations go on their own
  * line rather than trailing the value, so stripping `//` lines gets the JSON back
  * — which is how the sync test compares this file to the records.
+ *
+ * An entry is annotated with the reasons *it* encodes, not with every reason
+ * that mentions the path. `src/components/**` is excepted by nine rules, and
+ * printing all nine on each of the ten entries that name it — which is what
+ * "every reason for this path" produces now that each plugin has an entry of its
+ * own — buries the one argument the reader is looking at under ninety lines of
+ * the other eight.
  */
 function annotate(json: string, config: Awaited<ReturnType<typeof buildRepoConfig>>): string {
   const plugins = pluginRules(rulesRegistry)
-  const reasonsFor = (path: string): string[] => [
-    ...rulesRegistry.flatMap((rule) =>
-      rule.exceptions
-        .filter((exception) => exception.paths?.includes(path))
-        .map((exception) => `${rule.id} — ${firstSentence(exception.reason)}`),
-    ),
+  const reasonsFor = (path: string, ruleIds: Set<string>): string[] => [
+    ...rulesRegistry
+      .filter((rule) => ruleIds.has(rule.id))
+      .flatMap((rule) =>
+        rule.exceptions
+          .filter((exception) => exception.paths?.includes(path))
+          .map((exception) => `${rule.id} — ${firstSentence(exception.reason)}`),
+      ),
     ...localScopes
       .filter((scope) => scope.includes.includes(path))
       .flatMap((scope) =>
-        scope.rules.map((id) => `local scope, ${id} — ${firstSentence(scope.reason)}`),
+        scope.rules
+          .filter((id) => ruleIds.has(id))
+          .map((id) => `local scope, ${id} — ${firstSentence(scope.reason)}`),
       ),
   ]
+  // A built-in rule's exception entry switches that rule off and says nothing
+  // about the plugin rules that except the same path — those have entries of
+  // their own, one each, and that is where their argument belongs.
+  const builtInIds = new Set(builtInRules(rulesRegistry).map((rule) => rule.id))
 
   // Only inside `overrides`. The same glob can appear in `files.includes` too —
   // `tests/**\/*.tsx` does — and "this rule is relaxed here" written above a
   // file-list entry reads as if the file list were what relaxed it. It is not:
   // the file list says which files are linted, the override says with what.
   let inOverrides = false
+  // Which rule the entry being rendered is about, for a plugin's entry. Reset at
+  // the opening brace of each entry and set by its `plugins` line, which the
+  // generator emits before `includes` so that it is known by the time the paths
+  // arrive.
+  let entryRule: string | null = null
 
   return json
     .split("\n")
     .map((line) => {
       const indent = line.match(/^\s*/)?.[0] ?? ""
       if (/^\s*"overrides":/.test(line)) inOverrides = true
+      if (inOverrides && /^ {4}\{$/.test(line)) entryRule = null
       const plugin = plugins.find((rule) => line.includes(`/${rule.id}.grit`))
-      if (plugin) return `${indent}// ${plugin.title}\n${line}`
-      const path = line.match(/^\s*"([^"]+)",?$/)?.[1]
+      if (plugin) {
+        entryRule = plugin.id
+        return `${indent}// ${plugin.title}\n${line}`
+      }
+      // A carve-out on a plugin's entry is written `!glob` — the entry loads the
+      // plugin, so the exception has to subtract from its `includes` rather than
+      // switch a rule off. Same carve-out, same reason, so the `!` is dropped
+      // before the reason is looked up.
+      const path = line.match(/^\s*"([^"]+)",?$/)?.[1]?.replace(/^!/, "")
       if (!inOverrides) return line
-      if (!path || !config.overrides.some((o) => o.includes.includes(path))) return line
-      return [...reasonsFor(path).map((reason) => `${indent}// ${reason}`), line].join("\n")
+      const inAnOverride = config.overrides.some((o) =>
+        o.includes.some((glob) => glob.replace(/^!/, "") === path),
+      )
+      if (!path || !inAnOverride) return line
+      const reasons = reasonsFor(path, entryRule ? new Set([entryRule]) : builtInIds)
+      return [...reasons.map((reason) => `${indent}// ${reason}`), line].join("\n")
     })
     .join("\n")
 }
@@ -380,7 +417,7 @@ export async function writeRepoConfig(root = ROOT) {
   for (const rule of pluginRules(rulesRegistry)) {
     await writeFile(
       join(root, PLUGIN_DIR, `${rule.id}.grit`),
-      renderGritPlugin(rule, undefined, localIgnoresFor(rule.id)),
+      renderGritPlugin(rule),
     )
     written.push(`${PLUGIN_DIR}/${rule.id}.grit`)
   }

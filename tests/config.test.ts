@@ -14,13 +14,12 @@ import { join } from "node:path"
 import { metaRegistry } from "../src/registry/meta"
 import { failureModes, rulesRegistry } from "../src/registry/rules"
 import {
-  appliesToFilenameRegex,
   buildBiomeConfig,
   buildRuleChecks,
   builtInRules,
-  globToFilenameRegex,
   lintRules,
   pluginRules,
+  pluginScopeIncludes,
   renderBiomeConfig,
   renderGritPlugin,
   restrictedElements,
@@ -81,7 +80,7 @@ describe("documented exceptions reach Biome", () => {
     expect(rulesFiredOn(VIOLATION, "app/routes/signup.tsx")).toContain("no-raw-interactive-elements")
   })
 
-  test("vendored library source is exempt from the plugin rules (via $filename)", () => {
+  test("vendored library source is exempt from the plugin rules", () => {
     const surface = component(
       `    <div className="rounded-quebi-md border border-quebi-line/10 p-6">{props.children}</div>`,
     )
@@ -115,56 +114,87 @@ describe("documented exceptions reach Biome", () => {
     )
   })
 
-  test("plugin exceptions have to be compiled in, because overrides cannot scope plugins", () => {
-    // This is the reason plugin exceptions are $filename guards rather than
-    // config. If Biome ever learns to scope plugins, this test fails and the
-    // guards can be replaced with overrides.
+  test("an override adds a plugin where it names, and cannot take one away", () => {
+    // Why a plugin's whole scope has to be one include list, and why a rule's
+    // exceptions arrive there negated rather than as an entry of their own.
     //
-    // The probe lives under `src/` because the plugin now also carries the
-    // record's `appliesTo` as a guard: a file outside it reports nothing for a
-    // reason that has nothing to do with `overrides`, which would make this pass
-    // for the wrong reason.
-    const root = join(projectRoot, "override-probe")
-    mkdirSync(join(root, "src", "vendor"), { recursive: true })
+    // Biome scopes a plugin by *loading* it for the paths an override matches.
+    // There is no matching subtraction: an entry naming `plugins: []` does not
+    // unload one, so "the rule applies here" and "except here" cannot be two
+    // entries. Both halves are asserted, because the fix for the checkout-path
+    // bug rests on the first and the shape of it rests on the second.
+    const violation = `const [form] = useForm({ onValidate: fn })\n`
     const plugin = ruleById("validate-on-the-server-with-the-same-schema")
     expect(pluginRules(rulesRegistry)).toContain(plugin)
-    writeFileSync(join(root, "p.grit"), renderGritPlugin(plugin))
-    writeFileSync(
-      join(root, "biome.json"),
-      JSON.stringify({
+
+    const probe = (name: string, config: unknown): string[] => {
+      const root = join(projectRoot, name)
+      mkdirSync(join(root, "src", "vendor"), { recursive: true })
+      mkdirSync(join(root, "src", "routes"), { recursive: true })
+      writeFileSync(join(root, "p.grit"), renderGritPlugin(plugin))
+      writeFileSync(join(root, "biome.json"), JSON.stringify(config))
+      writeFileSync(join(root, "src", "vendor", "x.tsx"), violation)
+      writeFileSync(join(root, "src", "routes", "x.tsx"), violation)
+      const run = Bun.spawnSync([biomeBinary, "lint", "--reporter=json"], {
+        cwd: root,
+        stdout: "pipe",
+        stderr: "pipe",
+      })
+      const diagnostics = JSON.parse(run.stdout.toString()).diagnostics ?? []
+      return diagnostics
+        .map((d: { location?: { path?: { file?: string } | string } }) =>
+          typeof d.location?.path === "string" ? d.location.path : d.location?.path?.file,
+        )
+        .sort()
+    }
+
+    const linter = { enabled: true, rules: { preset: "none" } }
+
+    // Loading it from an override scopes it, exceptions and all — this is what
+    // the generated config does, and `!src/vendor/**` is an exception's shape.
+    expect(
+      probe("override-loads", {
+        linter,
+        overrides: [{ includes: ["src/**/*.tsx", "!src/vendor/**"], plugins: ["./p.grit"] }],
+      }),
+    ).toEqual(["src/routes/x.tsx"])
+
+    // Loading it at the top level and trying to take it back does nothing: both
+    // files still report. A rule switched off this way is not switched off.
+    expect(
+      probe("override-unloads", {
         plugins: ["./p.grit"],
-        linter: { enabled: true, rules: { recommended: false } },
+        linter,
         overrides: [{ includes: ["src/vendor/**"], plugins: [] }],
       }),
-    )
-    writeFileSync(join(root, "src", "vendor", "x.tsx"), `const [form] = useForm({ onValidate: fn })\n`)
-
-    const run = Bun.spawnSync([biomeBinary, "lint", "src/vendor/x.tsx", "--reporter=json"], {
-      cwd: root,
-      stdout: "pipe",
-      stderr: "pipe",
-    })
-    const diagnostics = JSON.parse(run.stdout.toString()).diagnostics ?? []
-    expect(diagnostics.length).toBeGreaterThan(0)
+    ).toEqual(["src/routes/x.tsx", "src/vendor/x.tsx"])
   })
 })
 
 describe("a plugin fires only where its record says it applies", () => {
-  // Biome loads GritQL plugins globally — `overrides` cannot scope them, which
-  // the case above proves — so a plugin has no way to be told which files it is
-  // about except to carry its record's `appliesTo` as a $filename guard. Without
-  // one, every plugin is asked about every file the project lints and answers
-  // anyway: this repo widened `files.includes` to its own TypeScript and got
-  // twelve diagnostics about `.ts` files no rule had ever claimed.
+  // A plugin that is simply loaded is asked about every file the project lints
+  // and answers anyway: this repo widened `files.includes` to its own TypeScript
+  // and got twelve diagnostics about `.ts` files no rule had ever claimed. The
+  // entry that loads each plugin carries the record's `appliesTo`, so the answer
+  // is not "the plugin declines", it is "the plugin is not there".
 
   /** No JSX, so a built-in rule cannot fire and only a plugin can answer. */
   const FORMATTING = `export const label = (n: number) => n.toLocaleString()\n`
 
-  test("the guard is compiled from the record, for every plugin", () => {
+  test("the include list is the record's own globs, for every plugin", () => {
+    // Verbatim, not translated: the records' globs are already the dialect
+    // Biome reads, and the translation that used to sit here — glob to a regex
+    // over GritQL's absolute `$filename` — is what made a rule's scope depend
+    // on which directory the repo happened to be cloned into.
     for (const rule of pluginRules(rulesRegistry)) {
-      const plugin = renderGritPlugin(rule)
-      expect(plugin).toContain(`// applies to: ${rule.appliesTo.join(", ")}`)
-      expect(plugin).toContain(`$filename <: r"${appliesToFilenameRegex(rule)}"`)
+      const includes = pluginScopeIncludes(rule)
+      expect(includes.slice(0, rule.appliesTo.length)).toEqual(rule.appliesTo)
+      for (const path of rule.exceptions.flatMap((e) => e.paths ?? [])) {
+        expect(includes).toContain(`!${path}`)
+      }
+      // And nothing in the .grit file claims a scope of its own, which would be
+      // a second answer to the question, given in a dialect that cannot answer it.
+      expect(renderGritPlugin(rule)).not.toContain("$filename <:")
     }
   })
 
@@ -181,13 +211,14 @@ describe("a plugin fires only where its record says it applies", () => {
     expect(rulesFiredOn(FORMATTING, "scripts/report.tsx")).toEqual([])
   })
 
-  test("the leading wildcard matches whole directories, not name prefixes", () => {
-    // $filename is absolute, so the guard has to let any checkout path stand in
-    // front of `app/`. It must not let half a directory name: `myapp/` is not
-    // `app/`, and a `.*` prefix would have said it was.
-    const guard = new RegExp(`^${globToFilenameRegex("app/**/*.{tsx,jsx}")}$`)
-    expect(guard.test("/home/me/project/app/routes/x.tsx")).toBe(true)
-    expect(guard.test("/home/me/myapp/routes/x.tsx")).toBe(false)
+  test("a directory whose name merely starts with one in scope is not in scope", () => {
+    // `myapp/` is not `app/`. Biome's own glob matching says so; the regex this
+    // used to compile had to be written carefully to agree, and got a different
+    // question — where the project root is — wrong instead.
+    expect(rulesFiredOn(FORMATTING, "myapp/routes/x.tsx")).toEqual([])
+    expect(rulesFiredOn(FORMATTING, "app/routes/x.tsx")).toContain(
+      "format-values-through-the-library",
+    )
   })
 })
 
@@ -269,10 +300,18 @@ describe("rule records", () => {
 describe("generated config", () => {
   const config = buildBiomeConfig(rulesRegistry, undefined, racPrimitives)
 
-  test("one plugin entry per plugin rule, and nothing else", () => {
-    expect(config.plugins.length).toBe(pluginRules(rulesRegistry).length)
+  test("one override entry loads each plugin rule, and nothing else loads one", () => {
+    const loaders = config.overrides.filter((o) => o.plugins?.length)
+    expect(loaders.length).toBe(pluginRules(rulesRegistry).length)
     for (const rule of pluginRules(rulesRegistry)) {
-      expect(config.plugins.some((p) => p.endsWith(`${rule.id}.grit`))).toBe(true)
+      const loading = loaders.filter((o) => o.plugins?.some((p) => p.endsWith(`${rule.id}.grit`)))
+      // Exactly one: a second entry loading the same plugin would widen its
+      // scope back out, and the widening would not be visible from either entry.
+      expect(loading).toHaveLength(1)
+      expect(loading[0].includes).toEqual(pluginScopeIncludes(rule))
+      // An entry either loads a plugin or relaxes a built-in rule, never both,
+      // so that each one reads as a single decision.
+      expect(loading[0].linter).toBeUndefined()
     }
   })
 
@@ -318,11 +357,15 @@ describe("generated config", () => {
       if (!paths.length) continue
       if (rule.enforcement.biome?.via === "rule") {
         for (const path of paths) {
-          expect(config.overrides.some((o) => o.includes.includes(path))).toBe(true)
+          expect(config.overrides.some((o) => o.linter && o.includes.includes(path))).toBe(true)
         }
       } else {
-        const plugin = renderGritPlugin(rule)
-        for (const path of paths) expect(plugin).toContain(globToFilenameRegex(path))
+        // On a plugin the same carve-out is a negated pattern on the entry that
+        // loads it, because there is no override that unloads a plugin.
+        const entry = config.overrides.find((o) =>
+          o.plugins?.some((p) => p.endsWith(`${rule.id}.grit`)),
+        )
+        for (const path of paths) expect(entry?.includes).toContain(`!${path}`)
       }
     }
   })

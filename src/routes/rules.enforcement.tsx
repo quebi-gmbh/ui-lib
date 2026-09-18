@@ -66,7 +66,8 @@ export default function RulesEnforcement() {
       <section className="mt-12">
         <h2 className="text-lg font-semibold text-quebi-fg">How Biome carries each rule</h2>
         <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
-          Two mechanisms, and the difference decides how a rule's documented exceptions are applied.
+          Two mechanisms, scoped the same way: an <Code>overrides</Code> entry, whose globs Biome
+          matches against your project root.
         </p>
         <DescriptionList className="mt-4">
           <DescriptionTerm>Built-in rules</DescriptionTerm>
@@ -112,10 +113,11 @@ export default function RulesEnforcement() {
               ))}
             </ul>
             <p className="mt-2 text-quebi-fg-muted">
-              Biome loads plugins globally and <Code>overrides</Code> does not scope them, so each
-              plugin carries its own exceptions as <Code>$filename</Code> guards compiled into the
-              pattern. Same records, same carve-outs — a different mechanism because the tool
-              requires one.
+              Each is loaded by an <Code>overrides</Code> entry, and that entry is also its whole
+              scope: the paths the rule applies to, with its exceptions negated behind them. A later
+              override cannot unload a plugin, so there is nowhere else for a plugin's scope to
+              live. The <Code>.grit</Code> file itself says nothing about paths — it sees an
+              absolute filename, and a rule's scope is written relative to your project root.
             </p>
           </DescriptionDetails>
         </DescriptionList>
