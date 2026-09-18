@@ -209,6 +209,14 @@
      always had, now written where the light theme can disagree with it. */
   --q-glow:        0 0 20px rgb(45 212 168 / 0.15);
   --q-glow-strong: 0 0 30px rgb(45 212 168 / 0.30);
+
+  /* Scrollbar thumb — see the `.light` block for the argument. These three are
+     the values both scrollbar systems have always used on dark, now named:
+     cyan-500 at 25% is 1.50:1 against this page, 2.14:1 on hover and 4.28:1
+     while dragging. Unchanged by task #146. */
+  --q-scroll-thumb:        rgb(6 182 212 / 0.25);
+  --q-scroll-thumb-hover:  rgb(6 182 212 / 0.40);
+  --q-scroll-thumb-active: rgb(45 212 168 / 0.60); /* quebi-brand on drag */
 }
 
 .light {
@@ -268,6 +276,27 @@
      the pair doing the separating a mint bloom cannot do here. */
   --q-glow:        0 1px 2px rgb(11 17 32 / 0.06), 0 8px 24px rgb(11 17 32 / 0.08);
   --q-glow-strong: 0 2px 4px rgb(11 17 32 / 0.08), 0 16px 40px rgb(11 17 32 / 0.16);
+
+  /* Scrollbar thumb — ink, where dark uses cyan, for the reason `--q-line`
+     flips: cyan at a low alpha vanishes on a light surface. The dark values
+     gave the light card a 1.26:1 thumb (task #146), and #103 already rejected
+     that number for a *divider*; a thumb has the stronger claim, because it is
+     a control the user has to find and drag rather than a line they read past.
+
+     So this is the one place the "tracks stay cyan" rule of #103 does not
+     reach: a thumb is not the track it runs in. The ladder is monotone on
+     purpose — 2.24:1 at rest, 3.45:1 on hover, 4.83:1 while dragging, each
+     against the ink-tinted light Card, which is the darkest surface either
+     scrollbar system is drawn on. Drag stays teal (`--q-brand-text`, the
+     darkest teal the light theme owns) so the brand still marks the grab in
+     both themes.
+
+     Firefox constrains the answer: it gets `scrollbar-color` and can neither
+     inset nor round the thumb, so whatever is chosen has to read as a flat
+     colour. A solid ink alpha does; a `color-mix` gradient would not. */
+  --q-scroll-thumb:        rgb(11 17 32 / 0.35);
+  --q-scroll-thumb-hover:  rgb(11 17 32 / 0.50);
+  --q-scroll-thumb-active: rgb(15 118 110 / 1); /* quebi-brand-text on drag */
 }
 
 /* ---------------- Custom utilities (v4 @utility syntax) ---------------- */
@@ -316,12 +345,41 @@
   padding-block: 6rem;      /* py-24 */
 }
 
+/* ---------------- Loading pulse ---------------- */
+/* Tailwind's `animate-pulse` troughs at `opacity: 0.5`, which is the right
+   depth for something that has an outline, a glyph or a label underneath it.
+   A Skeleton has none: the fill *is* the component, and it is a low-alpha tint
+   to begin with, so halving it takes the bar below perceptibility for half of
+   every cycle (task #139 measured the light default at 1.09:1 at rest and
+   ~1.04:1 at the trough — i.e. gone). Same duration and easing as Tailwind's,
+   a shallower trough: the motion still says "loading", the shape never leaves.
+
+   A `@utility` plus a top-level `@keyframes` rather than an `--animate-*`
+   theme token, because the keyframes then always ship and do not depend on a
+   source scan finding the utility. */
+@keyframes quebi-pulse {
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@utility quebi-pulse {
+  animation: quebi-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 /* ---------------- Native scrollbar (dropdowns, scroll areas) ---------------- */
-/* The quebi native scrollbar: a 12px track carrying a 6px cyan-tinted pill that
+/* The quebi native scrollbar: a 12px track carrying a 6px tinted pill that
    floats 3px clear of every edge. That is the same geometry as `.os-theme-quebi`
    further down, so the native bars and the app shell's OverlayScrollbars read as
    one system rather than two. Apply to any overflow container (list boxes,
    menus, popovers, the ScrollArea viewport) so every scrollable surface matches.
+
+   The colour is `--q-scroll-thumb`, which both systems now name rather than
+   each spelling out its own `color-mix`/`rgb()` (task #146). Two blocks that
+   are *meant* to hold the same value should read it from one place — that is
+   also what lets `tests/components/scroll-area.test.tsx` pin them to each
+   other by token instead of by matching literals. The thumb is cyan on dark
+   and ink on light; see the theme blocks above for why and for the ratios.
 
    The two scrollbar models are declared under `@supports`, never together.
    Chromium 121+ and Safari 18.2+ implement the standard `scrollbar-width` /
@@ -338,7 +396,7 @@
      be inset — the colour is what carries the family resemblance. */
   @supports not selector(::-webkit-scrollbar) {
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in oklab, var(--color-cyan-500) 25%, transparent) transparent;
+    scrollbar-color: var(--q-scroll-thumb) transparent;
   }
 
   @supports selector(::-webkit-scrollbar) {
@@ -364,7 +422,7 @@
       border: 3px solid transparent;
       border-radius: 9999px;
       background-clip: padding-box;
-      background-color: color-mix(in oklab, var(--color-cyan-500) 25%, transparent);
+      background-color: var(--q-scroll-thumb);
     }
     &::-webkit-scrollbar-thumb:vertical {
       min-height: 32px;
@@ -373,10 +431,10 @@
       min-width: 32px;
     }
     &::-webkit-scrollbar-thumb:hover {
-      background-color: color-mix(in oklab, var(--color-cyan-500) 40%, transparent);
+      background-color: var(--q-scroll-thumb-hover);
     }
     &::-webkit-scrollbar-thumb:active {
-      background-color: color-mix(in oklab, var(--color-quebi-brand) 60%, transparent);
+      background-color: var(--q-scroll-thumb-active);
     }
   }
 }
@@ -407,14 +465,16 @@
 }
 
 /* ---------------- Scrollbars (OverlayScrollbars) ---------------- */
-/* Quebi-themed overlay scrollbars: thin, rounded, cyan-tinted thumb on a
-   transparent track — matching the hairline borders used across the UI.
+/* Quebi-themed overlay scrollbars: thin, rounded, tinted thumb on a
+   transparent track — matching the hairline borders used across the UI, and
+   flipping with the theme the way those do.
    Applied via options.scrollbars.theme: "os-theme-quebi".
 
    These numbers are the source the `quebi-scrollbar` utility above copies: a
-   12px track, a handle inset 3px on every side, fully rounded, cyan-500 at
-   25% / 40% / brand at 60%. Change one and change the other, or the app shell
-   and the components stop looking like the same scrollbar. */
+   12px track, a handle inset 3px on every side, fully rounded. Change one and
+   change the other, or the app shell and the components stop looking like the
+   same scrollbar. The three colours are no longer among those numbers — both
+   blocks read `--q-scroll-thumb*` now, so they cannot drift (task #146). */
 .os-theme-quebi {
   --os-size: 12px;
   --os-padding-perpendicular: 3px;
@@ -422,8 +482,8 @@
   --os-track-bg: transparent;
   --os-track-bg-hover: transparent;
   --os-handle-border-radius: 9999px;
-  --os-handle-bg: rgb(6 182 212 / 0.25); /* cyan-500/25 */
-  --os-handle-bg-hover: rgb(6 182 212 / 0.4);
-  --os-handle-bg-active: rgb(45 212 168 / 0.6); /* quebi-brand on drag */
+  --os-handle-bg: var(--q-scroll-thumb);
+  --os-handle-bg-hover: var(--q-scroll-thumb-hover);
+  --os-handle-bg-active: var(--q-scroll-thumb-active);
   --os-handle-min-size: 32px;
 }

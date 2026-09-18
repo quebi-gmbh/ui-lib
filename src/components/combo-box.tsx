@@ -6,9 +6,19 @@ import type {
   ListBoxProps,
   PopoverProps,
 } from "react-aria-components"
-import { Button, ComboBox as ComboboxPrimitive, ListBox } from "react-aria-components"
+import {
+  Button,
+  ComboBox as ComboboxPrimitive,
+  composeRenderProps,
+  ListBox,
+} from "react-aria-components"
 import { cn } from "@/lib/utils"
-import { DropdownDescription, DropdownItem, DropdownLabel, DropdownSection } from "@/components/dropdown"
+import {
+  DropdownDescription,
+  DropdownItem,
+  DropdownLabel,
+  DropdownSection,
+} from "@/components/dropdown"
 import { PopoverContent } from "@/components/popover"
 import { Input } from "@/components/input"
 
@@ -39,7 +49,9 @@ const ComboBox = <T extends object>({
     <ComboboxPrimitive
       data-slot="control"
       menuTrigger={menuTrigger}
-      className={cn("group flex w-full flex-col gap-y-1.5", className)}
+      className={composeRenderProps(className, (resolved) =>
+        cn("group flex w-full flex-col gap-y-1.5", resolved),
+      )}
       {...props}
     />
   )
@@ -61,18 +73,22 @@ const ComboBoxContent = <T extends object>({
   return (
     <PopoverContent
       placement={popover?.placement ?? "bottom"}
-      className={cn(
-        "min-w-(--trigger-width) scroll-py-1 overflow-y-auto overscroll-contain",
-        popover?.className,
+      className={composeRenderProps(popover?.className, (resolved) =>
+        cn(
+          "min-w-(--trigger-width) scroll-py-1 overflow-y-auto overscroll-contain",
+          resolved,
+        ),
       )}
       {...popover}
     >
       <ListBox
         layout="stack"
         orientation="vertical"
-        className={cn(
-          "grid max-h-96 w-full grid-cols-[auto_1fr] flex-col gap-y-1 overflow-y-auto p-1 outline-hidden *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
-          className,
+        className={composeRenderProps(className, (resolved) =>
+          cn(
+            "grid max-h-96 w-full grid-cols-[auto_1fr] flex-col gap-y-1 overflow-y-auto p-1 outline-hidden *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
+            resolved,
+          ),
         )}
         items={items}
         {...props}

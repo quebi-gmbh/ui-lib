@@ -15,6 +15,7 @@ import {
   Button,
   Collection,
   CollectionRendererContext,
+  composeRenderProps,
   DefaultCollectionRenderer,
   Dialog,
   Header,
@@ -116,12 +117,14 @@ const CommandMenu = ({
         <ModalOverlay
           {...props}
           isDismissable={isDismissable}
-          className={cn(
-            "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-screen overflow-hidden bg-black/60 backdrop-blur-sm",
-            "grid grid-rows-[1fr_auto] justify-items-center text-center sm:grid-rows-[1fr_auto_3fr]",
-            "entering:fade-in entering:animate-in entering:duration-300 entering:ease-out",
-            "exiting:fade-out exiting:animate-out exiting:ease-in",
-            overlay?.className,
+          className={composeRenderProps(overlay?.className, (resolved) =>
+            cn(
+              "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-screen overflow-hidden bg-black/60 backdrop-blur-sm",
+              "grid grid-rows-[1fr_auto] justify-items-center text-center sm:grid-rows-[1fr_auto_3fr]",
+              "entering:fade-in entering:animate-in entering:duration-300 entering:ease-out",
+              "exiting:fade-out exiting:animate-out exiting:ease-in",
+              resolved,
+            ),
           )}
         >
           <Modal
@@ -192,9 +195,11 @@ const CommandMenuList = <T extends object>({ className, ...props }: MenuProps<T>
   return (
     <CollectionRendererContext.Provider value={renderer}>
       <MenuPrimitive
-        className={cn(
-          "quebi-scrollbar grid max-h-full flex-1 grid-cols-[auto_1fr] content-start overflow-y-auto border-quebi-line/10 border-t p-2 sm:max-h-110 *:[[role=group]]:mb-6 *:[[role=group]]:last:mb-0",
-          className,
+        className={composeRenderProps(className, (resolved) =>
+          cn(
+            "quebi-scrollbar grid max-h-full flex-1 grid-cols-[auto_1fr] content-start overflow-y-auto border-quebi-line/10 border-t p-2 sm:max-h-110 *:[[role=group]]:mb-6 *:[[role=group]]:last:mb-0",
+            resolved,
+          ),
         )}
         {...props}
       />
@@ -230,7 +235,9 @@ const CommandMenuItem = ({ className, ...props }: React.ComponentProps<typeof Me
     <MenuItem
       {...props}
       textValue={textValue}
-      className={cn("items-center gap-y-0.5", className)}
+      className={composeRenderProps(className, (resolved) =>
+        cn("items-center gap-y-0.5", resolved),
+      )}
     />
   )
 }
@@ -264,12 +271,27 @@ const CommandMenuSeparator = ({
   <MenuSeparator className={cn("-mx-2", className)} {...props} />
 )
 
+/**
+ * The footer sits on the palette's text column: `px-4.5` is 18px, which is
+ * where the search placeholder (SearchField `px-2.5` + Input `sm:px-2`), the
+ * section headers (List `p-2` + Header `px-2.5`) and the item labels (List
+ * `p-2` + `dropdownItemStyles` `sm:px-2.5`) all land. It used to be `px-2`, so
+ * the footer copy hung 10px to the left of everything above it. `py-2` matches
+ * the search row's 10px rather than crowding at 6px.
+ *
+ * It deliberately does not style bare `<kbd>` children. It used to, with a
+ * `*:[kbd]:…` block that was a second, worse `Kbd` — 16px tall and with no
+ * horizontal padding, so anything longer than one glyph ("esc") sat flush
+ * against its own ring. `Kbd` from `@/components/keyboard` is the padded,
+ * monospace, hairline version; put one in the footer. Restoring the arbitrary
+ * variants alongside it is not an option: `*:[kbd]:` matches a `<Kbd>` direct
+ * child too, and the two class sets would fight.
+ */
 const CommandMenuFooter = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       className={cn(
-        "col-span-full flex-none border-quebi-line/10 border-t px-2 py-1.5 text-quebi-fg-muted text-sm",
-        "*:[kbd]:inset-ring *:[kbd]:inset-ring-quebi-surface/10 *:[kbd]:mx-1 *:[kbd]:inline-grid *:[kbd]:h-4 *:[kbd]:min-w-4 *:[kbd]:place-content-center *:[kbd]:rounded-quebi-sm *:[kbd]:bg-quebi-surface/[0.04]",
+        "flex-none border-quebi-line/10 border-t px-4.5 py-2 text-quebi-fg-muted text-sm",
         className,
       )}
       {...props}

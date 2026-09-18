@@ -229,15 +229,17 @@ const SidebarMobile = ({ side = "left", className, children, ...props }: Sidebar
         data-slot="sidebar"
         data-intent="default"
         aria-label="Sidebar"
-        className={cn(
-          "fixed inset-y-0 z-50 flex w-(--sidebar-width) flex-col bg-quebi-elevated text-quebi-fg [--sidebar-width:18rem]",
-          "border-quebi-line/10 transition will-change-transform",
-          side === "left" &&
-            "left-0 border-r entering:slide-in-from-left exiting:slide-out-to-left",
-          side === "right" &&
-            "right-0 border-l entering:slide-in-from-right exiting:slide-out-to-right",
-          "entering:animate-in exiting:animate-out entering:duration-300 exiting:duration-200",
-          className,
+        className={composeRenderProps(className, (resolved) =>
+          cn(
+            "fixed inset-y-0 z-50 flex w-(--sidebar-width) flex-col bg-quebi-elevated text-quebi-fg [--sidebar-width:18rem]",
+            "border-quebi-line/10 transition will-change-transform",
+            side === "left" &&
+              "left-0 border-r entering:slide-in-from-left exiting:slide-out-to-left",
+            side === "right" &&
+              "right-0 border-l entering:slide-in-from-right exiting:slide-out-to-right",
+            "entering:animate-in exiting:animate-out entering:duration-300 exiting:duration-200",
+            resolved,
+          ),
         )}
       >
         {children}
@@ -552,10 +554,12 @@ const SidebarLink = ({ className, ref, ...props }: SidebarLinkProps) => {
   return (
     <Link
       ref={ref}
-      className={cn(
-        "col-span-full min-w-0 shrink-0 items-center p-2 focus:outline-hidden",
-        "grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] supports-[grid-template-columns:subgrid]:grid-cols-subgrid",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          "col-span-full min-w-0 shrink-0 items-center p-2 focus:outline-hidden",
+          "grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] supports-[grid-template-columns:subgrid]:grid-cols-subgrid",
+          resolved,
+        ),
       )}
       {...props}
     />
@@ -592,9 +596,11 @@ const SidebarDisclosureGroup = ({
     <DisclosureGroup
       data-slot="sidebar-disclosure-group"
       allowsMultipleExpanded={allowsMultipleExpanded}
-      className={cn(
-        "col-span-full flex min-w-0 flex-col gap-y-0.5 in-data-[state=collapsed]:gap-y-1.5",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          "col-span-full flex min-w-0 flex-col gap-y-0.5 in-data-[state=collapsed]:gap-y-1.5",
+          resolved,
+        ),
       )}
       {...props}
     />
@@ -610,7 +616,7 @@ const SidebarDisclosure = ({ className, ref, ...props }: SidebarDisclosureProps)
     <Disclosure
       ref={ref}
       data-slot="sidebar-disclosure"
-      className={cn("col-span-full min-w-0", className)}
+      className={composeRenderProps(className, (resolved) => cn("col-span-full min-w-0", resolved))}
       {...props}
     />
   )
@@ -698,9 +704,11 @@ const SidebarDisclosurePanel = ({ className, ...props }: DisclosurePanelProps) =
   return (
     <DisclosurePanel
       data-slot="sidebar-disclosure-panel"
-      className={cn(
-        "h-(--disclosure-panel-height) overflow-clip transition-[height] duration-200",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          "h-(--disclosure-panel-height) overflow-clip transition-[height] duration-200",
+          resolved,
+        ),
       )}
       {...props}
     >
@@ -741,7 +749,7 @@ const SidebarTrigger = ({
       data-slot="sidebar-trigger"
       intent={props.intent || "ghost"}
       size={props.size || "sq-sm"}
-      className={cn("shrink-0", className)}
+      className={composeRenderProps(className, (resolved) => cn("shrink-0", resolved))}
       onPress={(event) => {
         onPress?.(event)
         toggleSidebar()
@@ -783,13 +791,15 @@ const SidebarRail = ({ className, ref, ...props }: ButtonProps & { ref?: React.R
       // affordance, reachable by keyboard through the sidebar trigger instead.
       excludeFromTabOrder
       onPress={toggleSidebar}
-      className={cn(
-        "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 outline-hidden transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-0.5 hover:after:bg-transparent group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex",
-        "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
-        "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
-        "group-data-[collapsible=hidden]:translate-x-0 group-data-[collapsible=hidden]:hover:bg-quebi-surface/[0.04] group-data-[collapsible=hidden]:after:left-full",
-        "[[data-side=left][data-collapsible=hidden]_&]:-right-2 [[data-side=right][data-collapsible=hidden]_&]:-left-2",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 outline-hidden transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-0.5 hover:after:bg-transparent group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex",
+          "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
+          "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
+          "group-data-[collapsible=hidden]:translate-x-0 group-data-[collapsible=hidden]:hover:bg-quebi-surface/[0.04] group-data-[collapsible=hidden]:after:left-full",
+          "[[data-side=left][data-collapsible=hidden]_&]:-right-2 [[data-side=right][data-collapsible=hidden]_&]:-left-2",
+          resolved,
+        ),
       )}
       {...props}
     />
@@ -846,13 +856,15 @@ const SidebarMenuTrigger = ({
 }: SidebarMenuTriggerProps) => {
   return (
     <Trigger
-      className={cn(
-        !alwaysVisible &&
-          "opacity-0 pressed:opacity-100 group-hover/sidebar-item:opacity-100 group-focus-visible/sidebar-item:opacity-100 group/sidebar-item:pressed:opacity-100",
-        "absolute end-0 flex h-full w-[calc(var(--sidebar-width)-90%)] items-center justify-end pe-2.5 outline-hidden",
-        "**:data-[slot=icon]:shrink-0 [&_[data-slot='icon']:not([class*='size-'])]:size-5 sm:[&_[data-slot='icon']:not([class*='size-'])]:size-4 pressed:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
-        "pressed:text-quebi-fg text-quebi-fg-muted hover:text-quebi-fg",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          !alwaysVisible &&
+            "opacity-0 pressed:opacity-100 group-hover/sidebar-item:opacity-100 group-focus-visible/sidebar-item:opacity-100 group/sidebar-item:pressed:opacity-100",
+          "absolute end-0 flex h-full w-[calc(var(--sidebar-width)-90%)] items-center justify-end pe-2.5 outline-hidden",
+          "**:data-[slot=icon]:shrink-0 [&_[data-slot='icon']:not([class*='size-'])]:size-5 sm:[&_[data-slot='icon']:not([class*='size-'])]:size-4 pressed:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
+          "pressed:text-quebi-fg text-quebi-fg-muted hover:text-quebi-fg",
+          resolved,
+        ),
       )}
       {...props}
     />

@@ -150,6 +150,35 @@ describe("the quebi-scrollbar utility declares one scrollbar model per browser",
     expect(outside).not.toContain("&::-webkit-scrollbar")
   })
 
+  test("the thumb's colour is a theme token, and both scrollbar systems read it", async () => {
+    // The thumb was cyan-500 at 25% in both themes, which is 1.26:1 on the
+    // light Card — a control you have to find and drag, at less contrast than
+    // the divider #103 already rejected that number for (task #146). It is now
+    // `--q-scroll-thumb`, ink under `.light` and the unchanged cyan under
+    // `:root, .dark`.
+    //
+    // The two systems have to move together: `quebi-scrollbar` paints every
+    // native overflow container and `.os-theme-quebi` paints the app shell's
+    // OverlayScrollbars. Naming the same three variables is what makes that
+    // structural rather than a promise in a comment — so what is pinned here
+    // is that neither block spells a colour out for itself.
+    const source = await css.text()
+    const body = await utilityBody()
+    const os = source.slice(source.indexOf(".os-theme-quebi {"))
+
+    for (const token of ["--q-scroll-thumb", "--q-scroll-thumb-hover", "--q-scroll-thumb-active"]) {
+      expect(body).toContain(`var(${token})`)
+      expect(os).toContain(`var(${token})`)
+      // Declared in both theme blocks, or one theme falls back to nothing.
+      expect(source.match(new RegExp(`^\\s*${token}:`, "gm"))?.length).toBe(2)
+    }
+
+    // A literal colour in either block is the drift this replaces.
+    const colour = /(?:#[0-9a-fA-F]{3,8}|rgba?\(|color-mix\()/
+    expect(body.replace(/transparent/g, "")).not.toMatch(colour)
+    expect(os.replace(/transparent/g, "")).not.toMatch(colour)
+  })
+
   test("the thumb floats clear of the edges, matching the OverlayScrollbars theme", async () => {
     const source = await css.text()
     const webkitOnly = supportsBody(await utilityBody(), "selector(::-webkit-scrollbar)")

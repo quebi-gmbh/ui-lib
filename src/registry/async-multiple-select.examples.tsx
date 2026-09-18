@@ -53,7 +53,7 @@ export const asyncMultipleSelectExamples: ComponentExample[] = [
   {
     title: "Default",
     description:
-      "Focus the control to open the list; the first page loads from the source. Type to re-query live and scroll to load more.",
+      "Focus the control — or click anywhere in the box — to open the list; the first page loads from the source. Type to re-query live and scroll to load more. This is the same control Multiple Select draws; only the source of the options differs.",
     render: () => (
       <div className="w-80">
         <AsyncMultipleSelect<User>
@@ -66,17 +66,19 @@ export const asyncMultipleSelectExamples: ComponentExample[] = [
   },
   {
     title: "With label & description",
-    description: "Pair the control with field primitives and seed an initial selection.",
+    description:
+      "Pair the control with field primitives and seed an initial selection. This is a hand-built combobox rather than a react-aria field, so the ids are yours: point the label at the input with `htmlFor` and the input at the hint with `aria-describedby`.",
     render: () => (
       <div className="w-80 space-y-1.5">
-        <Label>Assignees</Label>
+        <Label htmlFor="assignees">Assignees</Label>
         <AsyncMultipleSelect<User>
-          aria-label="Assignees"
+          id="assignees"
+          aria-describedby="assignees-hint"
           placeholder="Select users"
           load={loadUsers}
           defaultValue={[ALL_USERS[0], ALL_USERS[3]]}
         />
-        <Description>Options are fetched on demand as you search.</Description>
+        <Description id="assignees-hint">Options are fetched on demand as you search.</Description>
       </div>
     ),
   },

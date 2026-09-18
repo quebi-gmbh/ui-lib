@@ -46,7 +46,7 @@ export function DisclosureGroup({ className, ...props }: DisclosureGroupProps) {
   return (
     <PrimitiveDisclosureGroup
       data-slot="disclosure-group"
-      className={cn("flex flex-col gap-2", className)}
+      className={composeRenderProps(className, (resolved) => cn("flex flex-col gap-2", resolved))}
       {...props}
     />
   )
@@ -153,9 +153,11 @@ export function DisclosurePanel({ className, children, ...props }: DisclosurePan
   return (
     <PrimitiveDisclosurePanel
       data-slot="disclosure-panel"
-      className={cn(
-        "overflow-hidden text-sm text-quebi-fg-muted transition-[height] duration-200",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          "overflow-hidden text-sm text-quebi-fg-muted transition-[height] duration-200",
+          resolved,
+        ),
       )}
       {...props}
     >

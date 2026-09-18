@@ -135,10 +135,14 @@ export function ConformColorPicker({
                     <ColorSliderThumb />
                   </ColorSliderTrack>
                 </ColorSlider>
+                {/* One height across the row. `ColorInput` is the field
+                    scale's `md`, 42px, and Button's square scale steps 38 → 46
+                    with nothing in between — so the dropper and the swatch are
+                    sized to the field rather than the field to them. */}
                 <div className="flex items-center gap-2">
                   <ColorField aria-label="Hex color" className="flex-1" />
-                  <EyeDropper />
-                  <ColorSwatch className="size-9 shrink-0" />
+                  <EyeDropper className="size-10.5" />
+                  <ColorSwatch className="size-10.5 shrink-0" />
                 </div>
               </PopoverBody>
             </Dialog>

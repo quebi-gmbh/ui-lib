@@ -30,16 +30,21 @@ export const toggleStyles = tv({
     "*:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center",
   ],
   variants: {
+    // The selected chip's mint fill is edged in `--q-brand-mark`, not in the
+    // fill token, and the edge does not move on hover — see button.tsx for the
+    // numbers (task #145). Mint on the light page is 1.74:1, so a mint chip
+    // edged in mint had no boundary there; teal-600 is 3.45:1, and on dark the
+    // mark token *is* the fill token, so the dark theme is unchanged.
     intent: {
       outline: [
         "bg-transparent border-quebi-line/20 text-quebi-fg-muted",
         "hover:text-quebi-fg hover:border-quebi-brand-mark",
-        "selected:bg-quebi-brand selected:border-quebi-brand selected:text-quebi-on-brand selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover selected:hover:border-quebi-brand-hover selected:hover:text-quebi-on-brand",
+        "selected:bg-quebi-brand selected:border-quebi-brand-mark selected:text-quebi-on-brand selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover selected:hover:text-quebi-on-brand",
       ],
       plain: [
         "bg-transparent border-transparent text-quebi-fg-muted",
         "hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
-        "selected:bg-quebi-brand selected:border-quebi-brand selected:text-quebi-on-brand selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover selected:hover:text-quebi-on-brand",
+        "selected:bg-quebi-brand selected:border-quebi-brand-mark selected:text-quebi-on-brand selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover selected:hover:text-quebi-on-brand",
       ],
     },
     size: {

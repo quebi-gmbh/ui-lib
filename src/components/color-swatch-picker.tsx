@@ -5,6 +5,7 @@ import {
   type ColorSwatchPickerItemProps,
   ColorSwatchPickerItem as ColorSwatchPickerItemPrimitive,
   type ColorSwatchPickerProps,
+  composeRenderProps,
 } from "react-aria-components"
 import { cn } from "@/lib/utils"
 
@@ -12,15 +13,26 @@ import { cn } from "@/lib/utils"
  * ColorSwatchPicker — quebi design system
  *
  * Built on react-aria-components. A wrapping grid of selectable color swatches.
- * The selected swatch gets a quebi-brand ring plus a small dot marker; focus
- * uses the quebi teal ring. Self-contained: render a ColorSwatch (from
- * react-aria-components) inside each item.
+ *
+ * Selection is marked with a halo, not with a hue: a ring in the foreground
+ * token, separated from the swatch by an offset ring in the page colour. Both
+ * tokens flip with the theme, so the mark reads over amber, over mint and over
+ * white alike — a fixed brand-mint ring did not, and around a teal swatch it
+ * disappeared altogether (task #133). Focus keeps the library-wide quebi mint
+ * ring, so the two states differ by hue rather than by opacity.
+ *
+ * There is no dot inside the swatch any more: it was painted `bg-white/80`
+ * whatever the swatch under it, which is invisible on a white or pale one. The
+ * halo is outside the colour, so it never has that problem.
+ *
+ * Self-contained: render a ColorSwatch (from react-aria-components) inside
+ * each item.
  */
 export function ColorSwatchPicker({ className, ...props }: ColorSwatchPickerProps) {
   return (
     <ColorSwatchPickerPrimitive
       data-slot="control"
-      className={cn("flex flex-wrap gap-2", className)}
+      className={composeRenderProps(className, (resolved) => cn("flex flex-wrap gap-2", resolved))}
       {...props}
     />
   )
@@ -34,29 +46,21 @@ export function ColorSwatchPickerItem({
   return (
     <ColorSwatchPickerItemPrimitive
       data-slot="item"
-      className={cn(
-        "group relative rounded-quebi-sm outline-hidden",
-        "*:rounded-quebi-sm",
-        "transition-opacity duration-150",
-        "data-[selected]:ring-2 data-[selected]:ring-quebi-brand-mark data-[selected]:ring-offset-2 data-[selected]:ring-offset-quebi-bg",
-        "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
-        "hover:opacity-90",
-        "data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          "group relative rounded-quebi-sm outline-hidden",
+          "*:rounded-quebi-sm",
+          "transition-opacity duration-150",
+          "data-[selected]:ring-2 data-[selected]:ring-quebi-fg data-[selected]:ring-offset-2 data-[selected]:ring-offset-quebi-bg",
+          "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
+          "hover:opacity-90",
+          "data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed",
+          resolved,
+        ),
       )}
       {...props}
     >
-      {(values) => (
-        <>
-          {values.isSelected && (
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute bottom-1 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-white/80 shadow-quebi-glow"
-            />
-          )}
-          {typeof children === "function" ? children(values) : children}
-        </>
-      )}
+      {children}
     </ColorSwatchPickerItemPrimitive>
   )
 }

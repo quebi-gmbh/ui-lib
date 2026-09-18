@@ -16,6 +16,16 @@ import { Loader } from "@/components/loader"
  * (intent / size / isCircle) and swaps its glyph based on intent:
  * camera for `defaultCamera`, folder for `acceptDirectory`, otherwise a
  * paperclip. While `isPending` it shows the quebi Loader.
+ *
+ * It defaults to `size="sm"`, not Button's `md`. A picker is read as a field
+ * control, not as a call to action: Button's `md` is `text-base` (16px, 46px
+ * tall) while every field-shaped control in the library — Input, the Select
+ * trigger, the DropZone label — is `text-sm` at its default size, and a
+ * FileTrigger sits directly against those (inside a DropZone in
+ * `conform-file-trigger`, beside an Input in a form). `sm` is `text-sm px-3
+ * py-2` → 38px, which is the field scale's own `sm` by the arithmetic in the
+ * `inputSizeStyles` comment. The `size` prop is untouched, so a consumer who
+ * wants the CTA scale still passes `size="md"`.
  */
 const PaperClipIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -77,7 +87,7 @@ export interface FileTriggerProps
 
 export function FileTrigger({
   intent = "outline",
-  size = "md",
+  size = "sm",
   isCircle = false,
   ref,
   className,

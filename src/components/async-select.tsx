@@ -250,7 +250,8 @@ export function AsyncSelect<T extends AsyncSelectOption>({
         data-invalid={isInvalid || undefined}
         className={cn(
           "flex w-full items-center gap-1 rounded-quebi-sm border border-quebi-line/10 bg-quebi-surface/[0.02] p-1.5 pe-2",
-          "transition-colors duration-150 focus-within:border-quebi-brand-mark",
+          "transition-[border-color,box-shadow] duration-150 focus-within:border-quebi-brand-mark",
+          "focus-within:ring-2 focus-within:ring-quebi-brand-mark focus-within:ring-offset-2 focus-within:ring-offset-quebi-bg",
           isInvalid && "border-red-500",
           isDisabled ? "cursor-not-allowed opacity-50" : "cursor-text",
         )}

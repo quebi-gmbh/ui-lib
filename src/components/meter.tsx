@@ -2,6 +2,7 @@
 
 import { createContext, use } from "react"
 import {
+  composeRenderProps,
   Meter as MeterPrimitive,
   type MeterProps as MeterPrimitiveProps,
   type MeterRenderProps as MeterPrimitiveRenderProps,
@@ -31,15 +32,17 @@ export function Meter({ className, children, color, ...props }: MeterProps) {
     <MeterPrimitive
       data-slot="meter"
       {...props}
-      className={cn(
-        "w-full",
-        "[&>[data-slot=meter-header]+[data-slot=meter-track]]:mt-2",
-        "[&>[data-slot=meter-header]+[slot='description']]:mt-1",
-        "[&>[slot='description']+[data-slot=meter-track]]:mt-2",
-        "[&>[data-slot=meter-track]+[slot=description]]:mt-2",
-        "[&>[data-slot=meter-track]+[slot=errorMessage]]:mt-2",
-        "*:data-[slot=meter-header]:font-medium",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          "w-full",
+          "[&>[data-slot=meter-header]+[data-slot=meter-track]]:mt-2",
+          "[&>[data-slot=meter-header]+[slot='description']]:mt-1",
+          "[&>[slot='description']+[data-slot=meter-track]]:mt-2",
+          "[&>[data-slot=meter-track]+[slot=description]]:mt-2",
+          "[&>[data-slot=meter-track]+[slot=errorMessage]]:mt-2",
+          "*:data-[slot=meter-header]:font-medium",
+          resolved,
+        ),
       )}
     >
       {(values) => (

@@ -11,6 +11,9 @@ import { breadcrumbsMeta } from "./breadcrumbs.meta"
 import { buttonMeta } from "./button.meta"
 import { buttonGroupMeta } from "./button-group.meta"
 import { calendarMeta } from "./calendar.meta"
+import { calendarShellMeta } from "./calendar-shell.meta"
+import { calendarTimelineMeta } from "./calendar-timeline.meta"
+import { calendarToolbarMeta } from "./calendar-toolbar.meta"
 import { cardMeta } from "./card.meta"
 import { carouselMeta } from "./carousel.meta"
 import { chartMeta } from "./chart.meta"
@@ -45,6 +48,7 @@ import { conformDayScheduleMeta } from "./conform-day-schedule.meta"
 import { conformFieldMeta } from "./conform-field.meta"
 import { conformFileTriggerMeta } from "./conform-file-trigger.meta"
 import { conformInputOtpMeta } from "./conform-input-otp.meta"
+import { conformMonthPickerMeta } from "./conform-month-picker.meta"
 import { conformMultipleSelectMeta } from "./conform-multiple-select.meta"
 import { conformNumberFieldMeta } from "./conform-number-field.meta"
 import { conformRadioGroupMeta } from "./conform-radio-group.meta"
@@ -57,6 +61,8 @@ import { conformSwitchMeta } from "./conform-switch.meta"
 import { conformTagFieldMeta } from "./conform-tag-field.meta"
 import { conformTextareaMeta } from "./conform-textarea.meta"
 import { conformTimeFieldMeta } from "./conform-time-field.meta"
+import { conformWeekPickerMeta } from "./conform-week-picker.meta"
+import { conformYearPickerMeta } from "./conform-year-picker.meta"
 import { containerMeta } from "./container.meta"
 import { contextMenuMeta } from "./context-menu.meta"
 import { dataTableMeta } from "./data-table.meta"
@@ -64,6 +70,7 @@ import { dateFieldMeta } from "./date-field.meta"
 import { datePickerMeta } from "./date-picker.meta"
 import { dateRangePickerMeta } from "./date-range-picker.meta"
 import { dayScheduleMeta } from "./day-schedule.meta"
+import { dayViewMeta } from "./day-view.meta"
 import { descriptionListMeta } from "./description-list.meta"
 import { dialogMeta } from "./dialog.meta"
 import { disclosureGroupMeta } from "./disclosure-group.meta"
@@ -94,6 +101,7 @@ import { menuMeta } from "./menu.meta"
 import { meterMeta } from "./meter.meta"
 import { modalMeta } from "./modal.meta"
 import { monthPickerMeta } from "./month-picker.meta"
+import { monthViewMeta } from "./month-view.meta"
 import { multipleSelectMeta } from "./multiple-select.meta"
 import { navbarMeta } from "./navbar.meta"
 import { noteMeta } from "./note.meta"
@@ -141,6 +149,7 @@ import { trackerMeta } from "./tracker.meta"
 import { treemapMeta } from "./treemap.meta"
 import { treeMeta } from "./tree.meta"
 import { weekPickerMeta } from "./week-picker.meta"
+import { weekViewMeta } from "./week-view.meta"
 import { yearPickerMeta } from "./year-picker.meta"
 
 export const metaRegistry: ComponentMeta[] = [
@@ -156,6 +165,9 @@ export const metaRegistry: ComponentMeta[] = [
   buttonMeta,
   buttonGroupMeta,
   calendarMeta,
+  calendarShellMeta,
+  calendarTimelineMeta,
+  calendarToolbarMeta,
   cardMeta,
   carouselMeta,
   chartMeta,
@@ -190,6 +202,7 @@ export const metaRegistry: ComponentMeta[] = [
   conformFieldMeta,
   conformFileTriggerMeta,
   conformInputOtpMeta,
+  conformMonthPickerMeta,
   conformMultipleSelectMeta,
   conformNumberFieldMeta,
   conformRadioGroupMeta,
@@ -202,6 +215,8 @@ export const metaRegistry: ComponentMeta[] = [
   conformTagFieldMeta,
   conformTextareaMeta,
   conformTimeFieldMeta,
+  conformWeekPickerMeta,
+  conformYearPickerMeta,
   containerMeta,
   contextMenuMeta,
   dataTableMeta,
@@ -209,6 +224,7 @@ export const metaRegistry: ComponentMeta[] = [
   datePickerMeta,
   dateRangePickerMeta,
   dayScheduleMeta,
+  dayViewMeta,
   descriptionListMeta,
   dialogMeta,
   disclosureGroupMeta,
@@ -239,6 +255,7 @@ export const metaRegistry: ComponentMeta[] = [
   meterMeta,
   modalMeta,
   monthPickerMeta,
+  monthViewMeta,
   multipleSelectMeta,
   navbarMeta,
   noteMeta,
@@ -286,5 +303,6 @@ export const metaRegistry: ComponentMeta[] = [
   treemapMeta,
   treeMeta,
   weekPickerMeta,
+  weekViewMeta,
   yearPickerMeta,
 ]

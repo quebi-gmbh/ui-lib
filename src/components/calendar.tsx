@@ -2,14 +2,18 @@
 
 import {
   type CalendarDate,
+  endOfMonth,
+  endOfYear,
   getLocalTimeZone,
   maxDate,
   minDate,
+  startOfMonth,
+  startOfYear,
   toCalendarDate,
   today,
 } from "@internationalized/date"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { use } from "react"
+import { use, useRef } from "react"
 import {
   CalendarCell,
   CalendarGrid,
@@ -45,7 +49,8 @@ import { cn } from "@/lib/utils"
  * Which header the calendar draws.
  *
  * - `select` — month and year dropdowns on the left, one prev/next pair on the
- *   right that pages the visible range.
+ *   right that pages the visible range. The dropdowns offer only the months and
+ *   years `minValue`/`maxValue` can reach.
  * - `stepper` — `‹ Sep ›` and `‹ 2026 ›`. The paging pair is dropped, or the
  *   month would carry two sets of chevrons meaning slightly different things.
  */
@@ -165,92 +170,16 @@ const useCalendarHeaderState = (component: string) => {
 }
 
 interface CalendarDropdown {
-  id: number
+  /** The collection key — a month number, or an era-qualified year. */
+  id: string | number
+  /** Where picking this entry puts focus, already inside the bounds. */
   date: CalendarDate
+  /** The label, formatted in the calendar's locale. */
   formatted: string
 }
 
-const SelectMonth = () => {
-  const state = useCalendarHeaderState("SelectMonth")
-  const { locale } = useLocale()
-  const formatter = getDateTimeFormat(locale, {
-    month: "short",
-    timeZone: state.timeZone,
-  })
-
-  const months: CalendarDropdown[] = []
-  const numMonths = state.focusedDate.calendar.getMonthsInYear(state.focusedDate)
-  for (let i = 1; i <= numMonths; i++) {
-    const date = state.focusedDate.set({ month: i })
-    months.push({
-      id: i,
-      date,
-      formatted: formatter.format(date.toDate(state.timeZone)),
-    })
-  }
-
-  return (
-    <Select
-      className="[popover-width:8rem]"
-      aria-label="Month"
-      style={{ flex: 1, width: "fit-content" }}
-      selectedKey={state.focusedDate.month}
-      onSelectionChange={(key) => {
-        if (typeof key === "number") {
-          state.setFocusedDate(months[key - 1].date)
-        }
-      }}
-    >
-      <SelectTrigger className="w-22 text-sm/5 **:data-[slot=select-value]:inline-block **:data-[slot=select-value]:truncate sm:px-2.5 sm:py-1.5 sm:*:text-sm/5" />
-      <SelectContent className="min-w-0" items={months}>
-        {(item) => (
-          <SelectItem id={item.id}>
-            <SelectLabel>{item.formatted}</SelectLabel>
-          </SelectItem>
-        )}
-      </SelectContent>
-    </Select>
-  )
-}
-
-const SelectYear = () => {
-  const state = useCalendarHeaderState("SelectYear")
-  const { locale } = useLocale()
-  const formatter = getDateTimeFormat(locale, {
-    year: "numeric",
-    timeZone: state.timeZone,
-  })
-
-  const years: CalendarDropdown[] = []
-  for (let i = -20; i <= 20; i++) {
-    const date = state.focusedDate.add({ years: i })
-    years.push({
-      id: years.length,
-      date,
-      formatted: formatter.format(date.toDate(state.timeZone)),
-    })
-  }
-  return (
-    <Select
-      aria-label="Year"
-      selectedKey={20}
-      onSelectionChange={(key) => {
-        if (typeof key === "number") {
-          state.setFocusedDate(years[key].date)
-        }
-      }}
-    >
-      <SelectTrigger className="text-sm/5 sm:px-2.5 sm:py-1.5 sm:*:text-sm/5" />
-      <SelectContent items={years}>
-        {(item) => (
-          <SelectItem id={item.id}>
-            <SelectLabel>{item.formatted}</SelectLabel>
-          </SelectItem>
-        )}
-      </SelectContent>
-    </Select>
-  )
-}
+/** A stepper walks one of these, and its buttons say which. */
+type CalendarStepperUnit = "month" | "year"
 
 /**
  * The date a focus move to `date` would actually land on.
@@ -272,8 +201,165 @@ const constrain = (
   return constrained
 }
 
-/** A stepper walks one of these, and its buttons say which. */
-type CalendarStepperUnit = "month" | "year"
+/**
+ * Is any day of `date`'s month — or of its year — inside the bounds?
+ *
+ * The unit is the question, not the date that stands for it: a `minValue` of
+ * 15 June leaves June and 2026 reachable while May and 2025 are not. Asking per
+ * unit is the same thing `CalendarStepper` asks before it offers a chevron, and
+ * the same thing `isMonthAvailable` / `isYearAvailable` ask in the month and
+ * year pickers.
+ */
+const isUnitReachable = (
+  unit: CalendarStepperUnit,
+  date: CalendarDate,
+  minValue?: DateValue | null,
+  maxValue?: DateValue | null,
+) => {
+  const first = unit === "year" ? startOfYear(date) : startOfMonth(date)
+  const last = unit === "year" ? endOfYear(date) : endOfMonth(date)
+  if (minValue && last.compare(toCalendarDate(minValue)) < 0) return false
+  if (maxValue && first.compare(toCalendarDate(maxValue)) > 0) return false
+  return true
+}
+
+/**
+ * Both dropdowns offer only what the bounds can reach, for the reason the
+ * stepper chevrons disable themselves: `setFocusedDate` runs through react-aria's
+ * `focusCell`, which clamps to `minValue`/`maxValue`. An out-of-range entry is
+ * therefore not inert — picking it snaps to the nearest legal date and re-renders
+ * the dropdown showing a month or year nobody chose, which reads as a control
+ * that ignored the click.
+ *
+ * Dropping the entries rather than marking them `isDisabled` is the choice:
+ * disabled entries keep the list one length, but a booking calendar open for a
+ * year would spend 39 of its 41 rows on years that cannot be picked, and the
+ * list a user scrolls is then mostly dead. The stability that argument is really
+ * about is the list not moving under them, and that is what the anchor in
+ * `SelectYear` buys.
+ */
+const SelectMonth = () => {
+  const state = useCalendarHeaderState("SelectMonth")
+  const { locale } = useLocale()
+  const formatter = getDateTimeFormat(locale, {
+    month: "short",
+    timeZone: state.timeZone,
+  })
+
+  const months: CalendarDropdown[] = []
+  const numMonths = state.focusedDate.calendar.getMonthsInYear(state.focusedDate)
+  for (let i = 1; i <= numMonths; i++) {
+    const date = state.focusedDate.set({ month: i })
+    if (!isUnitReachable("month", date, state.minValue, state.maxValue)) continue
+    months.push({
+      id: i,
+      // A month reachable only in part — `minValue` on the 15th — is offered,
+      // and lands on the first day of it that the bounds allow.
+      date: constrain(date, state.minValue, state.maxValue),
+      formatted: formatter.format(date.toDate(state.timeZone)),
+    })
+  }
+
+  return (
+    <Select
+      className="[popover-width:8rem]"
+      aria-label="Month"
+      style={{ flex: 1, width: "fit-content" }}
+      selectedKey={state.focusedDate.month}
+      onSelectionChange={(key) => {
+        // By key, not by index: the list is only the reachable months, so the
+        // nth entry is not the nth month of the year.
+        const month = months.find((candidate) => candidate.id === key)
+        if (month) state.setFocusedDate(month.date)
+      }}
+    >
+      <SelectTrigger className="w-22 text-sm/5 **:data-[slot=select-value]:inline-block **:data-[slot=select-value]:truncate sm:px-2.5 sm:py-1.5 sm:*:text-sm/5" />
+      <SelectContent className="min-w-0" items={months}>
+        {(item) => (
+          <SelectItem id={item.id} textValue={item.formatted}>
+            <SelectLabel>{item.formatted}</SelectLabel>
+          </SelectItem>
+        )}
+      </SelectContent>
+    </Select>
+  )
+}
+
+/**
+ * How many years to each side of the anchor the dropdown offers where a bound
+ * does not say otherwise.
+ */
+const YEAR_WINDOW = 20
+
+/**
+ * A collection key for a year. Era-qualified, because in an era calendar `year`
+ * counts from the start of the era and two different years are both year 1.
+ */
+const yearKey = (date: CalendarDate) => `${date.era}-${date.year}`
+
+const SelectYear = () => {
+  const state = useCalendarHeaderState("SelectYear")
+  const { locale } = useLocale()
+  const formatter = getDateTimeFormat(locale, {
+    year: "numeric",
+    timeZone: state.timeZone,
+  })
+
+  /**
+   * The year the calendar opened on. The window is measured from here and not
+   * from `state.focusedDate`, which is what it used to be: a window centred on
+   * the focused year re-centres itself every time the user picks from it, so
+   * the row under the pointer means a different year on the second pick than it
+   * did on the first. Bounds, when there are any, still win over the window.
+   */
+  const anchor = useRef(state.focusedDate).current
+
+  const entry = (date: CalendarDate): CalendarDropdown => ({
+    id: yearKey(date),
+    // Only the year is being chosen — keep the month the user is looking at.
+    date: constrain(
+      state.focusedDate.set({ era: date.era, year: date.year }),
+      state.minValue,
+      state.maxValue,
+    ),
+    formatted: formatter.format(date.toDate(state.timeZone)),
+  })
+
+  const years: CalendarDropdown[] = []
+  for (let i = -YEAR_WINDOW; i <= YEAR_WINDOW; i++) {
+    const date = anchor.add({ years: i })
+    if (!isUnitReachable("year", date, state.minValue, state.maxValue)) continue
+    years.push(entry(date))
+  }
+
+  const focusedKey = yearKey(state.focusedDate)
+  if (!years.some((year) => year.id === focusedKey)) {
+    // Paging with the prev/next pair can walk focus off the end of the window.
+    // The selected key has to be in the collection or the trigger renders empty.
+    if (state.focusedDate.compare(anchor) < 0) years.unshift(entry(state.focusedDate))
+    else years.push(entry(state.focusedDate))
+  }
+
+  return (
+    <Select
+      aria-label="Year"
+      selectedKey={focusedKey}
+      onSelectionChange={(key) => {
+        const year = years.find((candidate) => candidate.id === key)
+        if (year) state.setFocusedDate(year.date)
+      }}
+    >
+      <SelectTrigger className="text-sm/5 sm:px-2.5 sm:py-1.5 sm:*:text-sm/5" />
+      <SelectContent items={years}>
+        {(item) => (
+          <SelectItem id={item.id} textValue={item.formatted}>
+            <SelectLabel>{item.formatted}</SelectLabel>
+          </SelectItem>
+        )}
+      </SelectContent>
+    </Select>
+  )
+}
 
 /**
  * Do `a` and `b` fall in the same month (or the same year)? `era` is part of

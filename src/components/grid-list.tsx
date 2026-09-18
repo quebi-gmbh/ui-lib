@@ -24,11 +24,13 @@ import { cn } from "@/lib/utils"
 const GridList = <T extends object>({ className, ...props }: GridListProps<T>) => (
   <GridListPrimitive
     data-slot="grid-list"
-    className={cn(
-      "relative flex flex-col gap-y-1 sm:text-sm/6",
-      "*:data-[drop-target]:border *:data-[drop-target]:border-quebi-brand-mark",
-      "has-data-[slot=grid-list-section]:gap-y-6",
-      className,
+    className={composeRenderProps(className, (resolved) =>
+      cn(
+        "relative flex flex-col gap-y-1 sm:text-sm/6",
+        "*:data-[drop-target]:border *:data-[drop-target]:border-quebi-brand-mark",
+        "has-data-[slot=grid-list-section]:gap-y-6",
+        resolved,
+      ),
     )}
     {...props}
   />

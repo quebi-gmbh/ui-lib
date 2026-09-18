@@ -1,10 +1,12 @@
 "use client"
 
-import { Check, Loader2, X } from "lucide-react"
-import { useEffect, useId, useMemo, useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { useAsyncList } from "react-stately"
-import { PopoverContent } from "@/components/popover"
-import { cn } from "@/lib/utils"
+import {
+  MultiSelectControl,
+  type MultiSelectOption,
+  multiSelectKey,
+} from "@/components/multiple-select"
 
 /**
  * Async Multiple Select — quebi design system
@@ -17,12 +19,16 @@ import { cn } from "@/lib/utils"
  * double-fires; removing a chip (✕ or Backspace on an empty input) never opens
  * the menu. Built as an ARIA 1.2 combobox with `aria-activedescendant` keyboard
  * navigation over the results listbox.
+ *
+ * The control it draws is `MultiSelectControl`, shared with Multiple Select
+ * (task #157). The two components are the same field; the only thing that
+ * chooses between them is who supplies the options — a local collection there,
+ * the `load` below here. Everything async lives in this file: the list, the
+ * debounce, and the "load the next page" the control reports by scroll.
  */
 
-export interface AsyncMultipleSelectOption {
-  id: string | number
-  name: string
-}
+/** An option: an id and a label for its chip — the same shape Multiple Select takes. */
+export type AsyncMultipleSelectOption = MultiSelectOption
 
 export interface AsyncMultipleSelectLoadParams {
   /** Current search string; empty on the initial page. */
@@ -63,9 +69,8 @@ export interface AsyncMultipleSelectProps<T extends AsyncMultipleSelectOption> {
   "aria-describedby"?: string
 }
 
-const keyOf = (option: AsyncMultipleSelectOption) => String(option.id)
 const toMap = <T extends AsyncMultipleSelectOption>(items: T[]) =>
-  new Map(items.map((item) => [keyOf(item), item]))
+  new Map(items.map((item) => [multiSelectKey(item), item]))
 
 export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
   load,
@@ -80,21 +85,11 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
   form,
   className,
   id,
-  "aria-label": ariaLabel = "Select items",
+  "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
 }: AsyncMultipleSelectProps<T>) {
-  const reactId = useId()
-  const listboxId = `${reactId}-listbox`
-  const optionId = (key: string) => `${reactId}-opt-${key}`
-
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const popoverRef = useRef<HTMLDivElement | null>(null)
-  const inputRef = useRef<HTMLInputElement | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const [open, setOpen] = useState(false)
-  const [inputValue, setInputValue] = useState("")
-  const [activeKey, setActiveKey] = useState<string | null>(null)
+  const [search, setSearch] = useState("")
 
   const list = useAsyncList<T>({
     async load({ signal, cursor, filterText }) {
@@ -115,283 +110,50 @@ export function AsyncMultipleSelect<T extends AsyncMultipleSelectOption>({
     onChange?.(Array.from(next.values()))
   }
 
-  const openMenu = () => {
-    if (!isDisabled) setOpen(true)
-  }
-
-  const handleOpenChange = (next: boolean) => {
-    setOpen(next)
-    if (!next) setActiveKey(null)
-  }
-
   const runSearch = (text: string) => {
-    setInputValue(text)
+    setSearch(text)
     if (debounceRef.current) clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => list.setFilterText(text), searchDelay)
   }
 
-  const toggle = (key: string) => {
+  const toggle = (item: T) => {
+    const key = multiSelectKey(item)
     const next = new Map(selected)
-    if (next.has(key)) {
-      next.delete(key)
-    } else {
-      const item = list.items.find((i) => keyOf(i) === key)
-      if (item) next.set(key, item)
-    }
+    if (next.has(key)) next.delete(key)
+    else next.set(key, item)
     commit(next)
   }
 
-  const removeKey = (key: string) => {
+  const remove = (item: T) => {
+    const key = multiSelectKey(item)
     if (!selected.has(key)) return
     const next = new Map(selected)
     next.delete(key)
     commit(next)
   }
 
-  // Keep the keyboard-highlighted option valid as the list filters/paginates.
-  useEffect(() => {
-    if (!open) return
-    if (list.items.length === 0) {
-      setActiveKey(null)
-      return
-    }
-    setActiveKey((prev) =>
-      prev && list.items.some((i) => keyOf(i) === prev) ? prev : keyOf(list.items[0]),
-    )
-  }, [open, list.items])
-
-  // Scroll the active option into view during keyboard navigation.
-  useEffect(() => {
-    if (!open || !activeKey) return
-    document.getElementById(`${reactId}-opt-${activeKey}`)?.scrollIntoView({ block: "nearest" })
-  }, [activeKey, open, reactId])
-
-  // Close on outside press. The popover is non-modal (so focus stays in the
-  // input), which means react-aria's usePopover runs with isDismissable=false
-  // and won't dismiss on outside interaction — so we own that here. Capture
-  // phase runs before any child handler that might stop propagation.
-  useEffect(() => {
-    if (!open) return
-    const onPointerDown = (e: PointerEvent) => {
-      const target = e.target as Node | null
-      if (!target) return
-      if (containerRef.current?.contains(target)) return
-      if (popoverRef.current?.contains(target)) return
-      setOpen(false)
-      setActiveKey(null)
-    }
-    document.addEventListener("pointerdown", onPointerDown, true)
-    return () => document.removeEventListener("pointerdown", onPointerDown, true)
-  }, [open])
-
-  const moveActive = (dir: 1 | -1) => {
-    const items = list.items
-    if (items.length === 0) return
-    const idx = activeKey ? items.findIndex((i) => keyOf(i) === activeKey) : -1
-    const nextIdx = idx === -1 ? (dir === 1 ? 0 : items.length - 1) : (idx + dir + items.length) % items.length
-    setActiveKey(keyOf(items[nextIdx]))
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault()
-        if (open) moveActive(1)
-        else openMenu()
-        break
-      case "ArrowUp":
-        e.preventDefault()
-        if (open) moveActive(-1)
-        else openMenu()
-        break
-      case "Enter":
-        if (open && activeKey) {
-          e.preventDefault()
-          toggle(activeKey)
-        }
-        break
-      case "Escape":
-        if (open) {
-          e.preventDefault()
-          handleOpenChange(false)
-        }
-        break
-      case "Backspace":
-        if (inputValue === "" && selectedItems.length > 0) {
-          e.preventDefault()
-          removeKey(keyOf(selectedItems[selectedItems.length - 1]))
-        }
-        break
-    }
-  }
-
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const el = e.currentTarget
-    const distanceToBottom = el.scrollHeight - el.scrollTop - el.clientHeight
-    if (distanceToBottom < 60 && list.items.length > 0 && list.loadingState === "idle") {
-      list.loadMore()
-    }
-  }
-
-  const isLoading = list.loadingState === "loading" || list.loadingState === "filtering"
-
   return (
-    <div className={cn("w-full", className)}>
-      {/** biome-ignore lint/a11y/noStaticElementInteractions: the control surface forwards bare-surface clicks to the combobox input; all real semantics live on the input/options */}
-      <div
-        ref={containerRef}
-        onMouseDown={(e) => {
-          // Clicking the bare surface (padding) — not a chip, ✕, or the input —
-          // focuses the input without stealing it from those controls.
-          if (e.target === e.currentTarget && !isDisabled) {
-            e.preventDefault()
-            inputRef.current?.focus()
-            openMenu()
-          }
-        }}
-        data-invalid={isInvalid || undefined}
-        className={cn(
-          "flex w-full flex-wrap items-center gap-1.5 rounded-quebi-sm border border-quebi-line/10 bg-quebi-surface/[0.02] p-1.5",
-          "transition-colors duration-150 focus-within:border-quebi-brand-mark",
-          isInvalid && "border-red-500",
-          isDisabled ? "cursor-not-allowed opacity-50" : "cursor-text",
-        )}
-      >
-        {selectedItems.map((item) => {
-          const k = keyOf(item)
-          return (
-            <span
-              key={k}
-              data-slot="chip"
-              className="inline-flex items-center gap-x-1 rounded-full border border-quebi-line/10 bg-quebi-surface/[0.03] py-0.5 pe-1 ps-2.5 font-medium text-quebi-fg-muted text-xs"
-            >
-              {item.name}
-              {!isDisabled && (
-                // biome-ignore lint/correctness/noRestrictedElements: as in async-select — onMouseDown preventDefault holds focus on the input and stopPropagation stops chip removal reopening the listbox; onPress is neither DOM event.
-                <button
-                  type="button"
-                  aria-label={`Remove ${item.name}`}
-                  tabIndex={-1}
-                  // Keep focus in the input so removing a chip never opens/closes
-                  // the menu or blurs the field.
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    removeKey(k)
-                  }}
-                  className={cn(
-                    "flex size-4 shrink-0 items-center justify-center rounded-full text-quebi-fg-subtle outline-none transition-colors duration-150",
-                    "hover:bg-cyan-500/10 hover:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-brand-mark",
-                  )}
-                >
-                  <X className="size-3" strokeWidth={2.5} aria-hidden="true" />
-                </button>
-              )}
-            </span>
-          )
-        })}
-
-        <input
-          ref={inputRef}
-          id={id}
-          type="text"
-          role="combobox"
-          aria-expanded={open}
-          aria-controls={open ? listboxId : undefined}
-          aria-autocomplete="list"
-          aria-activedescendant={open && activeKey ? optionId(activeKey) : undefined}
-          aria-label={ariaLabel}
-          aria-invalid={isInvalid || undefined}
-          aria-describedby={ariaDescribedBy}
-          disabled={isDisabled}
-          value={inputValue}
-          placeholder={selectedItems.length === 0 ? placeholder : undefined}
-          onChange={(e) => {
-            runSearch(e.target.value)
-            openMenu()
-          }}
-          onFocus={openMenu}
-          onClick={openMenu}
-          onKeyDown={handleKeyDown}
-          className={cn(
-            "min-w-24 flex-1 bg-transparent px-1.5 py-0.5 text-sm text-quebi-fg outline-none",
-            "placeholder:text-quebi-fg-subtle placeholder:italic",
-          )}
-        />
-      </div>
-
-      <PopoverContent
-        ref={popoverRef}
-        triggerRef={containerRef}
-        isOpen={open && !isDisabled}
-        onOpenChange={handleOpenChange}
-        isNonModal
-        placement="bottom start"
-        className="w-(--trigger-width) p-0"
-      >
-        <div
-          role="listbox"
-          id={listboxId}
-          aria-multiselectable="true"
-          aria-label={ariaLabel}
-          onScroll={handleScroll}
-          className="quebi-scrollbar max-h-72 overflow-y-auto overscroll-contain p-1"
-        >
-          {list.items.length === 0 ? (
-            <div className="flex items-center justify-center gap-2 py-6 text-quebi-fg-subtle text-sm">
-              {isLoading ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                  Loading…
-                </>
-              ) : (
-                "No results"
-              )}
-            </div>
-          ) : (
-            list.items.map((item) => {
-              const k = keyOf(item)
-              const isSel = selected.has(k)
-              const isActive = activeKey === k
-              return (
-                // biome-ignore lint/a11y/useFocusableInteractive: options use virtual focus via the combobox input's aria-activedescendant
-                // biome-ignore lint/a11y/useKeyWithClickEvents: keyboard is handled centrally on the combobox input (Enter toggles the active option)
-                <div
-                  key={k}
-                  id={optionId(k)}
-                  role="option"
-                  aria-selected={isSel}
-                  // Keep focus in the input while clicking an option.
-                  onMouseDown={(e) => e.preventDefault()}
-                  onMouseEnter={() => setActiveKey(k)}
-                  onClick={() => toggle(k)}
-                  className={cn(
-                    "flex cursor-pointer items-center gap-2 rounded-quebi-sm px-2.5 py-1.5 text-sm text-quebi-fg outline-none transition-colors duration-150",
-                    isActive && "bg-quebi-surface/[0.05]",
-                    isSel && "text-quebi-brand-text",
-                  )}
-                >
-                  <Check
-                    className={cn("size-4 shrink-0", isSel ? "opacity-100" : "opacity-0")}
-                    aria-hidden="true"
-                  />
-                  <span className="flex-1 truncate">{item.name}</span>
-                </div>
-              )
-            })
-          )}
-          {list.loadingState === "loadingMore" && (
-            <div className="flex items-center justify-center py-2">
-              <Loader2 className="size-4 animate-spin text-quebi-fg-subtle" aria-hidden="true" />
-            </div>
-          )}
-        </div>
-      </PopoverContent>
-
-      {name &&
-        selectedItems.map((item) => (
-          <input key={keyOf(item)} type="hidden" name={name} form={form} value={keyOf(item)} />
-        ))}
-    </div>
+    <MultiSelectControl<T>
+      options={list.items}
+      selected={selectedItems}
+      onToggle={toggle}
+      onRemove={remove}
+      search={search}
+      onSearchChange={runSearch}
+      isLoading={list.loadingState === "loading" || list.loadingState === "filtering"}
+      isLoadingMore={list.loadingState === "loadingMore"}
+      onLoadMore={() => {
+        if (list.loadingState === "idle") list.loadMore()
+      }}
+      placeholder={placeholder}
+      isDisabled={isDisabled}
+      isInvalid={isInvalid}
+      name={name}
+      form={form}
+      className={className}
+      id={id}
+      aria-label={ariaLabel}
+      aria-describedby={ariaDescribedBy}
+    />
   )
 }

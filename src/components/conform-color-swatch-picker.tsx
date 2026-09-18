@@ -168,26 +168,18 @@ export function ConformColorSwatchPicker({
             // The quebi ColorSwatchPickerItem's look, on a listbox option: the
             // ring is keyed off `data-[selected]`, which react-aria now sets,
             // rather than off a className the component computes for itself.
+            // Selection is the neutral halo, focus the mint ring — see that
+            // component for why the selection mark is not a brand hue.
             className={cn(
               "relative rounded-quebi-sm outline-hidden",
               "*:rounded-quebi-sm",
               "transition-opacity duration-150",
-              "data-[selected]:ring-2 data-[selected]:ring-quebi-brand-mark data-[selected]:ring-offset-2 data-[selected]:ring-offset-quebi-bg",
+              "data-[selected]:ring-2 data-[selected]:ring-quebi-fg data-[selected]:ring-offset-2 data-[selected]:ring-offset-quebi-bg",
               "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
               "hover:opacity-90",
             )}
           >
-            {({ isSelected }) => (
-              <>
-                <ColorSwatch color={color.hex} className="size-8" />
-                {isSelected && (
-                  <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute bottom-1 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-white/80 shadow-quebi-glow"
-                  />
-                )}
-              </>
-            )}
+            <ColorSwatch color={color.hex} className="size-8" />
           </ListBoxItem>
         ))}
       </ListBox>

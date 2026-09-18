@@ -1,7 +1,7 @@
 "use client"
 
 import type { FieldMetadata } from "@conform-to/react"
-import { TextField, type TextFieldProps } from "react-aria-components"
+import { composeRenderProps, TextField, type TextFieldProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { Description, FieldError, Label } from "@/components/field"
 import { Input } from "@/components/input"
@@ -56,7 +56,7 @@ export function ConformField({
       pattern={field.pattern}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={cn("flex flex-col gap-1.5", className)}
+      className={composeRenderProps(className, (resolved) => cn("flex flex-col gap-1.5", resolved))}
     >
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>

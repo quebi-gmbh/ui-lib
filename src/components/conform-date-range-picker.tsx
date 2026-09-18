@@ -4,6 +4,7 @@ import type { FieldMetadata } from "@conform-to/react"
 import { BaseControl, useControl } from "@conform-to/react/future"
 import { type CalendarDate, parseDate } from "@internationalized/date"
 import { useRef } from "react"
+import { composeRenderProps } from "react-aria-components"
 import type { DateValue, RangeValue } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import {
@@ -113,7 +114,7 @@ export function ConformDateRangePicker({
       onBlur={() => control.blur()}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={cn("w-full", className)}
+      className={composeRenderProps(className, (resolved) => cn("w-full", resolved))}
     >
       <BaseControl
         type="fieldset"

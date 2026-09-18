@@ -9,7 +9,7 @@ export const formatValuesThroughTheLibraryRule: RuleMeta = {
   title: "Format numbers and dates through the library, with an explicit locale",
   navTitle: "Value formatting",
   summary:
-    "toLocaleString() and a bare new Intl.NumberFormat() resolve against whatever locale the runtime happens to have. Render FormattedNumber / FormattedDate, or call formatNumber / formatCurrency with a locale you passed in.",
+    "toLocaleString() and a bare new Intl.NumberFormat() resolve against whatever locale the runtime happens to have, and a .toString() rendered as JSX text prints the wire format in all of them. Render FormattedNumber / FormattedDate, or call formatNumber / formatCurrency with a locale you passed in.",
   severity: "error",
   category: "element-usage",
   tier: 6,
@@ -19,6 +19,7 @@ export const formatValuesThroughTheLibraryRule: RuleMeta = {
     "A bare `toLocaleString()` is not a formatting choice, it is the absence of one. With no locale argument the result comes from the runtime's default — the server's ICU default in Node, the user's browser setting in the client — so the same value renders `8,420` in one place and `8.420` in another with nothing in the code to explain the difference.",
     "In a prerendered app that is a hydration bug, not a cosmetic one. This site sets `ssr: false` with a `prerender()` list, so every page is HTML generated in Node and then hydrated in the browser: the two runs format the same number against two different default locales, React finds text it did not expect, and what it does about it is not something to reason about per-component. The fix is the same in either direction — say which locale you mean.",
     "The library's formatters are where that decision is written down once. `FormattedNumber`, `FormattedCurrency` and `FormattedPercentage` render the value through `Intl.NumberFormat` with a locale from the nearest `I18nProvider` (mount one, or pass `locale`); `FormattedDate` pins both a locale and an IANA time zone, so a date is not silently reinterpreted in the reader's zone. For string contexts where a component cannot go — a chart tick callback, a `valueFormatter`, an aria-label — `formatNumber(value, locale)` and `formatCurrency(value, locale)` take the locale as an argument, which is the point: it cannot be forgotten.",
+    "`CalendarDate#toString()` and `Time#toString()` from `@internationalized/date` fail the same way from the other end, and worse. They are not locale-dependent at all — they return ISO 8601, the wire format — so instead of a different spelling in each runtime you get the serialization in every runtime: `2026-06-30` in a Description sitting a few pixels under a trigger whose segments spell the same day `30.6.2026`. GritQL cannot see types, so \"a value whose type comes from @internationalized/date\" is not a pattern that can be written. The position is. A `.toString()` rendered as JSX *text* is either redundant — React stringifies whatever you hand it — or a serialization leak, and neither is something anyone writes on purpose, so that position, and only that position, is what the check matches.",
     "Two honest limits. `FormattedStorage` is not a byte formatter — it takes gigabytes and rolls up to TB, with no KB, MB or PB and no binary-vs-decimal choice — so hand-rolled byte arithmetic is outside what this rule can redirect you to. And `new Intl.DateTimeFormat().resolvedOptions().timeZone`, the standard way to ask what zone you are in, is a construction like any other and is reported; that one is a suppression with a reason, not a rewrite.",
   ],
   appliesTo: ["app/**/*.{tsx,jsx}", "src/**/*.{tsx,jsx}"],
@@ -75,6 +76,18 @@ export const formatValuesThroughTheLibraryRule: RuleMeta = {
       ],
       note: "Relative output (\"3 days ago\") depends on when it is rendered, so pass `now` when the result has to be identical on the server and in the browser.",
     },
+    {
+      element: "CalendarDate.toString() / Time.toString() rendered into JSX",
+      use: [
+        {
+          name: "FormattedDate",
+          from: "@/components/formatted-date",
+          slug: "formatted-date",
+          when: "echoing a picker's value back to the reader — the segments above it are localized, so the echo has to be too",
+        },
+      ],
+      note: "A `CalendarDate` has no time of day and a `Time` has no day at all, so formatting either through Intl means choosing both plus a zone. Anchor the value with `toZoned(value, zone)` and pass that same `zone` to FormattedDate: anchoring in the viewer's zone instead puts the echo a day away from the segments for any reader west of the one you format in.",
+    },
   ],
   examples: [
     {
@@ -107,6 +120,27 @@ export const formatValuesThroughTheLibraryRule: RuleMeta = {
 </LeaderboardEnd>`,
       note: "FormattedNumber reads the locale from the nearest I18nProvider, so one decision at the root of the app covers every number under it — and the same markup is produced on the server and in the browser.",
     },
+    {
+      title: "A controlled picker echoing its own value",
+      source: "src/registry/date-picker.examples.tsx",
+      sourceFixed: true,
+      wrong: `<Description>{value ? value.toString() : "No date selected"}</Description>`,
+      right: `import { toZoned } from "@internationalized/date"
+import { FormattedDate } from "@/components/formatted-date"
+
+<Description>
+  {value ? (
+    <FormattedDate
+      date={toZoned(value, DISPLAY_TIME_ZONE).toDate()}
+      timeZone={DISPLAY_TIME_ZONE}
+      dateStyle="medium"
+    />
+  ) : (
+    "No date selected"
+  )}
+</Description>`,
+      note: "Four sibling examples printed 2026-06-30 under a trigger whose segments spelled 30.6.2026, and lint was silent for the whole life of the rule: toString() is on every object in the language, so it can only be matched by where it sits. Here it sits in a JSX expression child, which is the one position where nobody means it.",
+    },
   ],
   exceptions: [
     {
@@ -127,6 +161,14 @@ export const formatValuesThroughTheLibraryRule: RuleMeta = {
     // r"..."), which compiles and never matches. `$args` also matches an empty
     // argument list, which is the whole point: `n.toLocaleString()` is the case
     // this rule is about.
+    //
+    // The `toString()` arm is matched by *position*, because it cannot be
+    // matched by name: every object in the language has the method. `until`
+    // is what makes "in a JSX expression child" mean the child itself rather
+    // than anything anywhere beneath one — without it, `key={id.toString()}`
+    // inside a `{items.map(...)}` has a JsxExpressionChild ancestor and is
+    // reported. It also takes no `$args`: `n.toString(16)` is a radix
+    // conversion, not a date reaching the DOM.
     biome: {
       via: "plugin",
       pattern: `or {
@@ -135,14 +177,21 @@ export const formatValuesThroughTheLibraryRule: RuleMeta = {
   \`$value.toLocaleString($args)\`,
   \`new Intl.DateTimeFormat($args)\`,
   \`new Intl.NumberFormat($args)\`,
-  \`new Intl.RelativeTimeFormat($args)\`
+  \`new Intl.RelativeTimeFormat($args)\`,
+  \`$value.toString()\` where {
+    $value <: within JsxExpressionChild() until or {
+      JsxAttributeInitializerClause(),
+      JsArrowFunctionExpression(),
+      JsFunctionExpression()
+    }
+  }
 } as $call where {
   $call <: not within JsFunctionDeclaration(id = r"^(?:format[A-Z]|use[A-Z]).*")`,
     },
     message:
-      "This formats a value against whatever locale the runtime has, which differs between the prerender and the browser. Render <FormattedNumber>, <FormattedCurrency> or <FormattedDate> from @/components/formatted-number and @/components/formatted-date, or call formatNumber(value, locale) / formatCurrency(value, locale) where a string is needed. See https://ui-lib.quebi.de/rules/format-values-through-the-library",
-    grep: "\\.toLocale(String|DateString|TimeString)\\(|new Intl\\.(NumberFormat|DateTimeFormat|RelativeTimeFormat)\\(",
-    note: "A wrapper of your own is allowed to call Intl: the check skips anything inside a function declaration named format* or use*, which is how a project-level formatter opts out without a suppression. It reads the call, not the locale — `toLocaleString(\"de-DE\")` with an explicit locale is reported too, because the library formatter is still the answer and one place to change it is the reason the rule exists. It matches a construction, so a formatter called without `new` — `Intl.NumberFormat(locale).format(n)` is legal and does the same thing — escapes it entirely; the ripgrep line catches those. `new Intl.DateTimeFormat().resolvedOptions().timeZone` is the known false positive in the other direction; suppress it with the reason.",
+      "This puts a value on the page without the library formatter: a toLocale* call or an Intl construction formats against whatever locale the runtime has, which differs between the prerender and the browser, and a .toString() rendered as JSX text prints the wire format in both. Render <FormattedNumber>, <FormattedCurrency> or <FormattedDate> from @/components/formatted-number and @/components/formatted-date, or call formatNumber(value, locale) / formatCurrency(value, locale) where a string is needed. See https://ui-lib.quebi.de/rules/format-values-through-the-library",
+    grep: "\\.toLocale(String|DateString|TimeString)\\(|new Intl\\.(NumberFormat|DateTimeFormat|RelativeTimeFormat)\\(|\\{.*\\.toString\\(\\)",
+    note: "A wrapper of your own is allowed to call Intl: the check skips anything inside a function declaration named format* or use*, which is how a project-level formatter opts out without a suppression. It reads the call, not the locale — `toLocaleString(\"de-DE\")` with an explicit locale is reported too, because the library formatter is still the answer and one place to change it is the reason the rule exists. It matches a construction, so a formatter called without `new` — `Intl.NumberFormat(locale).format(n)` is legal and does the same thing — escapes it entirely; the ripgrep line catches those. `new Intl.DateTimeFormat().resolvedOptions().timeZone` is the known false positive in the other direction; suppress it with the reason. The `.toString()` half is matched by position and not by type, because GritQL has none: the call has to *be* a JSX expression child — `{value.toString()}`, or a template literal in that same slot — with no JSX attribute and no function boundary between the two. So `key={id.toString()}`, a `valueFormatter` callback, `{rows.map((r) => r.id.toString()).join()}` and a `new URLSearchParams(q).toString()` in a helper are all outside it on purpose, as is `n.toString(16)`, which is a radix conversion rather than a date reaching the DOM. Those are misses, not exceptions: the ripgrep line is deliberately looser than the plugin here and will show you them.",
   },
   tags: ["formatting", "i18n", "hydration", "tier-6"],
 }

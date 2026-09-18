@@ -1,6 +1,7 @@
 "use client"
 
 import type { FieldMetadata } from "@conform-to/react"
+import { composeRenderProps } from "react-aria-components"
 import type { NumberFieldProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { Description, FieldError, Label } from "@/components/field"
@@ -91,7 +92,7 @@ export function ConformNumberField({
       step={toNumber(field.step)}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={cn(className)}
+      className={composeRenderProps(className, (resolved) => cn(resolved))}
     >
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>

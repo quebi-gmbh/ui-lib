@@ -27,7 +27,7 @@ export const multipleSelectExamples: ComponentExample[] = [
   {
     title: "Default",
     description:
-      "Pick several options; each becomes a removable tag. Clicking the field — or tabbing into it, or pressing ArrowDown on it — opens the searchable list; the + button is the affordance, not the only way in.",
+      "A tokenizer combobox: type to filter, Enter or a click chooses, and each choice becomes a removable chip inline with the input. Clicking anywhere in the box — the padding or a chip's label — puts focus in the input and opens the list; Backspace on an empty input removes the last chip.",
     render: () => (
       <div className="w-80">
         <MultipleSelect aria-label="Frameworks" placeholder="Select frameworks">
@@ -40,12 +40,14 @@ export const multipleSelectExamples: ComponentExample[] = [
   },
   {
     title: "With label & description",
-    description: "Pair the control with field primitives for a complete labelled form field.",
+    description:
+      "Pair the control with field primitives. This is a hand-built combobox rather than a react-aria field, so the ids are yours: point the label at the input with `htmlFor` and the input at the hint with `aria-describedby`.",
     render: () => (
       <div className="w-80 space-y-1.5">
-        <Label>Frameworks</Label>
+        <Label htmlFor="frameworks">Frameworks</Label>
         <MultipleSelect
-          aria-label="Frameworks"
+          id="frameworks"
+          aria-describedby="frameworks-hint"
           placeholder="Select frameworks"
           defaultValue={["react", "svelte"]}
         >
@@ -53,7 +55,7 @@ export const multipleSelectExamples: ComponentExample[] = [
             {(item) => <MultipleSelectItem id={item.id}>{item.name}</MultipleSelectItem>}
           </MultipleSelectContent>
         </MultipleSelect>
-        <Description>Choose the frameworks your team uses.</Description>
+        <Description id="frameworks-hint">Choose the frameworks your team uses.</Description>
       </div>
     ),
   },
@@ -63,9 +65,7 @@ export const multipleSelectExamples: ComponentExample[] = [
     render: () => {
       function Demo() {
         const [selected, setSelected] = useState<Key[]>(["react"])
-        const labels = frameworks
-          .filter((f) => selected.includes(f.id))
-          .map((f) => f.name)
+        const labels = frameworks.filter((f) => selected.includes(f.id)).map((f) => f.name)
         return (
           <div className="w-80 space-y-3">
             <MultipleSelect
@@ -89,7 +89,7 @@ export const multipleSelectExamples: ComponentExample[] = [
   },
   {
     title: "Disabled",
-    description: "The whole control can be disabled.",
+    description: "The whole control can be disabled; chips lose their ✕ with it.",
     render: () => (
       <div className="w-80">
         <MultipleSelect

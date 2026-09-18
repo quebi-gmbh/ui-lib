@@ -107,12 +107,14 @@ const ChoiceBox = <T extends object>({
         data-slot="choice-box"
         layout={columns === 1 ? "stack" : "grid"}
         selectionMode={selectionMode}
-        className={cn(
-          choiceBoxStyles({
-            columns,
-            gap,
-          }),
-          className,
+        className={composeRenderProps(className, (resolved) =>
+          cn(
+            choiceBoxStyles({
+              columns,
+              gap,
+            }),
+            resolved,
+          ),
         )}
         {...props}
       />

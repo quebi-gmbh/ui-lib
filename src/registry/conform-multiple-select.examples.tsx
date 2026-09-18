@@ -57,7 +57,7 @@ export const conformMultipleSelectExamples: ComponentExample[] = [
   {
     title: "Bound to a Conform form",
     description:
-      "Submit without selecting anything to see the validation error wired from field metadata.",
+      "Type to filter, pick several frameworks, and remove a chip with its ✕ or with Backspace. Submit without selecting anything to see the validation error wired from field metadata.",
     render: () => <FrameworksForm />,
   },
 ]

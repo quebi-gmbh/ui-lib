@@ -55,13 +55,15 @@ export function ToggleGroup({
         data-slot="control"
         selectionMode={selectionMode}
         orientation={orientation}
-        className={cn(
-          "inline-flex p-0.5",
-          "border border-solid border-quebi-line/10 bg-quebi-bg/40",
-          orientation === "horizontal" ? "flex-row" : "flex-col",
-          selectionMode === "single" ? "gap-0.5" : "gap-0",
-          isCircle ? "rounded-full" : "rounded-quebi-md",
-          className,
+        className={composeRenderProps(className, (resolved) =>
+          cn(
+            "inline-flex p-0.5",
+            "border border-solid border-quebi-line/10 bg-quebi-bg/40",
+            orientation === "horizontal" ? "flex-row" : "flex-col",
+            selectionMode === "single" ? "gap-0.5" : "gap-0",
+            isCircle ? "rounded-full" : "rounded-quebi-md",
+            resolved,
+          ),
         )}
         {...props}
       />
@@ -77,7 +79,11 @@ export const toggleGroupItemStyles = tv({
     "transition-all duration-200 ease-out",
     "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg focus-visible:z-10",
     "hover:not-selected:bg-quebi-surface/[0.04] hover:not-selected:text-quebi-fg",
-    "selected:bg-quebi-brand selected:border-quebi-brand selected:text-quebi-on-brand selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover selected:hover:border-quebi-brand-hover",
+    // The selected item's mint fill is edged in `--q-brand-mark` (teal-600 on
+    // light, 3.45:1 against the page; identical to the fill token on dark), and
+    // the edge holds on hover. Mint edged in mint was 1.74:1 — no boundary at
+    // all on the light page. See button.tsx and task #145.
+    "selected:bg-quebi-brand selected:border-quebi-brand-mark selected:text-quebi-on-brand selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover",
     "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent",
     "*:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center",
   ],

@@ -12,6 +12,7 @@ import {
   CommandMenuShortcut,
 } from "@/components/command-menu"
 import { Button } from "@/components/button"
+import { Kbd } from "@/components/keyboard"
 import type { ComponentExample } from "./types"
 
 const Palette = ({
@@ -60,7 +61,7 @@ const Palette = ({
       </CommandMenuSection>
     </CommandMenuList>
     <CommandMenuFooter>
-      Press <kbd>↵</kbd> to select, <kbd>esc</kbd> to close.
+      Press <Kbd>↵</Kbd> to select, <Kbd>esc</Kbd> to close.
     </CommandMenuFooter>
   </CommandMenu>
 )

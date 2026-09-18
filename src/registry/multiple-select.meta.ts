@@ -4,7 +4,7 @@ export const multipleSelectMeta: ComponentMeta = {
   slug: "multiple-select",
   name: "Multiple Select",
   description:
-    "A multi-value picker that renders chosen options as removable tags and opens a searchable list-box popover to add more. The whole control box is the trigger — click it, tab into it, or press ArrowDown/Enter/Space on it — and the + button is the affordance beside the tags. Composes Tag Group, Popover, Search Field, and List Box, styled with the quebi dark surface and brand-teal selection.",
+    "A multi-value picker over a local option list: chosen options are removable chips inline with a text input, typing filters the list, and the results open in a non-modal popover navigated with aria-activedescendant so focus never leaves the field. Clicking anywhere in the box opens it; Backspace on an empty input removes the last chip. Same control as Async Multiple Select — the only difference is who supplies the options. Styled with the quebi dark surface and brand-teal selection.",
   category: "Selection",
-  tags: ["select", "multi-select", "combobox", "tags", "form", "input", "search", "interactive"],
+  tags: ["select", "multi-select", "combobox", "tags", "chips", "form", "input", "search", "interactive"],
 }

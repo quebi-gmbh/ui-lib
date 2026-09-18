@@ -238,17 +238,38 @@ describe("the fill token is not used as a mark", () => {
     expect(uses).toEqual([])
   })
 
-  test("an opaque `border-quebi-brand` only where a mint fill is behind it", () => {
-    // `border-quebi-brand bg-quebi-brand` is a checkbox, a radio dot, a selected
-    // toggle: the border is the fill's own edge and moving it would draw a teal
-    // outline around a mint square. Alone — on an input's focus state, a drop
-    // target, a Stepper's current step — it is the mark, and it belongs to
-    // `-brand-mark`.
-    const lone = SOURCES.flatMap(({ path, source }) =>
+  test("no opaque `border-quebi-brand` at all — a mint fill's edge is the mark", () => {
+    // This test used to allow `border-quebi-brand bg-quebi-brand`, on the
+    // argument that the border is the fill's own edge and so not a mark. Task
+    // #145 measured that argument and it is false on the light page: mint is
+    // 1.74:1 there, so edging a mint fill in the fill token gives a selected
+    // Checkbox, Radio, Switch, Toggle, Tag or Stepper bullet *no boundary at
+    // all* — the control and the page meet at an invisible seam. The edge is
+    // what marks the state, whatever is behind it, so it is judged at 1.4.11's
+    // 3:1 like every other mark and belongs to `--q-brand-mark` (teal-600 on
+    // light, 3.45:1; identical to `--q-brand` on dark, so dark is unchanged).
+    //
+    // Both readings therefore fail now — lone, or edging a fill — which
+    // collapses to the simpler rule this asserts.
+    const uses = SOURCES.flatMap(({ path, source }) =>
       stringLiterals(source)
-        .filter((s) => OPAQUE_BRAND_BORDER.test(s) && !OPAQUE_BRAND_FILL.test(s))
+        .filter((s) => OPAQUE_BRAND_BORDER.test(s))
         .map((s) => `${path}: ${s}`),
     )
-    expect(lone).toEqual([])
+    expect(uses).toEqual([])
+  })
+
+  test("and a mint fill is never edged in `border-transparent`", () => {
+    // The same invisible seam reached from the other side, and how the Stepper's
+    // done-bullet had it: `border-transparent bg-quebi-brand` draws the fill with
+    // no edge whatsoever, which on light is a 1.74:1 shape floating on the page.
+    // A mint fill either carries `border-quebi-brand-mark` or sits on a surface
+    // that is not the page; it does not opt out of having an edge.
+    const edgeless = SOURCES.flatMap(({ path, source }) =>
+      stringLiterals(source)
+        .filter((s) => OPAQUE_BRAND_FILL.test(s) && /(?<![-\w])(?:[\w:[\]./-]*:)?border-transparent(?![\w/-])/.test(s))
+        .map((s) => `${path}: ${s}`),
+    )
+    expect(edgeless).toEqual([])
   })
 })

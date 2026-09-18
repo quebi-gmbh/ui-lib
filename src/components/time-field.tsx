@@ -2,6 +2,7 @@
 
 import type { DateInputProps, TimeFieldProps, TimeValue } from "react-aria-components"
 import {
+  composeRenderProps,
   DateInput as DateInputPrimitive,
   DateSegment,
   TimeField as TimeFieldPrimitive,
@@ -27,16 +28,18 @@ export function TimeField<T extends TimeValue>({ className, ...props }: TimeFiel
     <TimeFieldPrimitive
       {...props}
       data-slot="control"
-      className={cn(
-        "group w-fit",
-        // label → control → hint stack with 6px between siblings.
-        "[&>[data-slot=label]+[data-slot=control]]:mt-1.5",
-        "[&>[data-slot=label]+[slot='description']]:mt-1",
-        "[&>[slot=description]+[data-slot=control]]:mt-1.5",
-        "[&>[data-slot=control]+[slot=description]]:mt-1.5",
-        "[&>[data-slot=control]+[slot=errorMessage]]:mt-1.5",
-        "in-disabled:opacity-50 disabled:opacity-50",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          "group w-fit",
+          // label → control → hint stack with 6px between siblings.
+          "[&>[data-slot=label]+[data-slot=control]]:mt-1.5",
+          "[&>[data-slot=label]+[slot='description']]:mt-1",
+          "[&>[slot=description]+[data-slot=control]]:mt-1.5",
+          "[&>[data-slot=control]+[slot=description]]:mt-1.5",
+          "[&>[data-slot=control]+[slot=errorMessage]]:mt-1.5",
+          "in-disabled:opacity-50 disabled:opacity-50",
+          resolved,
+        ),
       )}
     />
   )
@@ -52,26 +55,28 @@ export function TimeInput({ className, bare = false, ...props }: TimeInputProps)
   return (
     <span data-slot="control" className={bare ? "relative block w-full" : "relative block"}>
       <DateInputPrimitive
-        className={cn(
-          "relative block appearance-none text-sm text-quebi-fg",
-          bare
-            ? "w-full rounded-none border-0 bg-transparent px-3 py-2.5 outline-none"
-            : [
-                // matches the quebi Input chrome.
-                "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
-                "transition-[border-color,box-shadow] duration-200",
-                // `DateInput` is a `<div role="group">`, so the `enabled:` this line used
-                // to carry never matched and the field had no hover feedback at all,
-                // despite the chrome above claiming to match `Input`. The guards are what
-                // `enabled:` was standing in for: hover must not outrank focus-within or
-                // the open state, and must stay off a disabled field.
-                "not-aria-disabled:not-focus-within:not-group-open:hover:border-quebi-line/40",
-                "outline-none focus-within:border-quebi-brand-mark focus-within:outline-none focus-within:ring-2 focus-within:ring-quebi-brand-mark",
-                "group-open:border-quebi-brand-mark group-open:ring-2 group-open:ring-quebi-brand-mark",
-                "invalid:border-red-500 focus-within:invalid:ring-red-500/50",
-                "in-disabled:cursor-not-allowed in-disabled:opacity-50",
-              ],
-          className,
+        className={composeRenderProps(className, (resolved) =>
+          cn(
+            "relative block appearance-none text-sm text-quebi-fg",
+            bare
+              ? "w-full rounded-none border-0 bg-transparent px-3 py-2.5 outline-none"
+              : [
+                  // matches the quebi Input chrome.
+                  "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
+                  "transition-[border-color,box-shadow] duration-200",
+                  // `DateInput` is a `<div role="group">`, so the `enabled:` this line used
+                  // to carry never matched and the field had no hover feedback at all,
+                  // despite the chrome above claiming to match `Input`. The guards are what
+                  // `enabled:` was standing in for: hover must not outrank focus-within or
+                  // the open state, and must stay off a disabled field.
+                  "not-aria-disabled:not-focus-within:not-group-open:hover:border-quebi-line/40",
+                  "outline-none focus-within:border-quebi-brand-mark focus-within:outline-none focus-within:ring-2 focus-within:ring-quebi-brand-mark focus-within:ring-offset-2 focus-within:ring-offset-quebi-bg",
+                  "group-open:border-quebi-brand-mark group-open:ring-2 group-open:ring-quebi-brand-mark group-open:ring-offset-2 group-open:ring-offset-quebi-bg",
+                  "invalid:border-red-500 focus-within:invalid:ring-red-500/50",
+                  "in-disabled:cursor-not-allowed in-disabled:opacity-50",
+                ],
+            resolved,
+          ),
         )}
         {...props}
       >

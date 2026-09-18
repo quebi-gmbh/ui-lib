@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { Button } from "@/components/button"
 import { FileTrigger } from "@/components/file-trigger"
 import { DropZone } from "@/components/drop-zone"
 import type { ComponentExample } from "./types"
@@ -29,10 +28,11 @@ export const dropZoneExamples: ComponentExample[] = [
             }}
           >
             <span>{fileName ? `Selected: ${fileName}` : "Drag a file here, or"}</span>
-            <FileTrigger onSelect={(files) => setFileName(files?.[0]?.name ?? null)}>
-              <Button className="rounded-quebi-sm border border-quebi-line/20 px-3 py-1.5 text-sm text-quebi-brand-text transition-colors duration-150 hover:bg-quebi-brand/10 data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg">
-                Browse
-              </Button>
+            {/* FileTrigger renders its own Button (intent="outline"), so pass the
+                label as children — a <Button> child would nest a button inside a
+                button and inherit the primary intent's hover glow. */}
+            <FileTrigger size="sm" onSelect={(files) => setFileName(files?.[0]?.name ?? null)}>
+              Browse
             </FileTrigger>
           </DropZone>
         )

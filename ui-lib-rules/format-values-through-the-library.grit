@@ -32,12 +32,19 @@ or {
   `$value.toLocaleString($args)`,
   `new Intl.DateTimeFormat($args)`,
   `new Intl.NumberFormat($args)`,
-  `new Intl.RelativeTimeFormat($args)`
+  `new Intl.RelativeTimeFormat($args)`,
+  `$value.toString()` where {
+    $value <: within JsxExpressionChild() until or {
+      JsxAttributeInitializerClause(),
+      JsArrowFunctionExpression(),
+      JsFunctionExpression()
+    }
+  }
 } as $call where {
   $call <: not within JsFunctionDeclaration(id = r"^(?:format[A-Z]|use[A-Z]).*"),
   register_diagnostic(
     span = $call,
-    message = "This formats a value against whatever locale the runtime has, which differs between the prerender and the browser. Render <FormattedNumber>, <FormattedCurrency> or <FormattedDate> from @/components/formatted-number and @/components/formatted-date, or call formatNumber(value, locale) / formatCurrency(value, locale) where a string is needed. See https://ui-lib.quebi.de/rules/format-values-through-the-library",
+    message = "This puts a value on the page without the library formatter: a toLocale* call or an Intl construction formats against whatever locale the runtime has, which differs between the prerender and the browser, and a .toString() rendered as JSX text prints the wire format in both. Render <FormattedNumber>, <FormattedCurrency> or <FormattedDate> from @/components/formatted-number and @/components/formatted-date, or call formatNumber(value, locale) / formatCurrency(value, locale) where a string is needed. See https://ui-lib.quebi.de/rules/format-values-through-the-library",
     severity = "error"
   )
 }

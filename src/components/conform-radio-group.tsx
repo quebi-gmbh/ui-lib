@@ -2,6 +2,7 @@
 
 import type { FieldMetadata } from "@conform-to/react"
 import { type PropsWithChildren, useState } from "react"
+import { composeRenderProps } from "react-aria-components"
 import type { RadioGroupProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { Description, FieldError, Label } from "@/components/field"
@@ -80,7 +81,7 @@ export function ConformRadioGroup({
       }}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={cn("flex flex-col gap-3", className)}
+      className={composeRenderProps(className, (resolved) => cn("flex flex-col gap-3", resolved))}
     >
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>

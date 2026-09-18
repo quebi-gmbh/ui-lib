@@ -11,6 +11,7 @@ import {
 import type { InputProps, NumberFieldProps } from "react-aria-components"
 import {
   Button,
+  composeRenderProps,
   Group,
   Input as InputPrimitive,
   NumberField as NumberFieldPrimitive,
@@ -24,22 +25,40 @@ import { cn } from "@/lib/utils"
  * Built on react-aria-components. Wraps the label → control → hint stack and
  * gives the control number-aware behaviour (parsing, stepping, formatting).
  * Pair with the field primitives (`Label`, `Description`, `FieldError`).
+ *
+ * A focused field does *not* step on the wheel: `isWheelDisabled` defaults to
+ * `true` here, inverting react-aria's default. The steppers, the arrow keys
+ * and typing are unaffected.
  */
-function NumberField({ className, ...props }: NumberFieldProps) {
+function NumberField({
+  // react-aria turns a wheel tick over a *focused* field into a value step,
+  // and `preventDefault`s the scroll, so the page does not move either: an
+  // ordinary read-the-rest-of-the-form scroll silently rewrites the number
+  // with no press, no keystroke and no undo (task #156). Wheel stepping is a
+  // real desktop affordance, so this is a default and not a removal — pass
+  // `isWheelDisabled={false}` to ask for it back, on a field the pointer is
+  // over on purpose.
+  isWheelDisabled = true,
+  className,
+  ...props
+}: NumberFieldProps) {
   return (
     <NumberFieldPrimitive
       {...props}
+      isWheelDisabled={isWheelDisabled}
       data-slot="control"
-      className={cn(
-        "group/number-field w-full",
-        // label → control → hint stack with 6px between siblings.
-        "[&>[data-slot=label]+[data-slot=control]]:mt-1.5",
-        "[&>[data-slot=label]+[slot='description']]:mt-1",
-        "[&>[slot=description]+[data-slot=control]]:mt-1.5",
-        "[&>[data-slot=control]+[slot=description]]:mt-1.5",
-        "[&>[data-slot=control]+[slot=errorMessage]]:mt-1.5",
-        "in-disabled:opacity-50 disabled:opacity-50",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          "group/number-field w-full",
+          // label → control → hint stack with 6px between siblings.
+          "[&>[data-slot=label]+[data-slot=control]]:mt-1.5",
+          "[&>[data-slot=label]+[slot='description']]:mt-1",
+          "[&>[slot=description]+[data-slot=control]]:mt-1.5",
+          "[&>[data-slot=control]+[slot=description]]:mt-1.5",
+          "[&>[data-slot=control]+[slot=errorMessage]]:mt-1.5",
+          "in-disabled:opacity-50 disabled:opacity-50",
+          resolved,
+        ),
       )}
     />
   )
@@ -162,7 +181,7 @@ function NumberInput({
         "group/addons flex w-full items-stretch rounded-quebi-sm",
         "transition-[box-shadow] duration-200",
         // Wrapper owns the outer focus ring so every segment highlights together.
-        "focus-within:ring-2 focus-within:ring-quebi-brand-mark",
+        "focus-within:ring-2 focus-within:ring-quebi-brand-mark focus-within:ring-offset-2 focus-within:ring-offset-quebi-bg",
         // Strip inner input's own ring (wrapper owns it).
         "[&_input:focus]:ring-0 [&_input:focus]:ring-transparent",
       )}
@@ -173,24 +192,26 @@ function NumberInput({
         </span>
       ) : null}
       <InputPrimitive
-        className={cn(
-          "relative block w-full min-w-0 appearance-none text-quebi-fg tabular-nums",
-          "placeholder:text-quebi-fg-subtle",
-          "border border-quebi-line/20 bg-quebi-surface/[0.02]",
-          numberInputSizeStyles[size],
-          "transition-[border-color,box-shadow] duration-200",
-          // `not-focus` guards against hover *beating* focus: `enabled:hover:` is
-          // (0,3,0) specificity and `focus:` is (0,2,0), so unguarded a hovered,
-          // focused field loses its mint border and keeps only the ring — a halo.
-          "enabled:not-focus:hover:border-quebi-line/40",
-          "outline-none focus:outline-none focus:border-quebi-brand-mark",
-          "invalid:border-red-500",
-          "disabled:cursor-not-allowed disabled:opacity-50 in-disabled:opacity-50",
-          "scheme-dark",
-          // Corner rounding depends on neighbouring segments.
-          prefix ? "rounded-s-none" : "rounded-s-quebi-sm",
-          suffix || !hideStepper ? "rounded-e-none" : "rounded-e-quebi-sm",
-          className,
+        className={composeRenderProps(className, (resolved) =>
+          cn(
+            "relative block w-full min-w-0 appearance-none text-quebi-fg tabular-nums",
+            "placeholder:text-quebi-fg-subtle",
+            "border border-quebi-line/20 bg-quebi-surface/[0.02]",
+            numberInputSizeStyles[size],
+            "transition-[border-color,box-shadow] duration-200",
+            // `not-focus` guards against hover *beating* focus: `enabled:hover:` is
+            // (0,3,0) specificity and `focus:` is (0,2,0), so unguarded a hovered,
+            // focused field loses its mint border and keeps only the ring — a halo.
+            "enabled:not-focus:hover:border-quebi-line/40",
+            "outline-none focus:outline-none focus:border-quebi-brand-mark",
+            "invalid:border-red-500",
+            "disabled:cursor-not-allowed disabled:opacity-50 in-disabled:opacity-50",
+            "scheme-dark",
+            // Corner rounding depends on neighbouring segments.
+            prefix ? "rounded-s-none" : "rounded-s-quebi-sm",
+            suffix || !hideStepper ? "rounded-e-none" : "rounded-e-quebi-sm",
+            resolved,
+          ),
         )}
         {...props}
       />

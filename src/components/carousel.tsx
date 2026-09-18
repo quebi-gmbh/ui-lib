@@ -3,6 +3,7 @@
 import useEmblaCarousel, { type UseEmblaCarouselType } from "embla-carousel-react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { createContext, use, useCallback, useEffect, useState } from "react"
+import { composeRenderProps } from "react-aria-components"
 import { Button, type ButtonProps } from "@/components/button"
 import { cn } from "@/lib/utils"
 
@@ -224,7 +225,9 @@ const CarouselButton = ({
       ref={ref}
       size={size}
       isCircle={isCircle}
-      className={cn(orientation === "vertical" ? "rotate-90" : "", "shrink-0", className)}
+      className={composeRenderProps(className, (resolved) =>
+        cn(orientation === "vertical" ? "rotate-90" : "", "shrink-0", resolved),
+      )}
       isDisabled={!canScroll}
       onPress={scroll}
       {...props}

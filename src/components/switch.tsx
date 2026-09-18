@@ -1,6 +1,10 @@
 "use client"
 
-import { Switch as SwitchPrimitive, type SwitchProps } from "react-aria-components"
+import {
+  composeRenderProps,
+  Switch as SwitchPrimitive,
+  type SwitchProps,
+} from "react-aria-components"
 import { Label } from "@/components/field"
 import { cn } from "@/lib/utils"
 
@@ -16,11 +20,13 @@ export function Switch({ children, className, ...props }: SwitchProps) {
     <SwitchPrimitive
       {...props}
       data-slot="control"
-      className={cn(
-        // Inline-flex so the Switch only takes the width it needs. Indicator
-        // first, then any children (label / description) to the right.
-        "group inline-flex items-center gap-3 disabled:cursor-not-allowed disabled:opacity-50",
-        className,
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          // Inline-flex so the Switch only takes the width it needs. Indicator
+          // first, then any children (label / description) to the right.
+          "group inline-flex items-center gap-3 disabled:cursor-not-allowed disabled:opacity-50",
+          resolved,
+        ),
       )}
       style={({ defaultStyle }) => ({
         ...defaultStyle,
@@ -36,7 +42,12 @@ export function Switch({ children, className, ...props }: SwitchProps) {
               "relative isolate inline-flex h-6 w-11 shrink-0 rounded-full border",
               "transition-colors duration-200",
               "border-quebi-line/30 bg-quebi-surface/10",
-              values.isSelected && "border-quebi-brand bg-quebi-brand",
+              // The on track's boundary is the mark token, not the fill token:
+              // mint on the light page is 1.74:1, so a mint track edged in mint
+              // left the switch with no outline there (task #145). Teal-600 is
+              // 3.45:1 against the page; on dark the two tokens are the same
+              // value, so nothing changes.
+              values.isSelected && "border-quebi-brand-mark bg-quebi-brand",
               values.isFocusVisible &&
                 "ring-2 ring-quebi-brand-mark ring-offset-2 ring-offset-quebi-bg",
             )}

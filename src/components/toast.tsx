@@ -178,6 +178,7 @@ const positionStyles: Record<ToastPosition, string> = {
 
 function ToastItem({ toast, onDismiss }: { toast: ToastRecord; onDismiss: (id: string) => void }) {
   const Icon = iconMap[toast.intent]
+  const isNeutral = toast.intent === "default"
 
   useEffect(() => {
     if (!toast.duration) return
@@ -189,9 +190,15 @@ function ToastItem({ toast, onDismiss }: { toast: ToastRecord; onDismiss: (id: s
     <div data-slot="toast" className={cn(toastStyles({ intent: toast.intent }))}>
       {Icon && <Icon className="mt-px size-5 shrink-0" />}
       <div className="min-w-0 flex-1">
-        <div className="font-semibold text-quebi-fg">{toast.title}</div>
+        {/* Title and description inherit the intent colour — the same rule Note
+            follows (task #136). Both used to force `text-quebi-fg` /
+            `text-quebi-fg-muted`, which left an intent-tinted toast with no
+            intent-coloured text at all, and a near-black heading on the light
+            theme's coloured surface. `default` keeps the two-step hierarchy,
+            because its root is already the muted token. */}
+        <div className={cn("font-semibold", isNeutral && "text-quebi-fg")}>{toast.title}</div>
         {toast.description && (
-          <div className="mt-1 text-quebi-fg-muted">{toast.description}</div>
+          <div className={cn("mt-1", isNeutral && "text-quebi-fg-muted")}>{toast.description}</div>
         )}
       </div>
       <Button

@@ -20,6 +20,14 @@ export interface ConformChoiceBoxProps<T extends object>
     "selectedKeys" | "defaultSelectedKeys" | "onSelectionChange"
   > {
   /**
+   * The wrapper's class. A plain string, unlike the inherited
+   * `ChoiceBoxProps<T>["className"]`: this lands on the `Field` div around the
+   * control, which has no render state to compose a function against. Keeping
+   * the wider type would let a caller pass a render prop that clsx drops in
+   * silence.
+   */
+  className?: string
+  /**
    * A choice box bound to a form value: one key with `selectionMode="single"`,
    * a key per selected card with `"multiple"` — which submits the name once per
    * key, so the parsed value is an array.
