@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react"
 import { NavLink, useMatch } from "react-router"
 import { LayoutGrid } from "lucide-react"
-import { OverlayScrollbarsComponent } from "overlayscrollbars-react"
 import {
   Disclosure,
   DisclosureGroup,
@@ -12,6 +11,7 @@ import { SearchField, SearchInput } from "@/components/search-field"
 import { cn } from "@/lib/utils"
 import { metaRegistry } from "@/registry/meta"
 import { filterComponents, groupByCategory } from "@/registry/grouping"
+import { ScrollSurface } from "@/site/scroll-surface"
 
 const LINK = "block rounded-quebi-sm px-3 py-1.5 text-sm transition-colors duration-150"
 const RESTING = "text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg"
@@ -95,12 +95,7 @@ export function ComponentSidebar({ onNavigate }: { onNavigate?: () => void }) {
       </NavLink>
 
       {/* Grouped nav */}
-      <OverlayScrollbarsComponent
-        element="nav"
-        defer
-        options={{ scrollbars: { theme: "os-theme-quebi", autoHide: "leave", autoHideDelay: 600 } }}
-        className="mt-6 flex-1 pb-6"
-      >
+      <ScrollSurface element="nav" className="mt-6 flex-1 pb-6">
         {groups.length === 0 ? (
           <p className="text-sm text-quebi-fg-subtle">No components match “{query}”.</p>
         ) : (
@@ -139,7 +134,7 @@ export function ComponentSidebar({ onNavigate }: { onNavigate?: () => void }) {
             ))}
           </DisclosureGroup>
         )}
-      </OverlayScrollbarsComponent>
+      </ScrollSurface>
 
       <p className="border-quebi-line/10 border-t pt-4 text-xs text-quebi-fg-subtle">
         {matches.length} component{matches.length === 1 ? "" : "s"}

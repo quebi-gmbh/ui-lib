@@ -1,8 +1,8 @@
 import { NavLink } from "react-router"
 import { ListChecks, Wrench } from "lucide-react"
-import { OverlayScrollbarsComponent } from "overlayscrollbars-react"
 import { cn } from "@/lib/utils"
 import { groupRules, rulesRegistry } from "@/registry/rules"
+import { ScrollSurface } from "@/site/scroll-surface"
 
 /**
  * Nav for the rules section — a home link, headed groups of plain links, a
@@ -36,12 +36,7 @@ export function RuleSidebar({ onNavigate }: { onNavigate?: () => void }) {
         All rules
       </NavLink>
 
-      <OverlayScrollbarsComponent
-        element="nav"
-        defer
-        options={{ scrollbars: { theme: "os-theme-quebi", autoHide: "leave", autoHideDelay: 600 } }}
-        className="mt-6 flex-1 space-y-6 pb-6"
-      >
+      <ScrollSurface element="nav" className="mt-6 flex-1 space-y-6 pb-6">
         {groups.map(({ group, rules }) => (
           <div key={group.id}>
             <h3 className="quebi-eyebrow mb-2 px-3">{group.title}</h3>
@@ -64,7 +59,7 @@ export function RuleSidebar({ onNavigate }: { onNavigate?: () => void }) {
             Biome config
           </NavLink>
         </div>
-      </OverlayScrollbarsComponent>
+      </ScrollSurface>
 
       <p className="border-quebi-line/10 border-t pt-4 text-xs text-quebi-fg-subtle">
         {rulesRegistry.length} rule{rulesRegistry.length === 1 ? "" : "s"}
