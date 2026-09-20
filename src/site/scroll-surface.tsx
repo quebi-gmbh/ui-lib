@@ -5,9 +5,11 @@ import type { OverlayScrollbars, PartialOptions } from "overlayscrollbars"
  * The one options object every quebi overlay scrollbar is built from.
  *
  * `os-theme-quebi` lives in quebi-theme.css next to the `quebi-scrollbar`
- * utility the component library paints its own overflow containers with — the
- * two are the same track and pill, so a popover body and the page scrollbar
- * read as one system. Declaring it once is also what keeps the four site
+ * utility every *native* overflow container is painted with — the component
+ * library's, and the page scroller itself, which is the platform's bar since
+ * tasks #180/#181. The two are the same track and pill, so a popover body, a
+ * sidebar and the page scrollbar read as one system whichever of the two
+ * implementations draws them. Declaring it once is also what keeps the site
  * surfaces from drifting apart from each other.
  */
 const QUEBI_SCROLLBAR_OPTIONS: PartialOptions = {
@@ -26,7 +28,9 @@ const QUEBI_SCROLLBAR_OPTIONS: PartialOptions = {
  * ran a scrollbar implementation before it did anything else, on a page whose
  * hydration is otherwise free. `import()` moves that chunk off the critical
  * path — it is fetched after first paint, only by a page that reaches a scroll
- * surface (task #174).
+ * surface (task #174). Since the page scroller went native there is no longer
+ * a surface `root.tsx` itself mounts, so a page with no inner scroll area
+ * never fetches the chunk at all.
  *
  * `requestIdleCallback` is Chromium and Firefox; Safari still does not have it,
  * so a timeout is the fallback. Either way the point is the same: none of this
@@ -146,24 +150,4 @@ export function ScrollSurface({ element = "div", className, children }: ScrollSu
       {contents}
     </div>
   )
-}
-
-/**
- * Attaches quebi's overlay scrollbars to the page scrollbar (`document.body`).
- *
- * Mounted from `root.tsx`, so this is the one surface every page has — and the
- * reason the library used to be in every page's preload list. The
- * `data-overlayscrollbars-initialize` attributes `root.tsx` puts on `<html>`
- * and `<body>` hold the native bar back until this lands.
- */
-export function BodyScrollbar() {
-  useEffect(
-    () =>
-      attachWhenIdle((create) =>
-        create({ target: document.body, cancel: { body: false } }, QUEBI_SCROLLBAR_OPTIONS),
-      ),
-    [],
-  )
-
-  return null
 }

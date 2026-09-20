@@ -2,17 +2,33 @@ import { I18nProvider } from "react-aria-components"
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLocation } from "react-router"
 import { Header } from "@/site/site-header"
 import { Footer } from "@/site/site-footer"
-import { BodyScrollbar } from "@/site/scroll-surface"
 import "./main.css"
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    // data-overlayscrollbars-initialize: hides the native scrollbar until
-    // OverlayScrollbars initializes on the body, preventing a flash.
+    // The page scroller is the platform's, painted by `quebi-scrollbar` — the
+    // same 12px track and 6px pill `.os-theme-quebi` draws on the inner
+    // surfaces, so the two still read as one system.
+    //
+    // It used to be an OverlayScrollbars instance on `document.body`, and that
+    // is what put every overlay that flips *above* its trigger off the bottom
+    // of the page (tasks #180, #181): initialising there gives `<html>`
+    // `position: relative`, and react-aria's `calculatePosition` special-cases
+    // `HTML`/`BODY` by tag name — it measures the *visual viewport* even once
+    // it has detected the container is positioned. The `bottom:` it emits is
+    // therefore viewport-relative, the browser resolves it against the full
+    // document box, and the overlay lands `documentHeight − viewportHeight`
+    // too low. `top:`-anchored placements resolve against the same origin
+    // either way, which is why only the flipped ones were ever reported.
+    //
+    // `scrollbar-gutter: stable` holds the bar's width whether or not the page
+    // overflows, so content does not shift between a long page and a short one
+    // — the one thing an overlay bar gave us for free. The body instance was
+    // also the most expensive OverlayScrollbars on the site and the only one
+    // every page paid for, which task #174 had already recommended removing.
     <html
       lang="en"
-      className="bg-quebi-bg dark"
-      data-overlayscrollbars-initialize
+      className="quebi-scrollbar bg-quebi-bg dark [scrollbar-gutter:stable]"
       suppressHydrationWarning
     >
       <head>
@@ -50,9 +66,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Meta />
         <Links />
       </head>
-      <body data-overlayscrollbars-initialize>
+      <body>
         {children}
-        <BodyScrollbar />
         <ScrollRestoration />
         <Scripts />
       </body>
