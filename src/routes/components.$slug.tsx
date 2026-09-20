@@ -1,19 +1,22 @@
+import { Suspense, lazy, type ComponentType } from "react"
 import { Link, data, useParams } from "react-router"
 import { ChevronRight } from "lucide-react"
 import { Badge } from "@/components/badge"
 import { Card } from "@/components/card"
 import { Skeleton } from "@/components/skeleton"
-import { getComponent } from "@/registry"
-import { componentSources } from "@/registry/sources.generated"
+import { metaRegistry } from "@/registry/meta"
+import { loadExamples } from "@/registry/examples-lazy"
+import { loadSource } from "@/registry/sources-lazy"
 import { CodeBlock } from "@/site/code-block"
 import { seo } from "@/lib/seo"
+import type { ComponentExample } from "@/registry/types"
 import type { Route } from "./+types/components.$slug"
 
 export function loader({ params }: Route.LoaderArgs) {
-  const component = getComponent(params.slug)
+  const component = metaRegistry.find((c) => c.slug === params.slug)
   if (!component) throw data("Not found", { status: 404 })
   // Return only serializable fields for meta + prerender; the live examples are
-  // read from the in-memory registry in the component (render fns aren't serializable).
+  // loaded as their own chunk by <Gallery> (render fns aren't serializable).
   return {
     slug: component.slug,
     name: component.name,
@@ -32,12 +35,78 @@ export function meta({ loaderData: d }: Route.MetaArgs) {
   })
 }
 
+/**
+ * One `React.lazy` per slug, cached so a re-render does not rebuild the
+ * component type and remount the gallery.
+ *
+ * `lazy` rather than an effect because this site is prerendered: the build
+ * renders in SPA mode, `src/entry.server.tsx` picks `onAllReady` for that, and
+ * React therefore waits for every Suspense boundary to resolve before it writes
+ * the HTML. An effect would run after the markup was already emitted and the
+ * examples would be missing from the static page.
+ */
+const galleries = new Map<string, ComponentType>()
+
+function galleryFor(slug: string): ComponentType {
+  let Gallery = galleries.get(slug)
+  if (!Gallery) {
+    Gallery = lazy(async () => {
+      const examples = await loadExamples(slug)
+      return { default: () => <ExampleList examples={examples} /> }
+    })
+    galleries.set(slug, Gallery)
+  }
+  return Gallery
+}
+
+/** The same per-slug lazy treatment for the baked source block. */
+const sourceBlocks = new Map<string, ComponentType>()
+
+function sourceFor(slug: string): ComponentType {
+  let Source = sourceBlocks.get(slug)
+  if (!Source) {
+    Source = lazy(async () => {
+      const data = await loadSource(slug)
+      return {
+        default: () =>
+          data ? (
+            <CodeBlock html={data.highlighted} code={data.source} />
+          ) : (
+            <Skeleton className="h-40 rounded-quebi-md" />
+          ),
+      }
+    })
+    sourceBlocks.set(slug, Source)
+  }
+  return Source
+}
+
+function ExampleList({ examples }: { examples: ComponentExample[] }) {
+  return (
+    <>
+      {examples.map((example) => (
+        <div key={example.title}>
+          <h2 className="text-lg font-semibold text-quebi-fg">{example.title}</h2>
+          {example.description && (
+            <p className="mt-1 text-sm leading-relaxed text-quebi-fg-muted">
+              {example.description}
+            </p>
+          )}
+          <Card className="mt-4 min-h-30 items-center justify-center p-8">{example.render()}</Card>
+        </div>
+      ))}
+    </>
+  )
+}
+
 export default function ComponentDetail() {
   const { slug } = useParams()
-  const component = slug ? getComponent(slug) : undefined
-  const sourceData = component ? componentSources[component.slug] : undefined
+  const component = slug ? metaRegistry.find((c) => c.slug === slug) : undefined
 
   if (!component) return null
+
+  const Gallery = galleryFor(component.slug)
+  const Source = sourceFor(component.slug)
 
   return (
     <div>
@@ -78,19 +147,9 @@ export default function ComponentDetail() {
       </div>
 
       <div className="mt-12 space-y-10">
-        {component.examples.map((example) => (
-          <div key={example.title}>
-            <h2 className="text-lg font-semibold text-quebi-fg">{example.title}</h2>
-            {example.description && (
-              <p className="mt-1 text-sm leading-relaxed text-quebi-fg-muted">
-                {example.description}
-              </p>
-            )}
-            <Card className="mt-4 min-h-30 items-center justify-center p-8">
-              {example.render()}
-            </Card>
-          </div>
-        ))}
+        <Suspense fallback={<Skeleton className="h-60 rounded-quebi-md" />}>
+          <Gallery />
+        </Suspense>
       </div>
 
       <div className="mt-16">
@@ -101,11 +160,9 @@ export default function ComponentDetail() {
           entry.
         </p>
         <div className="mt-4">
-          {sourceData ? (
-            <CodeBlock html={sourceData.highlighted} code={sourceData.source} />
-          ) : (
-            <Skeleton className="h-40 rounded-quebi-md" />
-          )}
+          <Suspense fallback={<Skeleton className="h-40 rounded-quebi-md" />}>
+            <Source />
+          </Suspense>
         </div>
       </div>
     </div>

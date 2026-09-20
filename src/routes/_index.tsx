@@ -1,6 +1,6 @@
 import { Link as RouterLink } from "react-router"
 import { ArrowRight, Bot, Boxes, Copy } from "lucide-react"
-import { registry } from "@/registry"
+import { metaRegistry } from "@/registry/meta"
 import { seo } from "@/lib/seo"
 import { buttonStyles } from "@/components/button"
 import { Card, CardDescription, CardTitle } from "@/components/card"
@@ -14,7 +14,7 @@ export function meta() {
   return seo({
     title: "quebi ui-lib — React component library",
     exactTitle: true,
-    description: `A React component library of ${registry.length} accessible components styled with the quebi design system. Copy-paste source, no install required. Built for humans and AI agents.`,
+    description: `A React component library of ${metaRegistry.length} accessible components styled with the quebi design system. Copy-paste source, no install required. Built for humans and AI agents.`,
     path: "/",
   })
 }
@@ -97,7 +97,7 @@ const features = [
   },
   {
     icon: Boxes,
-    eyebrow: `${registry.length} components`,
+    eyebrow: `${metaRegistry.length} components`,
     title: "Batteries included",
     body: "Charts, forms, overlays, navigation, data display — plus Conform-bound variants for every form element.",
   },
