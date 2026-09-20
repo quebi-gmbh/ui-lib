@@ -88,16 +88,51 @@ const SubsetOfViews = () => {
 }
 
 const WithExtraChrome = () => {
+  const [view, setView] = useState<CalendarViewName>("week")
   const anchor = today(TIME_ZONE)
 
   return (
     <CalendarToolbar
       label={calendarRangeLabel(week(anchor), { locale: LOCALE, timeZone: TIME_ZONE })}
-      view="week"
+      view={view}
       views={["week", "month"]}
+      onViewChange={setView}
     >
       <CalendarLegend calendars={CALENDARS} />
     </CalendarToolbar>
+  )
+}
+
+const PickerLabel = () => {
+  const [anchor, setAnchor] = useState<CalendarDate>(() => today(TIME_ZONE))
+
+  return (
+    <CalendarToolbar
+      label={calendarRangeLabel([anchor], { locale: LOCALE, timeZone: TIME_ZONE })}
+      labelVariant="picker"
+      date={anchor}
+      onDateChange={setAnchor}
+      onPrevious={() => setAnchor(anchor.subtract({ days: 1 }))}
+      onNext={() => setAnchor(anchor.add({ days: 1 }))}
+      onToday={() => setAnchor(today(TIME_ZONE))}
+    />
+  )
+}
+
+const PickerLabelByMonth = () => {
+  const [anchor, setAnchor] = useState<CalendarDate>(() => today(TIME_ZONE))
+
+  return (
+    <CalendarToolbar
+      label={calendarMonthLabel(anchor, { locale: LOCALE, timeZone: TIME_ZONE })}
+      labelVariant="picker"
+      pickerGranularity="month"
+      date={anchor}
+      onDateChange={setAnchor}
+      onPrevious={() => setAnchor(anchor.subtract({ months: 1 }))}
+      onNext={() => setAnchor(anchor.add({ months: 1 }))}
+      onToday={() => setAnchor(today(TIME_ZONE))}
+    />
   )
 }
 
@@ -123,7 +158,19 @@ export const calendarToolbarExamples: ComponentExample[] = [
   {
     title: "Extra chrome",
     description:
-      "Children are placed after the switcher. A legend belongs here: it names the calendar colours, which is what stops hue being the only thing telling two calendars apart.",
+      "Children are placed after the switcher. A legend belongs here: it names the calendar colours, which is what stops hue being the only thing telling two calendars apart. The switcher is wired to state like every other one: the group is fully controlled from `view`, so a `view` with no `onViewChange` cannot move — the toolbar draws that one disabled rather than letting it look pressable.",
     render: () => <WithExtraChrome />,
+  },
+  {
+    title: "Jump to a date",
+    description:
+      "`labelVariant=\"picker\"` turns the heading into a button opening a calendar, the way the Calendar\u2019s own header opens the Month Picker. Without it the only way to a distant day is Today or one chevron press at a time. It needs `date` and `onDateChange` \u2014 the toolbar still owns nothing.",
+    render: () => <PickerLabel />,
+  },
+  {
+    title: "A month grid, for a month heading",
+    description:
+      "`pickerGranularity=\"month\"` opens the Month Picker instead. A heading that reads `September 2026` names a month, so that is what the grid should offer \u2014 Month View passes this for you. The day you were anchored on survives the choice.",
+    render: () => <PickerLabelByMonth />,
   },
 ]

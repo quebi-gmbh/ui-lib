@@ -21,6 +21,7 @@ import {
 } from "@/components/calendar-shell"
 import {
   calendarRangeLabel,
+  type CalendarToolbarLabelVariant,
   CalendarToolbar,
   type CalendarViewName,
   useCalendarLocale,
@@ -86,6 +87,8 @@ export interface CalendarTimelineProps<E extends CalendarEvent = CalendarEvent> 
   views?: readonly CalendarViewName[]
   onViewChange?: (view: CalendarViewName) => void
   label?: React.ReactNode
+  /** Make the toolbar's date label a picker that jumps to any day. Default "static". */
+  labelVariant?: CalendarToolbarLabelVariant
   /** Shown in a row that has nothing on it. */
   emptyRowLabel?: string
   className?: string
@@ -113,6 +116,7 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
   views,
   onViewChange,
   label,
+  labelVariant,
   emptyRowLabel = "Nothing scheduled",
   className,
 }: CalendarTimelineProps<E>) {
@@ -152,6 +156,9 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
       {showToolbar ? (
         <CalendarToolbar
           label={label ?? calendarRangeLabel(days, { locale, timeZone })}
+          labelVariant={labelVariant}
+          date={navigation.date}
+          onDateChange={navigation.goTo}
           view={view}
           views={views}
           onViewChange={onViewChange}

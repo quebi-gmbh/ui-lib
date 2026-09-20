@@ -9,6 +9,7 @@ import {
 } from "@/components/calendar-shell"
 import {
   calendarRangeLabel,
+  type CalendarToolbarLabelVariant,
   CalendarToolbar,
   type CalendarViewName,
   useCalendarLocale,
@@ -49,6 +50,8 @@ export interface DayViewProps<E extends CalendarEvent = CalendarEvent>
   onViewChange?: (view: CalendarViewName) => void
   /** Replace the heading the toolbar shows. */
   label?: React.ReactNode
+  /** Make the toolbar's date label a picker that jumps to any day. Default "static". */
+  labelVariant?: CalendarToolbarLabelVariant
 }
 
 export function DayView<E extends CalendarEvent = CalendarEvent>({
@@ -60,6 +63,7 @@ export function DayView<E extends CalendarEvent = CalendarEvent>({
   views,
   onViewChange,
   label,
+  labelVariant,
   timeZone = DEFAULT_CALENDAR_TIME_ZONE,
   locale: localeProp,
   className,
@@ -80,6 +84,9 @@ export function DayView<E extends CalendarEvent = CalendarEvent>({
       {showToolbar ? (
         <CalendarToolbar
           label={label ?? calendarRangeLabel(days, { locale, timeZone })}
+          labelVariant={labelVariant}
+          date={navigation.date}
+          onDateChange={navigation.goTo}
           view={view}
           views={views}
           onViewChange={onViewChange}
