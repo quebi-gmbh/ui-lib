@@ -1,7 +1,7 @@
 import { MotionGlobalConfig } from "motion/react"
 import { useEffect, useState } from "react"
 import { useParams } from "react-router"
-import { getComponent } from "@/registry"
+import { metaRegistry } from "@/registry/meta"
 import { ogScenes } from "@/registry/og"
 
 /**
@@ -115,7 +115,7 @@ function titleSize(title: string) {
 
 export default function OgImage() {
   const { slug } = useParams()
-  const component = slug ? getComponent(slug) : undefined
+  const component = slug ? metaRegistry.find((c) => c.slug === slug) : undefined
   const scene = slug ? ogScenes[slug] : undefined
   const ready = useOgReady()
 

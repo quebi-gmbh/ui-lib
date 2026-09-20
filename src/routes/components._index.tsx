@@ -1,20 +1,20 @@
 import { Link } from "react-router"
 import { ArrowRight } from "lucide-react"
 import { Card, CardDescription, CardTitle } from "@/components/card"
-import { registry } from "@/registry"
+import { metaRegistry } from "@/registry/meta"
 import { groupByCategory } from "@/registry/grouping"
 import { seo } from "@/lib/seo"
 
 export function meta() {
   return seo({
     title: "Components",
-    description: `Browse ${registry.length} accessible React components styled with the quebi design system — buttons, forms, overlays, charts, navigation, and more. Copy-paste source.`,
+    description: `Browse ${metaRegistry.length} accessible React components styled with the quebi design system — buttons, forms, overlays, charts, navigation, and more. Copy-paste source.`,
     path: "/components",
   })
 }
 
 export default function Components() {
-  const groups = groupByCategory(registry)
+  const groups = groupByCategory(metaRegistry)
 
   return (
     <div>
@@ -23,7 +23,7 @@ export default function Components() {
         Components
       </h1>
       <p className="mt-4 max-w-quebi-content text-base leading-relaxed text-quebi-fg-muted">
-        {registry.length} component{registry.length === 1 ? "" : "s"} and counting. Each renders live
+        {metaRegistry.length} component{metaRegistry.length === 1 ? "" : "s"} and counting. Each renders live
         and ships as copy-paste source.
       </p>
 

@@ -10,7 +10,7 @@ import {
 } from "@/components/disclosure-group"
 import { SearchField, SearchInput } from "@/components/search-field"
 import { cn } from "@/lib/utils"
-import { registry } from "@/registry"
+import { metaRegistry } from "@/registry/meta"
 import { filterComponents, groupByCategory } from "@/registry/grouping"
 
 const LINK = "block rounded-quebi-sm px-3 py-1.5 text-sm transition-colors duration-150"
@@ -44,11 +44,11 @@ const linkClasses = ({ isActive }: { isActive: boolean }) =>
 export function ComponentSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const [query, setQuery] = useState("")
 
-  const matches = useMemo(() => filterComponents(query, registry), [query])
+  const matches = useMemo(() => filterComponents(query, metaRegistry), [query])
   const groups = useMemo(() => groupByCategory(matches), [matches])
 
   const slug = useMatch("/components/:slug")?.params.slug
-  const activeCategory = slug ? registry.find((c) => c.slug === slug)?.category : undefined
+  const activeCategory = slug ? metaRegistry.find((c) => c.slug === slug)?.category : undefined
 
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(
     () => new Set(activeCategory ? [activeCategory] : []),

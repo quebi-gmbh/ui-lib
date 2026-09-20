@@ -20,7 +20,7 @@ public/r/
 public/llms.txt
 
 # Generated source-bake module (emitted by generate-api)
-src/registry/sources.generated.ts
+src/registry/sources/
 
 # React Router framework mode
 .react-router/
