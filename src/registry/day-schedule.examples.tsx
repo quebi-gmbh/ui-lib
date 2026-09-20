@@ -112,7 +112,7 @@ export const dayScheduleExamples: ComponentExample[] = [
   {
     title: "Editable times",
     description:
-      "timeLabels=\"editable\" turns the rotated times into TimeFields, and widens the lanes to fit them. A typed time is taken as typed — the 15-minute step snaps a drag, not a keystroke — and commits when the field loses focus or on Enter.",
+      "timeLabels=\"editable\" turns the rotated times into TimeFields at the same 10.5px the static labels use, and widens the lanes to fit them. A typed time is taken as typed — the 15-minute step snaps a drag, not a keystroke — and commits when the field loses focus or on Enter.",
     render: () => <TypedTimes />,
   },
   {

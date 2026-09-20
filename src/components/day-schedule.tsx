@@ -19,7 +19,9 @@ import { TimeField, TimeInput } from "@/components/time-field"
  * `defaultSpans` to let it manage its own state.
  *
  * The rotated times beside each span are text by default. `timeLabels="editable"`
- * makes them TimeFields instead, so a time can be typed rather than dragged to.
+ * makes them TimeFields instead, so a time can be typed rather than dragged to —
+ * drawn at the same 10.5px as the static ones, because they are the same label
+ * in the same place and a 14px one sat above the span names beside it.
  *
  * Span names share a single column to the right of the lanes. Two spans can
  * always be dragged onto the same midpoint, so that column de-overlaps itself
@@ -30,15 +32,21 @@ import { TimeField, TimeInput } from "@/components/time-field"
 const DAY_MINUTES = 1440
 
 /**
- * Lanes sit as far apart as the widest thing drawn in one. A static time label
- * is only as wide as its line box (~16px), so 18px clears it; rotating a
- * TimeField into the same slot puts the library control's own height there —
- * a 20px line box, a few pixels more once a focused segment's tint is counted —
- * so the editable mode needs half again as much room. `labelOffset` is derived
- * from the gap, so the name column follows on its own.
+ * Lanes sit as far apart as the widest thing drawn in one, and a rotated edge
+ * time is as wide as its own line box — so 18px clears a static label at 16px.
+ *
+ * The editable mode used to claim half again as much, on the reasoning that a
+ * TimeField's line box is 20px and a focused segment's tint costs a few more.
+ * Both halves were wrong once the field came down to the static labels' 10.5px:
+ * measured in Chromium, a rotated editable field and a rotated static label
+ * have the same 15.75px footprint, and focusing a segment changes it by nothing
+ * at all — the tint is a background on a box that was always that size. So 36
+ * is now 24: the 18 that clears a label, plus air, because a field is something
+ * you aim a pointer at and two of them 2px apart are one target. `labelOffset`
+ * is derived from the gap, so the name column follows on its own.
  */
 const LANE_GAP = 18
-const EDITABLE_LANE_GAP = 36
+const EDITABLE_LANE_GAP = 24
 
 /**
  * The least vertical distance between two span names. They share one column, so
@@ -241,9 +249,17 @@ function EdgeTimeField({
       className="absolute origin-top-left"
       style={{ left: lane, top: toPercent(minutes), transform: EDGE_TRANSFORM[edge] }}
     >
-      {/* The rotated box is the control's own metrics, so it carries no chrome
-          and no padding of its own — the lane is the box. */}
-      <TimeInput bare className="w-auto px-0 py-0" />
+      {/* The box is the control's own metrics, so it carries no chrome
+          and no padding of its own — the lane is the box. The type is the
+          static labels' type, set here and nowhere else: `TimeInput` leaves its
+          segments without a resting `text-*`, so all three of these inherit
+          through to the digits (task #173). Sized down rather than the static
+          labels up: those share a size with the hour axis and sit beside the
+          span names, so raising them would put a time above its own name. */}
+      <TimeInput
+        bare
+        className="w-auto px-0 py-0 text-[10.5px] text-quebi-fg-muted tabular-nums"
+      />
     </TimeField>
   )
 }
@@ -263,8 +279,9 @@ export interface DayScheduleProps extends Omit<React.ComponentProps<"div">, "onC
   /** Track height in pixels. */
   height?: number
   /**
-   * Horizontal distance between lanes, in pixels. Defaults to 18, or to 36 in
-   * `timeLabels="editable"` — where the rotated control needs the room.
+   * Horizontal distance between lanes, in pixels. Defaults to 18, or to 24 in
+   * `timeLabels="editable"` — where the rotated control wants to be separately
+   * clickable rather than merely non-overlapping.
    */
   laneGap?: number
   /** Offset of the first lane from the track's left edge, in pixels. */

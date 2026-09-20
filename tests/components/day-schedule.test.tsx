@@ -201,7 +201,7 @@ describe("typing a time", () => {
 })
 
 describe("the wider lanes", () => {
-  test("default to 36px, and an explicit laneGap still wins", () => {
+  test("default to 24px, and an explicit laneGap still wins", () => {
     const leftOf = (container: HTMLElement) =>
       Array.from(
         container.querySelectorAll<HTMLElement>('[role="slider"][aria-label$="span"]'),
@@ -213,7 +213,7 @@ describe("the wider lanes", () => {
     const { container: typed } = render(
       <DaySchedule defaultSpans={WORKDAY} timeLabels="editable" />,
     )
-    expect(leftOf(typed)).toEqual(["24px", "60px"])
+    expect(leftOf(typed)).toEqual(["24px", "48px"])
 
     const { container: forced } = render(
       <DaySchedule defaultSpans={WORKDAY} timeLabels="editable" laneGap={50} />,
@@ -227,9 +227,9 @@ describe("the wider lanes", () => {
         .filter((el) => el.textContent === "pairing" && el.style.left)
         .map((el) => el.style.left)[0]
 
-    // laneOffset 24 + one lane of 36 + the 28px clearance.
+    // laneOffset 24 + one lane of 24 + the 28px clearance.
     expect(nameLeft(render(<DaySchedule defaultSpans={WORKDAY} timeLabels="editable" />).container))
-      .toBe("88px")
+      .toBe("76px")
   })
 })
 
