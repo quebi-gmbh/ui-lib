@@ -52,7 +52,7 @@ const sideVariants: Record<string, string> = {
     "entering:slide-in-from-bottom exiting:slide-out-to-bottom inset-x-0 bottom-0 rounded-t-quebi-md border-t data-[float=true]:inset-x-2 data-[float=true]:bottom-2 data-[float=true]:border-t-0",
   left: "entering:slide-in-from-left exiting:slide-out-to-left-80 inset-y-0 left-0 h-auto w-3/4 overflow-y-auto border-r sm:max-w-80 data-[float=true]:inset-y-2 data-[float=true]:left-2 data-[float=true]:border-r-0",
   right:
-    "entering:slide-in-from-right exiting:slide-out-to-right-80 inset-y-0 right-0 h-auto w-3/4 overflow-y-auto border-l sm:max-w-80 data-[float=true]:inset-y-2 data-[float=true]:right-2 data-[float=true]:border-r-0",
+    "entering:slide-in-from-right exiting:slide-out-to-right-80 inset-y-0 right-0 h-auto w-3/4 overflow-y-auto border-l sm:max-w-80 data-[float=true]:inset-y-2 data-[float=true]:right-2 data-[float=true]:border-l-0",
 }
 
 const SheetContent = ({
@@ -74,7 +74,14 @@ const SheetContent = ({
   return (
     <ModalOverlay
       isDismissable={isDismissable}
-      className="entering:fade-in exiting:fade-out fixed start-0 top-0 z-50 size-full entering:animate-in exiting:animate-out overflow-hidden bg-black/60 backdrop-blur-sm entering:duration-500 exiting:duration-300"
+      className={composeRenderProps(overlay?.className, (resolved) =>
+        cn(
+          // quebi backdrop — dark scrim + subtle blur, as ModalContent's.
+          "fixed start-0 top-0 z-50 size-full overflow-hidden bg-black/60 backdrop-blur-sm",
+          "entering:fade-in entering:animate-in exiting:fade-out exiting:animate-out duration-200 ease-in-out",
+          resolved,
+        ),
+      )}
       {...props}
     >
       <Modal
@@ -85,8 +92,12 @@ const SheetContent = ({
             "fixed z-50 grid gap-4 border border-quebi-line/10 bg-quebi-elevated text-quebi-fg shadow-quebi-glow",
             "transform-gpu transition ease-in-out will-change-transform [--visual-viewport-vertical-padding:16px]",
             "data-[float=true]:rounded-quebi-md",
-            "entering:fade-in entering:animate-in entering:duration-500",
-            "exiting:fade-in exiting:animate-out exiting:duration-300",
+            // One length and one curve for both directions, matching Drawer's
+            // `0.2s easeInOut` — Drawer is the surface the report held up as the
+            // right feel (task #179), so it sets the tempo and the CSS overlays
+            // follow it. The `ease-in-out` above sets `--tw-ease` for the
+            // animation as well as the transition, so the two cannot drift.
+            "entering:fade-in entering:animate-in exiting:fade-out exiting:animate-out duration-200",
             sideVariants[side],
             resolved,
           ),
