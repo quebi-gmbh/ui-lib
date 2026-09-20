@@ -237,3 +237,118 @@ describe("selection is drawn in the event's own colour", () => {
     expect(band).toContain(CALENDAR_COLORS.blue.selected)
   })
 })
+
+/**
+ * The accented edge is never rounded (task #176).
+ *
+ * `--radius-quebi-sm` is 8px and both the month chip and the week all-day band
+ * are 20px tall, so two corners consume 16px of the 20 and the 2px `edge` is
+ * forced round them — its inner radius is `outer - width`, so the stroke tapers
+ * as it turns and the series line reads as a crescent hooked into a pill rather
+ * than as a straight bar. `TimedBlock` already rounds only its trailing corners
+ * and leaves its accent dead straight; these two were the outliers, and the
+ * shortest surfaces, where it showed most.
+ */
+describe("the colour accent is a straight line, not a crescent", () => {
+  const chipFor = (container: HTMLElement, id: string) => slot(container, "calendar-chip", id)
+
+  test("a filled month chip is square on the accented edge and round on the other", () => {
+    const { container } = render(
+      <MonthView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[ALL_DAY]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+      />,
+    )
+    const className = chipFor(container, "trip")?.className ?? ""
+    expect(className).toContain("rounded-l-none")
+    expect(className).not.toContain("rounded-l-quebi-sm")
+    // The trailing edge keeps the radius: only the accent is straightened.
+    expect(className).toContain("rounded-r-quebi-sm")
+    // And it is the accent that makes the difference.
+    expect(className).toContain("border-l-2")
+    expect(className).toContain(CALENDAR_COLORS.blue.edge)
+  })
+
+  test("a timed month chip has no accent, so it keeps both corners", () => {
+    const { container } = render(
+      <MonthView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[EVENT]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+      />,
+    )
+    const className = chipFor(container, "one")?.className ?? ""
+    expect(className).not.toContain("border-l-2")
+    expect(className).toContain("rounded-l-quebi-sm")
+    expect(className).toContain("rounded-r-quebi-sm")
+  })
+
+  test("the week all-day band gets the same treatment", () => {
+    const { container } = render(
+      <WeekView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[ALL_DAY]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+      />,
+    )
+    const className = slot(container, "calendar-band", "trip")?.className ?? ""
+    expect(className).toContain("rounded-l-none")
+    expect(className).not.toContain("rounded-l-quebi-sm")
+    expect(className).toContain("rounded-r-quebi-sm")
+  })
+
+  test("a band cut at the week boundary still loses its trailing radius", () => {
+    const { container } = render(
+      <WeekView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[
+          {
+            id: "over",
+            title: "Offsite",
+            start: at(MONDAY.add({ days: 5 }), 0),
+            end: at(MONDAY.add({ days: 9 }), 0),
+            allDay: true,
+            calendarId: "me",
+          },
+        ]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+      />,
+    )
+    const className = slot(container, "calendar-band", "over")?.className ?? ""
+    // continuesAfter is intact: the two halves must read as one event cut.
+    expect(className).toContain("rounded-r-none")
+    expect(className).not.toContain("rounded-r-quebi-sm")
+    expect(className).toContain("rounded-l-none")
+  })
+
+  test("the timed block these two now match still rounds only its trailing corners", () => {
+    const { container } = render(
+      <DayView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[EVENT]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+      />,
+    )
+    const className = blockFor(container)?.className ?? ""
+    expect(className).toContain("rounded-tr-quebi-sm")
+    expect(className).toContain("rounded-br-quebi-sm")
+    expect(className).not.toContain("rounded-tl-quebi-sm")
+    expect(className).not.toContain("rounded-bl-quebi-sm")
+  })
+})

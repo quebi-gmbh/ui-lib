@@ -366,7 +366,13 @@ function MonthChip<E extends CalendarEvent>({
         filled
           ? cn(palette.band, "border-l-2", palette.edge)
           : "hover:bg-quebi-surface/[0.06]",
-        filled && band.continuesBefore ? "rounded-l-none" : "rounded-l-quebi-sm",
+        // The accented edge is never rounded (task #176). `--radius-quebi-sm`
+        // is 8px and the chip is 20px tall, so two corners eat 16px of the
+        // 20 and the 2px border tapers as it turns — the series line reads
+        // as a crescent hooked into a pill. `TimedBlock` already rounds only
+        // its trailing corners for the same reason. A chip cut at the week
+        // boundary squares that side too, so the halves read as one event.
+        filled || band.continuesBefore ? "rounded-l-none" : "rounded-l-quebi-sm",
         filled && band.continuesAfter ? "rounded-r-none" : "rounded-r-quebi-sm",
         isSelected && cn("outline-2 outline-solid outline-offset-0", palette.selected),
       )}

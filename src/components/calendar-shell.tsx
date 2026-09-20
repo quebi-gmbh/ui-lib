@@ -784,7 +784,13 @@ function AllDayBand<E extends CalendarEvent>({
               "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
               palette.band,
               palette.edge,
-              band.continuesBefore ? "rounded-l-none" : "rounded-l-quebi-sm",
+              // Square on the accent, rounded on the trailing edge — the same
+              // treatment `TimedBlock` gives its own edge, and for the same
+              // reason (task #176): an 8px radius on a 20px band bends the 2px
+              // series line into a crescent. The left is already square, so
+              // `continuesBefore` has nothing left to change on that side;
+              // `continuesAfter` still squares a band cut at the week boundary.
+              "rounded-l-none",
               band.continuesAfter ? "rounded-r-none" : "rounded-r-quebi-sm",
               selectedId === band.event.id &&
                 cn("outline-2 outline-solid outline-offset-0", palette.selected),
