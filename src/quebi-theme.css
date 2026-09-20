@@ -139,6 +139,56 @@
   --shadow-quebi-glow-strong: var(--q-glow-strong);
 }
 
+/* ---------------- Outfit, self-hosted ---------------- */
+/*
+ * These two files are byte-for-byte what fonts.gstatic.com serves for Outfit
+ * v15 — copied into `public/fonts/`, not rebuilt — so nothing about the
+ * rendering changes. What changes is where they come from. Until task #172 the
+ * first line of main.css was an `@import` of a Google Fonts stylesheet, which
+ * put two extra origins on the critical path of every first visit: the browser
+ * had to download and parse the root CSS before it could even discover
+ * fonts.googleapis.com, fetch a stylesheet from there to discover
+ * fonts.gstatic.com, and only then fetch the font. Two cold TLS handshakes,
+ * none of it visible to the preload scanner because the URL lived inside a CSS
+ * file. Same-origin, the font shares the connection the page is already using
+ * and root.tsx can preload it from the HTML.
+ *
+ * Outfit is a *variable* font (fvar/gvar/HVAR/MVAR/STAT), so one file covers
+ * the whole 100–900 axis. The old `@import` asked for five weights and got
+ * five @font-face rules pointing at this same one file; asking for fewer would
+ * not have saved a byte. The range below is the axis the file actually has, so
+ * `font-light` would render as real Light rather than a synthesised one, at no
+ * cost — though as of today the repo uses only 400/500/600/700.
+ *
+ * The latin-ext face is declared but deliberately NOT preloaded: `unicode-range`
+ * means the browser fetches it only if a codepoint in that range renders, and a
+ * scan of src/ finds none (German is entirely inside the latin subset). It is
+ * 14.8 kB of insurance that costs nothing on the wire until something needs it.
+ */
+
+/* latin-ext */
+@font-face {
+  font-family: "Outfit";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/outfit-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308,
+    U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113,
+    U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+  font-family: "Outfit";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/outfit-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 @theme {
   /* Tailwind also keeps its full default palette — cyan-500, amber-500, red-500,
      purple-400 are still available as supporting hues, no need to redeclare. */
