@@ -13,7 +13,7 @@ import {
   today,
 } from "@internationalized/date"
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
-import { use, useRef, useState } from "react"
+import { createContext, use, useCallback, useEffect, useId, useRef, useState } from "react"
 import {
   CalendarCell,
   CalendarGrid,
@@ -31,7 +31,6 @@ import {
 } from "react-aria-components"
 import { Button } from "@/components/button"
 import { MonthPicker } from "@/components/month-picker"
-import { Popover, PopoverContent } from "@/components/popover"
 import { Select, SelectContent, SelectItem, SelectLabel, SelectTrigger } from "@/components/select"
 import { getDateTimeFormat } from "@/lib/intl"
 import { cn } from "@/lib/utils"
@@ -41,19 +40,20 @@ import { cn } from "@/lib/utils"
  *
  * An accessible month calendar built on react-aria-components and
  * @internationalized/date, with a choice of header: `variant="select"` (the
- * default) opens the Month Picker grid from one control naming the visible
- * month, `variant="stepper"` walks them with a chevron on each side. Restyled
- * to quebi tokens: the selected day fills with brand teal, today is ringed in
- * brand teal, and days hover with a faint white wash. Foundational — Range
- * Calendar and Date Picker compose this.
+ * default) swaps the Month Picker grid into the calendar body from one control
+ * naming the visible month, `variant="stepper"` walks them with a chevron on
+ * each side. Restyled to quebi tokens: the selected day fills with brand teal,
+ * today is ringed in brand teal, and days hover with a faint white wash.
+ * Foundational — Range Calendar and Date Picker compose this.
  */
 
 /**
  * Which header the calendar draws.
  *
- * - `select` — one control reading `September 2026` on the left, opening the
- *   library's own Month Picker in a popover; one prev/next pair on the right
- *   that pages the visible range.
+ * - `select` — one control reading `September 2026` on the left, swapping the
+ *   library's own Month Picker into the body in place of the day grid; one
+ *   prev/next pair on the right that pages the visible range, shown while the
+ *   day grid is.
  * - `stepper` — `‹ Sep ›` and `‹ 2026 ›`. The paging pair is dropped, or the
  *   month would carry two sets of chevrons meaning slightly different things.
  */
@@ -62,7 +62,7 @@ type CalendarHeaderVariant = "select" | "stepper"
 interface CalendarProps<T extends DateValue>
   extends Omit<CalendarPrimitiveProps<T>, "visibleDuration"> {
   className?: string
-  /** Header treatment — the month-picker popover (default) or chevron steppers. */
+  /** Header treatment — the in-body month picker (default) or chevron steppers. */
   variant?: CalendarHeaderVariant
 }
 
@@ -71,44 +71,52 @@ const Calendar = <T extends DateValue>({ className, variant, ...props }: Calenda
 
   return (
     <CalendarPrimitive data-slot="calendar" {...props}>
-      <CalendarHeader variant={variant} />
-      <CalendarGrid>
-        <CalendarGridHeader />
-        <CalendarGridBody>
-          {(date) => (
-            <CalendarCell
-              date={date}
-              className={composeRenderProps(className, (className, { isSelected, isDisabled }) =>
-                cn(
-                  "relative flex h-9 w-9 cursor-default items-center justify-center rounded-quebi-sm text-sm text-quebi-fg tabular-nums outline-hidden transition-colors hover:bg-quebi-surface/[0.04]",
-                  isSelected &&
-                    "bg-quebi-brand text-quebi-on-brand hover:bg-quebi-brand-hover",
-                  isDisabled && "text-quebi-fg-subtle",
-                  date.compare(now) === 0 &&
-                    !isSelected &&
-                    "ring-1 ring-inset ring-quebi-brand-mark",
-                  className,
-                ),
+      <CalendarBodyModeProvider>
+        <CalendarHeader variant={variant} />
+        <CalendarBody>
+          <CalendarGrid>
+            <CalendarGridHeader />
+            <CalendarGridBody>
+              {(date) => (
+                <CalendarCell
+                  date={date}
+                  className={composeRenderProps(
+                    className,
+                    (className, { isSelected, isDisabled }) =>
+                      cn(
+                        "relative flex h-9 w-9 cursor-default items-center justify-center rounded-quebi-sm text-sm text-quebi-fg tabular-nums outline-hidden transition-colors hover:bg-quebi-surface/[0.04]",
+                        isSelected &&
+                          "bg-quebi-brand text-quebi-on-brand hover:bg-quebi-brand-hover",
+                        isDisabled && "text-quebi-fg-subtle",
+                        date.compare(now) === 0 &&
+                          !isSelected &&
+                          "ring-1 ring-inset ring-quebi-brand-mark",
+                        className,
+                      ),
+                  )}
+                />
               )}
-            />
-          )}
-        </CalendarGridBody>
-      </CalendarGrid>
+            </CalendarGridBody>
+          </CalendarGrid>
+        </CalendarBody>
+      </CalendarBodyModeProvider>
     </CalendarPrimitive>
   )
 }
 
 interface CalendarHeaderProps extends React.ComponentProps<"header"> {
-  /** Header treatment — the month-picker popover (default) or chevron steppers. */
+  /** Header treatment — the in-body month picker (default) or chevron steppers. */
   variant?: CalendarHeaderVariant
 }
 
 const CalendarHeader = ({ className, variant = "select", ...props }: CalendarHeaderProps) => {
   const { direction } = useLocale()
+  const { mode } = useCalendarBodyMode("CalendarHeader")
   return (
     <header
       data-slot="calendar-header"
       data-variant={variant}
+      data-mode={mode}
       className={cn("flex w-full justify-between gap-1.5 ps-1.5 pe-1 pt-1 pb-5 sm:pb-4", className)}
       {...props}
     >
@@ -122,37 +130,236 @@ const CalendarHeader = ({ className, variant = "select", ...props }: CalendarHea
         <>
           <SelectMonthYear />
           <Heading className="sr-only" />
-          <div className="flex items-center gap-1">
-            <Button
-              size="sq-sm"
-              className="size-8 sm:size-7 **:data-[slot=icon]:text-quebi-fg-muted"
-              isCircle
-              intent="ghost"
-              slot="previous"
-            >
-              {direction === "rtl" ? (
-                <ChevronRight data-slot="icon" />
-              ) : (
-                <ChevronLeft data-slot="icon" />
-              )}
-            </Button>
-            <Button
-              size="sq-sm"
-              className="size-8 sm:size-7 **:data-[slot=icon]:text-quebi-fg-muted"
-              isCircle
-              intent="ghost"
-              slot="next"
-            >
-              {direction === "rtl" ? (
-                <ChevronLeft data-slot="icon" />
-              ) : (
-                <ChevronRight data-slot="icon" />
-              )}
-            </Button>
-          </div>
+          {/*
+            The paging pair belongs to the day grid: it walks the visible
+            *month*, and the month grid that replaces that grid carries a year
+            stepper of its own a row below. Two chevron pairs in one surface
+            stepping different units is the ambiguity the `stepper` variant
+            drops this pair to avoid — so month mode drops it for the same
+            reason, and it returns with the day grid.
+          */}
+          {mode === "day" && (
+            <div className="flex items-center gap-1">
+              <Button
+                size="sq-sm"
+                className="size-8 sm:size-7 **:data-[slot=icon]:text-quebi-fg-muted"
+                isCircle
+                intent="ghost"
+                slot="previous"
+              >
+                {direction === "rtl" ? (
+                  <ChevronRight data-slot="icon" />
+                ) : (
+                  <ChevronLeft data-slot="icon" />
+                )}
+              </Button>
+              <Button
+                size="sq-sm"
+                className="size-8 sm:size-7 **:data-[slot=icon]:text-quebi-fg-muted"
+                isCircle
+                intent="ghost"
+                slot="next"
+              >
+                {direction === "rtl" ? (
+                  <ChevronLeft data-slot="icon" />
+                ) : (
+                  <ChevronRight data-slot="icon" />
+                )}
+              </Button>
+            </div>
+          )}
         </>
       )}
     </header>
+  )
+}
+
+/**
+ * What the calendar body is drawing.
+ *
+ * The month grid is not a second surface floating over the first (task #170 —
+ * it was, for the length of #160). Inside a Date Picker that made two react-aria
+ * overlays out of one trigger chain, portalled to `body` as siblings at the same
+ * z-index rather than nested, and the inner one covered every cell of the day
+ * grid the user was orienting against while hanging ~20px past the bottom edge
+ * of the surface it was anchored in — over the backdrop, on the mobile path,
+ * where the outer surface is a modal. Swapping the body in place is what the
+ * native and shadcn-style pickers do: one surface, one thing to dismiss, and the
+ * month grid sized by the popover that was already open.
+ */
+type CalendarBodyMode = "day" | "month"
+
+interface CalendarBodyModeValue {
+  /** Which grid the body is drawing. */
+  mode: CalendarBodyMode
+  /** Swap it. Returning to the day grid puts focus back on the trigger. */
+  setMode: (mode: CalendarBodyMode) => void
+  /** The body's id, so the trigger's `aria-controls` can name what it swaps. */
+  bodyId: string
+  /** The month/year trigger, so leaving month mode can restore focus to it. */
+  triggerRef: React.RefObject<HTMLButtonElement | null>
+}
+
+const CalendarBodyModeContext = createContext<CalendarBodyModeValue | null>(null)
+
+/**
+ * The toggle's two ends are siblings — `SelectMonthYear` sits in the header and
+ * the grid it replaces sits beside it — so the state joining them belongs to
+ * whatever owns both, which is `Calendar` and `RangeCalendar`. A consumer
+ * composing a calendar out of the exported parts wants `CalendarBodyModeProvider`
+ * around them and `CalendarBody` around the grid; the throw is for the case where
+ * neither happened, since a month/year control with no body to swap is the
+ * live-control-that-does-nothing this file avoids everywhere else.
+ */
+const useCalendarBodyMode = (component: string) => {
+  const value = use(CalendarBodyModeContext)
+  if (!value) throw new Error(`${component} must be used within a CalendarBodyModeProvider`)
+  return value
+}
+
+/**
+ * Is `element` somewhere focus was *parked* rather than somewhere a user put it?
+ *
+ * A `tabindex="-1"` container — the popover's own dialog div — and `<body>` are
+ * both "focus had nowhere to go". Neither is reachable by tabbing, so neither is
+ * a place the user chose, and taking focus back off one of them cannot interrupt
+ * anything they were doing.
+ */
+const isStrandedFocus = (element: Element | null) =>
+  !element || element === document.body || element.getAttribute("tabindex") === "-1"
+
+const CalendarBodyModeProvider = ({ children }: { children: React.ReactNode }) => {
+  const [mode, setModeState] = useState<CalendarBodyMode>("day")
+  const bodyId = useId()
+  const triggerRef = useRef<HTMLButtonElement | null>(null)
+  // Set by `setMode`, read by the effect below: only a swap the user asked for
+  // moves focus, so the first render does not steal it from the page.
+  const shouldRestoreFocus = useRef(false)
+
+  // Stable, so the Escape listener in `CalendarBody` subscribes once per swap
+  // rather than once per render of the calendar above it.
+  const setMode = useCallback((next: CalendarBodyMode) => {
+    setModeState(next)
+    if (next === "day") shouldRestoreFocus.current = true
+  }, [])
+
+  /**
+   * Put focus back on the trigger when the month grid goes away.
+   *
+   * It has to go somewhere deliberate: the grid unmounts under whatever inside
+   * it had focus, and the trigger is what the user pressed to get here. Doing it
+   * synchronously in `setMode` is not enough, and this is the part worth
+   * knowing — react-aria restores focus on behalf of the collection that just
+   * unmounted, and defers that through `runAfterTransition`, so in a real
+   * browser (where the cells have a colour transition and the trigger has one
+   * too) its restore lands *after* both the press handler and this effect. What
+   * the user was left with was the popover's own `tabindex="-1"` dialog div.
+   *
+   * So the focus is asserted once here and re-asserted on the next frame, by
+   * which point react-aria has finished. The `isStrandedFocus` guard is what
+   * keeps that second assert from being a yank: if focus has meanwhile reached
+   * anything tabbable, someone meant it, and the trigger does not take it back.
+   */
+  useEffect(() => {
+    if (mode !== "day" || !shouldRestoreFocus.current) return
+    shouldRestoreFocus.current = false
+    const trigger = triggerRef.current
+    if (!trigger) return
+
+    trigger.focus()
+    const frame = requestAnimationFrame(() => {
+      if (isStrandedFocus(document.activeElement)) trigger.focus()
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [mode])
+
+  return (
+    <CalendarBodyModeContext value={{ mode, setMode, bodyId, triggerRef }}>
+      {children}
+    </CalendarBodyModeContext>
+  )
+}
+
+/**
+ * The calendar's body: the day grid, or the Month Picker in its place.
+ *
+ * Three wiring details, all inherited from the popover this replaced.
+ *
+ * - **The calendar system comes from the state.** `MonthPicker` is Gregorian
+ *   where it is handed nothing, so `state.focusedDate.calendar` goes down with
+ *   the value. Without it a Japanese or Hebrew calendar's header would name
+ *   months its own grid does not have.
+ * - **The day survives.** `MonthPicker` reports the first of the month, but the
+ *   thing being chosen is a month, not a date: focus moves to the same day of
+ *   it, exactly as `SelectMonth`'s `set({ month })` did. `constrain` then does
+ *   what it does for the steppers — react-aria clamps every focus move anyway,
+ *   and asking first is what keeps the control from appearing to ignore a click.
+ * - **Escape has one meaning, and it is the innermost one.** The grid keeps
+ *   `escapeKeyBehavior="none"`, so the key belongs to whatever is above it; that
+ *   used to be a popover of its own and is now this. Stopping propagation is
+ *   what keeps the same keypress from also closing the Date Picker popover the
+ *   calendar sits in — the second Escape does that, from the day grid, which is
+ *   the order the two were opened in. Two nested popovers got this right for
+ *   free and the swap would otherwise lose it.
+ *
+ *   The listener is a native one on the body rather than an `onKeyDown` prop,
+ *   for two reasons. React delegates synthetic events to the root container, so
+ *   a native listener here runs *before* React has dispatched anything and
+ *   `stopPropagation` reliably keeps the overlay's own `onKeyDown` from ever
+ *   seeing the key — a synthetic handler would be racing siblings in the same
+ *   dispatch. And a `<div>` carrying an `onKeyDown` is a static element with an
+ *   interaction, which Biome's `noStaticElementInteractions` flags and is right
+ *   to: the interactive things here are the cells inside, which react-aria
+ *   gives their own roles. This is a key scope, not a control.
+ */
+const CalendarBody = ({ children }: { children: React.ReactNode }) => {
+  const state = useCalendarHeaderState("CalendarBody")
+  const { mode, setMode, bodyId } = useCalendarBodyMode("CalendarBody")
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const node = ref.current
+    if (mode !== "month" || !node) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return
+      event.preventDefault()
+      event.stopPropagation()
+      setMode("day")
+    }
+    node.addEventListener("keydown", onKeyDown)
+    return () => node.removeEventListener("keydown", onKeyDown)
+  }, [mode, setMode])
+
+  return (
+    <div id={bodyId} data-slot="calendar-body" ref={ref}>
+      {mode === "month" ? (
+        <MonthPicker
+          autoFocus
+          aria-label="Month and year"
+          // `mx-auto` for the RangeCalendar case: two months of day grid are far
+          // wider than one year of months, and an off-centre grid in a surface
+          // sized for the other one reads as a mistake.
+          className="mx-auto"
+          calendar={state.focusedDate.calendar}
+          value={state.focusedDate}
+          minValue={state.minValue ?? undefined}
+          maxValue={state.maxValue ?? undefined}
+          isDisabled={state.isDisabled}
+          onChange={(next) => {
+            state.setFocusedDate(
+              constrain(
+                state.focusedDate.set({ era: next.era, year: next.year, month: next.month }),
+                state.minValue,
+                state.maxValue,
+              ),
+            )
+            setMode("day")
+          }}
+        />
+      ) : (
+        children
+      )}
+    </div>
   )
 }
 
@@ -224,8 +431,8 @@ const isUnitReachable = (
 }
 
 /**
- * The `select` header's one control: `September 2026`, opening the library's
- * own `MonthPicker` in a popover.
+ * The `select` header's one control: `September 2026`, swapping the library's
+ * own `MonthPicker` into the calendar body in place of the day grid.
  *
  * It replaced a month `Select` beside a year `Select` (task #160). Two flat
  * lists — the year one forty-one rows of `2006 … 2046` — asked the user to
@@ -234,19 +441,19 @@ const isUnitReachable = (
  * worse one out of dropdowns. `SelectMonth` and `SelectYear` are still exported
  * for anyone who had composed a header of their own out of them.
  *
- * Three wiring details:
+ * #160 put that grid in a popover of its own, which is what task #170 took back
+ * out; the argument is on `CalendarBodyMode`, and everything about *choosing* a
+ * month is now on `CalendarBody`. What is left here is the trigger, and two
+ * details of it:
  *
- * - **The calendar system comes from the state.** `MonthPicker` is Gregorian
- *   where it is handed nothing, so `state.focusedDate.calendar` goes down with
- *   the value. Without it a Japanese or Hebrew calendar's header would name
- *   months its own grid does not have.
- * - **The day survives.** `MonthPicker` reports the first of the month, but the
- *   thing being chosen is a month, not a date: focus moves to the same day of
- *   it, exactly as `SelectMonth`'s `set({ month })` did. `constrain` then does
- *   what it does for the steppers — react-aria clamps every focus move anyway,
- *   and asking first is what keeps the control from appearing to ignore a click.
+ * - **It is a toggle, so it is `aria-pressed`.** Not `aria-expanded`: nothing
+ *   expands. The body is the same size and in the same place either way, and
+ *   what changes is which of two grids it draws — which is a two-state control,
+ *   pressed or not. `aria-controls` names the body as well, so the relationship
+ *   survives for the readers that expose it, but the state is the pressed one.
  * - **The trigger opts out of the calendar's `ButtonContext`.** See the note in
- *   `CalendarStepper`; `slot={null}` is the same fix for the same reason.
+ *   `CalendarStepper`; `slot={null}` is the same fix for the same reason, and
+ *   it matters more now that the button carries an `onPress` of its own.
  *
  * Reaching a distant year is the year chevrons, one at a time — deliberately,
  * and not what the old year dropdown did with its ±20-year window. A calendar
@@ -255,59 +462,47 @@ const isUnitReachable = (
  */
 const SelectMonthYear = () => {
   const state = useCalendarHeaderState("SelectMonthYear")
+  const { mode, setMode, bodyId, triggerRef } = useCalendarBodyMode("SelectMonthYear")
   const { locale } = useLocale()
-  const [isOpen, setIsOpen] = useState(false)
   const formatter = getDateTimeFormat(locale, {
     month: "long",
     year: "numeric",
     timeZone: state.timeZone,
   })
+  const isShowingMonths = mode === "month"
 
   return (
-    <Popover isOpen={isOpen} onOpenChange={setIsOpen}>
-      {/*
-        No `aria-label`: it would *replace* the button's own text as the
-        accessible name, and "September 2026" is the more useful of the two —
-        the trigger's own `aria-expanded` already says it opens something. What
-        that costs is a constant to query it by, so the stable handle for tests
-        and for a consumer restyling the header is the `data-slot`, the way it
-        is everywhere else in this library.
-      */}
-      <Button
-        data-slot="calendar-month-year"
-        intent="outline"
-        size="sm"
-        slot={null}
-        isDisabled={state.isDisabled}
-        // The old dropdown pair's own padding, so the header keeps its height:
-        // `Button`'s `sm` is a form control's, and this is a calendar's title.
-        className="px-3 py-2.5 text-sm/5 tabular-nums sm:px-2.5 sm:py-1.5"
-      >
-        {formatter.format(state.focusedDate.toDate(state.timeZone))}
-        <ChevronDown data-slot="icon" className="text-quebi-fg-muted" />
-      </Button>
-      <PopoverContent placement="bottom start" className="w-auto max-w-none p-3">
-        <MonthPicker
-          autoFocus
-          aria-label="Month and year"
-          calendar={state.focusedDate.calendar}
-          value={state.focusedDate}
-          minValue={state.minValue ?? undefined}
-          maxValue={state.maxValue ?? undefined}
-          isDisabled={state.isDisabled}
-          onChange={(next) => {
-            setIsOpen(false)
-            state.setFocusedDate(
-              constrain(
-                state.focusedDate.set({ era: next.era, year: next.year, month: next.month }),
-                state.minValue,
-                state.maxValue,
-              ),
-            )
-          }}
-        />
-      </PopoverContent>
-    </Popover>
+    /*
+      No `aria-label`: it would *replace* the button's own text as the
+      accessible name, and "September 2026" is the more useful of the two —
+      `aria-pressed` already says it toggles something. What that costs is a
+      constant to query it by, so the stable handle for tests and for a consumer
+      restyling the header is the `data-slot`, the way it is everywhere else in
+      this library.
+    */
+    <Button
+      ref={triggerRef}
+      data-slot="calendar-month-year"
+      intent="outline"
+      size="sm"
+      slot={null}
+      isDisabled={state.isDisabled}
+      aria-pressed={isShowingMonths}
+      aria-controls={bodyId}
+      onPress={() => setMode(isShowingMonths ? "day" : "month")}
+      // The old dropdown pair's own padding, so the header keeps its height:
+      // `Button`'s `sm` is a form control's, and this is a calendar's title.
+      className="px-3 py-2.5 text-sm/5 tabular-nums sm:px-2.5 sm:py-1.5"
+    >
+      {formatter.format(state.focusedDate.toDate(state.timeZone))}
+      <ChevronDown
+        data-slot="icon"
+        className={cn(
+          "text-quebi-fg-muted transition-transform duration-150",
+          isShowingMonths && "rotate-180",
+        )}
+      />
+    </Button>
   )
 }
 
@@ -597,9 +792,11 @@ const CalendarGridHeader = () => {
   )
 }
 
-export type { CalendarHeaderProps, CalendarHeaderVariant, CalendarProps }
+export type { CalendarBodyMode, CalendarHeaderProps, CalendarHeaderVariant, CalendarProps }
 export {
   Calendar,
+  CalendarBody,
+  CalendarBodyModeProvider,
   CalendarGridHeader,
   CalendarHeader,
   SelectMonth,

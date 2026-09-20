@@ -87,7 +87,7 @@ export interface DatePickerOverlayProps extends Omit<PopoverProps, "children"> {
   range?: boolean
   visibleDuration?: DateDuration
   pageBehavior?: "visible" | "single"
-  /** Calendar header treatment — the month-picker popover (default) or chevron steppers. */
+  /** Calendar header treatment — the in-body month picker (default) or chevron steppers. */
   variant?: CalendarHeaderVariant
 }
 

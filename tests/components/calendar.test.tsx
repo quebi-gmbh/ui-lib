@@ -8,6 +8,11 @@
  * below is that rule — a month the bounds cannot reach is not selectable, and a
  * month they reach only in part lands on the first day of it that is legal.
  *
+ * The grid lives in the calendar's own body, not in a popover of its own —
+ * task #170 took the popover back out, and `calendar-header.test.tsx` is what
+ * pins the swap itself. Everything here is about the offer, which is the same
+ * either way.
+ *
  * Until task #160 the header was a month `Select` beside a year `Select`, and
  * those answered the same question by *dropping* the unreachable entries: a
  * booking calendar open for a year would otherwise have spent 39 of its 41 year
@@ -32,9 +37,10 @@ import { RangeCalendar } from "../../src/components/range-calendar"
 const JUNE = new CalendarDate(2026, 6, 15)
 
 /**
- * The trigger that opens the grid. Its accessible name is the month and year it
- * is showing, so there is nothing constant to query it by — `data-slot` is the
- * stable handle, here and for a consumer restyling the header.
+ * The trigger that swaps the month grid into the calendar body. Its accessible
+ * name is the month and year it is showing, so there is nothing constant to
+ * query it by — `data-slot` is the stable handle, here and for a consumer
+ * restyling the header.
  */
 const trigger = () => {
   const element = document.querySelector<HTMLElement>('[data-slot="calendar-month-year"]')
@@ -42,7 +48,8 @@ const trigger = () => {
   return element
 }
 
-const openPicker = async (user: ReturnType<typeof userEvent.setup>) => {
+/** Press the trigger, putting the month grid in the body's day grid's place. */
+const showMonthGrid = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(trigger())
 }
 
@@ -82,7 +89,7 @@ describe("the month picker in the header", () => {
       />,
     )
 
-    await openPicker(user)
+    await showMonthGrid(user)
 
     expect(monthCells()).toHaveLength(12)
     expect(monthCells()[0]).toBe("January 2026")
@@ -99,7 +106,7 @@ describe("the month picker in the header", () => {
       />,
     )
 
-    await openPicker(user)
+    await showMonthGrid(user)
 
     // A month counts as reachable when any day of it is: `minValue` is 15 June
     // and `maxValue` is 20 August, so all three of those months are live.
@@ -117,7 +124,7 @@ describe("the month picker in the header", () => {
 
     expect(focusedDay()).toBe("15")
 
-    await openPicker(user)
+    await showMonthGrid(user)
     await user.click(monthCell("October 2026"))
 
     expect(visibleRange()).toContain("October")
@@ -128,21 +135,22 @@ describe("the month picker in the header", () => {
     expect(trigger().textContent).toContain("October")
   })
 
-  test("closes on selection", async () => {
+  test("gives the body back to the day grid on selection", async () => {
     const user = userEvent.setup()
-    render(<Calendar aria-label="Event date" defaultValue={JUNE} />)
+    const { container } = render(<Calendar aria-label="Event date" defaultValue={JUNE} />)
 
-    await openPicker(user)
+    await showMonthGrid(user)
     await user.click(monthCell("October 2026"))
 
     expect(screen.queryByRole("option")).toBeNull()
+    expect(container.querySelector("table")).toBeInTheDocument()
   })
 
   test("pages to another year without moving the calendar", async () => {
     const user = userEvent.setup()
     render(<Calendar aria-label="Event date" defaultValue={JUNE} />)
 
-    await openPicker(user)
+    await showMonthGrid(user)
     await user.click(screen.getByRole("button", { name: "Next year" }))
 
     expect(monthCells()[0]).toBe("January 2027")
@@ -166,7 +174,7 @@ describe("the month picker in the header", () => {
       />,
     )
 
-    await openPicker(user)
+    await showMonthGrid(user)
     await user.click(screen.getByRole("button", { name: "Next year" }))
     await user.click(monthCell("February 2027"))
 
@@ -195,7 +203,7 @@ describe("the month picker in the header", () => {
       />,
     )
 
-    await openPicker(user)
+    await showMonthGrid(user)
 
     expect(monthCell("June 2026")).not.toHaveAttribute("aria-disabled", "true")
     expect(monthCell("May 2026")).toHaveAttribute("aria-disabled", "true")
