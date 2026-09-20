@@ -48,6 +48,17 @@ const [form, fields] = useForm({
 })`,
       note: "A fetcher has its own state, and its own revalidation to wait for. The guard is the same shape; only the thing being asked changes.",
     },
+    {
+      title: "A type argument does not change the question",
+      wrong: `const lastResult = useActionData<typeof action>()
+const [form, fields] = useForm<SignupSchema>({ lastResult })`,
+      right: `const lastResult = useActionData<typeof action>()
+const navigation = useNavigation()
+const [form, fields] = useForm<SignupSchema>({
+  lastResult: navigation.state === "idle" ? lastResult : null,
+})`,
+      note: "useForm<Schema>({ … }) is the call Conform's docs lead with, and the race it runs is the one above. The check read only the untyped spelling until task #163, which is why a real form could carry an ungated lastResult and lint clean.",
+    },
   ],
   exceptions: [
     {
@@ -67,9 +78,18 @@ const [form, fields] = useForm({
     // Both spellings of the option have to be matched: `{ lastResult }` is the
     // common one and is a shorthand member, not a property with a value, so a
     // pattern that only reads values misses exactly the shape people write.
+    //
+    // Both spellings of the *call* have to be matched too, which is why this is a
+    // JsCallExpression and not a `useForm($options)` snippet: a snippet is the
+    // whole call shape, and `useForm<Schema>({ … })` — the one that gets you typed
+    // fields, and so the one apps write — is a different shape from `useForm({ … })`
+    // (task #163). Naming only callee and arguments leaves `type_arguments` free.
     biome: {
       via: "plugin",
-      pattern: `\`useForm($options)\` as $call where {
+      pattern: `JsCallExpression(
+  callee = \`useForm\`,
+  arguments = JsCallArguments(args = [$options])
+) as $call where {
   $options <: JsObjectExpression(),
   $options <: contains bubble or {
     JsPropertyObjectMember(name = $name, value = $value) where {
@@ -83,7 +103,7 @@ const [form, fields] = useForm({
     message:
       "lastResult is applied on every render, so an ungated one lands before React Router has revalidated the loader data behind the form — a form with loader defaults snaps back to its previous value after a reset. Pass lastResult: navigation.state === 'idle' ? lastResult : null (or fetcher.state for a fetcher). See https://ui-lib.quebi.de/rules/gate-last-result-on-idle-navigation",
     grep: "lastResult",
-    note: "The check reads the guard textually: any lastResult expression mentioning navigation.state or fetcher.state satisfies it, including one that mentions it and gets the comparison backwards. It reads options written inline only — useForm(options) with the object in a variable is invisible, the same blind spot the tier-3 rule documents — and it says nothing about forms that pass no lastResult at all, which is tier 3's business.",
+    note: "The check reads the guard textually: any lastResult expression mentioning navigation.state or fetcher.state satisfies it, including one that mentions it and gets the comparison backwards. It reads options written inline only — useForm(options) with the object in a variable is invisible, the same blind spot the tier-3 rule documents; a type argument is not one of them, as useForm<Schema>({ … }) is read exactly like useForm({ … }) — and it says nothing about forms that pass no lastResult at all, which is tier 3's business.",
   },
   tags: ["forms", "conform", "react-router", "tier-5"],
 }

@@ -64,8 +64,27 @@ export async function action({ request }: Route.ActionArgs) {
 }`,
       note: "This is the half people skip, and it is the half that makes server validation usable rather than just safe. Without lastResult a server rejection is a silent no-op to the person filling in the form.",
     },
+    {
+      title: "The typed call is the same call",
+      wrong: `// useForm<Schema>({ … }) is the spelling Conform's docs lead with, because it is
+// what makes fields.email typed. It is still a form with nowhere to put a server error.
+const [form, fields] = useForm<SignupSchema>({
+  onValidate: ({ formData }) => parseWithValibot(formData, { schema: signupSchema }),
+})`,
+      right: `const [form, fields] = useForm<SignupSchema>({
+  lastResult: navigation.state === "idle" ? actionData : null,
+  onValidate: ({ formData }) => parseWithValibot(formData, { schema: signupSchema }),
+})`,
+      note: "The type argument says what the fields are, not where they are checked. The check reads both spellings — until task #163 it read only the untyped one, which meant it was quiet on most real forms.",
+    },
   ],
   exceptions: [
+    {
+      scope: "Your copy of the ui-lib component source (components/ui/**)",
+      paths: ["src/components/**", "components/ui/**"],
+      reason:
+        "A ui-lib form is a control surface, not a submission. table-controls.tsx builds six of them — the search box, the column picker, a column's filter panel, the page-size picker, the row editor and the cell editor — and every one ends in onSubmit: event.preventDefault(). They use Conform for field metadata and validation, not for a round trip; the query they produce goes back to the caller through onQueryChange, and it is the caller's route that has an action to validate against. There is no lastResult for them to carry and nowhere for one to come from — which is the \"no server side at all\" exception below, arriving at an address. It is on the record rather than in this repo's local scopes because the file is vendored verbatim: a consumer who installs table-controls owns the same six calls under their own components/ui/, and a rule that reports them there is reporting the library's shape, not their code. (Nobody noticed until task #163: all six are written useForm<T>({ … }) and the check matched only the untyped call.)",
+    },
     {
       scope: "Gallery, story and example files",
       paths: ["**/*.stories.{tsx,jsx}", "**/*.examples.{tsx,jsx}"],
@@ -82,16 +101,27 @@ export async function action({ request }: Route.ActionArgs) {
     kind: "lint",
     // A useForm() call whose options carry no lastResult: the form has no way to
     // render what the server said, which in practice means nobody asked it.
+    //
+    // Matched as a JsCallExpression rather than through a `useForm($options)` call
+    // snippet, because a snippet is the whole call shape and `useForm<Schema>({ … })`
+    // is a different one — the type argument sits between the callee and the
+    // arguments, so the snippet matched only the untyped spelling and said nothing
+    // about the typed call Conform's docs lead with (task #163). Naming the two
+    // fields the rule actually reads leaves `type_arguments` unconstrained, so both
+    // spellings match and `$call` is still the whole call, type argument included.
     biome: {
       via: "plugin",
-      pattern: `\`useForm($options)\` as $call where {
+      pattern: `JsCallExpression(
+  callee = \`useForm\`,
+  arguments = JsCallArguments(args = [$options])
+) as $call where {
   $options <: JsObjectExpression(),
   $options <: not contains \`lastResult\``,
     },
     message:
       "useForm without lastResult: this form cannot display anything the server says, which in practice means the server is not validating. Parse the same schema in your route action, return submission.reply(), and pass it here as lastResult. See https://ui-lib.quebi.de/rules/validate-on-the-server-with-the-same-schema",
-    grep: "useForm\\(",
-    note: "The check looks for the missing option, which is a proxy: it cannot confirm your action actually re-parses the schema, and it will fire on a form that is genuinely client-only (scope that away with the exceptions rather than switching it off). It only reads options written inline — useForm(options) with the object in a variable is skipped on purpose, because the alternative is reporting every such call whether or not it passes lastResult. Reading it the other way round is the useful part: a form that passes has somewhere to put the server's answer.",
+    grep: "useForm\\s*[<(]",
+    note: "The check looks for the missing option, which is a proxy: it cannot confirm your action actually re-parses the schema, and it will fire on a form that is genuinely client-only (scope that away with the exceptions rather than switching it off). It only reads options written inline — useForm(options) with the object in a variable is skipped on purpose, because the alternative is reporting every such call whether or not it passes lastResult. A type argument is not a blind spot: useForm({ … }) and useForm<Schema>({ … }) are read the same way. Reading it the other way round is the useful part: a form that passes has somewhere to put the server's answer.",
   },
   tags: ["forms", "conform", "validation", "security", "tier-3"],
 }

@@ -163,8 +163,36 @@ const [form, fields] = useForm({
     expect(fires(SERVER, `const [form] = useForm({ lastResult: props.actionData })\n`)).toBe(false)
   })
 
+  test("true positive: the typed call, which is the one Conform's docs lead with", () => {
+    // useForm<Schema>({ … }) is what gets you typed fields, so it is what apps
+    // write. The check matched only the untyped call until task #163 and was
+    // therefore silent on most real forms — the security rule least worth losing.
+    const code = `const [form, fields] = useForm<SignupSchema>({
+  onValidate: ({ formData }) => parseWithValibot(formData, { schema }),
+})
+`
+    expect(fires(SERVER, code)).toBe(true)
+  })
+
+  test("true negative: the typed call with lastResult threaded back", () => {
+    const code = `const [form, fields] = useForm<SignupSchema>({ lastResult: props.actionData })\n`
+    expect(fires(SERVER, code)).toBe(false)
+  })
+
   test("no false positive: an unrelated hook call named differently", () => {
     expect(fires(SERVER, `const form = useFormState({ onValidate: fn })\n`)).toBe(false)
+  })
+
+  test("no false positive: the same unrelated hook with a type argument", () => {
+    // Matching the call by callee and arguments must not widen to a prefix.
+    expect(fires(SERVER, `const form = useFormState<Shape>({ onValidate: fn })\n`)).toBe(false)
+  })
+
+  test("the library source is exempt — its forms have no server to post to", () => {
+    // table-controls.tsx builds six useForm<T>({ … }) calls that all end in
+    // preventDefault(); the record excepts the layer, and it is vendored verbatim.
+    const code = `const [form, fields] = useForm<{ q: string }>({ defaultValue: { q: value } })\n`
+    expect(fires(SERVER, code, "src/components/table-controls.tsx")).toBe(false)
   })
 
   test("known blind spot: options passed as a variable are invisible", () => {
@@ -262,6 +290,21 @@ describe(GATE, () => {
   test("true negative: gated on a fetcher's state", () => {
     const code = `const [form] = useForm({
   lastResult: fetcher.state === "idle" ? fetcher.data : null,
+})
+`
+    expect(fires(GATE, code)).toBe(false)
+  })
+
+  test("true positive: the typed call, ungated all the same", () => {
+    // Same blind spot, same fix (task #163): the type argument says what the
+    // fields are, not when the result may be applied.
+    const code = `const [form, fields] = useForm<SignupSchema>({ lastResult })\n`
+    expect(fires(GATE, code)).toBe(true)
+  })
+
+  test("true negative: the typed call, gated on the navigation state", () => {
+    const code = `const [form] = useForm<SignupSchema>({
+  lastResult: navigation.state === "idle" ? lastResult : null,
 })
 `
     expect(fires(GATE, code)).toBe(false)

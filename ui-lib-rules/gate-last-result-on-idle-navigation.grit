@@ -26,7 +26,10 @@
 
 language js;
 
-`useForm($options)` as $call where {
+JsCallExpression(
+  callee = `useForm`,
+  arguments = JsCallArguments(args = [$options])
+) as $call where {
   $options <: JsObjectExpression(),
   $options <: contains bubble or {
     JsPropertyObjectMember(name = $name, value = $value) where {
