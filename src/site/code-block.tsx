@@ -1,9 +1,9 @@
 import { useState } from "react"
 import { Check, Copy } from "lucide-react"
-import { OverlayScrollbarsComponent } from "overlayscrollbars-react"
 import { Button } from "@/components/button"
 import { Card } from "@/components/card"
 import { cn } from "@/lib/utils"
+import { ScrollSurface } from "@/site/scroll-surface"
 
 interface CodeBlockProps {
   /** Pre-highlighted Shiki HTML (from the build-time API). */
@@ -47,14 +47,10 @@ export function CodeBlock({ html, code, className }: CodeBlockProps) {
         {copied ? <Check data-slot="icon" /> : <Copy data-slot="icon" />}
         {copied ? "Copied" : "Copy"}
       </Button>
-      <OverlayScrollbarsComponent
-        defer
-        options={{ scrollbars: { theme: "os-theme-quebi", autoHide: "leave", autoHideDelay: 600 } }}
-        className="code-block max-h-150 p-5 text-sm leading-relaxed [&_pre]:bg-transparent! [&_pre]:outline-none"
-      >
+      <ScrollSurface className="code-block max-h-150 p-5 text-sm leading-relaxed [&_pre]:bg-transparent! [&_pre]:outline-none">
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: `html` is Shiki output produced at build time by scripts/generate-api.ts from source in this repo — there is no path by which user input reaches it. */}
         <div dangerouslySetInnerHTML={{ __html: html }} />
-      </OverlayScrollbarsComponent>
+      </ScrollSurface>
     </Card>
   )
 }
