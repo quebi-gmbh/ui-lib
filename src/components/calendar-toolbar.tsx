@@ -1,12 +1,15 @@
 "use client"
 
-import type { CalendarDate, DateDuration } from "@internationalized/date"
+import type { CalendarDate, DateDuration, DateValue } from "@internationalized/date"
 import { today } from "@internationalized/date"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { useState } from "react"
 import { useLocale } from "react-aria-components"
 import { Button } from "@/components/button"
+import { Calendar } from "@/components/calendar"
 import { dayToDate, DEFAULT_CALENDAR_TIME_ZONE } from "@/components/calendar-shell"
+import { MonthPicker } from "@/components/month-picker"
+import { Popover, PopoverContent } from "@/components/popover"
 import { ToggleGroup, ToggleGroupItem } from "@/components/toggle-group"
 import { getDateTimeFormat } from "@/lib/intl"
 import { cn } from "@/lib/utils"
@@ -32,8 +35,30 @@ import { cn } from "@/lib/utils"
  * reused here: all three read react-aria's `CalendarStateContext`, so they only
  * work *inside* a `<Calendar>` and there is no such state above a week grid.
  * What is shared is the vocabulary — a chevron pair around a label — not the
- * code.
+ * code. `labelVariant="picker"` therefore mounts a `<Calendar>` of its own
+ * inside a popover rather than borrowing one of those three (task #166).
  */
+
+/**
+ * How the date label is drawn.
+ *
+ * - `static` — a `<span>`. The default, so no existing view moves.
+ * - `picker` — a button opening a date grid in a popover, the way `Calendar`'s
+ *   own header opens the Month Picker (task #160). Without it the only way to
+ *   another date is `Today` or one chevron press at a time.
+ */
+export type CalendarToolbarLabelVariant = "static" | "picker"
+
+/**
+ * Which grid the picker opens.
+ *
+ * `day` is a `Calendar` and `month` is a `MonthPicker`, and the choice belongs
+ * to whoever knows what the label names: `MonthView`'s heading reads
+ * `September 2026`, so a day grid there would ask for something the heading
+ * does not say and hand back a date the month grid cannot show. The other
+ * three views are anchored on a day and get `day`.
+ */
+export type CalendarToolbarPickerGranularity = "day" | "month"
 
 /** The views a toolbar can switch between. A subset is fine; the order is yours. */
 export type CalendarViewName = "day" | "week" | "month" | "timeline"
@@ -48,6 +73,36 @@ const DEFAULT_VIEW_LABELS: Record<CalendarViewName, string> = {
 export interface CalendarToolbarProps {
   /** What you are looking at — usually `calendarRangeLabel(...)`. */
   label: React.ReactNode
+  /**
+   * Draw the label as a date picker instead of as text. Default `static`.
+   *
+   * `picker` needs `date` *and* `onDateChange`: the toolbar owns no state, so
+   * with either missing there is nothing to open the grid on or to report a
+   * choice to, and the label falls back to `static`. That fallback is not the
+   * trap the view switcher had — the static label carries exactly the same
+   * text, so nothing that looks pressable is left behind.
+   *
+   * A custom `label` is *wrapped* rather than ignored or warned about. `label`
+   * says what you are looking at and `date` says where the picker opens, and
+   * the two are independent: a page whose heading reads `Week 39 · Q3` still
+   * wants to jump to an arbitrary day, and silently dropping the variant is
+   * the class of bug task #169 was about.
+   */
+  labelVariant?: CalendarToolbarLabelVariant
+  /** Where the picker opens, and what it reports relative to. */
+  date?: CalendarDate
+  /** Called with the day (or month) chosen in the picker. `useCalendarNavigation().goTo`. */
+  onDateChange?: (date: CalendarDate) => void
+  /** Day grid or month grid. Default `day`; `MonthView` passes `month`. */
+  pickerGranularity?: CalendarToolbarPickerGranularity
+  /** Accessible name for the grid inside the popover — the place to translate it. */
+  pickerLabel?: string
+  /** Dates before this cannot be picked. */
+  minValue?: DateValue
+  /** Dates after this cannot be picked. */
+  maxValue?: DateValue
+  /** Disable every control the toolbar draws. */
+  isDisabled?: boolean
   /** The active view. Omit to hide the switcher. */
   view?: CalendarViewName
   /** Which switches to offer. Defaults to all four. */
@@ -70,6 +125,14 @@ export interface CalendarToolbarProps {
 
 export function CalendarToolbar({
   label,
+  labelVariant = "static",
+  date,
+  onDateChange,
+  pickerGranularity = "day",
+  pickerLabel,
+  minValue,
+  maxValue,
+  isDisabled,
   view,
   views = ["day", "week", "month", "timeline"],
   viewLabels,
@@ -90,26 +153,53 @@ export function CalendarToolbar({
     >
       <div className="flex items-center gap-2">
         {onToday ? (
-          <Button intent="outline" size="sm" onPress={onToday}>
+          <Button intent="outline" size="sm" isDisabled={isDisabled} onPress={onToday}>
             {todayLabel}
           </Button>
         ) : null}
         {onPrevious ? (
-          <Button intent="ghost" size="sm" isCircle aria-label={previousLabel} onPress={onPrevious}>
+          <Button
+            intent="ghost"
+            size="sm"
+            isCircle
+            aria-label={previousLabel}
+            isDisabled={isDisabled}
+            onPress={onPrevious}
+          >
             <ChevronLeft data-slot="icon" className="size-4" aria-hidden="true" />
           </Button>
         ) : null}
         {onNext ? (
-          <Button intent="ghost" size="sm" isCircle aria-label={nextLabel} onPress={onNext}>
+          <Button
+            intent="ghost"
+            size="sm"
+            isCircle
+            aria-label={nextLabel}
+            isDisabled={isDisabled}
+            onPress={onNext}
+          >
             <ChevronRight data-slot="icon" className="size-4" aria-hidden="true" />
           </Button>
         ) : null}
-        <span
-          data-slot="calendar-toolbar-label"
-          className="font-semibold text-quebi-fg tracking-tight"
-        >
-          {label}
-        </span>
+        {labelVariant === "picker" && date && onDateChange ? (
+          <CalendarToolbarPicker
+            label={label}
+            date={date}
+            onDateChange={onDateChange}
+            granularity={pickerGranularity}
+            pickerLabel={pickerLabel}
+            minValue={minValue}
+            maxValue={maxValue}
+            isDisabled={isDisabled}
+          />
+        ) : (
+          <span
+            data-slot="calendar-toolbar-label"
+            className="font-semibold text-quebi-fg tracking-tight"
+          >
+            {label}
+          </span>
+        )}
       </div>
 
       <div className="flex items-center gap-2">
@@ -118,7 +208,7 @@ export function CalendarToolbar({
             size="xs"
             aria-label="Calendar view"
             disallowEmptySelection
-            isDisabled={!onViewChange}
+            isDisabled={isDisabled || !onViewChange}
             selectedKeys={[view]}
             onSelectionChange={(keys) => {
               const next = [...keys][0]
@@ -135,6 +225,98 @@ export function CalendarToolbar({
         {children}
       </div>
     </div>
+  )
+}
+
+interface CalendarToolbarPickerProps {
+  label: React.ReactNode
+  date: CalendarDate
+  onDateChange: (date: CalendarDate) => void
+  granularity: CalendarToolbarPickerGranularity
+  pickerLabel: string | undefined
+  minValue: DateValue | undefined
+  maxValue: DateValue | undefined
+  isDisabled: boolean | undefined
+}
+
+/**
+ * The date label as a trigger, and the grid it opens.
+ *
+ * Its own component because the open state is a hook and the label is a
+ * conditional. Shaped after `Calendar`'s `SelectMonthYear`, down to the two
+ * things that are easy to get wrong there:
+ *
+ * - **No `aria-label` on the trigger.** It would *replace* the button's own
+ *   text as the accessible name, and "Sunday, 20 September 2026" is the more
+ *   useful of the two; `aria-expanded` already says it opens something. The
+ *   stable handle for a test or a restyle is `data-slot`, as everywhere else.
+ * - **The popover closes in `onChange`.** The toolbar keeps no date, so the
+ *   choice goes upward and the surface gets out of the way; leaving it open
+ *   would sit a grid over the view the press just changed.
+ *
+ * A month choice keeps the day the view was anchored on. `MonthPicker` reports
+ * the first of the month because a month is all it was asked for, but the
+ * anchor is a date — dropping to the 1st would silently move a consumer who
+ * switches from Month back to Day. `era` travels with `year` and `month`: in an
+ * era calendar the year counts from the start of the era, so two different
+ * years can both be year 1.
+ */
+function CalendarToolbarPicker({
+  label,
+  date,
+  onDateChange,
+  granularity,
+  pickerLabel,
+  minValue,
+  maxValue,
+  isDisabled,
+}: CalendarToolbarPickerProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const gridLabel = pickerLabel ?? (granularity === "month" ? "Choose month" : "Choose date")
+
+  return (
+    <Popover isOpen={isOpen} onOpenChange={setIsOpen}>
+      <Button
+        data-slot="calendar-toolbar-label"
+        intent="outline"
+        size="sm"
+        isDisabled={isDisabled}
+        className="font-semibold tracking-tight"
+      >
+        {label}
+        <ChevronDown data-slot="icon" className="text-quebi-fg-muted" />
+      </Button>
+      <PopoverContent placement="bottom start" className="w-auto max-w-none p-3">
+        {granularity === "month" ? (
+          <MonthPicker
+            autoFocus
+            aria-label={gridLabel}
+            calendar={date.calendar}
+            value={date}
+            minValue={minValue}
+            maxValue={maxValue}
+            isDisabled={isDisabled}
+            onChange={(next) => {
+              setIsOpen(false)
+              onDateChange(date.set({ era: next.era, year: next.year, month: next.month }))
+            }}
+          />
+        ) : (
+          <Calendar
+            autoFocus
+            aria-label={gridLabel}
+            value={date}
+            minValue={minValue}
+            maxValue={maxValue}
+            isDisabled={isDisabled}
+            onChange={(next) => {
+              setIsOpen(false)
+              onDateChange(next)
+            }}
+          />
+        )}
+      </PopoverContent>
+    </Popover>
   )
 }
 

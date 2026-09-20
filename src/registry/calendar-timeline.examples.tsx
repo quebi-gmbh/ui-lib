@@ -109,6 +109,21 @@ const WithSelection = () => {
   )
 }
 
+const JumpToADay = () => {
+  const [day, setDay] = useState<CalendarDate>(() => today(TIME_ZONE))
+
+  return (
+    <CalendarTimeline
+      calendars={ROOMS.slice(0, 3)}
+      events={bookings(day)}
+      date={day}
+      onDateChange={setDay}
+      labelVariant="picker"
+      timeZone={TIME_ZONE}
+    />
+  )
+}
+
 export const calendarTimelineExamples: ComponentExample[] = [
   {
     title: "Rooms",
@@ -133,5 +148,11 @@ export const calendarTimelineExamples: ComponentExample[] = [
     description:
       "selectedEventId and onSelectionChange behave exactly as they do in Day, Week and Month — one event model, one selection contract, four views.",
     render: () => <WithSelection />,
+  },
+  {
+    title: "Jump to a day",
+    description:
+      "One chevron press is one day here, so a timeline is the view that most wants somewhere else to go. `labelVariant=\"picker\"` makes the date heading a button opening a calendar; the bookings are rebuilt for whichever day comes back.",
+    render: () => <JumpToADay />,
   },
 ]

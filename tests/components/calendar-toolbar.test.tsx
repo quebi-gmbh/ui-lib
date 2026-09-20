@@ -20,6 +20,7 @@
  * Dates are pinned rather than read from the clock, so a run in December does
  * not read differently from a run in June.
  */
+import { CalendarDate } from "@internationalized/date"
 import { describe, expect, test } from "bun:test"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
@@ -66,5 +67,89 @@ describe("the view switcher without a handler", () => {
     await user.click(option("Month"))
 
     expect(seen).toEqual(["month"])
+  })
+})
+
+/** Sunday, 20 September 2026 — pinned, so a run in December reads the same. */
+const SEPTEMBER = new CalendarDate(2026, 9, 20)
+
+/**
+ * The trigger has no `aria-label`: it would replace the button's own text as
+ * the accessible name, and the formatted date is the more useful of the two.
+ * `data-slot` is the stable handle, as it is for `Calendar`'s own header.
+ */
+const trigger = () => document.querySelector('[data-slot="calendar-toolbar-label"]') as HTMLElement
+
+describe("the picker variant", () => {
+  test("reports the day that was picked, and closes behind it", async () => {
+    const user = userEvent.setup()
+    const seen: CalendarDate[] = []
+    render(
+      <CalendarToolbar
+        label="Sunday, 20 September 2026"
+        labelVariant="picker"
+        date={SEPTEMBER}
+        onDateChange={(next) => seen.push(next)}
+      />,
+    )
+
+    expect(screen.queryByRole("application")).toBeNull()
+
+    await user.click(trigger())
+    await user.click(screen.getByRole("button", { name: "Tuesday, September 8, 2026" }))
+
+    expect(seen.map(String)).toEqual(["2026-09-08"])
+  })
+
+  test("opens a month grid instead when the heading names a month", async () => {
+    const user = userEvent.setup()
+    const seen: CalendarDate[] = []
+    render(
+      <CalendarToolbar
+        label="September 2026"
+        labelVariant="picker"
+        pickerGranularity="month"
+        date={SEPTEMBER}
+        onDateChange={(next) => seen.push(next)}
+      />,
+    )
+
+    await user.click(trigger())
+
+    // Twelve cells, not a day grid asking for something the heading never says.
+    expect(screen.getAllByRole("option")).toHaveLength(12)
+
+    await user.click(screen.getByRole("option", { name: "December 2026" }))
+
+    // The anchor day survives: MonthPicker reports the 1st because a month is
+    // all it was asked for, but the view was anchored on the 20th.
+    expect(seen.map(String)).toEqual(["2026-12-20"])
+  })
+
+  test("wraps a custom label rather than ignoring it", async () => {
+    const user = userEvent.setup()
+    render(
+      <CalendarToolbar
+        label={<span>Week 39</span>}
+        labelVariant="picker"
+        date={SEPTEMBER}
+        onDateChange={() => {}}
+      />,
+    )
+
+    // `label` says what you are looking at, `date` says where the picker opens.
+    // The two are independent, so the variant wraps whatever it is handed.
+    expect(trigger().textContent).toContain("Week 39")
+    await user.click(trigger())
+    expect(screen.getByRole("button", { name: "Tuesday, September 8, 2026" })).toBeInTheDocument()
+  })
+
+  test("falls back to the static label with nothing to report to", () => {
+    render(<CalendarToolbar label="Sunday, 20 September 2026" labelVariant="picker" />)
+
+    // No `date` and no `onDateChange` means there is nothing to open the grid
+    // on and nowhere to send a choice. The span carries the same text, so
+    // unlike the old view switcher nothing pressable is left behind.
+    expect(trigger().tagName).toBe("SPAN")
   })
 })

@@ -16,6 +16,7 @@ import {
 } from "@/components/calendar-shell"
 import {
   calendarMonthLabel,
+  type CalendarToolbarLabelVariant,
   CalendarToolbar,
   type CalendarViewName,
   useCalendarLocale,
@@ -81,6 +82,13 @@ export interface MonthViewProps<E extends CalendarEvent = CalendarEvent> {
   views?: readonly CalendarViewName[]
   onViewChange?: (view: CalendarViewName) => void
   label?: React.ReactNode
+  /**
+   * Make the toolbar's heading a picker. Default "static".
+   *
+   * A month grid, not a day one: the heading here reads `September 2026`, and
+   * a day picker would ask for a day this grid never shows the choice of.
+   */
+  labelVariant?: CalendarToolbarLabelVariant
   className?: string
 }
 
@@ -110,6 +118,7 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
   views,
   onViewChange,
   label,
+  labelVariant,
   className,
 }: MonthViewProps<E>) {
   const locale = useCalendarLocale(localeProp)
@@ -134,6 +143,10 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
       {showToolbar ? (
         <CalendarToolbar
           label={label ?? calendarMonthLabel(navigation.date, { locale, timeZone })}
+          labelVariant={labelVariant}
+          pickerGranularity="month"
+          date={navigation.date}
+          onDateChange={navigation.goTo}
           view={view}
           views={views}
           onViewChange={onViewChange}
