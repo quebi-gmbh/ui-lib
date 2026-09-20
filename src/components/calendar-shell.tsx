@@ -10,7 +10,7 @@ import {
   type ZonedDateTime,
 } from "@internationalized/date"
 import { useEffect, useMemo, useState } from "react"
-import { Button, useLocale } from "react-aria-components"
+import { Button, Dialog, Heading, useLocale } from "react-aria-components"
 import {
   type CalendarColorName,
   type CalendarEvent,
@@ -18,6 +18,7 @@ import {
   type DaySegment,
   type EventBand,
   eventsOnDay,
+  isAllDayEvent,
   limitLanes,
   MINUTES_PER_DAY,
   packBands,
@@ -26,6 +27,7 @@ import {
 } from "@/lib/calendar"
 import { getDateTimeFormat } from "@/lib/intl"
 import { cn } from "@/lib/utils"
+import { Popover, PopoverContent } from "@/components/popover"
 
 /**
  * CalendarShell — quebi design system
@@ -447,6 +449,8 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
             allBands={bands}
             segments={segments}
             calendars={calendars}
+            locale={locale}
+            timeZone={timeZone}
             columns={columns}
             selectedId={selection.value}
             moreLabel={moreLabel}
@@ -728,6 +732,8 @@ interface AllDayBandProps<E extends CalendarEvent> {
   segments: readonly DaySegment<E>[]
   hiddenPerDay: number[]
   calendars: readonly CalendarSource[] | undefined
+  locale: string
+  timeZone: string
   columns: React.CSSProperties
   selectedId: string | null
   moreLabel: (count: number) => string
@@ -743,6 +749,8 @@ function AllDayBand<E extends CalendarEvent>({
   segments,
   hiddenPerDay,
   calendars,
+  locale,
+  timeZone,
   columns,
   selectedId,
   moreLabel,
@@ -806,13 +814,30 @@ function AllDayBand<E extends CalendarEvent>({
           {days.map((day, index) => (
             <div key={day.toString()} className="px-1">
               {(hiddenPerDay[index] ?? 0) > 0 ? (
-                <MoreLink
-                  count={hiddenPerDay[index] ?? 0}
-                  label={moreLabel}
-                  onPress={() =>
-                    onMoreClick?.(day, eventsOnDay(allBands, segments, index))
-                  }
-                />
+                // Supplying `onMoreClick` says the consumer owns what "+N more"
+                // does — the documented "switch to this day" hook — so the
+                // library draws no panel behind it. Without it the panel is the
+                // default, which is the only reading under which the affordance
+                // does something on its own.
+                onMoreClick ? (
+                  <MoreLink
+                    count={hiddenPerDay[index] ?? 0}
+                    label={moreLabel}
+                    onPress={() => onMoreClick(day, eventsOnDay(allBands, segments, index))}
+                  />
+                ) : (
+                  <MoreLink count={hiddenPerDay[index] ?? 0} label={moreLabel}>
+                    <DayOverflowPanel
+                      day={day}
+                      events={eventsOnDay(allBands, segments, index)}
+                      calendars={calendars}
+                      locale={locale}
+                      timeZone={timeZone}
+                      selectedId={selectedId}
+                      onActivate={onActivate}
+                    />
+                  </MoreLink>
+                )
               ) : null}
             </div>
           ))}
@@ -857,19 +882,170 @@ export function CalendarLegend({ calendars, className }: CalendarLegendProps) {
   )
 }
 
+export interface CalendarEventRowProps<E extends CalendarEvent = CalendarEvent> {
+  event: E
+  calendars: readonly CalendarSource[] | undefined
+  locale: string
+  timeZone: string
+  isSelected: boolean
+  onActivate: (event: E) => void
+  /** Geometry — where the row sits and which of its corners are cut. */
+  className?: string
+  style?: React.CSSProperties
+  /** `data-slot`; the month grid's chips answer to `calendar-chip`. */
+  slot?: string
+}
+
+/**
+ * One event on one line: a dot, a time and a title.
+ *
+ * A timed event is a dot, a time and a title on a transparent chip — the shape
+ * that reads as "at 09:00" rather than as "all morning". An all-day or multi-day
+ * one is the filled band, because it genuinely occupies the days it covers.
+ *
+ * Two things draw an event this way and they disagree about nothing except
+ * where it goes: the month grid positions it absolutely from its band geometry,
+ * and a "+N more" panel stacks it in a static list. So position is the caller's
+ * (`className` and `style`) and everything that makes it *an event* — the
+ * palette, the dot, the time, the selected ring — is here, once. Reusing the
+ * chip as-is was the alternative, and it would have meant a list of absolutely
+ * positioned rows all sitting on top of each other.
+ */
+export function CalendarEventRow<E extends CalendarEvent>({
+  event,
+  calendars,
+  locale,
+  timeZone,
+  isSelected,
+  onActivate,
+  className,
+  style,
+  slot = "calendar-chip",
+}: CalendarEventRowProps<E>) {
+  const palette = CALENDAR_COLORS[resolveEventColor(event, calendars)]
+  const filled = isAllDayEvent(event)
+
+  return (
+    <Button
+      data-slot={slot}
+      data-event-id={event.id}
+      onPress={() => onActivate(event)}
+      style={style}
+      className={cn(
+        "flex h-5 cursor-pointer items-center gap-1.5 overflow-hidden px-1.5 text-left text-xs",
+        "transition-colors duration-150",
+        "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
+        filled ? cn(palette.band, "border-l-2", palette.edge) : "hover:bg-quebi-surface/[0.06]",
+        // Selection is an outline, not the inset ring focus uses: it sits
+        // outside the border box, so it neither overpaints `edge` nor vanishes
+        // when the same row takes focus. `outline-solid` is load-bearing — it
+        // is what displaces the `outline-none` above, which would otherwise
+        // leave the outline styled away (task #168).
+        isSelected && cn("outline-2 outline-solid outline-offset-0", palette.selected),
+        className,
+      )}
+    >
+      {filled ? null : (
+        <span className={cn("size-1.5 shrink-0 rounded-full", palette.dot)} aria-hidden="true" />
+      )}
+      {filled ? null : (
+        <span className="shrink-0 text-quebi-fg-subtle tabular-nums">
+          {formatEventTime(event.start, locale, timeZone)}
+        </span>
+      )}
+      <span className="truncate font-semibold text-quebi-fg">{event.title}</span>
+    </Button>
+  )
+}
+
+export interface DayOverflowPanelProps<E extends CalendarEvent = CalendarEvent> {
+  day: CalendarDate
+  events: readonly E[]
+  calendars: readonly CalendarSource[] | undefined
+  locale: string
+  timeZone: string
+  selectedId: string | null
+  onActivate: (event: E) => void
+}
+
+/**
+ * What a "+N more" opens onto: the date, and everything on it.
+ *
+ * Everything, not only what the cell hid — a list that started at the fourth
+ * event would be a list of what the layout happened to run out of room for, and
+ * it is the same payload `onMoreClick` has always been handed. Activating a row
+ * closes the panel, because the question it was opened to ask has been answered
+ * and the answer is behind it.
+ */
+export function DayOverflowPanel<E extends CalendarEvent>({
+  day,
+  events,
+  calendars,
+  locale,
+  timeZone,
+  selectedId,
+  onActivate,
+}: DayOverflowPanelProps<E>) {
+  return (
+    <Dialog data-slot="calendar-day-panel" className="flex flex-col gap-1 p-2 outline-none">
+      {({ close }) => (
+        <>
+          <Heading slot="title" className="px-1.5 pb-1 font-semibold text-quebi-fg text-xs">
+            {getDateTimeFormat(locale, {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              timeZone,
+            }).format(dayToDate(day, timeZone))}
+          </Heading>
+          {events.map((event) => (
+            <CalendarEventRow
+              key={event.id}
+              event={event}
+              calendars={calendars}
+              locale={locale}
+              timeZone={timeZone}
+              isSelected={selectedId === event.id}
+              onActivate={(activated) => {
+                close()
+                onActivate(activated)
+              }}
+              className="w-full rounded-quebi-sm"
+              slot="calendar-day-event"
+            />
+          ))}
+        </>
+      )}
+    </Dialog>
+  )
+}
+
 export interface MoreLinkProps {
   count: number
   label: (count: number) => string
+  /** Fires on press. Only reachable when the link opens no panel of its own. */
   onPress?: () => void
+  /**
+   * The panel the link opens, if it opens one.
+   *
+   * Given children the link is a popover trigger, and react-aria supplies
+   * `aria-expanded`, focus into the panel, focus contained while it is open,
+   * Escape to dismiss and focus back on the trigger on the way out — none of
+   * which a bare button can claim. (It sets no `aria-haspopup`: react-aria
+   * omits it for a dialog trigger, where `aria-expanded` is the signal.) Given
+   * no children it stays that bare button, which is what keeps `onMoreClick`
+   * the consumer's to own.
+   */
+  children?: React.ReactNode
 }
 
 /** The "+N more" affordance, shared by the all-day band and the month cells. */
-export function MoreLink({ count, label, onPress }: MoreLinkProps) {
-  return (
+export function MoreLink({ count, label, onPress, children }: MoreLinkProps) {
+  const trigger = (
     <Button
       data-slot="calendar-more"
       data-more-count={count}
-      onPress={() => onPress?.()}
+      onPress={children ? undefined : () => onPress?.()}
       className={cn(
         "w-full cursor-pointer truncate rounded-quebi-sm px-1 text-left text-xs",
         "text-quebi-fg-subtle transition-colors duration-150",
@@ -879,6 +1055,22 @@ export function MoreLink({ count, label, onPress }: MoreLinkProps) {
     >
       {label(count)}
     </Button>
+  )
+
+  if (!children) return trigger
+
+  return (
+    <Popover>
+      {trigger}
+      {/* A cell is narrower than the day it holds, so `min-w-(--trigger-width)`
+          alone would draw a panel the width of a "+3 more". The cap is the
+          popover's own `max-w-xs`, and `maxHeight` hands react-aria the ceiling
+          it then shrinks further against the viewport — a busy day scrolls in
+          the popover's `quebi-scrollbar` rather than running off the screen. */}
+      <PopoverContent data-slot="calendar-more-panel" className="min-w-56" maxHeight={320}>
+        {children}
+      </PopoverContent>
+    </Popover>
   )
 }
 
