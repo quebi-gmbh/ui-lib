@@ -118,8 +118,36 @@ export interface CalendarTimelineProps<E extends CalendarEvent = CalendarEvent> 
   className?: string
 }
 
-/** The narrowest a bar is ever drawn. `buildRows` packs against the same minimum. */
-const MIN_BAR_WIDTH = 18
+/**
+ * The narrowest a bar is ever drawn, and so the smallest touch target it offers.
+ *
+ * 24px is the WCAG 2.5.8 minimum against a 26px-tall bar, and it is a floor on
+ * the *box*: `BarText` decides separately what fits inside it. `buildRows` packs
+ * against the same minimum — see `minSpanMinutes`.
+ */
+const MIN_BAR_WIDTH = 24
+
+/**
+ * Below this a bar shows no text at all; its name lives on `aria-label`/`title`.
+ *
+ * Measured against the rendered Outfit 12px face rather than guessed: at this
+ * width the content box is 36px (46 less `px-1` and the 2px edge), the ellipsis
+ * costs 9.7px, and an average Outfit glyph at 12px advances ~6.5px — so 36px is
+ * four characters and a "…". Below four characters a stub is not a word, it is
+ * texture, and the tooltip serves it better than the bar does.
+ */
+const BAR_TITLE_WIDTH = 46
+
+/**
+ * Below this a bar shows the title alone — the time is what goes first.
+ *
+ * The same arithmetic with the time added: a four-character title (36px), the
+ * `gap-1.5` between them (6px), the widest common time the library formats
+ * ("12:00 AM" in tabular figures, ~44px) and `px-2` plus the edge (18px).
+ * Also the width at which the bar can afford `px-2` at all — a bar with no room
+ * for its time has no room for its padding either.
+ */
+const BAR_TIME_WIDTH = 104
 
 /**
  * The narrowest an hour tick may be drawn.
@@ -258,13 +286,21 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
       : []
 
   const dayLabelFormat = getDateTimeFormat(locale, { ...dayLabelOptions(dayWidth), timeZone })
+  const dayNameFormat = getDateTimeFormat(locale, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    timeZone,
+  })
   const hourFormat = getDateTimeFormat(locale, { hour: "numeric", timeZone })
 
   const dayCells = visibleDays.map((current, dayIndex) => ({
     key: current.toString(),
     label: dayLabelFormat.format(atHour(current, 0, timeZone)),
+    name: dayNameFormat.format(atHour(current, 0, timeZone)),
     left: dayIndex * dayWidth,
   }))
+  const dayNames = dayCells.map((cell) => cell.name)
 
   const hourTicks = visibleDays.flatMap((current, dayIndex) =>
     tickHours.map((hour) => ({
@@ -418,37 +454,54 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                   // shown has to reach the reader another way: `aria-label` for
                   // a screen reader, `title` for a pointer. Without them the only
                   // way to find out what an 18px bar is was to click it.
+                  const name = barName(bar.span, dayNames, dayCount, locale, timeZone)
                   return (
-                    <Button
+                    // The geometry and the tooltip sit on the wrapper, not on the
+                    // button. `react-aria-components`' `Button` forwards exactly
+                    // five global attributes — dir, lang, hidden, inert,
+                    // translate — so a `title` on it is accepted by the types and
+                    // dropped in silence, which is the failure mode this repo has
+                    // a lint rule about. `aria-label` is labelable and does reach
+                    // the element, so the two channels are split across the two.
+                    <div
                       key={`${bar.span.event.id}:${bar.span.startDayIndex}:${bar.lane}`}
                       data-slot="calendar-bar"
                       data-event-id={bar.span.event.id}
-                      onPress={() => activate(bar.span.event)}
+                      title={name}
+                      className="absolute"
                       style={{
                         left: Math.max(0, Math.min(left, gridWidth - width)),
                         width,
                         top: 4 + bar.lane * laneHeight,
                         height: laneHeight - 4,
                       }}
-                      className={cn(
-                        "absolute flex cursor-pointer items-center gap-1.5 overflow-hidden px-2 text-left",
-                        "border-l-2 text-xs transition-colors duration-150",
-                        "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
-                        palette.block,
-                        palette.edge,
-                        bar.span.continuesBefore ? "rounded-l-none" : "rounded-l-quebi-sm",
-                        bar.span.continuesAfter ? "rounded-r-none" : "rounded-r-quebi-sm",
-                        selectedEventId === bar.span.event.id &&
-                          cn("outline-2 outline-solid outline-offset-0", palette.selected),
-                      )}
                     >
-                      <span className="truncate font-semibold text-quebi-fg">
-                        {bar.span.event.title}
-                      </span>
-                      <span className="shrink-0 text-quebi-fg-subtle tabular-nums">
-                        {formatEventTime(bar.span.event.start, locale, timeZone)}
-                      </span>
-                    </Button>
+                      <Button
+                        data-slot="calendar-bar-button"
+                        aria-label={name}
+                        onPress={() => activate(bar.span.event)}
+                        className={cn(
+                          "flex h-full w-full cursor-pointer items-center gap-1.5 overflow-hidden text-left",
+                          width < BAR_TIME_WIDTH ? "px-1" : "px-2",
+                          "border-l-2 text-xs transition-colors duration-150",
+                          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
+                          palette.block,
+                          palette.edge,
+                          bar.span.continuesBefore ? "rounded-l-none" : "rounded-l-quebi-sm",
+                          bar.span.continuesAfter ? "rounded-r-none" : "rounded-r-quebi-sm",
+                          selectedEventId === bar.span.event.id &&
+                            cn("outline-2 outline-solid outline-offset-0", palette.selected),
+                        )}
+                      >
+                        <BarText
+                          event={bar.span.event}
+                          allDay={bar.span.allDay}
+                          width={width}
+                          locale={locale}
+                          timeZone={timeZone}
+                        />
+                      </Button>
+                    </div>
                   )
                 })}
 
@@ -465,6 +518,47 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
         </div>
       </div>
     </div>
+  )
+}
+
+interface BarTextProps {
+  event: CalendarEvent
+  allDay: boolean
+  width: number
+  locale: string
+  timeZone: string
+}
+
+/**
+ * Title and time, dropped one at a time as the bar gets narrower (task #164).
+ *
+ * The horizontal counterpart of `CalendarShell`'s `BlockText`, and it keeps that
+ * one's rule: the title is never the thing that goes. The bar used to render
+ * both unconditionally with `truncate` on the title and `shrink-0` on the time,
+ * which under flex is exactly backwards — the interesting half collapsed to
+ * nothing first and a 15-minute booking was a coloured sliver saying "09:00".
+ *
+ * Dropping the time is done here rather than by flex because flex cannot drop a
+ * child, only squash it, and a time squashed to `0…` is noise where an absent
+ * one is merely absent. What flex still does is give the title the slack: it is
+ * `flex-1 min-w-0`, so it takes every pixel the time does not need.
+ *
+ * Below `BAR_TITLE_WIDTH` nothing is drawn — the bar is a sliver by
+ * construction — and the name reaches the reader through the `aria-label` and
+ * `title` the caller puts on the button.
+ */
+function BarText({ event, allDay, width, locale, timeZone }: BarTextProps) {
+  if (width < BAR_TITLE_WIDTH) return null
+
+  return (
+    <>
+      <span className="min-w-0 flex-1 truncate font-semibold text-quebi-fg">{event.title}</span>
+      {allDay || width < BAR_TIME_WIDTH ? null : (
+        <span className="shrink-0 text-quebi-fg-subtle tabular-nums">
+          {formatEventTime(event.start, locale, timeZone)}
+        </span>
+      )}
+    </>
   )
 }
 
@@ -622,6 +716,41 @@ function dayLabelOptions(dayWidth: number): Intl.DateTimeFormatOptions {
 /** A day at a given hour, as the `Date` the Intl formatters take. */
 const atHour = (day: CalendarDate, hour: number, timeZone: string) =>
   toZoned(toCalendarDateTime(day, new Time(hour)), timeZone).toDate()
+
+/**
+ * What a bar is called, for a screen reader and for a hover.
+ *
+ * Everything the bar might have drawn and more: over a span the day is part of
+ * the answer, because "Standup, 09:00 – 09:15" on a thirty-day axis is only half
+ * of where it is.
+ */
+function barName<E extends CalendarEvent>(
+  span: TimelineSpan<E>,
+  dayNames: readonly string[],
+  dayCount: number,
+  locale: string,
+  timeZone: string,
+): string {
+  const parts = [span.event.title]
+
+  if (dayCount > 1) {
+    const from = dayNames[span.startDayIndex]
+    const to = dayNames[span.endDayIndex]
+    if (from && to) parts.push(from === to ? from : `${from} – ${to}`)
+  }
+
+  if (!span.allDay) {
+    parts.push(
+      `${formatEventTime(span.event.start, locale, timeZone)} – ${formatEventTime(
+        span.event.end,
+        locale,
+        timeZone,
+      )}`,
+    )
+  }
+
+  return parts.join(", ")
+}
 
 /**
  * The now-marker's position — which day of the span, and the clock minute.

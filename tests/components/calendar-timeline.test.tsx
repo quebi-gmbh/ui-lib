@@ -1,8 +1,11 @@
 /**
- * CalendarTimeline's multi-day axis (task #167).
+ * CalendarTimeline's bar text (task #164) and its multi-day axis (task #167).
  *
- * `tests/components/calendar-views.test.tsx` covers what the timeline shares
- * with the three grid views; this file covers what only it has.
+ * These two were reported separately and are one change: the ladder that decides
+ * what a bar can say has to work against the geometry the span produces, and a
+ * thirty-day span makes almost every bar a sliver. `tests/components/
+ * calendar-views.test.tsx` covers what the timeline shares with the three grid
+ * views; this file covers what only it has.
  *
  * Every render is given an explicit `locale`, `timeZone`, date and `now`, so
  * nothing here depends on the machine running it.
@@ -18,8 +21,9 @@ import {
 } from "@internationalized/date"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import type { CalendarSource } from "../../src/components/calendar-shell"
+import type { CalendarEvent, CalendarSource } from "../../src/components/calendar-shell"
 import { CalendarTimeline } from "../../src/components/calendar-timeline"
+import { calendarTimelineExamples } from "../../src/registry/calendar-timeline.examples"
 
 const ZONE = "Europe/Berlin"
 const LOCALE = "de-DE"
@@ -44,6 +48,123 @@ function blocks(container: HTMLElement, slot = "calendar-bar") {
     ]),
   )
 }
+
+/**
+ * The button inside a bar.
+ *
+ * A bar is two elements: the wrapper carries the geometry and the `title`, and
+ * the button inside it carries the surface, the classes and the `aria-label` —
+ * because `react-aria-components`' `Button` forwards only five global
+ * attributes and would drop a `title` in silence.
+ */
+const pressable = (bar: HTMLElement | undefined) =>
+  bar?.querySelector<HTMLElement>('[data-slot="calendar-bar-button"]') ?? null
+
+/**
+ * What a bar says at each width (task #164).
+ *
+ * The bar used to render its title and its time unconditionally at every width,
+ * with `truncate` on the title and `shrink-0` on the time — which under flex is
+ * exactly backwards. A 15-minute booking came out as an 18px box whose content
+ * box was 0px: both spans clipped away, colour the only channel, and the only
+ * way to find out what it was was to click it.
+ *
+ * So the assertions here are on the two things that were missing: that every bar
+ * carries its full name whether or not it has room to draw it, and that as the
+ * bar narrows the *time* is what goes. The thresholds the ladder uses were
+ * measured against the rendered Outfit 12px face; these widths are the ones the
+ * default `hourWidth` of 72 actually produces on a 6–22 axis.
+ */
+describe("CalendarTimeline bar text", () => {
+  const ladder: CalendarEvent[] = [
+    { id: "q", title: "Standup", start: at(MONDAY, 9), end: at(MONDAY, 9, 15), calendarId: "me" },
+    { id: "h", title: "One to one", start: at(MONDAY, 11), end: at(MONDAY, 11, 30), calendarId: "me" },
+    { id: "t", title: "Interview", start: at(MONDAY, 13), end: at(MONDAY, 13, 45), calendarId: "me" },
+    { id: "l", title: "Workshop", start: at(MONDAY, 15), end: at(MONDAY, 17), calendarId: "me" },
+  ]
+
+  const rendered = () => {
+    const { container } = render(
+      <CalendarTimeline
+        date={MONDAY}
+        calendars={CALENDARS.slice(0, 1)}
+        events={ladder}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+      />,
+    )
+    return blocks(container, "calendar-bar")
+  }
+
+  test("the widths are the ones the ladder is written against", () => {
+    const bars = rendered()
+    // 15 minutes computes to 18px, so the bar is held at the 24px floor.
+    expect(bars.get("q")?.style.width).toBe("24px")
+    expect(bars.get("h")?.style.width).toBe("34px")
+    expect(bars.get("t")?.style.width).toBe("52px")
+    expect(bars.get("l")?.style.width).toBe("142px")
+  })
+
+  test("every bar has an accessible name, including the ones with no room", () => {
+    const bars = rendered()
+    for (const [id, title] of [
+      ["q", "Standup"],
+      ["h", "One to one"],
+      ["t", "Interview"],
+      ["l", "Workshop"],
+    ] as const) {
+      const bar = bars.get(id)
+      // Title first, then the range — the thing a click used to be needed for.
+      const label = pressable(bar)?.getAttribute("aria-label")
+      expect(label).toMatch(new RegExp(`^${title}, \\d{1,2}:\\d{2} – \\d{1,2}:\\d{2}$`))
+      // And the same string as a tooltip, so a pointer can reach it too.
+      expect(bar?.getAttribute("title")).toBe(label ?? "")
+    }
+  })
+
+  test("a sliver draws no text rather than a clipped fragment of two spans", () => {
+    const bars = rendered()
+    expect(bars.get("q")?.textContent).toBe("")
+    expect(bars.get("h")?.textContent).toBe("")
+  })
+
+  test("the title is what survives — the time is dropped first", () => {
+    const bars = rendered()
+    // 52px: title only. The old markup dropped the title here and kept "13:00".
+    expect(bars.get("t")?.textContent).toBe("Interview")
+    expect(bars.get("t")?.textContent).not.toMatch(/\d{1,2}:\d{2}/)
+
+    // 142px: room for both, and the title still leads.
+    expect(bars.get("l")?.textContent).toContain("Workshop")
+    expect(bars.get("l")?.textContent).toMatch(/\d{1,2}:\d{2}/)
+  })
+
+  test("a bar with no room for its time has no room for its padding either", () => {
+    const bars = rendered()
+    expect(pressable(bars.get("t"))?.className).toContain("px-1")
+    expect(pressable(bars.get("l"))?.className).toContain("px-2")
+  })
+
+  test("the floor still does not push a late bar off the end of the axis", () => {
+    const { container } = render(
+      <CalendarTimeline
+        date={MONDAY}
+        calendars={CALENDARS.slice(0, 1)}
+        events={[
+          { id: "last", title: "Lock up", start: at(MONDAY, 21, 50), end: at(MONDAY, 21, 55), calendarId: "me" },
+        ]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+      />,
+    )
+    const bar = blocks(container, "calendar-bar").get("last")
+    // The 6–22 axis is 1152px wide; 24px of bar has to end exactly on it (#161).
+    expect(bar?.style.width).toBe("24px")
+    expect(bar?.style.left).toBe("1128px")
+  })
+})
 
 /** Every rendered bar in document order — multi-day events produce several. */
 const barList = (container: HTMLElement) =>
@@ -175,7 +296,8 @@ describe("CalendarTimeline over a span", () => {
     // Days 2 through 4 inclusive: from the start of day 2 to the end of day 4.
     expect(bar?.style.left).toBe("1200px")
     expect(bar?.style.width).toBe("1798px")
-    expect(bar?.textContent).toContain("Research offsite")
+    // It fills each day's window, so it has no time to show.
+    expect(bar?.textContent).toBe("Research offsite")
   })
 
   test("an event through midnight is one segment per day, cut at each edge", () => {
@@ -198,10 +320,10 @@ describe("CalendarTimeline over a span", () => {
     // they are not on the axis, so the seam is the day boundary itself.
     expect(bars[0]?.style.left).toBe("480px")
     expect(bars[0]?.style.width).toBe("118px")
-    expect(bars[0]?.className).toContain("rounded-r-none")
+    expect(pressable(bars[0])?.className).toContain("rounded-r-none")
     expect(bars[1]?.style.left).toBe("600px")
     expect(bars[1]?.style.width).toBe("58px")
-    expect(bars[1]?.className).toContain("rounded-l-none")
+    expect(pressable(bars[1])?.className).toContain("rounded-l-none")
   })
 
   test("no hour tick is drawn without room before the next one or the day's edge", () => {
@@ -246,5 +368,29 @@ describe("CalendarTimeline over a span", () => {
     span({ days: 3, onDateChange: (next: CalendarDate) => seen.push(next) })
     await userEvent.click(screen.getByRole("button", { name: "Next" }))
     expect(seen[0]?.toString()).toBe(MONDAY.add({ days: 3 }).toString())
+  })
+})
+
+/**
+ * The thirty-day example is a fixture that gets copied verbatim through
+ * `/api/components/calendar-timeline.json`, so it may not depend on the machine
+ * that renders it. Its recurring standup is generated rather than listed, and
+ * the first version of that loop asked `day.toDate(TIME_ZONE).getDay()` for the
+ * weekday — which reads the weekday of that *instant* in the runtime's zone, so
+ * on a UTC box midnight in Berlin fell on the day before and the standups ran
+ * Tuesday to Saturday. Counting them is the cheapest way to hold it.
+ */
+describe("the thirty-day example is the same everywhere", () => {
+  test("its standup falls on the 22 working days of the span and no others", () => {
+    const example = calendarTimelineExamples.find((entry) => entry.title === "Thirty days")
+    if (!example) throw new Error("the Thirty days example is gone")
+
+    const { container } = render(example.render())
+    const standups = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-slot="calendar-bar"]'),
+    ).filter((bar) => (bar.getAttribute("title") ?? "").startsWith("Standup"))
+
+    // Mon 21 Sep 2026 through Tue 20 Oct: four full working weeks plus two days.
+    expect(standups).toHaveLength(22)
   })
 })
