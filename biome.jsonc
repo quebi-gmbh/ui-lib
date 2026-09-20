@@ -272,6 +272,10 @@
       "includes": [
         "app/**/*.{tsx,jsx}",
         "src/**/*.{tsx,jsx}",
+        // validate-on-the-server-with-the-same-schema — A ui-lib form is a control surface, not a submission.
+        "!src/components/**",
+        // validate-on-the-server-with-the-same-schema — A ui-lib form is a control surface, not a submission.
+        "!components/ui/**",
         // validate-on-the-server-with-the-same-schema — A rendered example has no route action to post to, so it validates client-side by definition.
         "!**/*.stories.{tsx,jsx}",
         // validate-on-the-server-with-the-same-schema — A rendered example has no route action to post to, so it validates client-side by definition.
@@ -338,6 +342,7 @@
         // format-values-through-the-library — The formatters this rule points at are implemented there: FormattedNumber, FormattedDate and the Calendar's month/year labels format through Intl themselves — via the cached constructors in `@/lib/intl`, which build one formatter per (locale, options) pair instead of one per rendered value — which is what makes the rest of the codebase able not to.
         // bind-fields-through-conform — The conform-* variants are where the metadata is read off the field and put onto a control.
         // render-field-text-through-the-field — The conform-* variants and the field primitives are where this markup is supposed to live — they are the layer that renders the label, the description, and the error, and wires the ids between them.
+        // validate-on-the-server-with-the-same-schema — A ui-lib form is a control surface, not a submission.
         // seed-toggles-with-default-selected — That is the layer that reads the metadata off the field and names it onto a control.
         "components/ui/**",
         // no-raw-interactive-elements — Only <input>, and only there.
@@ -348,6 +353,7 @@
         // format-values-through-the-library — The formatters this rule points at are implemented there: FormattedNumber, FormattedDate and the Calendar's month/year labels format through Intl themselves — via the cached constructors in `@/lib/intl`, which build one formatter per (locale, options) pair instead of one per rendered value — which is what makes the rest of the codebase able not to.
         // bind-fields-through-conform — The conform-* variants are where the metadata is read off the field and put onto a control.
         // render-field-text-through-the-field — The conform-* variants and the field primitives are where this markup is supposed to live — they are the layer that renders the label, the description, and the error, and wires the ids between them.
+        // validate-on-the-server-with-the-same-schema — A ui-lib form is a control surface, not a submission.
         // seed-toggles-with-default-selected — That is the layer that reads the metadata off the field and names it onto a control.
         "src/components/**"
       ],

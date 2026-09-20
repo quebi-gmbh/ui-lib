@@ -131,7 +131,7 @@ export const localScopes: LocalScope[] = [
     includes: ["src/registry/og-scene.tsx"],
     rules: ["validate-on-the-server-with-the-same-schema"],
     reason:
-      "One file, one rule, for the same reason the tests entry exists: an OG scene is a still life photographed by scripts/screenshot-og.ts, and there is no route action behind it to return a lastResult. Every conform-* scene needs field metadata, which only useForm can produce, so OgForm calls it once here rather than thirty-two times — and this is where that concession is written down. Note that the check does not currently fire on the call anyway: its pattern matches `useForm($options)` and the call here is `useForm<T>(options)`, which the pattern misses. That is an accident, not the argument, and an entry that states the argument is what should survive the accident being fixed.",
+      "One file, one rule, for the same reason the tests entry exists: an OG scene is a still life photographed by scripts/screenshot-og.ts, and there is no route action behind it to return a lastResult. Every conform-* scene needs field metadata, which only useForm can produce, so OgForm calls it once here rather than thirty-two times — and this is where that concession is written down. This entry was written while the check could not fire on the call anyway — its pattern matched `useForm($options)` and missed the `useForm<T>({ … })` written here — on the argument that a scope stating why should outlive the accident that made it moot. Task #163 fixed the pattern, the check reaches this call now, and the entry is what is keeping it quiet.",
   },
   {
     includes: ["tests/conform-binding.test.tsx"],
