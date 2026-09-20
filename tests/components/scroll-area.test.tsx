@@ -158,7 +158,8 @@ describe("the quebi-scrollbar utility declares one scrollbar model per browser",
     // `:root, .dark`.
     //
     // The two systems have to move together: `quebi-scrollbar` paints every
-    // native overflow container and `.os-theme-quebi` paints the app shell's
+    // native overflow container — including the page scroller since tasks
+    // #180/#181 — and `.os-theme-quebi` paints the inner scroll areas'
     // OverlayScrollbars. Naming the same three variables is what makes that
     // structural rather than a promise in a comment — so what is pinned here
     // is that neither block spells a colour out for itself.

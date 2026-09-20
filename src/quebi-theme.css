@@ -617,12 +617,21 @@
   --quebi-exit-translate-x: calc(var(--spacing) * 80);
 }
 
-/* ---------------- Native scrollbar (dropdowns, scroll areas) ---------------- */
+/* ---------------- Native scrollbar (the page, dropdowns, scroll areas) -------- */
 /* The quebi native scrollbar: a 12px track carrying a 6px tinted pill that
    floats 3px clear of every edge. That is the same geometry as `.os-theme-quebi`
-   further down, so the native bars and the app shell's OverlayScrollbars read as
-   one system rather than two. Apply to any overflow container (list boxes,
-   menus, popovers, the ScrollArea viewport) so every scrollable surface matches.
+   further down, so the native bars and the inner surfaces' OverlayScrollbars
+   read as one system rather than two. Apply to any overflow container (list
+   boxes, menus, popovers, the ScrollArea viewport) so every scrollable surface
+   matches.
+
+   `<html>` is one of them: the page scroller is the platform's bar, painted
+   here, rather than an OverlayScrollbars instance on `document.body`. That
+   instance positioned `<html>`, and react-aria then placed every overlay that
+   flips above its trigger a whole document-minus-viewport too low (tasks #180,
+   #181 — the argument is in `root.tsx`, where the class is applied). `<html>`
+   also carries `scrollbar-gutter: stable`, which is what keeps the 12px the
+   native bar costs from appearing and vanishing with the page's length.
 
    The colour is `--q-scroll-thumb`, which both systems now name rather than
    each spelling out its own `color-mix`/`rgb()` (task #146). Two blocks that
@@ -719,6 +728,10 @@
    transparent track — matching the hairline borders used across the UI, and
    flipping with the theme the way those do.
    Applied via options.scrollbars.theme: "os-theme-quebi".
+
+   These are the *inner* scroll areas only — the two sidebars and the code
+   block, which want a bar that takes no layout width out of a column that has
+   none to give. The page scroller is native; see the utility above.
 
    These numbers are the source the `quebi-scrollbar` utility above copies: a
    12px track, a handle inset 3px on every side, fully rounded. Change one and
