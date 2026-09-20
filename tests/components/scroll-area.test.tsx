@@ -164,7 +164,12 @@ describe("the quebi-scrollbar utility declares one scrollbar model per browser",
     // is that neither block spells a colour out for itself.
     const source = await css.text()
     const body = await utilityBody()
-    const os = source.slice(source.indexOf(".os-theme-quebi {"))
+    // Bounded at the block's own closing brace rather than running to the end
+    // of the file: `.os-theme-quebi` happened to be last in `quebi-theme.css`,
+    // so an unbounded slice read whatever was appended after it as part of the
+    // block — and `task #179` in a comment is a three-digit hex colour.
+    const osStart = source.indexOf(".os-theme-quebi {")
+    const os = source.slice(osStart, source.indexOf("\n}", osStart) + 2)
 
     for (const token of ["--q-scroll-thumb", "--q-scroll-thumb-hover", "--q-scroll-thumb-active"]) {
       expect(body).toContain(`var(${token})`)
