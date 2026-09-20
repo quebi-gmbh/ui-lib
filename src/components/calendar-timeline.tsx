@@ -268,7 +268,7 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                         bar.segment.continuesBefore ? "rounded-l-none" : "rounded-l-quebi-sm",
                         bar.segment.continuesAfter ? "rounded-r-none" : "rounded-r-quebi-sm",
                         selectedEventId === bar.segment.event.id &&
-                          "ring-2 ring-quebi-brand-mark ring-inset",
+                          cn("outline-2 outline-solid outline-offset-0", palette.selected),
                       )}
                     >
                       <span className="truncate font-semibold text-quebi-fg">

@@ -68,6 +68,44 @@ import { cn } from "@/lib/utils"
  *   time as text, and a timeline row is labelled with the calendar's name, so
  *   the hue is a second signal rather than the signal.
  *
+ * **The wash is opaque.** A tint spelled `bg-blue-500/15` is 85% transparent, so
+ * the hour lines, the sub-slot lines and the column rules the grid draws *under*
+ * an event are all still legible through it — the bar reads as a pane of tinted
+ * glass laid over the grid rather than as an object sitting on it (task #165).
+ * Each entry therefore names the colour that tint *resolves to* over the page:
+ * `color-mix(in oklab, <hue> 15%, var(--color-quebi-bg))`, at alpha 1. The
+ * apparent colour is unchanged in both themes — `--color-quebi-bg` is the
+ * theme-aware token the surface is already painted in — but nothing shows
+ * through. `band` converts with `block`: the all-day band and the month chip sit
+ * over the day-column rules rather than over hour lines, which is the same
+ * defect with a different line under it.
+ *
+ * The eight pairs are written out rather than built by a helper because a
+ * Tailwind v4 class only exists if its full text appears in a scanned file. A
+ * helper interpolating the hue would emit `bg-[color-mix(…var(--color-blue-500)…)]`
+ * at runtime and Tailwind would never have generated a rule for it, so every bar
+ * would paint transparent. Theme tokens (`--q-calendar-tint-*`) would compile,
+ * but they would move eight values a consumer copying this file cannot see into
+ * a stylesheet they have to copy too — and self-containment is why the palette
+ * uses Tailwind's own scales in the first place.
+ *
+ * **Selection wears the event's own hue.** `selected` is the colour of the ring
+ * drawn round a selected event (task #168). It used to be `quebi-brand-mark`
+ * for every calendar, which made the highlight a second colour system arguing
+ * with the first — teal over a blue bar — and made selection indistinguishable
+ * from focus, which is that same brand ring. Focus keeps the brand mark;
+ * selection is now a saturated version of what the event is already painted in,
+ * so the two differ by hue as well as by position. It is an `outline-` rather
+ * than a `ring-` utility because the ring these views draw is *inset*, and an
+ * inset ring lands exactly on top of the 2px `edge` — selecting an event used
+ * to erase the one piece of chrome saying which calendar it belongs to. An
+ * outline sits outside the border box, so the accent survives being selected,
+ * and it rides a different CSS property from the focus ring, so a bar that is
+ * both focused and selected shows both. `brand` is the one entry whose value is
+ * chosen rather than derived: `-quebi-brand-mark`, matching its `edge`, and
+ * never bare `-quebi-brand`, which `tests/mark-contrast.test.ts` rejects for a
+ * stroke.
+ *
  * The scales here are Tailwind's rather than quebi tokens because quebi has one
  * accent, and one accent cannot tell eight calendars apart. That is the same
  * argument `chart.tsx` makes for its series palette, and the same exception
@@ -76,55 +114,63 @@ import { cn } from "@/lib/utils"
  */
 export const CALENDAR_COLORS: Record<
   CalendarColorName,
-  { block: string; edge: string; dot: string; band: string }
+  { block: string; edge: string; dot: string; band: string; selected: string }
 > = {
   blue: {
-    block: "bg-blue-500/15 hover:bg-blue-500/25",
+    block: "bg-[color-mix(in_oklab,var(--color-blue-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-blue-500)_25%,var(--color-quebi-bg))]",
     edge: "border-l-blue-500",
     dot: "bg-blue-500",
-    band: "bg-blue-500/20",
+    band: "bg-[color-mix(in_oklab,var(--color-blue-500)_20%,var(--color-quebi-bg))]",
+    selected: "outline-blue-500",
   },
   orange: {
-    block: "bg-orange-500/15 hover:bg-orange-500/25",
+    block: "bg-[color-mix(in_oklab,var(--color-orange-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-orange-500)_25%,var(--color-quebi-bg))]",
     edge: "border-l-orange-500",
     dot: "bg-orange-500",
-    band: "bg-orange-500/20",
+    band: "bg-[color-mix(in_oklab,var(--color-orange-500)_20%,var(--color-quebi-bg))]",
+    selected: "outline-orange-500",
   },
   brand: {
-    block: "bg-quebi-brand/15 hover:bg-quebi-brand/25",
+    block: "bg-[color-mix(in_oklab,var(--color-quebi-brand)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-quebi-brand)_25%,var(--color-quebi-bg))]",
     edge: "border-l-quebi-brand-mark",
     dot: "bg-quebi-brand",
-    band: "bg-quebi-brand/20",
+    band: "bg-[color-mix(in_oklab,var(--color-quebi-brand)_20%,var(--color-quebi-bg))]",
+    selected: "outline-quebi-brand-mark",
   },
   amber: {
-    block: "bg-amber-500/15 hover:bg-amber-500/25",
+    block: "bg-[color-mix(in_oklab,var(--color-amber-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-amber-500)_25%,var(--color-quebi-bg))]",
     edge: "border-l-amber-500",
     dot: "bg-amber-500",
-    band: "bg-amber-500/20",
+    band: "bg-[color-mix(in_oklab,var(--color-amber-500)_20%,var(--color-quebi-bg))]",
+    selected: "outline-amber-500",
   },
   pink: {
-    block: "bg-pink-500/15 hover:bg-pink-500/25",
+    block: "bg-[color-mix(in_oklab,var(--color-pink-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-pink-500)_25%,var(--color-quebi-bg))]",
     edge: "border-l-pink-500",
     dot: "bg-pink-500",
-    band: "bg-pink-500/20",
+    band: "bg-[color-mix(in_oklab,var(--color-pink-500)_20%,var(--color-quebi-bg))]",
+    selected: "outline-pink-500",
   },
   emerald: {
-    block: "bg-emerald-500/15 hover:bg-emerald-500/25",
+    block: "bg-[color-mix(in_oklab,var(--color-emerald-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-emerald-500)_25%,var(--color-quebi-bg))]",
     edge: "border-l-emerald-500",
     dot: "bg-emerald-500",
-    band: "bg-emerald-500/20",
+    band: "bg-[color-mix(in_oklab,var(--color-emerald-500)_20%,var(--color-quebi-bg))]",
+    selected: "outline-emerald-500",
   },
   violet: {
-    block: "bg-violet-500/15 hover:bg-violet-500/25",
+    block: "bg-[color-mix(in_oklab,var(--color-violet-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-violet-500)_25%,var(--color-quebi-bg))]",
     edge: "border-l-violet-500",
     dot: "bg-violet-500",
-    band: "bg-violet-500/20",
+    band: "bg-[color-mix(in_oklab,var(--color-violet-500)_20%,var(--color-quebi-bg))]",
+    selected: "outline-violet-500",
   },
   rose: {
-    block: "bg-rose-500/15 hover:bg-rose-500/25",
+    block: "bg-[color-mix(in_oklab,var(--color-rose-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-rose-500)_25%,var(--color-quebi-bg))]",
     edge: "border-l-rose-500",
     dot: "bg-rose-500",
-    band: "bg-rose-500/20",
+    band: "bg-[color-mix(in_oklab,var(--color-rose-500)_20%,var(--color-quebi-bg))]",
+    selected: "outline-rose-500",
   },
 }
 
@@ -598,7 +644,12 @@ function TimedBlock<E extends CalendarEvent>({
         // the two halves of one event read as one thing cut, not two events.
         segment.continuesBefore ? "rounded-t-none" : "rounded-tr-quebi-sm",
         segment.continuesAfter ? "rounded-b-none" : "rounded-br-quebi-sm",
-        isSelected && "ring-2 ring-quebi-brand-mark ring-inset",
+        // Selection is an outline, not the inset ring focus uses: it sits
+        // outside the border box, so it neither overpaints `edge` nor
+        // vanishes when the same block takes focus. `outline-solid` is
+        // load-bearing — it is what displaces the `outline-none` above,
+        // which would otherwise leave the outline styled away.
+        isSelected && cn("outline-2 outline-solid outline-offset-0", palette.selected),
       )}
     >
       <BlockText
@@ -733,9 +784,16 @@ function AllDayBand<E extends CalendarEvent>({
               "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
               palette.band,
               palette.edge,
-              band.continuesBefore ? "rounded-l-none" : "rounded-l-quebi-sm",
+              // Square on the accent, rounded on the trailing edge — the same
+              // treatment `TimedBlock` gives its own edge, and for the same
+              // reason (task #176): an 8px radius on a 20px band bends the 2px
+              // series line into a crescent. The left is already square, so
+              // `continuesBefore` has nothing left to change on that side;
+              // `continuesAfter` still squares a band cut at the week boundary.
+              "rounded-l-none",
               band.continuesAfter ? "rounded-r-none" : "rounded-r-quebi-sm",
-              selectedId === band.event.id && "ring-2 ring-quebi-brand-mark ring-inset",
+              selectedId === band.event.id &&
+                cn("outline-2 outline-solid outline-offset-0", palette.selected),
             )}
           >
             <span className="truncate font-semibold text-quebi-fg">{band.event.title}</span>
