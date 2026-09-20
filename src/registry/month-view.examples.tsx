@@ -97,6 +97,45 @@ const Overflowing = () => {
   return <MonthView events={[...month(first), ...crowd]} calendars={CALENDARS} timeZone={TIME_ZONE} weekHeight={110} />
 }
 
+/** A day nobody would want: twelve things, one of them the release freeze. */
+const BUSY_DAY = [
+  "Standup",
+  "Design review",
+  "1:1 with Ada",
+  "Interview loop",
+  "Lunch & learn",
+  "Sprint planning",
+  "Vendor call",
+  "Budget sync",
+  "Support triage",
+  "Retro",
+  "Deploy window",
+  "On-call handover",
+]
+
+const OverflowPanel = () => {
+  const first = startOfMonth(today(TIME_ZONE))
+  const busyDay = first.add({ days: 16 })
+  const [selected, setSelected] = useState<string | null>(null)
+  const crowd: CalendarEvent[] = BUSY_DAY.map((title, index) => ({
+    id: `busy-${index}`,
+    title,
+    start: at(busyDay, 8 + index),
+    end: at(busyDay, 9 + index),
+    calendarId: index % 2 === 0 ? "me" : "team",
+  }))
+
+  return (
+    <MonthView
+      events={[...month(first), ...crowd]}
+      calendars={CALENDARS}
+      timeZone={TIME_ZONE}
+      selectedEventId={selected}
+      onSelectionChange={setSelected}
+    />
+  )
+}
+
 const DrillDown = () => {
   const first = startOfMonth(today(TIME_ZONE))
   const [note, setNote] = useState("Click a day number, an event, or a \"+N more\".")
@@ -136,9 +175,15 @@ export const monthViewExamples: ComponentExample[] = [
     render: () => <Overflowing />,
   },
   {
+    title: "The overflow panel",
+    description:
+      "The \"+N more\" is a popover trigger by default: it opens onto the whole day — all-day bands first, then the timed events — and a row selects and reports itself exactly as a chip does. A day this full scrolls inside the panel rather than off the screen.",
+    render: () => <OverflowPanel />,
+  },
+  {
     title: "Drilling down",
     description:
-      "onDayClick, onEventClick and onMoreClick are the three ways out of a month grid — switch to the day view, open a detail panel, or list what a cell hid.",
+      "onDayClick, onEventClick and onMoreClick are the three ways out of a month grid — switch to the day view, open a detail panel, or list what a cell hid. Passing onMoreClick is also the opt-out: the link stops opening the built-in panel and the interaction is yours again.",
     render: () => <DrillDown />,
   },
 ]

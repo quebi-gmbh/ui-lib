@@ -4,14 +4,13 @@ import type { CalendarDate } from "@internationalized/date"
 import { useMemo } from "react"
 import { Button } from "react-aria-components"
 import {
-  CALENDAR_COLORS,
   type CalendarEvent,
+  CalendarEventRow,
   type CalendarSource,
+  DayOverflowPanel,
   dayToDate,
   DEFAULT_CALENDAR_TIME_ZONE,
-  formatEventTime,
   MoreLink,
-  resolveEventColor,
   useCalendarToday,
 } from "@/components/calendar-shell"
 import {
@@ -306,11 +305,30 @@ function MonthWeek<E extends CalendarEvent>({
               className="pointer-events-auto px-1"
               style={{ marginTop: (maxLanes - 1) * LANE_HEIGHT }}
             >
-              <MoreLink
-                count={hidden}
-                label={moreLabel}
-                onPress={() => onMoreClick?.(day, eventsOn(events, day, timeZone))}
-              />
+              {/* Supplying `onMoreClick` says the consumer owns what "+N more"
+                  does — the documented "switch to this day" hook — so the
+                  library draws no panel behind it. Without it the panel is the
+                  default, which is the only reading under which the affordance
+                  does something on its own. */}
+              {onMoreClick ? (
+                <MoreLink
+                  count={hidden}
+                  label={moreLabel}
+                  onPress={() => onMoreClick(day, eventsOn(events, day, timeZone))}
+                />
+              ) : (
+                <MoreLink count={hidden} label={moreLabel}>
+                  <DayOverflowPanel
+                    day={day}
+                    events={eventsOn(events, day, timeZone)}
+                    calendars={calendars}
+                    locale={locale}
+                    timeZone={timeZone}
+                    selectedId={selectedEventId}
+                    onActivate={activate}
+                  />
+                </MoreLink>
+              )}
             </div>
           )
         })}
@@ -345,11 +363,13 @@ interface MonthChipProps<E extends CalendarEvent> {
 }
 
 /**
- * One event in the month grid.
+ * One event in the month grid: a `CalendarEventRow` placed by its band.
  *
- * A timed event is a dot, a time and a title on a transparent chip — the shape
- * that reads as "at 09:00" rather than as "all morning". An all-day or multi-day
- * one is the filled band, because it genuinely occupies the days it covers.
+ * What the row *is* — the dot, the time, the palette — is `CalendarEventRow`'s,
+ * because the "+N more" panel lists the same events without any of this
+ * geometry. What is left here is the geometry: which columns the band spans,
+ * which lane it sits in, and which of its corners are cut because it runs on
+ * into the week either side.
  */
 function MonthChip<E extends CalendarEvent>({
   band,
@@ -361,24 +381,21 @@ function MonthChip<E extends CalendarEvent>({
   isSelected,
   onActivate,
 }: MonthChipProps<E>) {
-  const palette = CALENDAR_COLORS[resolveEventColor(band.event, calendars)]
   const filled = isAllDayEvent(band.event)
   const left = (band.startIndex / dayCount) * 100
   const width = ((band.endIndex - band.startIndex + 1) / dayCount) * 100
 
   return (
-    <Button
-      data-slot="calendar-chip"
-      data-event-id={band.event.id}
-      onPress={() => onActivate(band.event)}
+    <CalendarEventRow
+      event={band.event}
+      calendars={calendars}
+      locale={locale}
+      timeZone={timeZone}
+      isSelected={isSelected}
+      onActivate={onActivate}
       style={{ top, left: `${left}%`, width: `calc(${width}% - 6px)`, marginLeft: 3 }}
       className={cn(
-        "absolute flex h-5 cursor-pointer items-center gap-1.5 overflow-hidden px-1.5 text-left text-xs",
-        "transition-colors duration-150",
-        "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
-        filled
-          ? cn(palette.band, "border-l-2", palette.edge)
-          : "hover:bg-quebi-surface/[0.06]",
+        "absolute",
         // The accented edge is never rounded (task #176). `--radius-quebi-sm`
         // is 8px and the chip is 20px tall, so two corners eat 16px of the
         // 20 and the 2px border tapers as it turns — the series line reads
@@ -387,18 +404,7 @@ function MonthChip<E extends CalendarEvent>({
         // boundary squares that side too, so the halves read as one event.
         filled || band.continuesBefore ? "rounded-l-none" : "rounded-l-quebi-sm",
         filled && band.continuesAfter ? "rounded-r-none" : "rounded-r-quebi-sm",
-        isSelected && cn("outline-2 outline-solid outline-offset-0", palette.selected),
       )}
-    >
-      {filled ? null : (
-        <span className={cn("size-1.5 shrink-0 rounded-full", palette.dot)} aria-hidden="true" />
-      )}
-      {filled ? null : (
-        <span className="shrink-0 text-quebi-fg-subtle tabular-nums">
-          {formatEventTime(band.event.start, locale, timeZone)}
-        </span>
-      )}
-      <span className="truncate font-semibold text-quebi-fg">{band.event.title}</span>
-    </Button>
+    />
   )
 }
