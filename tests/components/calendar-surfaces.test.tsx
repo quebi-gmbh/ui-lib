@@ -27,6 +27,8 @@ import {
   type CalendarSource,
 } from "../../src/components/calendar-shell"
 import { DayView } from "../../src/components/day-view"
+import { MonthView } from "../../src/components/month-view"
+import { WeekView } from "../../src/components/week-view"
 
 const ZONE = "Europe/Berlin"
 const LOCALE = "de-DE"
@@ -47,8 +49,19 @@ const EVENT: CalendarEvent = {
   calendarId: "me",
 }
 
-const blockFor = (container: HTMLElement, id = "one") =>
-  container.querySelector<HTMLElement>(`[data-slot="calendar-event"][data-event-id="${id}"]`)
+const ALL_DAY: CalendarEvent = {
+  id: "trip",
+  title: "Conference",
+  start: at(MONDAY, 0),
+  end: at(MONDAY.add({ days: 2 }), 0),
+  allDay: true,
+  calendarId: "me",
+}
+
+const slot = (container: HTMLElement, name: string, id: string) =>
+  container.querySelector<HTMLElement>(`[data-slot="${name}"][data-event-id="${id}"]`)
+
+const blockFor = (container: HTMLElement, id = "one") => slot(container, "calendar-event", id)
 
 /**
  * The wash is a colour, not a transparency (task #165).
@@ -105,5 +118,122 @@ describe("the calendar palette is opaque", () => {
       />,
     )
     expect(blockFor(container)?.className).toContain(CALENDAR_COLORS.blue.block)
+  })
+})
+
+/**
+ * Selection is the event's own hue; focus stays the brand's (task #168).
+ *
+ * All three views drew selection as `ring-2 ring-quebi-brand-mark ring-inset` —
+ * byte for byte the focus treatment on the line above it. That was three
+ * defects in one: teal argued with whatever hue the event was painted in, the
+ * *inset* ring landed exactly on the 2px `edge` and erased the only mark of
+ * which calendar the event belonged to, and a merely focused event was
+ * indistinguishable from a selected one.
+ *
+ * What is pinned: selection and focus never share a treatment, selection comes
+ * from the palette, and the accent survives it.
+ */
+describe("selection is drawn in the event's own colour", () => {
+  const entries = Object.entries(CALENDAR_COLORS)
+
+  test("every palette entry carries a selection colour", () => {
+    for (const [name, palette] of entries) {
+      expect([name, typeof palette.selected]).toEqual([name, "string"])
+      expect([name, palette.selected.startsWith("outline-")]).toEqual([name, true])
+    }
+  })
+
+  test("the selection colour is the entry's own hue, not a second colour system", () => {
+    for (const [name, palette] of entries) {
+      const hue = palette.edge.replace("border-l-", "")
+      expect([name, palette.selected]).toEqual([name, `outline-${hue}`])
+    }
+  })
+
+  test("only the brand entry may wear the brand mark", () => {
+    for (const [name, palette] of entries) {
+      expect([name, palette.selected.includes("quebi-brand")]).toEqual([name, name === "brand"])
+    }
+    expect(CALENDAR_COLORS.brand.selected).toBe("outline-quebi-brand-mark")
+  })
+
+  test("a selected block differs from a focused one, and keeps its accent", () => {
+    const { container } = render(
+      <DayView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[EVENT]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+        selectedEventId="one"
+      />,
+    )
+    const className = blockFor(container)?.className ?? ""
+
+    expect(className).toContain("outline-2")
+    expect(className).toContain(CALENDAR_COLORS.blue.selected)
+    // `outline-solid` is what displaces the base `outline-none`; without it the
+    // outline has a width and no style, and so paints nothing at all.
+    expect(className).toContain("outline-solid")
+    expect(className).not.toContain("outline-none")
+
+    // Focus is still the brand mark, and still only under focus-visible.
+    expect(className).toContain("focus-visible:ring-quebi-brand-mark")
+    expect(className.split(" ")).not.toContain("ring-2")
+
+    // The left accent is no longer overpainted by an inset ring.
+    expect(className).toContain("border-l-2")
+    expect(className).toContain(CALENDAR_COLORS.blue.edge)
+  })
+
+  test("an unselected block has no outline at all", () => {
+    const { container } = render(
+      <DayView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[EVENT]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+      />,
+    )
+    const className = blockFor(container)?.className ?? ""
+    expect(className).toContain("outline-none")
+    expect(className).not.toContain("outline-2")
+  })
+
+  test("the month chip and the week all-day band select the same way", () => {
+    const month = render(
+      <MonthView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[ALL_DAY]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+        selectedEventId="trip"
+      />,
+    )
+    const chip = slot(month.container, "calendar-chip", "trip")?.className ?? ""
+    expect(chip).toContain("outline-2")
+    expect(chip).toContain(CALENDAR_COLORS.blue.selected)
+    month.unmount()
+
+    const week = render(
+      <WeekView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[ALL_DAY]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+        selectedEventId="trip"
+      />,
+    )
+    const band = slot(week.container, "calendar-band", "trip")?.className ?? ""
+    expect(band).toContain("outline-2")
+    expect(band).toContain(CALENDAR_COLORS.blue.selected)
   })
 })

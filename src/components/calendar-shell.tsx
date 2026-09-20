@@ -89,6 +89,23 @@ import { cn } from "@/lib/utils"
  * a stylesheet they have to copy too — and self-containment is why the palette
  * uses Tailwind's own scales in the first place.
  *
+ * **Selection wears the event's own hue.** `selected` is the colour of the ring
+ * drawn round a selected event (task #168). It used to be `quebi-brand-mark`
+ * for every calendar, which made the highlight a second colour system arguing
+ * with the first — teal over a blue bar — and made selection indistinguishable
+ * from focus, which is that same brand ring. Focus keeps the brand mark;
+ * selection is now a saturated version of what the event is already painted in,
+ * so the two differ by hue as well as by position. It is an `outline-` rather
+ * than a `ring-` utility because the ring these views draw is *inset*, and an
+ * inset ring lands exactly on top of the 2px `edge` — selecting an event used
+ * to erase the one piece of chrome saying which calendar it belongs to. An
+ * outline sits outside the border box, so the accent survives being selected,
+ * and it rides a different CSS property from the focus ring, so a bar that is
+ * both focused and selected shows both. `brand` is the one entry whose value is
+ * chosen rather than derived: `-quebi-brand-mark`, matching its `edge`, and
+ * never bare `-quebi-brand`, which `tests/mark-contrast.test.ts` rejects for a
+ * stroke.
+ *
  * The scales here are Tailwind's rather than quebi tokens because quebi has one
  * accent, and one accent cannot tell eight calendars apart. That is the same
  * argument `chart.tsx` makes for its series palette, and the same exception
@@ -97,55 +114,63 @@ import { cn } from "@/lib/utils"
  */
 export const CALENDAR_COLORS: Record<
   CalendarColorName,
-  { block: string; edge: string; dot: string; band: string }
+  { block: string; edge: string; dot: string; band: string; selected: string }
 > = {
   blue: {
     block: "bg-[color-mix(in_oklab,var(--color-blue-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-blue-500)_25%,var(--color-quebi-bg))]",
     edge: "border-l-blue-500",
     dot: "bg-blue-500",
     band: "bg-[color-mix(in_oklab,var(--color-blue-500)_20%,var(--color-quebi-bg))]",
+    selected: "outline-blue-500",
   },
   orange: {
     block: "bg-[color-mix(in_oklab,var(--color-orange-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-orange-500)_25%,var(--color-quebi-bg))]",
     edge: "border-l-orange-500",
     dot: "bg-orange-500",
     band: "bg-[color-mix(in_oklab,var(--color-orange-500)_20%,var(--color-quebi-bg))]",
+    selected: "outline-orange-500",
   },
   brand: {
     block: "bg-[color-mix(in_oklab,var(--color-quebi-brand)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-quebi-brand)_25%,var(--color-quebi-bg))]",
     edge: "border-l-quebi-brand-mark",
     dot: "bg-quebi-brand",
     band: "bg-[color-mix(in_oklab,var(--color-quebi-brand)_20%,var(--color-quebi-bg))]",
+    selected: "outline-quebi-brand-mark",
   },
   amber: {
     block: "bg-[color-mix(in_oklab,var(--color-amber-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-amber-500)_25%,var(--color-quebi-bg))]",
     edge: "border-l-amber-500",
     dot: "bg-amber-500",
     band: "bg-[color-mix(in_oklab,var(--color-amber-500)_20%,var(--color-quebi-bg))]",
+    selected: "outline-amber-500",
   },
   pink: {
     block: "bg-[color-mix(in_oklab,var(--color-pink-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-pink-500)_25%,var(--color-quebi-bg))]",
     edge: "border-l-pink-500",
     dot: "bg-pink-500",
     band: "bg-[color-mix(in_oklab,var(--color-pink-500)_20%,var(--color-quebi-bg))]",
+    selected: "outline-pink-500",
   },
   emerald: {
     block: "bg-[color-mix(in_oklab,var(--color-emerald-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-emerald-500)_25%,var(--color-quebi-bg))]",
     edge: "border-l-emerald-500",
     dot: "bg-emerald-500",
     band: "bg-[color-mix(in_oklab,var(--color-emerald-500)_20%,var(--color-quebi-bg))]",
+    selected: "outline-emerald-500",
   },
   violet: {
     block: "bg-[color-mix(in_oklab,var(--color-violet-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-violet-500)_25%,var(--color-quebi-bg))]",
     edge: "border-l-violet-500",
     dot: "bg-violet-500",
     band: "bg-[color-mix(in_oklab,var(--color-violet-500)_20%,var(--color-quebi-bg))]",
+    selected: "outline-violet-500",
   },
   rose: {
     block: "bg-[color-mix(in_oklab,var(--color-rose-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-rose-500)_25%,var(--color-quebi-bg))]",
     edge: "border-l-rose-500",
     dot: "bg-rose-500",
     band: "bg-[color-mix(in_oklab,var(--color-rose-500)_20%,var(--color-quebi-bg))]",
+    selected: "outline-rose-500",
   },
 }
 
@@ -619,7 +644,12 @@ function TimedBlock<E extends CalendarEvent>({
         // the two halves of one event read as one thing cut, not two events.
         segment.continuesBefore ? "rounded-t-none" : "rounded-tr-quebi-sm",
         segment.continuesAfter ? "rounded-b-none" : "rounded-br-quebi-sm",
-        isSelected && "ring-2 ring-quebi-brand-mark ring-inset",
+        // Selection is an outline, not the inset ring focus uses: it sits
+        // outside the border box, so it neither overpaints `edge` nor
+        // vanishes when the same block takes focus. `outline-solid` is
+        // load-bearing — it is what displaces the `outline-none` above,
+        // which would otherwise leave the outline styled away.
+        isSelected && cn("outline-2 outline-solid outline-offset-0", palette.selected),
       )}
     >
       <BlockText
@@ -756,7 +786,8 @@ function AllDayBand<E extends CalendarEvent>({
               palette.edge,
               band.continuesBefore ? "rounded-l-none" : "rounded-l-quebi-sm",
               band.continuesAfter ? "rounded-r-none" : "rounded-r-quebi-sm",
-              selectedId === band.event.id && "ring-2 ring-quebi-brand-mark ring-inset",
+              selectedId === band.event.id &&
+                cn("outline-2 outline-solid outline-offset-0", palette.selected),
             )}
           >
             <span className="truncate font-semibold text-quebi-fg">{band.event.title}</span>

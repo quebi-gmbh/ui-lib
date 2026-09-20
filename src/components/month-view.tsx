@@ -368,7 +368,7 @@ function MonthChip<E extends CalendarEvent>({
           : "hover:bg-quebi-surface/[0.06]",
         filled && band.continuesBefore ? "rounded-l-none" : "rounded-l-quebi-sm",
         filled && band.continuesAfter ? "rounded-r-none" : "rounded-r-quebi-sm",
-        isSelected && "ring-2 ring-quebi-brand-mark ring-inset",
+        isSelected && cn("outline-2 outline-solid outline-offset-0", palette.selected),
       )}
     >
       {filled ? null : (
