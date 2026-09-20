@@ -33,7 +33,9 @@ import { cn } from "@/lib/utils"
  *
  * The grid is a react-aria ListBox with `layout="grid"`, so roving focus, arrow
  * keys, typeahead and the selection state come from react-aria rather than from
- * hand-rolled key handling.
+ * hand-rolled key handling. See the note on `orientation` at the ListBox for why
+ * a grid that reads left-to-right is a *vertical* one as far as react-aria's
+ * keyboard delegate is concerned.
  *
  * Month names come from `getDateTimeFormat` in `@/lib/intl`, never a bare
  * `toLocaleString()`: the site is prerendered, so an implicit locale is a
@@ -157,7 +159,19 @@ export function MonthPicker({
         aria-labelledby={ariaLabelledBy}
         aria-describedby={ariaDescribedBy}
         layout="grid"
-        orientation="horizontal"
+        // Vertical, though the grid reads left-to-right, and this is the one
+        // thing about it that is not obvious. `orientation` tells
+        // `ListKeyboardDelegate` how the *collection order* maps onto the
+        // layout, not which way the rows run: with `grid` + `vertical` it walks
+        // left/right by collection order and up/down by comparing cell
+        // geometry, which is exactly a wrapping 3-column grid. With `grid` +
+        // `horizontal` it sends left/right through `findKey(..., isSameColumn)`
+        // instead, and that compares every candidate against the rect it
+        // started from rather than the previous one — so from any cell every
+        // later cell is either in a different row or in the same column, every
+        // candidate is skipped, and it returns null. Arrow keys did nothing at
+        // all (task #170).
+        orientation="vertical"
         selectionMode="single"
         disallowEmptySelection
         autoFocus={autoFocus}

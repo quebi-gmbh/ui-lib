@@ -119,6 +119,89 @@ describe("YearPicker", () => {
   })
 })
 
+/**
+ * Arrow keys, for both grids (task #170).
+ *
+ * These grids spent their whole life with `orientation="horizontal"` on a
+ * `layout="grid"` ListBox, which is the combination react-aria's
+ * `ListKeyboardDelegate` handles worst: left/right went through
+ * `findKey(..., isSameColumn)`, which compares every candidate against the rect
+ * it *started* from rather than the previous one, so from the last column every
+ * later cell was either in another row or in the same column, every candidate
+ * was skipped and it returned null. ArrowRight did nothing at all. Up/down
+ * meanwhile fell through to plain collection order, so ArrowDown moved one cell
+ * rather than one row. The grid reads left-to-right, but as far as the delegate
+ * is concerned that is a *vertical* orientation, and saying so fixes both.
+ *
+ * Only the horizontal arrows are pinned here. Up and down go through
+ * `getItemRect`, and every rect is zero in happy-dom, so a row step is not
+ * observable outside a real browser — but ArrowRight is the key that was a
+ * no-op, and it is pure collection order once the orientation is right.
+ */
+describe("the picker grids take arrow keys", () => {
+  /**
+   * Focus is seeded with a click rather than `autoFocus`, deliberately. The
+   * assertion is about what an arrow key does once focus is in the grid, and
+   * leaving that to `autoFocus` makes each test depend on focus surviving the
+   * one before it — which it does not, and which made a broken MonthPicker show
+   * up as a failing YearPicker.
+   */
+  const seed = async (user: ReturnType<typeof userEvent.setup>, name: string) => {
+    await user.click(option(name))
+    expect(document.activeElement).toBe(option(name))
+  }
+
+  test("MonthPicker walks months with the horizontal arrows", async () => {
+    const user = userEvent.setup()
+    inLocale(
+      "en-GB",
+      <MonthPicker aria-label="Month" defaultValue={new CalendarDate(2026, 6, 15)} />,
+    )
+
+    // September is the last cell of a row in a 3-column grid, which is the case
+    // the old delegate returned null for even in a real browser.
+    await seed(user, "September 2026")
+
+    await user.keyboard("{ArrowRight}")
+    expect(document.activeElement).toBe(option("October 2026"))
+
+    await user.keyboard("{ArrowLeft}")
+    expect(document.activeElement).toBe(option("September 2026"))
+  })
+
+  test("MonthPicker selects the month the arrows landed on", async () => {
+    const received: CalendarDate[] = []
+    const user = userEvent.setup()
+    inLocale(
+      "en-GB",
+      <MonthPicker
+        aria-label="Month"
+        defaultValue={new CalendarDate(2026, 6, 15)}
+        onChange={(value) => received.push(value)}
+      />,
+    )
+
+    await seed(user, "June 2026")
+    await user.keyboard("{ArrowRight}")
+    await user.keyboard("{Enter}")
+
+    expect(received.at(-1)?.toString()).toBe("2026-07-01")
+  })
+
+  test("YearPicker walks years the same way", async () => {
+    const user = userEvent.setup()
+    inLocale("en-GB", <YearPicker aria-label="Year" defaultValue={new CalendarDate(2026, 3, 4)} />)
+
+    await seed(user, "2026")
+
+    await user.keyboard("{ArrowRight}")
+    expect(document.activeElement).toBe(option("2027"))
+
+    await user.keyboard("{ArrowLeft}")
+    expect(document.activeElement).toBe(option("2026"))
+  })
+})
+
 describe("MonthPicker", () => {
   test("shows twelve months of one year and steps the year", async () => {
     inLocale(

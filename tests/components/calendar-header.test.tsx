@@ -2,9 +2,11 @@
  * The Calendar's two headers.
  *
  * `variant="select"` is the default: one control naming the visible month and
- * year, opening the library's own Month Picker in a popover (task #160 — it was
- * a pair of dropdowns before), and a single prev/next pair on the right that is
- * react-aria's own (`slot="previous"` / `slot="next"`, disabled for free from
+ * year, swapping the library's own Month Picker into the calendar body in place
+ * of the day grid (task #160 made it a Month Picker where it had been a pair of
+ * dropdowns; task #170 took it out of the popover of its own that #160 gave it),
+ * and a single prev/next pair on the right that is react-aria's own
+ * (`slot="previous"` / `slot="next"`, disabled for free from
  * `isPreviousVisibleRangeInvalid`). `variant="stepper"` replaces both halves
  * with `‹ Sep ›` and `‹ 2026 ›` and drops the paging pair, or the month would
  * carry two sets of chevrons meaning slightly different things. Task #120.
@@ -58,7 +60,7 @@ describe("select header (default)", () => {
     )
   })
 
-  test("opens the Month Picker grid rather than a list of months", async () => {
+  test("swaps in the Month Picker grid rather than a list of months", async () => {
     const user = userEvent.setup()
     render(<Calendar aria-label="Event date" defaultValue={JUNE} />)
 
@@ -78,6 +80,152 @@ describe("select header (default)", () => {
 
     expect(screen.queryByRole("button", { name: "Previous month" })).not.toBeInTheDocument()
     expect(container.querySelectorAll("[data-variant]")).toHaveLength(1)
+  })
+})
+
+/**
+ * The swap itself (task #170).
+ *
+ * #160 put the Month Picker in a popover of its own, which inside a Date Picker
+ * made two react-aria overlays out of one trigger chain: portalled to `body` as
+ * siblings rather than nested, the inner one covering every cell of the day grid
+ * and hanging past the bottom edge of the surface it was anchored in — over the
+ * backdrop, on the mobile path, where that surface is a modal. The body swaps in
+ * place instead, so what is worth pinning is that there is no second surface:
+ * the month grid is a descendant of the calendar's own body, and the day grid it
+ * replaced is gone rather than hidden behind it.
+ *
+ * The rest is what the swap has to not cost. Escape used to dismiss the inner
+ * popover and leave the outer one open, and a press that only ever reached the
+ * Date Picker's popover would close the whole picker from under the user — so
+ * the body claims the key while the month grid holds it. And focus has to come
+ * back to something: the month grid unmounts under whatever inside it had focus,
+ * and `<body>` is not an answer.
+ */
+describe("the month grid swaps into the body", () => {
+  const dayGrid = (container: HTMLElement) => container.querySelector("table")
+  const monthGrid = (container: HTMLElement) =>
+    container.querySelector('[data-slot="month-picker"]')
+  const press = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(monthYearTrigger() as HTMLElement)
+  }
+
+  test("replaces the day grid instead of floating a surface over it", async () => {
+    const user = userEvent.setup()
+    const { container } = render(<Calendar aria-label="Event date" defaultValue={JUNE} />)
+
+    expect(dayGrid(container)).toBeInTheDocument()
+
+    await press(user)
+
+    // Gone, not occluded — the day grid is what the month grid is standing in for.
+    expect(dayGrid(container)).toBeNull()
+    // Found through `container` at all is the assertion: a popover portals to
+    // `document.body` and would not be in the calendar's own tree.
+    const body = container.querySelector('[data-slot="calendar-body"]')
+    expect(body?.contains(monthGrid(container))).toBe(true)
+    expect(document.querySelectorAll('[role="dialog"]')).toHaveLength(0)
+  })
+
+  test("is a toggle, and says so", async () => {
+    const user = userEvent.setup()
+    const { container } = render(<Calendar aria-label="Event date" defaultValue={JUNE} />)
+
+    const bodyId = container.querySelector('[data-slot="calendar-body"]')?.id
+    expect(bodyId).toBeTruthy()
+    // `aria-pressed`, not `aria-expanded`: nothing expands. The body is the same
+    // size in the same place, and what changes is which grid it draws.
+    expect(monthYearTrigger()).toHaveAttribute("aria-pressed", "false")
+    expect(monthYearTrigger()).toHaveAttribute("aria-controls", bodyId as string)
+
+    await press(user)
+    expect(monthYearTrigger()).toHaveAttribute("aria-pressed", "true")
+
+    await press(user)
+    expect(monthYearTrigger()).toHaveAttribute("aria-pressed", "false")
+    expect(dayGrid(container)).toBeInTheDocument()
+  })
+
+  test("drops the paging pair while the month grid is showing", async () => {
+    const user = userEvent.setup()
+    const { container } = render(<Calendar aria-label="Event date" defaultValue={JUNE} />)
+
+    expect(container.querySelector('[slot="previous"]')).toBeInTheDocument()
+
+    await press(user)
+
+    // The pair walks the visible *month*, and the month grid has a year stepper
+    // of its own a row below. Two chevron pairs stepping different units in one
+    // surface is what `variant="stepper"` drops the pair to avoid.
+    expect(container.querySelector('[slot="previous"]')).toBeNull()
+    expect(container.querySelector('[slot="next"]')).toBeNull()
+    expect(screen.getByRole("button", { name: "Next year" })).toBeInTheDocument()
+
+    await press(user)
+    expect(container.querySelector('[slot="previous"]')).toBeInTheDocument()
+  })
+
+  test("spends Escape on the month grid, not on whatever is above the calendar", async () => {
+    const user = userEvent.setup()
+    const { container } = render(<Calendar aria-label="Event date" defaultValue={JUNE} />)
+
+    await press(user)
+    await user.keyboard("{Escape}")
+
+    expect(dayGrid(container)).toBeInTheDocument()
+    expect(monthGrid(container)).toBeNull()
+    expect(monthYearTrigger()).toHaveAttribute("aria-pressed", "false")
+  })
+
+  test("puts focus back on the trigger when the month grid goes away", async () => {
+    const user = userEvent.setup()
+    render(<Calendar aria-label="Event date" defaultValue={JUNE} />)
+
+    await press(user)
+    await user.click(screen.getByRole("option", { name: "October 2026" }))
+
+    // The grid unmounts under whatever inside it had focus. Left alone, focus
+    // falls to `<body>` and the next Escape belongs to the document rather than
+    // to the popover a Date Picker put the calendar in.
+    expect(document.activeElement).toBe(monthYearTrigger())
+  })
+
+  test("hands the month grid working arrow keys", async () => {
+    const user = userEvent.setup()
+    const { container } = render(<Calendar aria-label="Event date" defaultValue={JUNE} />)
+
+    await press(user)
+    expect(document.activeElement).toBe(screen.getByRole("option", { name: "June 2026" }))
+
+    // The day grid this replaced is fully keyboard-navigable, so a month grid
+    // that is not would be an accessibility regression against the surface it
+    // stands in for. `date-part-pickers.test.tsx` has the delegate argument.
+    await user.keyboard("{ArrowRight}")
+    expect(document.activeElement).toBe(screen.getByRole("option", { name: "July 2026" }))
+
+    await user.keyboard("{Enter}")
+
+    expect(dayGrid(container)).toBeInTheDocument()
+    expect(visibleRange()).toContain("July")
+  })
+
+  test("reaches the RangeCalendar through the shared body", async () => {
+    const user = userEvent.setup()
+    const { container } = render(
+      <RangeCalendar
+        aria-label="Trip dates"
+        defaultValue={{ start: JUNE, end: JUNE.add({ days: 5 }) }}
+        visibleDuration={{ months: 2 }}
+      />,
+    )
+
+    expect(container.querySelectorAll("table")).toHaveLength(2)
+
+    await press(user)
+
+    // Both months go, not just the one the trigger names.
+    expect(container.querySelectorAll("table")).toHaveLength(0)
+    expect(monthGrid(container)).toBeInTheDocument()
   })
 })
 
