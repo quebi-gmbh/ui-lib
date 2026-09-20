@@ -2,6 +2,7 @@
 
 import { composeRenderProps, ToggleButton } from "react-aria-components"
 import { tv } from "tailwind-variants"
+import { buttonStyles } from "@/components/button"
 import { cn } from "@/lib/utils"
 
 /**
@@ -11,8 +12,13 @@ import { cn } from "@/lib/utils"
  * plain label) centered on a hairline rule. Use it to gate collapsed content
  * (long threads, extra results) behind a single inline control.
  *
- * The rule is a cyan/10 hairline; the toggle is a quebi outline pill that
- * lifts to the brand teal on hover and selection. No drop shadows.
+ * The rule is a cyan/10 hairline. The pill's appearance is `buttonStyles` —
+ * not a copy of it (task #185). It used to carry its own transcription of the
+ * pre-#178 Button hover: `transition-all`, `hover:scale-[1.02]` and, on the
+ * selected chip, `hover:shadow-quebi-glow-strong`. #178 removed all three from
+ * `Button`, and this file did not follow, so a row of chips hovered with a
+ * grow-and-glow beside Buttons that lift by one neutral rung — on the same
+ * gallery page.
  */
 const showMoreStyles = tv({
   base: "text-sm leading-6 before:border-quebi-line/10 after:border-quebi-line/10",
@@ -39,19 +45,27 @@ const showMoreStyles = tv({
   },
 })
 
-const togglePillStyles = tv({
-  base: [
-    "inline-flex items-center justify-center gap-2",
-    "rounded-full border border-solid border-quebi-line/20 bg-transparent",
-    "px-3 py-2 text-sm font-sans font-semibold whitespace-nowrap select-none cursor-pointer",
-    "text-quebi-fg",
-    "transition-all duration-200 ease-out hover:scale-[1.02] active:scale-100",
-    "hover:border-quebi-brand-mark hover:text-quebi-brand-text",
-    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-    "selected:border-quebi-brand-mark selected:bg-quebi-brand selected:text-quebi-on-brand selected:hover:bg-quebi-brand-hover selected:hover:text-quebi-on-brand selected:hover:shadow-quebi-glow-strong",
-    "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",
-  ],
-})
+/**
+ * The pill, as a Button intent chosen by the toggle state.
+ *
+ * The two states were already *written* as button intents — the resting chip
+ * transcribed `outline` token for token (`bg-transparent`,
+ * `border-quebi-line/20`, `text-quebi-fg`, `hover:border-quebi-brand-mark`,
+ * `hover:text-quebi-brand-text`) and the `selected:` block transcribed
+ * `primary` (`bg-quebi-brand`, `border-quebi-brand-mark`, `text-quebi-on-brand`,
+ * `hover:bg-quebi-brand-hover`). Naming the intents instead of the classes
+ * keeps the chip tracking the recipe: the hover lift, the focus ring, the
+ * disabled treatment and the transition property list are now whatever
+ * `Button` says they are, and the mark-token edge from task #145 comes along
+ * for free.
+ *
+ * `size: "sm"` is `text-sm px-3 py-2`, which is the pill's existing box to the
+ * pixel, and `isCircle` is the pill shape — the one thing a chip does not take
+ * from the default. Nothing here is a hand-rolled appearance class, which is
+ * the point: there is no copy left to drift.
+ */
+const showMorePillStyles = (isSelected: boolean) =>
+  buttonStyles({ intent: isSelected ? "primary" : "outline", size: "sm", isCircle: true })
 
 interface ShowMoreProps extends Omit<React.ComponentProps<typeof ToggleButton>, "className"> {
   className?: string
@@ -70,7 +84,7 @@ const ShowMore = ({
   return (
     <div className={showMoreStyles({ orientation, className })}>
       {as === "button" ? (
-        <ToggleButton {...props} className={togglePillStyles()}>
+        <ToggleButton {...props} className={({ isSelected }) => showMorePillStyles(isSelected)}>
           {composeRenderProps(props.children, (children) => children)}
         </ToggleButton>
       ) : (
