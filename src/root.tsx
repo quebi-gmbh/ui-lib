@@ -30,6 +30,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
         />
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        {/* The one font first paint needs, discoverable by the preload scanner at
+            the first byte of the document instead of after the root stylesheet has
+            been downloaded and parsed. Only the latin subset: the latin-ext face is
+            unicode-range gated and nothing in the site renders a codepoint in its
+            range, so preloading it would force a download that otherwise never
+            happens. `crossOrigin` is required even same-origin — fonts are fetched
+            in CORS mode, and a preload without it is a second, separate fetch. */}
+        <link
+          rel="preload"
+          href="/fonts/outfit-latin.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-transparent-16x16.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-transparent-32x32.png" />
         <link rel="icon" type="image/png" sizes="128x128" href="/favicon-transparent-128x128.png" />
