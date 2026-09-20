@@ -123,6 +123,17 @@ Never hand-edit these; change the source and re-run the generator.
 |---|---|---|
 | `public/api/**`, `public/llms.txt`, `public/r/**`, `public/skills/**` | `src/registry/*.meta.ts`, `src/registry/rules/*.rule.ts` | `bun run generate:api` |
 | `biome.jsonc`, `ui-lib-rules/*.grit` | `src/registry/rules/*.rule.ts` | `bun run generate:lint` |
+| `build/client/og/*.jpg` | `src/registry/*.og.tsx` through the `/og/:slug` route | `bun run screenshot:og` |
+
+The share images are the odd one out: they are photographs, not a rendering of data. Every
+component has a scene in `src/registry/<slug>.og.tsx` — a reduced composition of itself, written
+for a 1200×630 thumbnail rather than for the gallery — and `scripts/screenshot-og.ts` opens
+`/og/<slug>` in Chromium and saves what it sees. So the generator runs *after* `react-router build`
+rather than before it, and `bun run build` needs a browser (`bunx playwright install chromium`;
+`deploy.yml` caches it). CI does not: `tests/og-scenes.test.ts` checks from the source what can be
+checked without one — that every slug has a scene or a written `noOgScene` reason, and that no
+scene reads the clock, rolls a die, or leaves a recharts animation on, each of which would publish
+a different image every deploy.
 
 `biome.jsonc` and `ui-lib-rules/` are committed on purpose: the hook and CI need them without a
 build step, and a rule change showing up as a config diff in the same PR is the point. A test fails
@@ -169,6 +180,11 @@ register, plus the quebi styling and self-contained-dependency conventions.
   materialises its temp project under `…/src/components/project/` so the suite keeps proving it.
 - CSS is still outside the file list: Biome cannot parse Tailwind v4's at-rules. The
   `no-hardcoded-design-values` record documents that gap.
+- `src/registry/*.og.tsx` is linted at full strength, like `src/routes/`, and the two rules the
+  examples are excused from bite hardest there: a scene wants a fixed-size box, and `w-[30rem]` is
+  a hardcoded design value while `w-120` is the spacing scale. The one local scope the scenes have
+  is `src/registry/og-scene.tsx`, where `OgForm` calls `useForm` for all thirty-two `conform-*`
+  scenes and has no server to validate on.
 - `src/registry/*.examples.tsx` is copied verbatim by agents through
   `/api/components/<slug>.json`. A shortcut taken in an example propagates.
 - The `@/…` alias is resolved for `bun test` by the `paths` entry in the *root* `tsconfig.json`.

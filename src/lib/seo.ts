@@ -6,6 +6,12 @@ interface SeoInput {
   description: string
   /** Path beginning with "/" for canonical + og:url. */
   path: string
+  /**
+   * Path of the share image, default `/og/default.jpg`. The images are
+   * photographs of `/og/<slug>` taken by scripts/screenshot-og.ts in the deploy
+   * build, and they are JPEG because 153 lossless 1200×630 screenshots are an
+   * order of magnitude more payload than the text cards they replaced.
+   */
   image?: string
   /** Use the title verbatim instead of appending the site name. */
   exactTitle?: boolean
@@ -18,7 +24,7 @@ interface SeoInput {
 export function seo({ title, description, path, image, exactTitle }: SeoInput) {
   const fullTitle = exactTitle ? title : `${title} — ${SITE}`
   const url = `${BASE_URL}${path}`
-  const ogImage = `${BASE_URL}${image ?? "/og/default.png"}`
+  const ogImage = `${BASE_URL}${image ?? "/og/default.jpg"}`
 
   return [
     { title: fullTitle },

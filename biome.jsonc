@@ -277,7 +277,9 @@
         // validate-on-the-server-with-the-same-schema — A rendered example has no route action to post to, so it validates client-side by definition.
         "!**/*.examples.{tsx,jsx}",
         // local scope, validate-on-the-server-with-the-same-schema — A fixture has no server to validate on.
-        "!tests/**/*.tsx"
+        "!tests/**/*.tsx",
+        // local scope, validate-on-the-server-with-the-same-schema — One file, one rule, for the same reason the tests entry exists: an OG scene is a still life photographed by scripts/screenshot-og.ts, and there is no route action behind it to return a lastResult.
+        "!src/registry/og-scene.tsx"
       ],
       "plugins": [
         // Validate on the server with the same schema

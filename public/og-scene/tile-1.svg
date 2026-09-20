@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A stand-in photograph for the Gallery OG scene. Local on purpose: the
+     gallery example loads its images from picsum.photos, and a share image that
+     is only correct when a third-party CDN answers is not one. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b2b2b"/>
+      <stop offset="1" stop-color="#2dd4a8"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="300" fill="url(#g1)"/>
+  <circle cx="300" cy="90" r="46" fill="#ffffff" fill-opacity="0.18"/>
+  <path d="M0 240 L110 150 L210 230 L300 175 L400 250 L400 300 L0 300 Z" fill="#031318" fill-opacity="0.55"/>
+</svg>
