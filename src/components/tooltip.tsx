@@ -37,11 +37,14 @@ const tooltipStyles = tv({
         "placement-left:slide-in-from-right-1 placement-right:slide-in-from-left-1 placement-top:slide-in-from-bottom-1 placement-bottom:slide-in-from-top-1",
       ],
     },
+    // A tooltip leaves on its entrance played backwards — `direction-reverse` on
+    // the *enter* animation — rather than on a second set of keyframes. So it
+    // reads `--quebi-enter-*`, and the `slide-out-to-*` classes that used to sit
+    // here set `--quebi-exit-*`, which nothing in this animation reads: they
+    // described the motion correctly and produced none of it. Reversing the
+    // entrance already lands on exactly the offset they named (task #179).
     isExiting: {
-      true: [
-        "fade-in direction-reverse animate-in",
-        "placement-left:slide-out-to-right-1 placement-right:slide-out-to-left-1 placement-top:slide-out-to-bottom-1 placement-bottom:slide-out-to-top-1",
-      ],
+      true: ["fade-in direction-reverse animate-in"],
     },
   },
 })
