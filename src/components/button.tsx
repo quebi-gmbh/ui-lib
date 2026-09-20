@@ -15,18 +15,41 @@ import { cn } from "@/lib/utils"
  * ghost, accent (purple), danger (red).
  * Sizes: xs / sm / md (default) / lg / xl, plus square icon-only (sq-*).
  *
- * Depth comes from shadow-quebi-glow, never a hand-rolled shadow. Hover lifts with a
- * subtle scale; the brand teal is reserved for the primary CTA.
+ * Depth comes from a token or a neutral rung, never a hand-rolled shadow. Hover lifts
+ * with one shadow, the same for every intent; the brand teal is reserved for the
+ * primary CTA.
  */
 export const buttonStyles = tv({
   base: [
     "inline-flex items-center justify-center gap-2",
     "font-sans font-semibold whitespace-nowrap select-none cursor-pointer",
     "border border-solid",
-    "transition-all duration-200 ease-out",
-    "hover:scale-[1.02] active:scale-100",
+    // Named properties, not `transition-all` (task #178). `all` animates every
+    // animatable property, so a hover fired fill, border, shadow *and* a scale
+    // at once — four changes reading as one smear. These five are what actually
+    // move: the intents' colours, the lift below, and the opacity that
+    // `disabled:`/`pending:` flip.
+    "transition-[background-color,border-color,color,box-shadow,opacity] duration-200 ease-out",
+    // One hover behaviour for the whole intent set, and a control-scale rung of
+    // the neutral ramp rather than the overlay token. `shadow-quebi-glow-strong`
+    // is what a *floating surface* takes — the command palette, the active
+    // Stepper bullet — and on light it is `0 16px 40px`: a cast the size of the
+    // button falling most of a button-height below a 46px control. `modal.tsx`
+    // makes the argument (task #137): a dialog is the tallest overlay there is
+    // and it still takes the top rung of the *neutral* ramp, because the mint
+    // bloom reads as the thing being lit rather than raised. A button is the
+    // shortest thing that lifts at all, so it takes the bottom rung. On dark the
+    // neutral shadow is quiet by design and the fill change carries the hover —
+    // the same trade #137/#141/#142 took for the overlay family.
+    //
+    // This replaces `hover:scale-[1.02]`, which was the other half of the mess:
+    // a control that grows under the pointer pushes its neighbours out of
+    // optical alignment in a `ButtonGroup` or a table toolbar, and scaling the
+    // box resamples the label, so the text softened for the length of the hover.
+    // With the scale gone, `active:scale-100` had nothing left to cancel.
+    "hover:shadow-md",
     "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-    "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",
+    "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none",
     "pending:opacity-70 pending:cursor-wait",
     // react-aria slot conventions — icons & loaders inherit current color
     "*:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center",
@@ -42,13 +65,17 @@ export const buttonStyles = tv({
       // byte-for-byte unchanged. It does not move on hover — a boundary that
       // weakens when you point at it is the bug below, again.
       primary:
-        "bg-quebi-brand border-quebi-brand-mark text-quebi-on-brand hover:bg-quebi-brand-hover hover:shadow-quebi-glow-strong",
+        "bg-quebi-brand border-quebi-brand-mark text-quebi-on-brand hover:bg-quebi-brand-hover",
       secondary:
         "bg-quebi-inverse-bg border-quebi-inverse-bg text-quebi-inverse-fg hover:bg-quebi-fg-muted hover:border-quebi-fg-muted",
       outline:
         "bg-transparent border-quebi-line/20 text-quebi-fg hover:border-quebi-brand-mark hover:text-quebi-brand-text",
+      // The one intent that opts out of the base hover shadow, and not as a
+      // special case: ghost has no box at rest — no fill, no border — and its
+      // hover fill is ink at 4%. A cast shadow there would be stronger than the
+      // surface casting it, drawing an edge the button does not have.
       ghost:
-        "bg-transparent border-transparent text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
+        "bg-transparent border-transparent text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg hover:shadow-none",
       // 600-level fills, darkening on hover. At 500 the white label was 3.96:1
       // (accent) and 3.76:1 (danger) — under 1.4.3's 4.5:1, which `xs` (12px)
       // and `sm` (14px) are squarely subject to — and both intents *lightened*
