@@ -20,6 +20,14 @@ import { cn } from "@/lib/utils"
  * of the state and reports every press, so the same toolbar drives a view that
  * keeps its own date and one whose date lives in a URL.
  *
+ * Every control is gated on its handler: no `onToday`, no today button. The
+ * view switcher is the one that cannot be — it doubles as the read-only "which
+ * view am I in" indicator, and dropping it would take that away — so it is
+ * drawn `isDisabled` instead when no `onViewChange` is wired. The group is
+ * fully controlled from `view`, so without a handler a press fires, changes
+ * nothing, and the next render re-asserts the same selection; disabled says so
+ * before the press rather than after it (task #169).
+ *
  * `Calendar` exports `SelectMonth`, `StepMonth` and `StepYear`, and they are not
  * reused here: all three read react-aria's `CalendarStateContext`, so they only
  * work *inside* a `<Calendar>` and there is no such state above a week grid.
@@ -46,6 +54,7 @@ export interface CalendarToolbarProps {
   views?: readonly CalendarViewName[]
   /** Override one or more switch labels — the place to translate them. */
   viewLabels?: Partial<Record<CalendarViewName, string>>
+  /** Omit to draw the switcher as a disabled indicator rather than a dead control. */
   onViewChange?: (view: CalendarViewName) => void
   onPrevious?: () => void
   onNext?: () => void
@@ -109,6 +118,7 @@ export function CalendarToolbar({
             size="xs"
             aria-label="Calendar view"
             disallowEmptySelection
+            isDisabled={!onViewChange}
             selectedKeys={[view]}
             onSelectionChange={(keys) => {
               const next = [...keys][0]

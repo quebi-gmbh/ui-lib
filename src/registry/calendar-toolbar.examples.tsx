@@ -88,13 +88,15 @@ const SubsetOfViews = () => {
 }
 
 const WithExtraChrome = () => {
+  const [view, setView] = useState<CalendarViewName>("week")
   const anchor = today(TIME_ZONE)
 
   return (
     <CalendarToolbar
       label={calendarRangeLabel(week(anchor), { locale: LOCALE, timeZone: TIME_ZONE })}
-      view="week"
+      view={view}
       views={["week", "month"]}
+      onViewChange={setView}
     >
       <CalendarLegend calendars={CALENDARS} />
     </CalendarToolbar>
@@ -123,7 +125,7 @@ export const calendarToolbarExamples: ComponentExample[] = [
   {
     title: "Extra chrome",
     description:
-      "Children are placed after the switcher. A legend belongs here: it names the calendar colours, which is what stops hue being the only thing telling two calendars apart.",
+      "Children are placed after the switcher. A legend belongs here: it names the calendar colours, which is what stops hue being the only thing telling two calendars apart. The switcher is wired to state like every other one: the group is fully controlled from `view`, so a `view` with no `onViewChange` cannot move — the toolbar draws that one disabled rather than letting it look pressable.",
     render: () => <WithExtraChrome />,
   },
 ]
