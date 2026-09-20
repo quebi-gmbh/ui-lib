@@ -72,6 +72,46 @@ const TypedTimes = () => {
   )
 }
 
+const UprightTimes = () => {
+  const [spans, setSpans] = useState<DaySpan[]>(WORKDAY.slice(0, 3))
+
+  return (
+    <div className="w-full max-w-md">
+      <div className="mb-5 flex items-baseline justify-between">
+        <div className="font-bold text-quebi-fg tracking-tight">wed 20 aug</div>
+        <span className="text-[10.5px] text-quebi-fg-subtle">times read left to right</span>
+      </div>
+      <DaySchedule
+        spans={spans}
+        onSpansChange={setSpans}
+        timeLabels="editable"
+        timeLabelOrientation="upright"
+        height={400}
+      />
+    </div>
+  )
+}
+
+const UprightShortSpans = () => {
+  const [spans, setSpans] = useState<DaySpan[]>([
+    { id: "standup", label: "standup", start: 540, end: 555 },
+    { id: "handover", label: "handover", start: 1020, end: 1050 },
+  ])
+
+  return (
+    <div className="w-full max-w-md">
+      <DaySchedule
+        spans={spans}
+        onSpansChange={setSpans}
+        timeLabels="editable"
+        timeLabelOrientation="upright"
+        minDuration={15}
+        height={400}
+      />
+    </div>
+  )
+}
+
 const LiveTotals = () => {
   const [spans, setSpans] = useState<DaySpan[]>(WORKDAY.slice(0, 3))
   const total = spans.reduce((sum, s) => sum + (s.end - s.start), 0)
@@ -112,8 +152,20 @@ export const dayScheduleExamples: ComponentExample[] = [
   {
     title: "Editable times",
     description:
-      "timeLabels=\"editable\" turns the rotated times into TimeFields, and widens the lanes to fit them. A typed time is taken as typed — the 15-minute step snaps a drag, not a keystroke — and commits when the field loses focus or on Enter.",
+      "timeLabels=\"editable\" turns the rotated times into TimeFields at the same 10.5px the static labels use, and widens the lanes to fit them. A typed time is taken as typed — the 15-minute step snaps a drag, not a keystroke — and commits when the field loses focus or on Enter.",
     render: () => <TypedTimes />,
+  },
+  {
+    title: "Upright times",
+    description:
+      'timeLabelOrientation="upright" stops rotating the edge times, so they read left to right like any other field. It is its own axis: timeLabels still chooses what the time is, this chooses how it faces, and it applies to the static labels too. Upright, a time spends its whole width on the lane rather than one line box, so the default laneGap widens again.',
+    render: () => <UprightTimes />,
+  },
+  {
+    title: "Upright times on a short span",
+    description:
+      "A 15-minute standup is four pixels of a 400px track, and upright its start and end boxes are fifteen each — so the rotation was the only thing keeping them apart. They go through the same sweep the name column uses: start holds its minute, end is pushed clear, and both stay inside the track. Drag either end shorter and watch the pair refuse to stack.",
+    render: () => <UprightShortSpans />,
   },
   {
     title: "Read-only",

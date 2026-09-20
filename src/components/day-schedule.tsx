@@ -18,8 +18,16 @@ import { TimeField, TimeInput } from "@/components/time-field"
  * date library. Supply `spans` + `onSpansChange` for controlled use, or
  * `defaultSpans` to let it manage its own state.
  *
- * The rotated times beside each span are text by default. `timeLabels="editable"`
- * makes them TimeFields instead, so a time can be typed rather than dragged to.
+ * The times beside each span are text by default. `timeLabels="editable"` makes
+ * them TimeFields instead, so a time can be typed rather than dragged to, and
+ * they are drawn at the same 10.5px as the static ones either way.
+ *
+ * Both are rotated a quarter turn into their lane, which is what lets a lane be
+ * 18px wide — a rotated time costs its line box, not its width.
+ * `timeLabelOrientation="upright"` reads them left to right instead, at the
+ * cost of a 64px lane and a sweep (`layoutEdgeTimes`) that keeps a short span's
+ * start and end from landing on top of each other — which the rotation had been
+ * hiding, because rotated the pair runs away from itself along the lane.
  *
  * Span names share a single column to the right of the lanes. Two spans can
  * always be dragged onto the same midpoint, so that column de-overlaps itself
@@ -30,15 +38,57 @@ import { TimeField, TimeInput } from "@/components/time-field"
 const DAY_MINUTES = 1440
 
 /**
- * Lanes sit as far apart as the widest thing drawn in one. A static time label
- * is only as wide as its line box (~16px), so 18px clears it; rotating a
- * TimeField into the same slot puts the library control's own height there —
- * a 20px line box, a few pixels more once a focused segment's tint is counted —
- * so the editable mode needs half again as much room. `labelOffset` is derived
- * from the gap, so the name column follows on its own.
+ * Lanes sit as far apart as the widest thing drawn in one, and a *rotated* edge
+ * time is as wide as its own line box — so 18px clears a static label at 16px.
+ *
+ * The editable mode used to claim half again as much, on the reasoning that a
+ * TimeField's line box is 20px and a focused segment's tint costs a few more.
+ * Both halves were wrong once the field came down to the static labels' 10.5px
+ * (task #173): measured in Chromium, a rotated editable field and a rotated
+ * static label have the same 15.75px footprint, and focusing a segment changes
+ * it by nothing at all — the tint is a background on a box that was always that
+ * size. So 36 is now 24: the 18 that clears a label, plus air, because a field
+ * is something you aim a pointer at and two of them 2px apart are one target.
+ * `labelOffset` is derived from the gap, so the name column follows on its own.
  */
 const LANE_GAP = 18
-const EDITABLE_LANE_GAP = 36
+const EDITABLE_LANE_GAP = 24
+
+/**
+ * An *upright* edge time spends its width on its width, so the lane has to hold
+ * the whole `09:00` rather than one line box of it. Measured in Chromium at the
+ * shared 10.5px: a static label is 28px wide and a field 46.28px, and the field
+ * starts 12.5px right of the bar (`translate(10px)`, plus half the 5px bar it
+ * is centred on) — so a lane has to be at least 58.78px to keep one span's
+ * times off the next span's bar. 64 is that, rounded up with 5px to spare. The
+ * field is the binding case and the label fits inside it, so one number serves
+ * both kinds rather than splitting `static` from `editable` again.
+ */
+const UPRIGHT_LANE_GAP = 64
+
+/**
+ * How far the name column sits past the last lane. The rotated label is only a
+ * line box wide, so 28px clears it.
+ *
+ * The upright one needs a whole lane again, and it needs it from a constant
+ * rather than from `laneGap`: the clearance is what the *last* lane requires,
+ * and the last lane is precisely the one `laneGap` never applies to. It is the
+ * same requirement a middle lane has, so it is the same number.
+ */
+const NAME_CLEARANCE = 28
+const UPRIGHT_NAME_CLEARANCE = UPRIGHT_LANE_GAP
+
+/**
+ * The least vertical distance between a span's own two upright edge times.
+ *
+ * Rotated, the pair can never collide — each one runs *along* the lane, away
+ * from the other. Upright they are two boxes stacked in one column, measured at
+ * 15.75px each, and a span of `minDuration` on a 400px track is 8px of it: the
+ * shipped example drew one straight over the other. 20 is that box rounded up,
+ * plus 4px — more air than `LABEL_GAP` gives two names, because two times in a
+ * column are eight digits that would otherwise read as one run of them.
+ */
+const UPRIGHT_EDGE_GAP = 20
 
 /**
  * The least vertical distance between two span names. They share one column, so
@@ -47,17 +97,38 @@ const EDITABLE_LANE_GAP = 36
  */
 const LABEL_GAP = 18
 
+type SpanEdge = "start" | "end"
+
+/** Which way an edge time faces: rotated into its lane, or upright beside it. */
+export type DayScheduleTimeLabelOrientation = "rotated" | "upright"
+
 /**
- * A quarter turn anticlockwise about the lane, then clear of the handle: the
- * start time runs up from the span's start, the end time down from its end.
- * The `-50%` is half the element's own *height*, which is what centres the
- * rotated box on the lane — so a taller control still sits on its lane, it
+ * Where an edge time sits relative to its lane.
+ *
+ * `rotated` is a quarter turn anticlockwise about the lane, then clear of the
+ * handle: the start time runs up from the span's start, the end time down from
+ * its end. The `-50%` is half the element's own *height*, which is what centres
+ * the rotated box on the lane — so a taller control still sits on its lane, it
  * just needs a wider gap to its neighbour.
+ *
+ * `upright` drops the rotation and nothing else. Both edges step the same 10px
+ * to the right of the lane, so the pair reads as one column beside the bar
+ * rather than straddling it: hanging `end` on the left instead would put it
+ * over the previous lane, and over the hour axis for lane 0, which no `laneGap`
+ * can fix because the first lane is not spaced from anything. What keeps the
+ * pair off each other is `layoutEdgeTimes`. The `-50%` now means half the
+ * element height in the ordinary sense: the box is centred on its own minute.
  */
-const EDGE_TRANSFORM = {
-  start: "rotate(-90deg) translate(16px, -50%)",
-  end: "rotate(-90deg) translate(calc(-100% - 16px), -50%)",
-} as const
+const EDGE_TRANSFORM: Record<DayScheduleTimeLabelOrientation, Record<SpanEdge, string>> = {
+  rotated: {
+    start: "rotate(-90deg) translate(16px, -50%)",
+    end: "rotate(-90deg) translate(calc(-100% - 16px), -50%)",
+  },
+  upright: {
+    start: "translate(10px, -50%)",
+    end: "translate(10px, -50%)",
+  },
+}
 
 export type DayScheduleTone = "brand" | "cyan"
 
@@ -128,44 +199,85 @@ const round = (value: number) => Math.round(value * 100) / 100
  * the HTML and would land — visibly — one frame after hydration.
  */
 function layoutNames(spans: DaySpan[], height: number) {
-  const wanted = spans
-    .map((span, index) => ({
+  return sweepApart(
+    spans.map((span, index) => ({
       index,
       y: (((span.start + span.end) / 2) * height) / DAY_MINUTES,
-    }))
-    // Ties break by span order rather than by whatever the sort makes of them,
-    // so two spans sharing a midpoint are laid out the same way every render.
-    .sort((a, b) => a.y - b.y || a.index - b.index)
+    })),
+    LABEL_GAP,
+    height,
+  )
+}
 
-  // Down: each name clears the one above it, and the first clears the top edge.
+/**
+ * The sweep itself, so the name column and the upright edge times share one
+ * algorithm rather than two that drift. Takes where each box wants to be and
+ * returns where it goes, in pixels, indexed as it came in.
+ */
+function sweepApart(wanted: SweepItem[], gap: number, height: number) {
+  // Ties break by the caller's order rather than by whatever the sort makes of
+  // them, so two boxes wanting the same y are laid out the same way every
+  // render.
+  wanted.sort((a, b) => a.y - b.y || a.index - b.index)
+
+  // Down: each box clears the one above it, and the first clears the top edge.
   let floor = Number.NEGATIVE_INFINITY
-  for (const name of wanted) {
-    name.y = Math.max(name.y, floor, 0)
-    floor = name.y + LABEL_GAP
+  for (const item of wanted) {
+    item.y = Math.max(item.y, floor, 0)
+    floor = item.y + gap
   }
 
-  // Up: the column ends inside the track. Skipped when the names cannot all fit
+  // Up: the column ends inside the track. Skipped when the boxes cannot all fit
   // in `height` — pushing then would only trade an overflow at the bottom for
   // one at the top, and restack everything on the way.
-  if ((wanted.length - 1) * LABEL_GAP <= height) {
+  if ((wanted.length - 1) * gap <= height) {
     let ceiling = height
     for (let i = wanted.length - 1; i >= 0; i--) {
       wanted[i].y = Math.min(wanted[i].y, ceiling)
-      ceiling = wanted[i].y - LABEL_GAP
+      ceiling = wanted[i].y - gap
     }
   }
 
   const tops: number[] = []
-  for (const name of wanted) tops[name.index] = round(name.y)
+  for (const item of wanted) tops[item.index] = round(item.y)
   return tops
+}
+
+/**
+ * Where one span's two *upright* edge times are drawn, in pixels down the track.
+ *
+ * Rotated, the pair can never collide: each time runs along the lane, away from
+ * the other, and the only thing it can hit is a neighbouring lane — which is
+ * what `laneGap` is for. Upright, they are two boxes in one column separated by
+ * nothing but the span's own length, and a span of `minDuration` is 8px of a
+ * 400px track. The shipped example would draw one straight over the other.
+ *
+ * So they go through the same sweep the name column uses. `start` sorts above
+ * `end` because a span's start is never after its end, and ties break by the
+ * order they are handed over, so the pair never swaps places under the sweep.
+ */
+function layoutEdgeTimes(span: DaySpan, height: number) {
+  const [start, end] = sweepApart(
+    (["start", "end"] as const).map((edge, index) => ({
+      index,
+      y: (span[edge] * height) / DAY_MINUTES,
+    })),
+    UPRIGHT_EDGE_GAP,
+    height,
+  )
+  return { start, end }
+}
+
+/** One box in a de-overlapped column: where it wants to be, and who it is. */
+interface SweepItem {
+  index: number
+  y: number
 }
 
 type DragPart = "body" | "start" | "end"
 
-/** Which rotated edge time to draw: none, read-only text, or a typeable field. */
+/** Which edge time to draw: none, read-only text, or a typeable field. */
 export type DayScheduleTimeLabels = "none" | "static" | "editable"
-
-type SpanEdge = "start" | "end"
 
 /**
  * A minute offset as a `Time`. 1440 — midnight closing the day — has no `Time`
@@ -181,14 +293,18 @@ interface EdgeTimeFieldProps {
   minutes: number
   /** The lane's `left`, shared with the bar and the handle. */
   lane: string
-  edge: SpanEdge
+  /** Where down the track the box is centred — a percentage, or laid-out px. */
+  top: string
+  /** The orientation's placement for this edge. See `EDGE_TRANSFORM`. */
+  transform: string
   isDisabled: boolean
   isReadOnly: boolean
   onCommit: (minutes: number) => void
 }
 
 /**
- * The rotated, typeable edge time.
+ * The typeable edge time — rotated into its lane, or upright beside it, which
+ * the caller decides by handing it a `transform` and a `top` to match.
  *
  * It holds a draft of its own, and that is the whole point of it. react-aria
  * reports a segmented field on every keystroke, so typing `17` into the hour
@@ -202,7 +318,8 @@ function EdgeTimeField({
   label,
   minutes,
   lane,
-  edge,
+  top,
+  transform,
   isDisabled,
   isReadOnly,
   onCommit,
@@ -239,11 +356,19 @@ function EdgeTimeField({
       hourCycle={24}
       shouldForceLeadingZeros
       className="absolute origin-top-left"
-      style={{ left: lane, top: toPercent(minutes), transform: EDGE_TRANSFORM[edge] }}
+      style={{ left: lane, top, transform }}
     >
-      {/* The rotated box is the control's own metrics, so it carries no chrome
-          and no padding of its own — the lane is the box. */}
-      <TimeInput bare className="w-auto px-0 py-0" />
+      {/* The box is the control's own metrics, so it carries no chrome
+          and no padding of its own — the lane is the box. The type is the
+          static labels' type, set here and nowhere else: `TimeInput` leaves its
+          segments without a resting `text-*`, so all three of these inherit
+          through to the digits (task #173). Sized down rather than the static
+          labels up: those share a size with the hour axis and sit beside the
+          span names, so raising them would put a time above its own name. */}
+      <TimeInput
+        bare
+        className="w-auto px-0 py-0 text-[10.5px] text-quebi-fg-muted tabular-nums"
+      />
     </TimeField>
   )
 }
@@ -263,14 +388,16 @@ export interface DayScheduleProps extends Omit<React.ComponentProps<"div">, "onC
   /** Track height in pixels. */
   height?: number
   /**
-   * Horizontal distance between lanes, in pixels. Defaults to 18, or to 36 in
-   * `timeLabels="editable"` — where the rotated control needs the room.
+   * Horizontal distance between lanes, in pixels. Defaults to 18, to 24 in
+   * `timeLabels="editable"` — where the rotated control wants to be separately
+   * clickable — and to 64 in `timeLabelOrientation="upright"`, where a time is
+   * as wide as a time rather than as wide as a line box.
    */
   laneGap?: number
   /** Offset of the first lane from the track's left edge, in pixels. */
   laneOffset?: number
   /**
-   * The rotated start/end times beside each span. `"static"` draws them as
+   * The start/end times beside each span. `"static"` draws them as
    * text; `"editable"` draws a TimeField the user can type a time into, which
    * also widens the default `laneGap` to fit it; `"none"` omits them.
    *
@@ -279,6 +406,20 @@ export interface DayScheduleProps extends Omit<React.ComponentProps<"div">, "onC
    * react-aria's, rendered for the active locale.
    */
   timeLabels?: DayScheduleTimeLabels
+  /**
+   * How an edge time is drawn: `"rotated"` a quarter turn into its lane (the
+   * default, and what every schedule looked like before this existed), or
+   * `"upright"` beside it, reading left to right like any other label or field.
+   *
+   * It is its own axis on purpose: `timeLabels` chooses *what* the edge time is
+   * and this chooses *how it faces*, so the two compose. Upright widens the
+   * default `laneGap` again — a rotated label spends its line box on the gap
+   * and an upright one spends its whole width — and moves a span's two times
+   * apart when its length cannot keep them apart on its own.
+   *
+   * Ignored when `timeLabels` is `"none"`: there is nothing to face.
+   */
+  timeLabelOrientation?: DayScheduleTimeLabelOrientation
   /** @deprecated Use `timeLabels`: `false` is `"none"`, `true` is `"static"`. */
   showTimeLabels?: boolean
   isDisabled?: boolean
@@ -298,6 +439,7 @@ export function DaySchedule({
   laneGap: laneGapProp,
   laneOffset = 24,
   timeLabels,
+  timeLabelOrientation = "rotated",
   showTimeLabels = true,
   isDisabled = false,
   isReadOnly = false,
@@ -306,7 +448,15 @@ export function DaySchedule({
   ...props
 }: DayScheduleProps) {
   const labelMode: DayScheduleTimeLabels = timeLabels ?? (showTimeLabels ? "static" : "none")
-  const laneGap = laneGapProp ?? (labelMode === "editable" ? EDITABLE_LANE_GAP : LANE_GAP)
+  // `"none"` draws nothing in the lane, so neither the orientation nor the
+  // editable widening has anything to make room for.
+  const isUpright = timeLabelOrientation === "upright" && labelMode !== "none"
+  const defaultLaneGap = isUpright
+    ? UPRIGHT_LANE_GAP
+    : labelMode === "editable"
+      ? EDITABLE_LANE_GAP
+      : LANE_GAP
+  const laneGap = laneGapProp ?? defaultLaneGap
 
   const [uncontrolled, setUncontrolled] = useState<DaySpan[]>(defaultSpans)
   const isControlled = controlledSpans !== undefined
@@ -428,7 +578,12 @@ export function DaySchedule({
     (_, i) => i * tickInterval,
   )
   // Push the name column clear of the widest lane so labels never overlap bars.
-  const labelOffset = laneOffset + Math.max(0, spans.length - 1) * laneGap + 28
+  // The clearance does not come from `laneGap`: it is what the *last* lane
+  // needs, and the last lane is the one `laneGap` never applies to.
+  const labelOffset =
+    laneOffset +
+    Math.max(0, spans.length - 1) * laneGap +
+    (isUpright ? UPRIGHT_NAME_CLEARANCE : NAME_CLEARANCE)
   // …and clear of each other, which the column on its own does not give you.
   const nameTops = layoutNames(spans, height)
 
@@ -474,6 +629,13 @@ export function DaySchedule({
           const laneX = laneOffset + index * laneGap
           const lane = `${laneX}px`
           const valueText = `${span.label}, ${formatTime(span.start)} to ${formatTime(span.end)}`
+          // Rotated, a span's two times run away from each other along the
+          // lane and cannot collide; upright they are one column, kept apart
+          // by the sweep rather than by the span happening to be long enough.
+          const edgeTops = isUpright ? layoutEdgeTimes(span, height) : null
+          const edgeTop = (edge: SpanEdge) =>
+            edgeTops ? `${edgeTops[edge]}px` : toPercent(span[edge])
+          const edgeTransform = EDGE_TRANSFORM[isUpright ? "upright" : "rotated"]
           // Where the name would sit if nothing were in its way, and where it
           // actually sits. A name that had to move gets a leader line back to
           // its own span, because the tone alone repeats every other lane.
@@ -575,7 +737,7 @@ export function DaySchedule({
                 {span.label}
               </div>
 
-              {/* Rotated edge times — text, or a field to type one into */}
+              {/* Edge times — text, or a field to type one into */}
               {labelMode === "static" &&
                 (["start", "end"] as const).map((edge) => (
                   <div
@@ -584,8 +746,8 @@ export function DaySchedule({
                     className="absolute origin-top-left whitespace-nowrap text-[10.5px] text-quebi-fg-muted tabular-nums"
                     style={{
                       left: lane,
-                      top: toPercent(span[edge]),
-                      transform: EDGE_TRANSFORM[edge],
+                      top: edgeTop(edge),
+                      transform: edgeTransform[edge],
                     }}
                   >
                     {formatTime(span[edge])}
@@ -599,7 +761,8 @@ export function DaySchedule({
                     label={`${span.label} ${edge} time`}
                     minutes={span[edge]}
                     lane={lane}
-                    edge={edge}
+                    top={edgeTop(edge)}
+                    transform={edgeTransform[edge]}
                     isDisabled={isDisabled}
                     isReadOnly={isReadOnly}
                     // Through the same clamp a drag uses, so `minDuration` and
