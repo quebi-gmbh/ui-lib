@@ -12,17 +12,15 @@ import {
 import type { OgScene } from "./types"
 
 /**
- * Up from the bottom edge, with the notch you drag it back down by. Unlike
- * `ModalContent`, `DrawerContent` throws outside a `Drawer` — it reads the open
- * state off the trigger's context — so the trigger is here, under the scrim,
- * with `defaultOpen` on the wrapper.
+ * Up from the bottom edge, with the notch you drag it back down by. Opened
+ * through the trigger's own `defaultOpen` rather than a standalone `isOpen`, so
+ * the scene photographs the shape the examples use; the trigger sits under the
+ * scrim.
  */
 export const drawerOgScene: OgScene = {
   render: () => (
     <Drawer defaultOpen>
-      <DrawerTrigger>
-        <Button>Open drawer</Button>
-      </DrawerTrigger>
+      <DrawerTrigger>Open drawer</DrawerTrigger>
       <DrawerContent side="bottom" aria-label="Mobile menu">
         <DrawerHeader>
           <DrawerTitle>Mobile menu</DrawerTitle>

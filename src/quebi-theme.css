@@ -417,6 +417,206 @@
   animation: quebi-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* ---------------- Overlay enter/exit animations ---------------- */
+/* Every overlay in this library asks for its motion in `tailwindcss-animate`'s
+   vocabulary — `entering:animate-in entering:fade-in entering:slide-in-from-right`,
+   `exiting:animate-out exiting:slide-out-to-bottom`, and so on. That package has
+   never been a dependency here and nothing else defined those names, so all six
+   of them (Modal, Sheet, Popover, Tooltip, Sidebar, CommandMenu) compiled to
+   *nothing* and cut straight in and out, since the first commit (task #179).
+   The `entering:`/`exiting:` variants were never the problem — those come from
+   `tailwindcss-react-aria-components` and work — it was the utilities they
+   modified that were never generated.
+
+   Defined here rather than pulled in as `tw-animate-css`, for the same reason
+   `quebi-pulse` above is: a dozen keyframes is not worth a dependency, and this
+   theme is meant to be readable as the whole answer to "what does quebi look
+   like". `@utility` plus a top-level `@keyframes` rather than `--animate-*`
+   theme tokens, so the keyframes always ship and do not depend on a source scan
+   finding the utility.
+
+   The mechanism is tailwindcss-animate's, kept deliberately: one `quebi-enter`
+   keyframe whose `from` reads four custom properties, and a pile of one-line
+   utilities that set them. That is what lets `fade-in`, `zoom-in-95` and
+   `slide-in-from-right` combine on one element into a single composite
+   animation instead of three fighting ones.
+
+   Two things are ours rather than upstream's:
+
+   - **Duration and easing come from Tailwind's own `duration-*` / `ease-*`.**
+     Those utilities set `--tw-duration` and `--tw-ease` (registered `@property`
+     with no initial value, so an unset one falls through to the default in the
+     `var()`), which is why `entering:duration-300 entering:ease-out` on a Modal
+     reads as it looks. Upstream ships a parallel `duration-*` override for this;
+     reading the variables needs no override at all. The 200ms default is
+     Drawer's `0.2s` — Drawer animates in `motion/react` and is the surface the
+     bug report pointed at as the correct feel, so it sets the house tempo and
+     the CSS overlays match it rather than the other way round.
+   - **`prefers-reduced-motion` turns the animation off entirely**, as Drawer
+     does through `useReducedMotion`. `animation: none` is safe to unmount
+     against: react-aria decides how long to keep an exiting overlay mounted by
+     asking `getAnimations()`, and an element with no animation resolves
+     immediately — which is exactly why the broken state above still closed.
+
+   Only the utilities the six components actually use are defined. Adding an
+   offset (`slide-in-from-top-4`) means adding the one line for it, on purpose:
+   the set stays a list of what this design system does. */
+
+@keyframes quebi-enter {
+  from {
+    opacity: var(--quebi-enter-opacity, 1);
+    transform: translate3d(var(--quebi-enter-translate-x, 0), var(--quebi-enter-translate-y, 0), 0)
+      scale3d(var(--quebi-enter-scale, 1), var(--quebi-enter-scale, 1), 1);
+  }
+}
+
+@keyframes quebi-exit {
+  to {
+    opacity: var(--quebi-exit-opacity, 1);
+    transform: translate3d(var(--quebi-exit-translate-x, 0), var(--quebi-exit-translate-y, 0), 0)
+      scale3d(var(--quebi-exit-scale, 1), var(--quebi-exit-scale, 1), 1);
+  }
+}
+
+/* The two drivers. Each resets its own four properties to `initial` — i.e. back
+   to the guaranteed-invalid value, so the `var()` fallbacks in the keyframes
+   apply — because these are inheriting custom properties and an overlay that
+   fades is very often the *parent* of a panel that only slides. Without the
+   reset, `fade-in` on a ModalOverlay would quietly fade its Modal child too. */
+@utility animate-in {
+  --quebi-enter-opacity: initial;
+  --quebi-enter-scale: initial;
+  --quebi-enter-translate-x: initial;
+  --quebi-enter-translate-y: initial;
+  animation: quebi-enter var(--tw-duration, 200ms) var(--tw-ease, ease-out) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@utility animate-out {
+  --quebi-exit-opacity: initial;
+  --quebi-exit-scale: initial;
+  --quebi-exit-translate-x: initial;
+  --quebi-exit-translate-y: initial;
+  animation: quebi-exit var(--tw-duration, 200ms) var(--tw-ease, ease-in) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+/* Tooltip leaves on its entrance played backwards rather than on a second
+   keyframe, so it needs the direction as a utility. */
+@utility direction-reverse {
+  animation-direction: reverse;
+}
+
+/* Opacity and scale. `zoom-*-95` is the Modal's, matching the 0.95 the dialog
+   grows from on a wide viewport. */
+@utility fade-in {
+  --quebi-enter-opacity: 0;
+}
+
+@utility fade-out {
+  --quebi-exit-opacity: 0;
+}
+
+@utility zoom-in-95 {
+  --quebi-enter-scale: 0.95;
+}
+
+@utility zoom-out-95 {
+  --quebi-exit-scale: 0.95;
+}
+
+/* Slides. The bare utility travels the element's own size, which is what an
+   edge-anchored panel wants; a numeric suffix is the Tailwind spacing scale
+   (`-1` = 0.25rem, the nudge a popover or tooltip makes towards its trigger;
+   `-0` cancels an inherited slide at a breakpoint; `-80` = 20rem, the Sheet's
+   own `sm:max-w-80`). Sign convention is upstream's: "from top" starts above,
+   "to top" ends above. */
+@utility slide-in-from-top {
+  --quebi-enter-translate-y: -100%;
+}
+
+@utility slide-in-from-bottom {
+  --quebi-enter-translate-y: 100%;
+}
+
+@utility slide-in-from-left {
+  --quebi-enter-translate-x: -100%;
+}
+
+@utility slide-in-from-right {
+  --quebi-enter-translate-x: 100%;
+}
+
+@utility slide-out-to-top {
+  --quebi-exit-translate-y: -100%;
+}
+
+@utility slide-out-to-bottom {
+  --quebi-exit-translate-y: 100%;
+}
+
+@utility slide-out-to-left {
+  --quebi-exit-translate-x: -100%;
+}
+
+@utility slide-out-to-right {
+  --quebi-exit-translate-x: 100%;
+}
+
+@utility slide-in-from-bottom-0 {
+  --quebi-enter-translate-y: 0;
+}
+
+@utility slide-out-to-bottom-0 {
+  --quebi-exit-translate-y: 0;
+}
+
+@utility slide-in-from-top-1 {
+  --quebi-enter-translate-y: calc(var(--spacing) * -1);
+}
+
+@utility slide-in-from-bottom-1 {
+  --quebi-enter-translate-y: var(--spacing);
+}
+
+@utility slide-in-from-left-1 {
+  --quebi-enter-translate-x: calc(var(--spacing) * -1);
+}
+
+@utility slide-in-from-right-1 {
+  --quebi-enter-translate-x: var(--spacing);
+}
+
+@utility slide-out-to-top-1 {
+  --quebi-exit-translate-y: calc(var(--spacing) * -1);
+}
+
+@utility slide-out-to-bottom-1 {
+  --quebi-exit-translate-y: var(--spacing);
+}
+
+@utility slide-out-to-left-1 {
+  --quebi-exit-translate-x: calc(var(--spacing) * -1);
+}
+
+@utility slide-out-to-right-1 {
+  --quebi-exit-translate-x: var(--spacing);
+}
+
+@utility slide-out-to-left-80 {
+  --quebi-exit-translate-x: calc(var(--spacing) * -80);
+}
+
+@utility slide-out-to-right-80 {
+  --quebi-exit-translate-x: calc(var(--spacing) * 80);
+}
+
 /* ---------------- Native scrollbar (dropdowns, scroll areas) ---------------- */
 /* The quebi native scrollbar: a 12px track carrying a 6px tinted pill that
    floats 3px clear of every edge. That is the same geometry as `.os-theme-quebi`

@@ -10,7 +10,7 @@ import type {
   TextProps,
 } from "react-aria-components"
 import {
-  Button as ButtonPrimitive,
+  composeRenderProps,
   Dialog,
   DialogTrigger,
   Heading,
@@ -28,6 +28,16 @@ import { Button, type ButtonProps } from "@/components/button"
  * A draggable sliding panel that enters from any edge. Built on react-aria's
  * Modal/ModalOverlay for accessibility and `motion` for the slide + drag-to-
  * dismiss gesture. Composes the same overlay surface tokens as Dialog.
+ *
+ * Sheet is this same panel without the gesture, and the gesture is the one
+ * question that chooses between them: a panel a thumb should be able to throw
+ * off the screen is a Drawer, and anything else is a Sheet — which is the
+ * plainer of the two and carries the fuller Dialog surface.
+ *
+ * Two shapes, as with Sheet: `Drawer` is react-aria's `DialogTrigger` and takes
+ * a `DrawerTrigger` plus a `DrawerContent`; when state decides instead — a
+ * drawer a route opens, say — render `DrawerContent` on its own with
+ * `isOpen`/`onOpenChange` and leave `Drawer` out.
  *
  * Surface tokens: bg-quebi-elevated, border-quebi-line/20. Depth is a neutral
  * shadow, not the mint `shadow-quebi-glow` it used to carry: a halo painted at
@@ -56,22 +66,33 @@ const DrawerContent = ({
   notch = true,
   children,
   className,
+  role = "dialog",
+  // Held back from the overlay's props and handed to the Dialog below: the
+  // label describes the dialog, not the scrim around it. Same reasoning as
+  // SheetContent and ModalContent — and until now `aria-label` was declared,
+  // spread onto the scrim and overruled by a hardcoded "Drawer" on the Dialog,
+  // so a drawer could not be named at all.
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledby,
   ...props
 }: DrawerContentProps) => {
+  // A drawer with a trigger reads its open state off the DialogTrigger above
+  // it; a drawer a route opens has no trigger and controls `isOpen` itself.
+  // Both are supported shapes, and `DrawerContentProps` has accepted `isOpen`
+  // all along — this used to throw on the second one rather than use it.
   const state = use(OverlayTriggerStateContext)
   // Modal guards its scrim with `motion-reduce:backdrop-blur-none`; the blur is
   // an animated value here, so the same guard has to be a hook.
   const prefersReducedMotion = useReducedMotion()
   const blurAmount = isBlurred && !prefersReducedMotion ? "blur(8px)" : "blur(0px)"
-  if (!state) throw new Error("DrawerContent must be used within a Drawer")
 
   return (
     <AnimatePresence>
-      {(props?.isOpen || state?.isOpen) && (
+      {(props.isOpen ?? state?.isOpen) && (
         <DrawerOverlay
           isDismissable
-          isOpen={props?.isOpen || state?.isOpen}
-          onOpenChange={props?.onOpenChange || state?.setOpen}
+          isOpen={props.isOpen ?? state?.isOpen}
+          onOpenChange={props.onOpenChange ?? state?.setOpen}
           // The blur is a motion value rather than a `backdrop-blur-sm` class so
           // it can tween: as a class it was applied the moment the overlay
           // mounted and removed the moment AnimatePresence unmounted it, which
@@ -162,8 +183,9 @@ const DrawerContent = ({
               dragPropagation
             >
               <Dialog
-                aria-label="Drawer"
-                role="dialog"
+                aria-label={ariaLabel}
+                aria-labelledby={ariaLabelledby}
+                role={role}
                 className={cn(
                   "relative flex flex-col overflow-hidden outline-hidden will-change-auto",
                   side === "top" || side === "bottom"
@@ -237,7 +259,18 @@ const DrawerClose = ({ className, intent = "outline", ref, ...props }: ButtonPro
   return <Button slot="close" className={className} ref={ref} intent={intent} {...props} />
 }
 
-const DrawerTrigger = ButtonPrimitive
+/**
+ * The library's Button, matching `DialogTrigger` and `SheetTrigger`. It was
+ * react-aria's unstyled primitive, which meant every call site put a `Button`
+ * inside it — a `<button>` inside a `<button>`, and an unstyled one on any
+ * consumer who took the component at its word.
+ */
+const DrawerTrigger = ({ className, ...props }: ButtonProps) => (
+  <Button
+    className={composeRenderProps(className, (resolved) => cn("cursor-pointer", resolved))}
+    {...props}
+  />
+)
 
 export type { DrawerContentProps }
 export {

@@ -23,9 +23,7 @@ export const drawerExamples: ComponentExample[] = [
     description: "A bottom drawer with a notch, header, body, and footer.",
     render: () => (
       <Drawer>
-        <DrawerTrigger>
-          <Button>Open drawer</Button>
-        </DrawerTrigger>
+        <DrawerTrigger>Open drawer</DrawerTrigger>
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>Mobile menu</DrawerTitle>
@@ -50,9 +48,7 @@ export const drawerExamples: ComponentExample[] = [
     description: "Set `side` to slide the panel in from any edge.",
     render: () => (
       <Drawer>
-        <DrawerTrigger>
-          <Button intent="outline">Open settings</Button>
-        </DrawerTrigger>
+        <DrawerTrigger intent="outline">Open settings</DrawerTrigger>
         <DrawerContent side="right" notch={false}>
           <DrawerHeader>
             <DrawerTitle>Settings</DrawerTitle>
@@ -76,9 +72,7 @@ export const drawerExamples: ComponentExample[] = [
     description: "`isFloat` insets the panel from the edges with rounded corners.",
     render: () => (
       <Drawer>
-        <DrawerTrigger>
-          <Button intent="secondary">Open floating</Button>
-        </DrawerTrigger>
+        <DrawerTrigger intent="secondary">Open floating</DrawerTrigger>
         <DrawerContent side="left" isFloat notch={false}>
           <DrawerHeader>
             <DrawerTitle>Navigation</DrawerTitle>
