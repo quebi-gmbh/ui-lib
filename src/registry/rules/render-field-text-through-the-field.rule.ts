@@ -98,26 +98,43 @@ export const renderFieldTextThroughTheFieldRule: RuleMeta = {
   enforcement: {
     kind: "lint",
     // A p/span/div rendering field errors with no id for the control's
-    // aria-describedby to resolve to. Three parts, each earning its place
+    // aria-describedby to resolve to. Four parts, each earning its place
     // (tests/forms.test.ts covers all of them):
     //  - `until JsxElement()` stops the search at the next element, so the
     //    report lands on the message and not on every wrapper around it;
     //  - the id guard is what lets the correct version pass;
     //  - the .errors.length guard keeps it off "{errors.length} problems found",
-    //    which is a count, not a message.
+    //    which is a count, not a message;
+    //  - the $field regex asks what the object is called, because `.errors` is
+    //    an ordinary property of ordinary objects. With $field unbound this
+    //    reported `<p>{response.errors}</p>` and
+    //    `<div>{validation.errors.map((e) => e.message)}</div>` as unreferenced
+    //    field errors (task #196, the same hole as task #194 in
+    //    bind-fields-through-conform), telling the reader to put
+    //    `id={field.errorId}` on a GraphQL response — at error severity, with no
+    //    suppression comment available for a GritQL diagnostic. $field is
+    //    therefore the same chain that rule pins: `field`, or `fields.x` with
+    //    anything in front of it (`props.fields.email`) and any fieldset depth
+    //    behind it (`fields.address.street`). It is a shape test, not a type
+    //    test, so a field reached through an alias — an item out of
+    //    getFieldList(), `const emailField = fields.email` — goes unreported.
+    //    That is the side to miss on: this rule is an error. It also takes the
+    //    check off `<div>{form.errors}</div>`, which the record's own exception
+    //    for a form-level summary already says is not a field error.
     biome: {
       via: "plugin",
       pattern: `JsxElement(opening_element = $open, children = $children) as $message where {
   $open <: JsxOpeningElement(name = $el, attributes = $attrs),
   $el <: r"^(?:p|span|div)$",
   $children <: contains \`$field.errors\` until JsxElement(),
+  $field <: r"^(?:[A-Za-z_$][A-Za-z0-9_$]*\\.)*(?:field|fields\\.[A-Za-z0-9_$]+(?:\\.[A-Za-z0-9_$]+)*)$",
   $children <: not contains \`$field.errors.length\`,
   $attrs <: not contains JsxAttribute(name = r"^id$")`,
     },
     message:
       "This renders field errors in an element the control cannot reference. Inside a react-aria field use <FieldError> from @/components/field; outside one, put id={field.errorId} on this element so the aria-describedby that getInputProps already emits resolves to it. See https://ui-lib.quebi.de/rules/render-field-text-through-the-field",
-    grep: "<(p|span|div)[^>]*>\\s*\\{[a-zA-Z]+\\.errors",
-    note: "The check finds error text in an element with no id; it cannot tell whether you are inside a react-aria field, which is what decides between FieldError and an explicit id. It does not look at labels at all — a placeholder standing in for a label stays a review question, worth looking for whenever you touch a form.",
+    grep: "<(p|span|div)[^>]*>\\s*\\{[a-zA-Z0-9_$.]*\\bfields?\\b[a-zA-Z0-9_$.]*\\.errors",
+    note: "The check finds error text in an element with no id; it cannot tell whether you are inside a react-aria field, which is what decides between FieldError and an explicit id. The object the errors are read off has to be spelled like a field — `field`, `props.field`, `fields.email`, `fields.address.street` — so `<p>{response.errors}</p>` on a GraphQL response is not a finding; until task #196 it was, and an error with no suppression comment available. What is bought with that is what is lost: a field reached through an alias (an item out of `getFieldList()`, `const emailField = fields.email`) is spelled like a domain object and goes unreported. It does not look at labels at all — a placeholder standing in for a label stays a review question, worth looking for whenever you touch a form.",
   },
   tags: ["forms", "conform", "accessibility", "aria", "tier-2"],
 }
