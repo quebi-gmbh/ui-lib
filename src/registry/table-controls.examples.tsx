@@ -187,9 +187,10 @@ const Filters = () => {
         submit. Put 900 in <em>From</em> and 100 in <em>To</em> and the error is
         on the field — a range that would have returned nothing never becomes a
         query. Inside a table these are mounted by the header's filter popover,
-        one at a time; here they are side by side so all three are visible at
-        once. There are five variants in all: text and boolean are the two not
-        shown.
+        one at a time, and there Apply dismisses it through <code>onClose</code>.
+        Here nothing hosts them, so the prop is left off and the three stay side
+        by side, all visible at once. There are five variants in all: text and
+        boolean are the two not shown.
       </Note>
     </div>
   )

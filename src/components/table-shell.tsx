@@ -508,8 +508,15 @@ export interface TableShellProps<T extends RowData> {
   renderCellEditor?: DataTableCellEditRenderer<T>
   /** Extra classes for a row — conditional formatting lives here. */
   rowClassName?: (row: T) => string | undefined
-  /** Per-column filter popover content. Return null for an unfilterable column. */
-  renderFilter?: (columnId: string) => ReactNode
+  /**
+   * Per-column filter popover content. Return null for an unfilterable column.
+   *
+   * `close` dismisses the popover this content is rendered in. The shell owns
+   * the open state because it owns the overlay; the panel inside only asks.
+   * Hand it to a `TableFilterPanel` as `onClose` and Apply stops leaving the
+   * panel pinned over the rows it just filtered.
+   */
+  renderFilter?: (columnId: string, close: () => void) => ReactNode
   /** Which columns currently have a filter applied, for the header badge. */
   activeFilters?: string[]
   isLoading?: boolean
@@ -638,6 +645,14 @@ export function TableShell<T extends RowData>({
   className,
 }: TableShellProps<T>) {
   const { additive, handlers } = useSortModifier()
+  // Which column's filter popover is open, so that applying a filter can shut
+  // it. Uncontrolled overlays cannot be closed from their own content, and a
+  // filter panel that stays up after Apply hides the rows it just produced
+  // *and* holds react-aria's scroll lock on the page behind it. One id rather
+  // than a flag per column: two open filter popovers is not a state the header
+  // can reach, and one id cannot represent it.
+  const [openFilterColumnId, setOpenFilterColumnId] = useState<string | null>(null)
+  const closeFilter = () => setOpenFilterColumnId(null)
   const headerGroups = table.getHeaderGroups()
   const leafHeaders = headerGroups.at(-1)?.headers ?? []
   const hasBands = headerGroups.length > 1
@@ -968,7 +983,7 @@ export function TableShell<T extends RowData>({
     const column = header.column
     const meta = column.columnDef.meta
     const priority = sortPriority(sorting, column.id)
-    const filter = renderFilter?.(column.id)
+    const filter = renderFilter?.(column.id, closeFilter)
     const isFiltered = activeFilters.includes(column.id)
     return (
       <TableColumn
@@ -1013,7 +1028,10 @@ export function TableShell<T extends RowData>({
               </span>
             )}
             {filter && (
-              <Popover>
+              <Popover
+                isOpen={openFilterColumnId === column.id}
+                onOpenChange={(isOpen) => setOpenFilterColumnId(isOpen ? column.id : null)}
+              >
                 <PopoverTrigger
                   intent="ghost"
                   size="sq-xs"

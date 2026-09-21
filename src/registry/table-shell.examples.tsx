@@ -153,8 +153,11 @@ const OwnState = () => {
         // This prop is the seam between the shell and the controls: the shell
         // renders the popover and the trigger, the caller decides what is
         // inside it. Passing a TableFilterPanel is what DataTable does; passing
-        // anything else is allowed, and neither module imports the other.
-        renderFilter={(columnId) =>
+        // anything else is allowed, and neither module imports the other. The
+        // second argument closes that popover — the shell owns the open state,
+        // so Apply can end the interaction instead of leaving the panel over
+        // the rows it just filtered.
+        renderFilter={(columnId, close) =>
           columnId === "status" ? (
             <TableFilterPanel
               columnId="status"
@@ -166,6 +169,7 @@ const OwnState = () => {
               )}
               onApply={(value) => setStatus((value as string[]) ?? [])}
               onClear={() => setStatus([])}
+              onClose={close}
             />
           ) : null
         }
