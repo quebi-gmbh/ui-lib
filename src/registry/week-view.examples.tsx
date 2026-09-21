@@ -219,6 +219,68 @@ const DragToMove = () => {
 }
 
 /**
+ * The three things the toolbar's heading can be, and the two props that decide
+ * which. `labelVariant` says whether it is a control at all; `pickerGranularity`
+ * says what it offers when it is.
+ */
+type HeadingVariant = "week" | "day" | "static"
+
+const HEADING_VARIANTS: readonly { id: HeadingVariant; label: string }[] = [
+  { id: "week", label: "Week grid (default)" },
+  { id: "day", label: "Day grid" },
+  { id: "static", label: "Plain heading" },
+]
+
+const HeadingVariants = () => {
+  const [variant, setVariant] = useState<HeadingVariant>("week")
+  const [anchor, setAnchor] = useState<CalendarDate>(() => weekStart())
+  // The fixture follows the view rather than being pinned to this week, so a
+  // jump lands on a week that has something on it.
+  const start = startOfWeek(anchor, FIXTURE_LOCALE)
+
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <ToggleGroup
+        size="sm"
+        selectionMode="single"
+        aria-label="Heading variant"
+        selectedKeys={new Set([variant])}
+        onSelectionChange={(keys) => {
+          const [next] = keys
+          if (next) setVariant(next as HeadingVariant)
+        }}
+      >
+        {HEADING_VARIANTS.map((option) => (
+          <ToggleGroupItem key={option.id} id={option.id}>
+            {option.label}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+
+      <WeekView
+        events={week(start)}
+        calendars={CALENDARS}
+        timeZone={TIME_ZONE}
+        startHour={8}
+        endHour={18}
+        height={360}
+        date={anchor}
+        onDateChange={setAnchor}
+        labelVariant={variant === "static" ? "static" : "picker"}
+        pickerGranularity={variant === "day" ? "day" : "week"}
+      />
+      <p className="text-quebi-fg-muted text-sm">
+        {variant === "week"
+          ? "The heading names a week, so the grid it opens offers weeks: the row is the target and the ISO number is in the gutter."
+          : variant === "day"
+            ? "A day grid works too — every day in a row leads to the same week — but it asks which of the seven you meant when the answer does not matter."
+            : "labelVariant=\"static\" puts the text back. Today and the chevrons are then the only way out of this week."}
+      </p>
+    </div>
+  )
+}
+
+/**
  * Where a legend can sit. Four of these are pure layout — the legend is a child
  * and CSS puts it somewhere — and only the last one asks the library for
  * anything, because only the last one has a calendar behind it.
@@ -350,6 +412,12 @@ export const weekViewExamples: ComponentExample[] = [
     description:
       "onEventClick fires on every activation and receives the event object you passed in, so you can open your own detail panel from it.",
     render: () => <WithDayReadout />,
+  },
+  {
+    title: "Jumping to another week",
+    description:
+      "The heading is a picker, and it has been the default since the alternative was Today or one chevron press at a time. It opens the unit the heading is spelled in — a week grid, where the row is the target — because every day of a row leads to the same view. pickerGranularity=\"day\" asks for a day instead, and labelVariant=\"static\" turns the heading back into text.",
+    render: () => <HeadingVariants />,
   },
   {
     title: "Where the legend goes",

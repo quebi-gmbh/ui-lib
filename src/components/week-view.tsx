@@ -28,6 +28,10 @@ import { cn } from "@/lib/utils"
  * five days are Monday to Friday under `de-DE` and Sunday to Thursday under
  * `en-US` unless `firstDayOfWeek` says otherwise.
  *
+ * The toolbar's heading is a week picker: the label names a week, so the grid
+ * it opens offers whole weeks rather than asking which of the seven days you
+ * meant when all seven lead to the same view.
+ *
  * Display, selection, and — given `isEventEditable` and `onEventChange` —
  * dragging an event to another time or another day, by pointer or by arrow key.
  * The machinery for that is `CalendarShell`'s; see the note there, including
@@ -50,8 +54,16 @@ export interface WeekViewProps<E extends CalendarEvent = CalendarEvent>
   views?: readonly CalendarViewName[]
   onViewChange?: (view: CalendarViewName) => void
   label?: React.ReactNode
-  /** Make the toolbar's date label a picker that jumps to any day. Default "static". */
+  /** The toolbar's date label as a picker, or as plain text. Default "picker". */
   labelVariant?: CalendarToolbarLabelVariant
+  /**
+   * Which grid that picker opens. Default "week".
+   *
+   * The heading names a week, so a week is what it offers — the row is the
+   * target and the ISO number is in the gutter. `day` is there for a view whose
+   * reader is really choosing a day and looking at its week around it.
+   */
+  pickerGranularity?: "day" | "week"
 }
 
 export function WeekView<E extends CalendarEvent = CalendarEvent>({
@@ -65,7 +77,8 @@ export function WeekView<E extends CalendarEvent = CalendarEvent>({
   views,
   onViewChange,
   label,
-  labelVariant,
+  labelVariant = "picker",
+  pickerGranularity = "week",
   timeZone = DEFAULT_CALENDAR_TIME_ZONE,
   locale: localeProp,
   className,
@@ -89,6 +102,9 @@ export function WeekView<E extends CalendarEvent = CalendarEvent>({
         <CalendarToolbar
           label={label ?? calendarRangeLabel(days, { locale, timeZone })}
           labelVariant={labelVariant}
+          pickerGranularity={pickerGranularity}
+          locale={locale}
+          firstDayOfWeek={firstDayOfWeek}
           date={navigation.date}
           onDateChange={navigation.goTo}
           view={view}

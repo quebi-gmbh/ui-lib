@@ -1,7 +1,7 @@
 "use client"
 
 import type { CalendarDate, DateDuration, DateValue } from "@internationalized/date"
-import { today } from "@internationalized/date"
+import { startOfWeek, today } from "@internationalized/date"
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { useState } from "react"
 import { useLocale } from "react-aria-components"
@@ -11,6 +11,7 @@ import { dayToDate, DEFAULT_CALENDAR_TIME_ZONE } from "@/components/calendar-she
 import { MonthPicker } from "@/components/month-picker"
 import { Popover, PopoverContent } from "@/components/popover"
 import { ToggleGroup, ToggleGroupItem } from "@/components/toggle-group"
+import { WeekPicker } from "@/components/week-picker"
 import { getDateTimeFormat } from "@/lib/intl"
 import { cn } from "@/lib/utils"
 
@@ -35,30 +36,40 @@ import { cn } from "@/lib/utils"
  * reused here: all three read react-aria's `CalendarStateContext`, so they only
  * work *inside* a `<Calendar>` and there is no such state above a week grid.
  * What is shared is the vocabulary — a chevron pair around a label — not the
- * code. `labelVariant="picker"` therefore mounts a `<Calendar>` of its own
- * inside a popover rather than borrowing one of those three (task #166).
+ * code. `labelVariant="picker"` therefore mounts a grid of its own inside a
+ * popover rather than borrowing one of those three (task #166).
  */
 
 /**
  * How the date label is drawn.
  *
- * - `static` — a `<span>`. The default, so no existing view moves.
  * - `picker` — a button opening a date grid in a popover, the way `Calendar`'s
- *   own header opens the Month Picker (task #160). Without it the only way to
- *   another date is `Today` or one chevron press at a time.
+ *   own header opens the Month Picker (task #160). What the four views draw by
+ *   default: without it the only way to another date is `Today` or one chevron
+ *   press at a time, which is not a way to reach next March.
+ * - `static` — a `<span>`. Still the toolbar's own default, because a toolbar
+ *   with no `date` and no `onDateChange` has nothing to open a grid on; ask for
+ *   it on a view whose heading is not somewhere to jump from.
  */
 export type CalendarToolbarLabelVariant = "static" | "picker"
 
 /**
  * Which grid the picker opens.
  *
- * `day` is a `Calendar` and `month` is a `MonthPicker`, and the choice belongs
- * to whoever knows what the label names: `MonthView`'s heading reads
+ * The choice belongs to whoever knows what the label names, and the answer is
+ * the unit the heading is spelled in: `MonthView`'s heading reads
  * `September 2026`, so a day grid there would ask for something the heading
- * does not say and hand back a date the month grid cannot show. The other
- * three views are anchored on a day and get `day`.
+ * does not say and hand back a date the month grid cannot show. By the same
+ * argument `WeekView`'s heading reads `21.–27. September 2026` and gets
+ * `week` — a `WeekPicker`, where the row is the target and the ISO number is
+ * in the gutter, rather than a day grid asking which of the seven you meant
+ * when the view will show the whole row whichever you pick.
+ *
+ * - `day` — a `Calendar`. `DayView` and `CalendarTimeline`.
+ * - `week` — a `WeekPicker`. `WeekView`.
+ * - `month` — a `MonthPicker`. `MonthView`.
  */
-export type CalendarToolbarPickerGranularity = "day" | "month"
+export type CalendarToolbarPickerGranularity = "day" | "week" | "month"
 
 /** The views a toolbar can switch between. A subset is fine; the order is yours. */
 export type CalendarViewName = "day" | "week" | "month" | "timeline"
@@ -93,10 +104,22 @@ export interface CalendarToolbarProps {
   date?: CalendarDate
   /** Called with the day (or month) chosen in the picker. `useCalendarNavigation().goTo`. */
   onDateChange?: (date: CalendarDate) => void
-  /** Day grid or month grid. Default `day`; `MonthView` passes `month`. */
+  /** Which grid the label opens. Default `day`; each view passes its own unit. */
   pickerGranularity?: CalendarToolbarPickerGranularity
   /** Accessible name for the grid inside the popover — the place to translate it. */
   pickerLabel?: string
+  /**
+   * The locale and the first day the `week` grid lays its rows out on.
+   *
+   * Both default to the ambient locale's answer, and `WeekView` passes its own
+   * for both, because they are the two things that decide which seven days a
+   * row *is*. A grid that disagreed with the view about that would hand back a
+   * week the view then redraws as a different one. The `day` and `month` grids
+   * take neither: they read the ambient locale, which is all a day or a month
+   * needs.
+   */
+  locale?: string
+  firstDayOfWeek?: "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat"
   /** Dates before this cannot be picked. */
   minValue?: DateValue
   /** Dates after this cannot be picked. */
@@ -130,6 +153,8 @@ export function CalendarToolbar({
   onDateChange,
   pickerGranularity = "day",
   pickerLabel,
+  locale,
+  firstDayOfWeek,
   minValue,
   maxValue,
   isDisabled,
@@ -188,6 +213,8 @@ export function CalendarToolbar({
             onDateChange={onDateChange}
             granularity={pickerGranularity}
             pickerLabel={pickerLabel}
+            locale={locale}
+            firstDayOfWeek={firstDayOfWeek}
             minValue={minValue}
             maxValue={maxValue}
             isDisabled={isDisabled}
@@ -234,6 +261,8 @@ interface CalendarToolbarPickerProps {
   onDateChange: (date: CalendarDate) => void
   granularity: CalendarToolbarPickerGranularity
   pickerLabel: string | undefined
+  locale: string | undefined
+  firstDayOfWeek: CalendarToolbarProps["firstDayOfWeek"]
   minValue: DateValue | undefined
   maxValue: DateValue | undefined
   isDisabled: boolean | undefined
@@ -254,12 +283,13 @@ interface CalendarToolbarPickerProps {
  *   choice goes upward and the surface gets out of the way; leaving it open
  *   would sit a grid over the view the press just changed.
  *
- * A month choice keeps the day the view was anchored on. `MonthPicker` reports
- * the first of the month because a month is all it was asked for, but the
- * anchor is a date — dropping to the 1st would silently move a consumer who
- * switches from Month back to Day. `era` travels with `year` and `month`: in an
- * era calendar the year counts from the start of the era, so two different
- * years can both be year 1.
+ * A month choice keeps the day the view was anchored on, and a week choice
+ * keeps the weekday. `MonthPicker` reports the first of the month and
+ * `WeekPicker` a whole week, because that is all either was asked for, but the
+ * anchor is a date — dropping to the 1st, or to the Monday, would silently move
+ * a consumer who switches back to Day. `era` travels with `year` and `month`:
+ * in an era calendar the year counts from the start of the era, so two
+ * different years can both be year 1.
  */
 function CalendarToolbarPicker({
   label,
@@ -267,12 +297,20 @@ function CalendarToolbarPicker({
   onDateChange,
   granularity,
   pickerLabel,
+  locale,
+  firstDayOfWeek,
   minValue,
   maxValue,
   isDisabled,
 }: CalendarToolbarPickerProps) {
+  const { locale: ambientLocale } = useLocale()
   const [isOpen, setIsOpen] = useState(false)
-  const gridLabel = pickerLabel ?? (granularity === "month" ? "Choose month" : "Choose date")
+  const gridLabel = pickerLabel ?? DEFAULT_GRID_LABELS[granularity]
+
+  // Computed here as well as inside the grid, and from the same two inputs, so
+  // that the week handed down as the value and the week read back out of the
+  // choice are the same seven days.
+  const weekStart = startOfWeek(date, locale ?? ambientLocale, firstDayOfWeek)
 
   return (
     <Popover isOpen={isOpen} onOpenChange={setIsOpen}>
@@ -301,6 +339,26 @@ function CalendarToolbarPicker({
               onDateChange(date.set({ era: next.era, year: next.year, month: next.month }))
             }}
           />
+        ) : granularity === "week" ? (
+          <WeekPicker
+            autoFocus
+            aria-label={gridLabel}
+            value={{ start: weekStart, end: weekStart.add({ days: 6 }) }}
+            locale={locale}
+            firstDayOfWeek={firstDayOfWeek}
+            minValue={minValue}
+            maxValue={maxValue}
+            isDisabled={isDisabled}
+            onChange={(next) => {
+              setIsOpen(false)
+              // `compare` between two CalendarDates is their distance in
+              // days, so this carries the anchor's weekday into the chosen
+              // week — the promise the month grid already makes about the day
+              // of the month. Step back to Day afterwards and you land on the
+              // weekday you were on, not on everybody's Monday.
+              onDateChange(next.start.add({ days: date.compare(weekStart) }))
+            }}
+          />
         ) : (
           <Calendar
             autoFocus
@@ -318,6 +376,13 @@ function CalendarToolbarPicker({
       </PopoverContent>
     </Popover>
   )
+}
+
+/** The accessible name of the grid, when the caller does not translate one. */
+const DEFAULT_GRID_LABELS: Record<CalendarToolbarPickerGranularity, string> = {
+  day: "Choose date",
+  week: "Choose week",
+  month: "Choose month",
 }
 
 export interface RangeLabelOptions {

@@ -67,6 +67,25 @@ export interface WeekPickerProps {
   isReadOnly?: boolean
   /** Hide the ISO week-number gutter. */
   hideWeekNumbers?: boolean
+  /**
+   * Override the locale's first day — the rows start here instead.
+   *
+   * A grid whose rows start on a different day from whatever reads its value
+   * offers a week nobody can select: the row says Sunday to Saturday, the
+   * caller means Monday to Sunday, and the week that comes back is neither. So
+   * whoever overrides it in one place overrides it in both; `CalendarToolbar`
+   * hands `WeekView`'s straight through for exactly that reason.
+   */
+  firstDayOfWeek?: "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat"
+  /**
+   * Override the locale the rows are built and spelled in. Defaults to the
+   * nearest `I18nProvider`'s, like everything else here.
+   *
+   * It is the same argument as `firstDayOfWeek` and not a formatting detail: the
+   * locale is what decides which day a week starts on, so a grid in one locale
+   * and a view in another disagree about which seven days a row is.
+   */
+  locale?: string
   /** Move focus into the grid on mount — what the popover field wants. */
   autoFocus?: boolean
   className?: string
@@ -84,19 +103,22 @@ export function WeekPicker({
   isDisabled,
   isReadOnly,
   hideWeekNumbers,
+  firstDayOfWeek,
+  locale: localeProp,
   autoFocus,
   className,
   "aria-label": ariaLabel,
   "aria-labelledby": ariaLabelledBy,
   "aria-describedby": ariaDescribedBy,
 }: WeekPickerProps) {
-  const { locale } = useLocale()
+  const { locale: ambientLocale } = useLocale()
+  const locale = localeProp ?? ambientLocale
   const now = today(getLocalTimeZone())
   const isControlled = value !== undefined
 
   const [uncontrolled, setUncontrolled] = useState<WeekRange | null>(defaultValue ?? null)
   const selected = isControlled ? (value ?? null) : uncontrolled
-  const selectedStart = selected ? startOfWeek(selected.start, locale) : null
+  const selectedStart = selected ? startOfWeek(selected.start, locale, firstDayOfWeek) : null
 
   const [visibleMonth, setVisibleMonth] = useState(() =>
     startOfMonth(selected?.start ?? now),
@@ -125,11 +147,12 @@ export function WeekPicker({
   })
   const numberFormatter = getNumberFormat(locale)
 
-  const firstWeekStart = startOfWeek(visibleMonth, locale)
-  const weeks = Array.from({ length: getWeeksInMonth(visibleMonth, locale) }, (_, index) =>
-    firstWeekStart.add({ weeks: index }),
+  const firstWeekStart = startOfWeek(visibleMonth, locale, firstDayOfWeek)
+  const weeks = Array.from(
+    { length: getWeeksInMonth(visibleMonth, locale, firstDayOfWeek) },
+    (_, index) => firstWeekStart.add({ weeks: index }),
   )
-  const currentWeekStart = startOfWeek(now, locale)
+  const currentWeekStart = startOfWeek(now, locale, firstDayOfWeek)
 
   // react-aria's ListBox has no `isDisabled` of its own — a disabled grid is one
   // where every row is disabled, which is also what stops it taking focus.
@@ -283,12 +306,15 @@ export function WeekPickerField({
   onChange,
   placeholder = "Select week",
   placement = "bottom start",
+  firstDayOfWeek,
+  locale: localeProp,
   className,
   isDisabled,
   "aria-label": ariaLabel,
   ...props
 }: WeekPickerFieldProps) {
-  const { locale } = useLocale()
+  const { locale: ambientLocale } = useLocale()
+  const locale = localeProp ?? ambientLocale
   const [isOpen, setIsOpen] = useState(false)
   const [uncontrolled, setUncontrolled] = useState<WeekRange | null>(defaultValue ?? null)
   const selected = value !== undefined ? (value ?? null) : uncontrolled
@@ -302,7 +328,7 @@ export function WeekPickerField({
 
   const label = selected
     ? `Week ${numberFormatter.format(
-        isoWeekNumber(dominantDay(startOfWeek(selected.start, locale))),
+        isoWeekNumber(dominantDay(startOfWeek(selected.start, locale, firstDayOfWeek))),
       )} · ${rangeFormatter.formatRange(
         selected.start.toDate("UTC"),
         selected.end.toDate("UTC"),
@@ -324,6 +350,8 @@ export function WeekPickerField({
       <PopoverContent placement={placement} className="w-auto max-w-none p-3">
         <WeekPicker
           {...props}
+          firstDayOfWeek={firstDayOfWeek}
+          locale={localeProp}
           autoFocus
           aria-label={ariaLabel ?? "Week"}
           value={selected}

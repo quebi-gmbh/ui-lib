@@ -82,7 +82,7 @@ export interface MonthViewProps<E extends CalendarEvent = CalendarEvent> {
   onViewChange?: (view: CalendarViewName) => void
   label?: React.ReactNode
   /**
-   * Make the toolbar's heading a picker. Default "static".
+   * The toolbar's heading as a picker, or as plain text. Default "picker".
    *
    * A month grid, not a day one: the heading here reads `September 2026`, and
    * a day picker would ask for a day this grid never shows the choice of.
@@ -117,7 +117,7 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
   views,
   onViewChange,
   label,
-  labelVariant,
+  labelVariant = "picker",
   className,
 }: MonthViewProps<E>) {
   const locale = useCalendarLocale(localeProp)

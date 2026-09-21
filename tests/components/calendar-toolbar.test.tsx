@@ -15,7 +15,11 @@
  *    indicator survives and the press never invites itself.
  * 2. **`labelVariant="picker"` makes the label a date picker** (task #166).
  *    The toolbar owns no state, so the popover reports the day it was given
- *    and closes; what the view does with it is the view's business.
+ *    and closes; what the view does with it is the view's business. The grid it
+ *    opens is the unit the heading is spelled in — a day, a week or a month —
+ *    and a week grid has two inputs the others do not: the locale and the first
+ *    day of the week decide which seven days a row *is*, so the grid has to
+ *    agree with the view about both.
  *
  * Dates are pinned rather than read from the clock, so a run in December does
  * not read differently from a run in June.
@@ -73,6 +77,9 @@ describe("the view switcher without a handler", () => {
 /** Sunday, 20 September 2026 — pinned, so a run in December reads the same. */
 const SEPTEMBER = new CalendarDate(2026, 9, 20)
 
+/** Mid-week, so a week choice has a weekday it could lose. */
+const WEDNESDAY = new CalendarDate(2026, 9, 23)
+
 /**
  * The trigger has no `aria-label`: it would replace the button's own text as
  * the accessible name, and the formatted date is the more useful of the two.
@@ -124,6 +131,70 @@ describe("the picker variant", () => {
     // The anchor day survives: MonthPicker reports the 1st because a month is
     // all it was asked for, but the view was anchored on the 20th.
     expect(seen.map(String)).toEqual(["2026-12-20"])
+  })
+
+  test("offers weeks, not days, when the heading names a week", async () => {
+    const user = userEvent.setup()
+    const seen: CalendarDate[] = []
+    render(
+      <CalendarToolbar
+        label="20.–26. September 2026"
+        labelVariant="picker"
+        pickerGranularity="week"
+        date={WEDNESDAY}
+        onDateChange={(next) => seen.push(next)}
+      />,
+    )
+
+    await user.click(trigger())
+
+    // One option per week of the month on show, not thirty-something days: the
+    // reader is choosing between weeks, and every day of a row leads to the
+    // same view.
+    const weeks = screen.getAllByRole("option")
+    expect(weeks).toHaveLength(5)
+    expect(weeks.every((row) => row.getAttribute("aria-label")?.startsWith("Week "))).toBe(true)
+
+    await user.click(weeks[1] as HTMLElement)
+
+    // The anchor was a Wednesday, so the Wednesday of the chosen week is what
+    // comes back — the promise the month grid makes about the day of the month.
+    expect(seen.map(String)).toEqual(["2026-09-09"])
+  })
+
+  test("lays the week grid out in the locale it is given, not the ambient one", async () => {
+    const user = userEvent.setup()
+    const selected = async (props: Partial<React.ComponentProps<typeof CalendarToolbar>>) => {
+      const { unmount } = render(
+        <CalendarToolbar
+          label="A week"
+          labelVariant="picker"
+          pickerGranularity="week"
+          date={WEDNESDAY}
+          onDateChange={() => {}}
+          {...props}
+        />,
+      )
+      await user.click(trigger())
+      const name = screen
+        .getAllByRole("option")
+        .find((row) => row.getAttribute("aria-selected") === "true")
+        ?.getAttribute("aria-label")
+      unmount()
+      return name ?? ""
+    }
+
+    // The test environment is en-US, where the week of the 23rd runs from the
+    // 20th to the 26th; under de-DE the same day sits in the 21st to the 27th.
+    // The 21st is what the assertions turn on — a bare "20" would also match
+    // the year in every one of these labels.
+    expect(await selected({})).not.toContain("21")
+    expect(await selected({ locale: "de-DE" })).toContain("21")
+
+    // `firstDayOfWeek` overrides the locale's answer in the grid exactly as it
+    // does in the view, so a view that starts its weeks on Sunday cannot be
+    // handed a Monday-first grid to choose from.
+    expect(await selected({ locale: "de-DE", firstDayOfWeek: "sun" })).not.toContain("21")
   })
 
   test("wraps a custom label rather than ignoring it", async () => {

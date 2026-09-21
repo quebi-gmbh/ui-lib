@@ -159,7 +159,8 @@ export interface CalendarTimelineProps<E extends CalendarEvent = CalendarEvent> 
   views?: readonly CalendarViewName[]
   onViewChange?: (view: CalendarViewName) => void
   label?: React.ReactNode
-  /** Make the toolbar's date label a picker that jumps to any day. Default "static". */
+  /** The toolbar's date label as a picker that jumps to any day, or as plain
+   * text. Default "picker". */
   labelVariant?: CalendarToolbarLabelVariant
   /** Shown in a row that has nothing on it. */
   emptyRowLabel?: string
@@ -335,7 +336,7 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
   views,
   onViewChange,
   label,
-  labelVariant,
+  labelVariant = "picker",
   emptyRowLabel = "Nothing scheduled",
   className,
 }: CalendarTimelineProps<E>) {

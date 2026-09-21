@@ -25,6 +25,27 @@ const ControlledWeek = () => {
   )
 }
 
+/**
+ * The same month, laid out three ways. The site is drawn in de-DE, so the first
+ * grid starts on Monday; the other two are told otherwise.
+ */
+const WeekStarts = () => (
+  <div className="flex flex-wrap items-start gap-6">
+    {[
+      { caption: "The locale's own first day", props: {} },
+      { caption: 'firstDayOfWeek="sun"', props: { firstDayOfWeek: "sun" } as const },
+      { caption: 'locale="en-US"', props: { locale: "en-US" } as const },
+    ].map((variant) => (
+      <div key={variant.caption} className="flex flex-col gap-2">
+        <p className="font-semibold text-quebi-fg-muted text-xs uppercase tracking-[0.08em]">
+          {variant.caption}
+        </p>
+        <WeekPicker aria-label={variant.caption} hideWeekNumbers {...variant.props} />
+      </div>
+    ))}
+  </div>
+)
+
 export const weekPickerExamples: ComponentExample[] = [
   {
     title: "Default",
@@ -62,6 +83,12 @@ export const weekPickerExamples: ComponentExample[] = [
         maxValue={today(getLocalTimeZone()).add({ weeks: 4 })}
       />
     ),
+  },
+  {
+    title: "Where a week starts",
+    description:
+      "firstDayOfWeek and locale are the two things that decide which seven days a row is, which is why they are props and not formatting: a grid that disagrees with whatever reads its value offers a week nobody meant. Override one in a picker and override it in the view above it too \u2014 Calendar Toolbar passes Week View's through for exactly that reason.",
+    render: () => <WeekStarts />,
   },
   {
     title: "Controlled",

@@ -51,7 +51,8 @@ export interface DayViewProps<E extends CalendarEvent = CalendarEvent>
   onViewChange?: (view: CalendarViewName) => void
   /** Replace the heading the toolbar shows. */
   label?: React.ReactNode
-  /** Make the toolbar's date label a picker that jumps to any day. Default "static". */
+  /** The toolbar's date label as a picker that jumps to any day, or as plain
+   * text. Default "picker". */
   labelVariant?: CalendarToolbarLabelVariant
 }
 
@@ -64,7 +65,7 @@ export function DayView<E extends CalendarEvent = CalendarEvent>({
   views,
   onViewChange,
   label,
-  labelVariant,
+  labelVariant = "picker",
   timeZone = DEFAULT_CALENDAR_TIME_ZONE,
   locale: localeProp,
   className,

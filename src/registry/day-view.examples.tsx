@@ -117,6 +117,29 @@ const AllDayAndOvernight = () => {
   )
 }
 
+const JumpToADate = () => {
+  const [day, setDay] = useState<CalendarDate>(() => today(TIME_ZONE))
+
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <DayView
+        events={agenda(day)}
+        calendars={CALENDARS}
+        timeZone={TIME_ZONE}
+        startHour={8}
+        endHour={18}
+        height={380}
+        date={day}
+        onDateChange={setDay}
+      />
+      <p className="text-quebi-fg-muted text-sm">
+        Press the heading. The day you pick is reported through onDateChange — the view owns no
+        date here, this state does.
+      </p>
+    </div>
+  )
+}
+
 const WithSelection = () => {
   const day = today(TIME_ZONE)
   const events = agenda(day)
@@ -192,6 +215,12 @@ export const dayViewExamples: ComponentExample[] = [
     description:
       "An all-day event sits in the band above the grid. An overnight shift stays on the grid and is cut at midnight — its block loses the rounded edge where it continues.",
     render: () => <AllDayAndOvernight />,
+  },
+  {
+    title: "Jumping to another day",
+    description:
+      "The heading is a button opening a day grid, which is the default: without it the only way to a day three weeks out is Today or one chevron press at a time. labelVariant=\"static\" turns it back into plain text for a view whose heading is not somewhere to jump from.",
+    render: () => <JumpToADate />,
   },
   {
     title: "Selection",
