@@ -192,6 +192,12 @@ const ServerDriven = () => {
         // page 2 would repeat a row page 1 already showed.
         tiebreakColumn="reference"
         loadFilterValues={loadFilterValues}
+        // Off by default, and turned on here because this "server" runs the
+        // same `matchesFilter` the client mode does — so `is not` is a question
+        // it can actually answer. A backend that only implements `contains`
+        // would return `contains` rows under a header reading `does not
+        // contain`, and nothing in the client could tell.
+        enableFilterOperators
         selectionMode="multiple"
         selection={selection}
         onSelectionChange={setSelection}
@@ -483,7 +489,7 @@ export const serverTableExamples: ComponentExample[] = [
   {
     title: "Server-driven orders",
     description:
-      "300 orders behind a stand-in database. Sort (shift-click for a second column), filter from the header popovers — Status, Country and Customer load their distinct values with counts, searchable and paged on scroll — search, and page. Each of those is one onQueryChange and one query.",
+      "300 orders behind a stand-in database. Sort (shift-click for a second column), filter from the header popovers — Status, Country and Customer load their distinct values with counts, searchable and paged on scroll, and with enableFilterOperators the popover picks the question too, so \"is not\" reaches the server as part of the query — search, and page. Each of those is one onQueryChange and one query.",
     render: () => <ServerDriven />,
   },
   {

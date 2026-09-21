@@ -68,6 +68,56 @@ const FilterShowcase = () => (
 )
 
 /* -------------------------------------------------------------------------- */
+/*                          operators in the header                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The operator is a control in the popover, not only a term in the model.
+ *
+ * The filters are lifted here for the readout below the table — the select
+ * works exactly the same uncontrolled. What it commits is one condition:
+ * Apply sends the operator and the value together, and dismissing the popover
+ * discards both, so a server-driven table still makes one round trip per
+ * change.
+ */
+const OperatorShowcase = () => {
+  const [filters, setFilters] = useState<FilterCondition[]>([])
+
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <DataTable<Order>
+        aria-label="Orders filtered by operator"
+        columns={filterColumns}
+        data={ORDERS}
+        getRowId={(order) => String(order.id)}
+        columnFilters={filters}
+        onColumnFiltersChange={setFilters}
+        defaultPageSize={8}
+        enableColumnChooser={false}
+        caption="Open Customer or Status: the select above the value is the question. Priority has none — its Yes / No / Any already says what “is not” would."
+      />
+      <p className="text-quebi-fg-muted text-sm">
+        {filters.length === 0
+          ? "No conditions yet."
+          : filters
+              .map((condition) => `${condition.fieldId} ${condition.operator}`)
+              .join(" · ")}
+      </p>
+      <Note intent="info">
+        On here, and off in <strong>Server Table</strong>, which follows the one
+        question the two are named for — who owns the query. These rows are all
+        of them, so every operator the model can express is one this table can
+        answer. A server-driven table's answer comes from a backend that may
+        only implement <code>contains</code>, and nothing in the client could
+        notice the difference — so there it is{" "}
+        <code>enableFilterOperators</code>, off until the host says its query
+        can answer one.
+      </Note>
+    </div>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
 /*                              saved presets                                 */
 /* -------------------------------------------------------------------------- */
 
@@ -224,6 +274,12 @@ export const dataTableFilteringExamples: ComponentExample[] = [
     description:
       "All five filter variants over 300 orders: text contains, enum with faceted counts, a number range bounded by the faceted minimum and maximum, a date range, and a boolean. Active filters appear as removable chips with a clear-all, and the column chooser and density toggle sit beside them.",
     render: () => <FilterShowcase />,
+  },
+  {
+    title: "Operators in a column header",
+    description:
+      "A column's filter popover picks the question as well as the value: is not, does not contain, not between. The select is drawn only where there is a choice — boolean has one operator — and Apply commits the operator and the value as one condition, so dismissing the popover discards both.",
+    render: () => <OperatorShowcase />,
   },
   {
     title: "Saved filter presets",
