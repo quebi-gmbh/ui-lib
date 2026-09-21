@@ -12,6 +12,7 @@ import {
   CalendarLegend,
   type CalendarSource,
 } from "@/components/calendar-shell"
+import { ToggleGroup, ToggleGroupItem } from "@/components/toggle-group"
 import { WeekView } from "@/components/week-view"
 import type { ComponentExample } from "./types"
 
@@ -217,6 +218,114 @@ const DragToMove = () => {
   )
 }
 
+/**
+ * Where a legend can sit. Four of these are pure layout — the legend is a child
+ * and CSS puts it somewhere — and only the last one asks the library for
+ * anything, because only the last one has a calendar behind it.
+ */
+type LegendPlacement = "above" | "beside" | "below" | "overlay"
+
+const LEGEND_PLACEMENTS: readonly { id: LegendPlacement; label: string }[] = [
+  { id: "above", label: "Above" },
+  { id: "beside", label: "Beside" },
+  { id: "below", label: "Below" },
+  { id: "overlay", label: "Over the grid" },
+]
+
+const LegendPlacements = () => {
+  const start = weekStart()
+  const [placement, setPlacement] = useState<LegendPlacement>("above")
+
+  const view = (
+    <WeekView
+      events={week(start)}
+      calendars={CALENDARS}
+      timeZone={TIME_ZONE}
+      startHour={8}
+      endHour={18}
+      height={340}
+      className={placement === "beside" ? "min-w-0 flex-1" : undefined}
+    />
+  )
+
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <ToggleGroup
+        size="sm"
+        selectionMode="single"
+        aria-label="Legend placement"
+        selectedKeys={new Set([placement])}
+        // Single selection still lets you press the selected item to clear it;
+        // there is no "no placement", so an empty set keeps the current one.
+        onSelectionChange={(keys) => {
+          const [next] = keys
+          if (next) setPlacement(next as LegendPlacement)
+        }}
+      >
+        {LEGEND_PLACEMENTS.map((option) => (
+          <ToggleGroupItem key={option.id} id={option.id}>
+            {option.label}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+
+      {placement === "above" ? (
+        <div className="flex w-full flex-col gap-3">
+          <CalendarLegend calendars={CALENDARS} />
+          {view}
+        </div>
+      ) : null}
+
+      {placement === "beside" ? (
+        <div className="flex w-full items-start gap-4">
+          {view}
+          {/* A column rather than a row: direction is layout, so it is a class. */}
+          <CalendarLegend calendars={CALENDARS} className="w-28 shrink-0 flex-col items-start" />
+        </div>
+      ) : null}
+
+      {placement === "below" ? (
+        <div className="flex w-full flex-col gap-3">
+          {view}
+          <CalendarLegend calendars={CALENDARS} className="self-end" />
+        </div>
+      ) : null}
+
+      {placement === "overlay" ? (
+        <div className="relative w-full">
+          {view}
+          <CalendarLegend
+            calendars={CALENDARS}
+            variant="overlay"
+            className="absolute end-3 bottom-3"
+          />
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+const OverlayLegend = () => {
+  const start = weekStart()
+  return (
+    <div className="relative w-full">
+      <WeekView
+        events={week(start)}
+        calendars={CALENDARS}
+        timeZone={TIME_ZONE}
+        startHour={9}
+        endHour={17}
+        height={360}
+      />
+      <CalendarLegend
+        calendars={CALENDARS}
+        variant="overlay"
+        className="absolute start-3 bottom-3"
+      />
+    </div>
+  )
+}
+
 export const weekViewExamples: ComponentExample[] = [
   {
     title: "Default",
@@ -241,6 +350,18 @@ export const weekViewExamples: ComponentExample[] = [
     description:
       "onEventClick fires on every activation and receives the event object you passed in, so you can open your own detail panel from it.",
     render: () => <WithDayReadout />,
+  },
+  {
+    title: "Where the legend goes",
+    description:
+      "Placement is layout, so the legend takes no prop for it: it is a child, and a class puts it before the view, after it, or in a column beside it. Over the grid is the one case that needs the library — variant=\"overlay\" draws the same row on an elevated surface, because a bare row of small muted text with events behind it is no longer a legend.",
+    render: () => <LegendPlacements />,
+  },
+  {
+    title: "Overlay in the corner the week leaves free",
+    description:
+      "The same overlay in the other corner, with the hour axis and a column of events behind it. The surface is translucent and blurred, so the key stays readable without hiding what it covers — and which corner it takes is yours, one absolute class.",
+    render: () => <OverlayLegend />,
   },
   {
     title: "Drag to move",

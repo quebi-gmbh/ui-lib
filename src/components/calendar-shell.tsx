@@ -1477,9 +1477,27 @@ function AllDayBand<E extends CalendarEvent>({
   )
 }
 
+/**
+ * `plain` is a bare row of dots for above or below the grid; `overlay` is the
+ * same row on a surface, for a legend that sits *on* the calendar.
+ */
+export type CalendarLegendVariant = "plain" | "overlay"
+
 export interface CalendarLegendProps {
   calendars: readonly CalendarSource[]
+  /** Default "plain". "overlay" adds the surface an overlapping legend needs. */
+  variant?: CalendarLegendVariant
   className?: string
+}
+
+const LEGEND_VARIANTS: Record<CalendarLegendVariant, string> = {
+  plain: "",
+  // The chart tooltip's treatment, for the same reason: a translucent elevated
+  // surface over data reads as floating above it, and the blur keeps the row
+  // legible without hiding what it covers. `shadow-lg` is the neutral occlusion
+  // shadow, never the mint glow — see the note in `popover.tsx`.
+  overlay:
+    "rounded-quebi-md border border-quebi-line/20 bg-quebi-elevated/80 px-2.5 py-1.5 shadow-lg backdrop-blur-sm",
 }
 
 /**
@@ -1491,12 +1509,31 @@ export interface CalendarLegendProps {
  * colours into its own markup, which is the thing `no-hardcoded-design-values`
  * exists to stop; `CalendarTimeline` needs no legend because every row is
  * already labelled with its calendar's name.
+ *
+ * ## Where it goes is yours; what it looks like is not
+ *
+ * The legend takes no placement prop, because placement is layout: put it
+ * before the view or after it, align it with `self-end`, stack it into a column
+ * beside the grid with `className="flex-col items-start"`, or position it over
+ * the calendar from a `relative` wrapper. All of that is one className and none
+ * of it needs the library's permission.
+ *
+ * What the library does owe you is the one thing a placement cannot supply. A
+ * legend laid over the grid has events behind it, so a bare row of small muted
+ * text stops being readable — that is `variant="overlay"`, which is the same
+ * row on an elevated surface. Reach for it whenever the legend overlaps
+ * something, and leave it alone when the legend has a line of its own.
  */
-export function CalendarLegend({ calendars, className }: CalendarLegendProps) {
+export function CalendarLegend({ calendars, variant = "plain", className }: CalendarLegendProps) {
   return (
     <div
       data-slot="calendar-legend"
-      className={cn("flex flex-wrap items-center gap-x-4 gap-y-1", className)}
+      data-variant={variant}
+      className={cn(
+        "flex flex-wrap items-center gap-x-4 gap-y-1",
+        LEGEND_VARIANTS[variant],
+        className,
+      )}
     >
       {calendars.map((calendar) => (
         <span key={calendar.id} className="flex items-center gap-1.5 text-quebi-fg-muted text-xs">

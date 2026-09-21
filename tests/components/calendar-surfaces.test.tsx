@@ -24,6 +24,7 @@ import { render } from "@testing-library/react"
 import {
   CALENDAR_COLORS,
   type CalendarEvent,
+  CalendarLegend,
   type CalendarSource,
 } from "../../src/components/calendar-shell"
 import { DayView } from "../../src/components/day-view"
@@ -422,5 +423,56 @@ describe("the calendar grid scrolls behind the quebi bar", () => {
     expect(shell?.className).toContain("rounded-quebi-md")
     // The clip has to be an ancestor of the bar for it to reach it at all.
     expect(shell?.contains(viewport(container))).toBe(true)
+  })
+})
+
+/**
+ * The legend has one variant, and it exists for one situation.
+ *
+ * Where a legend sits is layout — above the view, below it, in a column beside
+ * it — and the library owns none of that: it is a child and a className. What
+ * it cannot own is what happens when the legend is laid *over* the grid, where
+ * a row of `text-xs text-quebi-fg-muted` has events, hour rules and column
+ * seams behind it. That is `variant="overlay"`, and pinning it here keeps the
+ * plain row plain: a legend on its own line must not arrive carrying a border
+ * and a shadow.
+ */
+describe("the legend's overlay variant", () => {
+  const legend = (container: HTMLElement) =>
+    container.querySelector<HTMLElement>('[data-slot="calendar-legend"]')
+
+  test("the default is a bare row — no surface, no edge, no lift", () => {
+    const { container } = render(<CalendarLegend calendars={CALENDARS} />)
+    const className = legend(container)?.className ?? ""
+    expect(className).not.toContain("bg-quebi-elevated")
+    expect(className).not.toContain("border")
+    expect(className).not.toContain("shadow")
+  })
+
+  test("the overlay is an elevated surface, so the grid cannot swallow it", () => {
+    const { container } = render(<CalendarLegend calendars={CALENDARS} variant="overlay" />)
+    const className = legend(container)?.className ?? ""
+    expect(className).toContain("bg-quebi-elevated")
+    // A hairline is the token at an alpha, never a raw palette scale.
+    expect(className).toMatch(/border-quebi-line\/\d+/)
+    // Neutral occlusion, not the mint glow — the argument is in popover.tsx.
+    expect(className).toContain("shadow-lg")
+    expect(className).toContain("rounded-quebi-md")
+  })
+
+  test("both variants are still the same row of dots", () => {
+    for (const variant of ["plain", "overlay"] as const) {
+      const { container } = render(<CalendarLegend calendars={CALENDARS} variant={variant} />)
+      expect(container.textContent).toContain("My calendar")
+      expect(legend(container)?.dataset.variant).toBe(variant)
+      expect(legend(container)?.className).toContain("flex-wrap")
+    }
+  })
+
+  test("a className still lands on it, because placement is the caller's", () => {
+    const { container } = render(
+      <CalendarLegend calendars={CALENDARS} variant="overlay" className="absolute end-3 bottom-3" />,
+    )
+    expect(legend(container)?.className).toContain("absolute")
   })
 })
