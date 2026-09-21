@@ -523,10 +523,28 @@ export function TableFilterChips({
             {filter.label}
             <span className="text-quebi-brand-text/70"> · {filter.text}</span>
           </span>
+          {/*
+            The variants are named, not fought with a className (task #187).
+            A `Button` given only a `className` still takes `buttonStyles`'
+            defaults — `intent="primary"` and `size="md"` — and `size-4` merges
+            away only the *size*: `px-5 py-2.5` is a different group, so it
+            survived and left a 16px box with 20px of padding a side. The
+            content box collapsed to 0 and the × vanished inside a solid mint
+            blob. `ghost` + a square size is the shape this actually wants; the
+            className is then only what is particular to a chip — its 16px box,
+            and mint ink instead of the muted default. `isCircle` is a variant
+            for the reason button.tsx gives: `rounded-full` in a className loses
+            to `rounded-quebi-sm` on sheet order. The ring loses its offset
+            because a 2px halo in the page colour around a 16px button inside a
+            22px pill paints over the chip's own tint.
+          */}
           <Button
+            intent="ghost"
+            size="sq-xs"
+            isCircle
             aria-label={`Clear ${filter.label} filter`}
             onPress={() => onClear(filter.column)}
-            className="flex size-4 shrink-0 items-center justify-center rounded-full text-quebi-brand-text/80 outline-none transition-colors hover:bg-quebi-brand/20 hover:text-quebi-brand-text focus-visible:ring-2 focus-visible:ring-quebi-brand-mark"
+            className="size-4 shrink-0 text-quebi-brand-text/80 hover:bg-quebi-brand/20 hover:text-quebi-brand-text focus-visible:ring-offset-0"
           >
             <X className="size-3" strokeWidth={2.5} aria-hidden="true" />
           </Button>
