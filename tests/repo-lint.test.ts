@@ -254,4 +254,42 @@ describe("the repo obeys the rules it publishes", () => {
     expect(restricted.map(textOf).join("\n")).toContain("@/components/button")
     expect(restricted.map(describeDiagnostic)).toHaveLength(1)
   })
+
+  test("a plain object with a `name` is not reported as a hand-wired Conform field", () => {
+    // Task #194, reproduced the way it was found: a scratch file in src/routes/
+    // run through the real config. `bind-fields-through-conform` looked for
+    // `$meta.name` with `$meta` unbound, so any `.name` property access on a
+    // control was a finding — `<Select defaultSelectedKey={person.name}>` was an
+    // error, at a severity that stops the commit, and Biome has no suppression
+    // comment for a GritQL diagnostic. Both controls are in one file so the
+    // check is not "the rule went quiet": one of them is still a real binding,
+    // and the assertion below says which one was reported.
+    const probe = "src/routes/__lint_probe__.tsx"
+    const source = [
+      "export const Probe = ({",
+      "  person,",
+      "  fields,",
+      "}: {",
+      "  person: { name: string }",
+      "  fields: { plan: { name: string } }",
+      "}) => (",
+      "  <>",
+      '    <Select aria-label="Role" defaultSelectedKey={person.name} />',
+      '    <Select aria-label="Plan" name={fields.plan.name} />',
+      "  </>",
+      ")",
+      "",
+    ].join("\n")
+    let diagnostics: Diagnostic[]
+    try {
+      writeFileSync(join(ROOT, probe), source)
+      diagnostics = lint([probe])
+    } finally {
+      rmSync(join(ROOT, probe), { force: true })
+    }
+    const bound = diagnostics.filter((d) => textOf(d).includes("bind-fields-through-conform"))
+    const spans = bound.map((d) => source.slice(d.location?.span?.[0] ?? 0, d.location?.span?.[1]))
+    expect(spans).toHaveLength(1)
+    expect(spans[0]).toContain("fields.plan.name")
+  })
 })

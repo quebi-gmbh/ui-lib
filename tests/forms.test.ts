@@ -29,6 +29,19 @@ describe(BIND, () => {
     expect(fires(BIND, code)).toBe(true)
   })
 
+  test("true positive: the field arrives as a prop rather than from useForm", () => {
+    // `field={fields.x}` is what the message asks for, so a component one level
+    // down holds a single field — and picking its name off by hand there is the
+    // same mistake in the same words.
+    expect(fires(BIND, component(`    <Checkbox name={props.field.name}>I accept</Checkbox>`))).toBe(true)
+    expect(fires(BIND, component(`    <TextField name={props.fields.email.name} />`))).toBe(true)
+  })
+
+  test("true positive: a field inside a fieldset", () => {
+    const code = component(`    <TextField name={fields.address.street.name} />`)
+    expect(fires(BIND, code)).toBe(true)
+  })
+
   test("true negative: the conform-* variant", () => {
     const code = component(`    <ConformCheckbox field={fields.terms} label="I accept" />`)
     expect(fires(BIND, code)).toBe(false)
@@ -51,6 +64,32 @@ describe(BIND, () => {
 
   test("no false positive: a literal name is not field metadata", () => {
     const code = component(`    <Checkbox name="terms">I accept</Checkbox>`)
+    expect(fires(BIND, code)).toBe(false)
+  })
+
+  test("no false positive: a plain object that happens to have a `name`", () => {
+    // Task #194. `.name` is an ordinary property of ordinary domain objects, and
+    // `$meta` used to be unbound — so every one of these was an error, with no
+    // suppression comment available and nothing to do about it but rename the
+    // domain property. The object has to be spelled like a field now.
+    expect(fires(BIND, component(`    <Select aria-label="Role" defaultSelectedKey={person.name} />`))).toBe(false)
+    expect(fires(BIND, component(`    <SearchField value={String(values.name ?? "")} />`))).toBe(false)
+    expect(fires(BIND, component(`    <NumberField defaultValue={props.user.name} />`))).toBe(false)
+  })
+
+  test("no false positive: the rarer four properties on a plain object either", () => {
+    // `.errors` on a fetch response, `.initialValue` on a chart datum. Rarer
+    // than `.name`, same hole.
+    expect(fires(BIND, component(`    <ComboBox items={response.errors} />`))).toBe(false)
+    expect(fires(BIND, component(`    <Slider defaultValue={setting.initialValue} />`))).toBe(false)
+  })
+
+  test("known blind spot: a field reached through an alias", () => {
+    // The price of asking what the object is called: an item out of
+    // getFieldList() is spelled exactly like a domain object, so this real
+    // hand-binding goes unreported. Missing one is the right way round for a
+    // rule at error severity — see the record's enforcement note.
+    const code = component(`    <TextField name={item.name} />`)
     expect(fires(BIND, code)).toBe(false)
   })
 

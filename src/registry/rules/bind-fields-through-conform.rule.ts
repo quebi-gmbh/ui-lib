@@ -214,6 +214,19 @@ import { Form } from "react-router"
     // (name={fields.x.name}, defaultValue={fields.x.initialValue}) — the
     // signature of a binding done by hand where a variant exists. Both element
     // forms are matched, since a bound control is as often self-closing.
+    //
+    // The object the property is read off has to look like field metadata, or
+    // the five property names match any object that happens to carry one:
+    // `$meta.name` alone reported `<Select defaultSelectedKey={person.name}>`
+    // as a hand-wired field (task #194), as an error, with no suppression
+    // comment available for a GritQL diagnostic. `$meta` is therefore pinned to
+    // a dotted chain that names a Conform field the way the message asks the
+    // reader to write one: `field`, or `fields.x` with anything in front of it
+    // (`props.fields.email`) and any fieldset depth behind it
+    // (`fields.address.street`). It is a shape test, not a type test, so an
+    // alias — `const item = items[i]` out of getFieldList(), or a destructured
+    // `const { name } = fields.terms` — reads like a domain object and goes
+    // unreported. That is the side to miss on: this rule is an error.
     biome: {
       via: "plugin",
       pattern: `or {
@@ -221,12 +234,20 @@ import { Form } from "react-router"
   JsxSelfClosingElement(name = $el, attributes = $attrs)
 } as $control where {
   $el <: r"^(?:Calendar|Checkbox|CheckboxGroup|ChoiceBox|ColorField|ColorPicker|ColorSwatchPicker|ComboBox|DateField|DatePicker|DateRangePicker|DaySchedule|InputOTP|MultipleSelect|AsyncMultipleSelect|AsyncSelect|NumberField|RadioGroup|RangeCalendar|SearchField|Select|Slider|StoragePicker|Switch|TagField|Textarea|TextField|TimeField)$",
-  $attrs <: contains or { \`$meta.name\`, \`$meta.errors\`, \`$meta.initialValue\`, \`$meta.errorId\`, \`$meta.formId\` }`,
+  $attrs <: contains or {
+    \`$meta.name\`,
+    \`$meta.errors\`,
+    \`$meta.initialValue\`,
+    \`$meta.errorId\`,
+    \`$meta.formId\`
+  } where {
+    $meta <: r"^(?:[A-Za-z_$][A-Za-z0-9_$]*\\.)*(?:field|fields\\.[A-Za-z0-9_$]+(?:\\.[A-Za-z0-9_$]+)*)$"
+  }`,
     },
     message:
       "This control is being wired to a Conform field by hand. Use the conform-* variant and pass field={fields.x}: every control that submits a value has one — Checkbox -> ConformCheckbox, Switch -> ConformSwitch, Select -> ConformSelect, RadioGroup -> ConformRadioGroup, Textarea -> ConformTextarea, Slider -> ConformSlider, TimeField -> ConformTimeField, FileTrigger -> ConformFileTrigger, TextField/Input -> ConformField. For a control you built yourself, spread getInputProps(field) onto its real <input>, or use useControl from @conform-to/react/future when it has none — do not pick metadata off one property at a time. See https://ui-lib.quebi.de/rules/bind-fields-through-conform",
     grep: "name=\\{[a-zA-Z]+\\.[a-zA-Z]+\\.name\\}",
-    note: "FileTrigger and DropZone are deliberately absent from the element list even though they have a variant: neither takes a `name`, so the hand-bound shape is a hidden input beside them, which this check cannot see — and the `$meta.name` half of the pattern matches any `x.name` member access, so listing DropZone fires on `item.name` inside an onDrop handler. This is a ui-lib convention, not a Conform requirement — Conform's own examples pick metadata off property by property, which is exactly the shape the check looks for. It fires only on ui-lib control names, so Conform's native-input examples do not trip it. It cannot see a field bound entirely through useState with a literal name; that shape needs review, and it is the common one in code written before the conform-* variants existed.",
+    note: "FileTrigger and DropZone are deliberately absent from the element list even though they have a variant: neither takes a `name`, so the hand-bound shape is a hidden input beside them, which this check cannot see. This is a ui-lib convention, not a Conform requirement — Conform's own examples pick metadata off property by property, which is exactly the shape the check looks for. It fires only on ui-lib control names, so Conform's native-input examples do not trip it. The object handing over the property has to be spelled like a field — `field`, `props.field`, `fields.x`, `fields.address.street` — so an ordinary `person.name` or `file.name` on a control is not a finding; until task #194 it was, and an error with no suppression comment available. What is bought with that is what is lost: a field reached through an alias (an item out of `getFieldList()`, a destructured `const { name } = fields.terms`) is spelled like a domain object and goes unreported. Nor can it see a field bound entirely through useState with a literal name; that shape needs review, and it is the common one in code written before the conform-* variants existed.",
   },
   tags: ["forms", "conform", "accessibility", "tier-1"],
 }
