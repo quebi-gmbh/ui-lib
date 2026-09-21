@@ -17,8 +17,8 @@ import { ToastProvider, useToast } from "@/components/toast"
 import {
   type DataTableCellAddress,
   type DataTableColumn,
-  type DataTableFilterValue,
   type DataTableQuery,
+  type FilterCondition,
   emptyQuery,
   queryFromSearchParams,
   queryToSearchParams,
@@ -242,7 +242,7 @@ const UrlStateShowcase = () => {
         globalFilter={query.search}
         onGlobalFilterChange={(search) => push({ ...query, search })}
         columnFilters={query.filters}
-        onColumnFiltersChange={(filters: DataTableFilterValue[]) => push({ ...query, filters })}
+        onColumnFiltersChange={(filters: FilterCondition[]) => push({ ...query, filters })}
         defaultPageSize={10}
       />
       <Note intent="info">
@@ -346,7 +346,16 @@ const StatesShowcase = () => {
         isLoading={mode === "loading"}
         isRefreshing={mode === "refresh"}
         columnFilters={
-          mode === "filtered" ? [{ column: "customer", value: "nothing matches this" }] : []
+          mode === "filtered"
+            ? [
+                {
+                  id: "customer",
+                  fieldId: "customer",
+                  operator: "contains" as const,
+                  value: "nothing matches this",
+                },
+              ]
+            : []
         }
         onColumnFiltersChange={() => undefined}
         error={mode === "error" ? "The orders service did not answer in time." : undefined}

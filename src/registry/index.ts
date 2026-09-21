@@ -83,6 +83,7 @@ import { dropdownExamples } from "./dropdown.examples"
 import { energyClassBadgeExamples } from "./energy-class-badge.examples"
 import { fieldExamples } from "./field.examples"
 import { filterBarExamples } from "./filter-bar.examples"
+import { filterBuilderExamples } from "./filter-builder.examples"
 import { filterRailExamples } from "./filter-rail.examples"
 import { fileTriggerExamples } from "./file-trigger.examples"
 import { formattedDateExamples } from "./formatted-date.examples"
@@ -242,6 +243,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "field": fieldExamples,
   "file-trigger": fileTriggerExamples,
   "filter-bar": filterBarExamples,
+  "filter-builder": filterBuilderExamples,
   "filter-rail": filterRailExamples,
   "formatted-date": formattedDateExamples,
   "formatted-number": formattedNumberExamples,

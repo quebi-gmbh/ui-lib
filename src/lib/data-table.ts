@@ -190,8 +190,15 @@ export interface DataTableColumn<T> {
    * rather than dropped. See `facetedOptions`.
    */
   filterOptions?: DataTableFilterOption[]
-  /** Custom predicate; overrides the one implied by `filterVariant`. */
-  filterFn?: (value: unknown, filter: unknown, row: T) => boolean
+  /**
+   * Custom predicate; overrides the one implied by `filterVariant`.
+   *
+   * The operator is passed for a predicate that wants to honour it, and is
+   * `undefined` for a filter nobody attached one to. A predicate that ignores
+   * it is its own operator, which is the usual case — that is what writing one
+   * instead of picking a variant means.
+   */
+  filterFn?: (value: unknown, filter: unknown, row: T, operator?: FilterOperator) => boolean
   noExport?: boolean
   /**
    * The control shown in this cell while it is being edited — and the reason
@@ -400,34 +407,195 @@ export function qualifiedLabel(meta: DataTableColumnMeta | undefined, fallback: 
   return meta?.group ? `${meta.group} · ${label}` : label
 }
 
-/** The one predicate both modes share, so a client filter and a server query
- * answer the same question for the same `DataTableFilterValue`. */
+/* -------------------------------------------------------------------------- */
+/*                               the operator                                 */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * The question a filter asks, separate from the value it asks it about.
+ *
+ * Until this existed, a variant *was* its question: `enum` meant "is one of",
+ * `text` meant "contains", and neither could be inverted — so no surface built
+ * on this model could express "is not", however convincingly it drew the
+ * select. That is not a missing control, it is a missing term in the
+ * vocabulary, and it has to be added here rather than in a component: the whole
+ * premise of `matchesFilter` is that a client filter and a server query answer
+ * the same question for the same filter, and an operator only the client
+ * understood would be the end of that. So it travels with the value —
+ * through `FilterCondition`, through `DataTableQuery.filters`, through the URL.
+ *
+ * The set is deliberately small and scoped per variant. A variant offers the
+ * operators that are *answerable* over its value shape and no more: a date has
+ * no "contains", an enum has no "starts with", and a boolean that already reads
+ * "Yes / No / Any" has nothing "is not" would add. Each variant's first
+ * operator is the one `matchesFilter` has always applied, so every existing
+ * filter means exactly what it meant before.
+ */
+
+export type FilterOperator =
+  | "is"
+  | "isNot"
+  | "contains"
+  | "doesNotContain"
+  | "startsWith"
+  | "between"
+  | "notBetween"
+
+/** Each variant's operators, in menu order. The first is its default. */
+const variantOperators: Record<DataTableFilterVariant, FilterOperator[]> = {
+  text: ["contains", "doesNotContain", "is", "startsWith"],
+  number: ["between", "notBetween"],
+  date: ["between", "notBetween"],
+  boolean: ["is"],
+  enum: ["is", "isNot"],
+}
+
+const operatorLabels: Record<FilterOperator, string> = {
+  is: "is",
+  isNot: "is not",
+  contains: "contains",
+  doesNotContain: "does not contain",
+  startsWith: "starts with",
+  between: "between",
+  notBetween: "not between",
+}
+
+/** The operators a variant offers, as a list a Select can render. */
+export function filterOperators(
+  variant: DataTableFilterVariant | undefined,
+): { id: FilterOperator; label: string }[] {
+  return (variantOperators[variant ?? "text"] ?? variantOperators.text).map((id) => ({
+    id,
+    label: operatorLabels[id],
+  }))
+}
+
+/**
+ * The operator a variant means when nobody said — i.e. exactly what
+ * `matchesFilter` did before there was an operator to say.
+ */
+export function defaultOperator(variant: DataTableFilterVariant | undefined): FilterOperator {
+  return (variantOperators[variant ?? "text"] ?? variantOperators.text)[0]
+}
+
+/** An operator in words, for a chip, a row or a menu item. */
+export function operatorLabel(operator: FilterOperator): string {
+  return operatorLabels[operator] ?? operator
+}
+
+/** True when `operator` is one of the ones `variant` offers. */
+export function isOperatorFor(
+  variant: DataTableFilterVariant | undefined,
+  operator: string | undefined,
+): operator is FilterOperator {
+  return (
+    operator != null &&
+    (variantOperators[variant ?? "text"] ?? variantOperators.text).includes(
+      operator as FilterOperator,
+    )
+  )
+}
+
+/**
+ * A filter value carrying its own operator, for a row model whose slot per
+ * field holds exactly one thing.
+ *
+ * TanStack's `columnFilters` is `{ id, value }` and its `filterFn` is handed
+ * the value and nothing else, so an operator has nowhere to travel except
+ * inside the value. `packFilter` only wraps when there is something to say —
+ * a filter at its variant's default operator is passed through untouched, so
+ * every filter written before this existed, and every custom `filterFn`
+ * reading one, sees exactly what it saw before.
+ */
+export interface PackedFilter {
+  operator: FilterOperator
+  value: unknown
+}
+
+export function packFilter(
+  variant: DataTableFilterVariant | undefined,
+  value: unknown,
+  operator: FilterOperator | undefined,
+): unknown {
+  return operator == null || operator === defaultOperator(variant) ? value : { operator, value }
+}
+
+export function unpackFilter(filter: unknown): { value: unknown; operator?: FilterOperator } {
+  return isPackedFilter(filter) ? { value: filter.value, operator: filter.operator } : { value: filter }
+}
+
+function isPackedFilter(filter: unknown): filter is PackedFilter {
+  return (
+    typeof filter === "object" &&
+    filter !== null &&
+    !Array.isArray(filter) &&
+    "operator" in filter &&
+    "value" in filter
+  )
+}
+
+/**
+ * The one predicate every surface shares, so a client filter and a server query
+ * answer the same question for the same value, operator and variant.
+ *
+ * An unset filter matches everything, whatever the operator — the negated
+ * operators are the reason that has to be stated rather than fallen into. "Not
+ * between" over a range with neither bound set would otherwise reject every
+ * row, so a condition nobody has finished filling in would empty the list
+ * instead of being inert; `isFilterSet` is the single answer to "is there a
+ * filter here at all", asked here and by the chrome that decides whether to
+ * draw a chip.
+ *
+ * A value that is not a number is outside *both* a numeric range and its
+ * complement: "not between 10 and 100" is a claim about an amount, and a row
+ * that has no amount does not make it true.
+ */
 export function matchesFilter(
   value: unknown,
   variant: DataTableFilterVariant | undefined,
   filter: unknown,
+  operator?: FilterOperator,
 ): boolean {
-  if (filter == null || filter === "" || (Array.isArray(filter) && filter.length === 0)) return true
+  if (!isFilterSet(filter)) return true
+  const op = operator ?? defaultOperator(variant)
   switch (variant) {
-    case "enum":
-      return (filter as string[]).includes(String(value))
-    case "boolean":
-      return String(value) === String(filter)
+    case "enum": {
+      const isOneOf = (filter as unknown[]).map(String).includes(String(value))
+      return op === "isNot" ? !isOneOf : isOneOf
+    }
+    case "boolean": {
+      const equals = String(value) === String(filter)
+      return op === "isNot" ? !equals : equals
+    }
     case "number": {
       const [min, max] = filter as [number | null, number | null]
       const n = Number(value)
       if (Number.isNaN(n)) return false
-      return (min == null || n >= min) && (max == null || n <= max)
+      const within =
+        (min == null || min === ("" as unknown) || n >= min) &&
+        (max == null || max === ("" as unknown) || n <= max)
+      return op === "notBetween" ? !within : within
     }
     case "date": {
       const [from, to] = filter as [string | null, string | null]
       const d = String(value ?? "")
-      return (!from || d >= from) && (!to || d <= to)
+      const within = (!from || d >= from) && (!to || d <= to)
+      return op === "notBetween" ? !within : within
     }
-    default:
-      return String(value ?? "")
-        .toLowerCase()
-        .includes(String(filter).toLowerCase())
+    default: {
+      const haystack = String(value ?? "").toLowerCase()
+      const needle = String(filter).toLowerCase()
+      switch (op) {
+        case "is":
+          return haystack === needle
+        case "startsWith":
+          return haystack.startsWith(needle)
+        case "doesNotContain":
+          return !haystack.includes(needle)
+        default:
+          return haystack.includes(needle)
+      }
+    }
   }
 }
 
@@ -571,8 +739,131 @@ export interface FilterField {
   step?: number
 }
 
-/** Every field's current filter, by field id, in the shape its variant expects. */
+/* -------------------------------------------------------------------------- */
+/*                              the condition                                 */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One condition: a field, an operator, and a value in the shape that field's
+ * variant expects. The unit of the filter model.
+ *
+ * The map below it is older and smaller, and the difference between them is
+ * exactly the difference between a toolbar and a query. A `Record<fieldId,
+ * value>` can hold one filter per field at one implied operator, which is all a
+ * one-control-per-field surface can *show* — a pill, a facet, a column popover.
+ * It cannot hold `Status is not live`, and it cannot hold two conditions on one
+ * field at all: the second overwrites the first. A list of conditions holds
+ * both, which is why the list is the model and the map is a projection of it.
+ *
+ * `id` is what makes the second condition on a field a second row rather than a
+ * replacement, and what a React key and a remove button address. It is opaque:
+ * generate it however you like, keep it stable while the condition is on
+ * screen.
+ *
+ * `variant` is carried only where the reader has no field list to look it up in
+ * — `DataTableQuery.filters` crossing to a server, a condition parsed out of a
+ * URL. Everywhere a `FilterField[]` is in hand it is redundant and may be left off.
+ */
+export interface FilterCondition {
+  id: string
+  fieldId: string
+  operator: FilterOperator
+  value: unknown
+  variant?: DataTableFilterVariant
+}
+
+/**
+ * Every field's current filter, by field id, in the shape its variant expects
+ * — one condition per field at its variant's default operator, which is the
+ * expressiveness a one-control-per-field surface has.
+ *
+ * `FilterBar`, `FilterRail` and both tables speak this; anything that can
+ * express negation, or two conditions on one field, carries `FilterCondition[]`
+ * instead. Every function below takes either.
+ */
 export type FilterValues = Record<string, unknown>
+
+/** Either filter shape — the list, or the map that is one condition per field. */
+export type FilterState = FilterValues | FilterCondition[]
+
+/** A fresh, valueless condition on a field, at its variant's default operator. */
+export function newCondition(field: FilterField, id: string): FilterCondition {
+  return {
+    id,
+    fieldId: field.id,
+    operator: defaultOperator(field.variant),
+    value: field.variant === "enum" ? [] : "",
+  }
+}
+
+/**
+ * Move a condition to another field.
+ *
+ * The value never survives: a text needle is not a set of enum keys and not a
+ * pair of dates, and carrying it across would either throw or filter by
+ * nonsense. The operator survives only where the new variant offers it — `is`
+ * means the same thing on an enum as on a text — and otherwise falls back to
+ * the new variant's default rather than being silently kept as a term that
+ * variant cannot answer.
+ */
+export function conditionOnField(condition: FilterCondition, field: FilterField): FilterCondition {
+  return {
+    ...newCondition(field, condition.id),
+    operator: isOperatorFor(field.variant, condition.operator)
+      ? condition.operator
+      : defaultOperator(field.variant),
+  }
+}
+
+/**
+ * True when the condition would narrow anything.
+ *
+ * A condition with no value yet is *inert* — `matchesFilter` lets every row
+ * through it — and a surface that draws one has to say so, because a row
+ * reading `Where Status is …` looks exactly as applied as the one beside it
+ * that is.
+ */
+export function isConditionSet(condition: FilterCondition): boolean {
+  return isFilterSet(condition.value)
+}
+
+/** The map as a list: one condition per field that has a value, in field order. */
+export function toConditions(values: FilterValues, fields: FilterField[]): FilterCondition[] {
+  return fields
+    .filter((field) => isFilterSet(values[field.id]))
+    .map((field) => ({
+      id: field.id,
+      fieldId: field.id,
+      operator: defaultOperator(field.variant),
+      value: values[field.id],
+      variant: field.variant,
+    }))
+}
+
+/**
+ * The list as the map — what a one-control-per-field surface can show of it.
+ *
+ * Lossy on purpose and in one direction only: a negated condition arrives as a
+ * plain value, and the last of two conditions on one field wins. Both are
+ * facts about the surface rather than about the conditions, which is why the
+ * conversion is explicit at its edge and never implicit in the model.
+ */
+export function toFilterValues(conditions: FilterCondition[]): FilterValues {
+  const values: FilterValues = {}
+  for (const condition of conditions) {
+    if (isConditionSet(condition)) values[condition.fieldId] = condition.value
+  }
+  return values
+}
+
+/** Normalise either shape to the list the predicates actually run over. */
+function asConditions(state: FilterState, fields: FilterField[]): FilterCondition[] {
+  return Array.isArray(state) ? state : toConditions(state, fields)
+}
+
+function variantsById(fields: FilterField[]): Map<string, DataTableFilterVariant> {
+  return new Map(fields.map((field) => [field.id, field.variant]))
+}
 
 /**
  * True when a filter would narrow anything — i.e. when it is worth a chip.
@@ -605,11 +896,20 @@ function fieldValue(row: unknown, fieldId: string): unknown {
 export function filterRows<T>(
   rows: T[],
   fields: FilterField[],
-  values: FilterValues,
+  filter: FilterState,
   getValue: (row: T, fieldId: string) => unknown = fieldValue,
 ): T[] {
+  const conditions = asConditions(filter, fields)
+  const variants = variantsById(fields)
   return rows.filter((row) =>
-    fields.every((field) => matchesFilter(getValue(row, field.id), field.variant, values[field.id])),
+    conditions.every((condition) =>
+      matchesFilter(
+        getValue(row, condition.fieldId),
+        condition.variant ?? variants.get(condition.fieldId),
+        condition.value,
+        condition.operator,
+      ),
+    ),
   )
 }
 
@@ -632,10 +932,12 @@ export function facetCounts<T>(
   rows: T[],
   fields: FilterField[],
   fieldId: string,
-  values: FilterValues,
+  filter: FilterState,
   getValue: (row: T, fieldId: string) => unknown = fieldValue,
 ): DataTableFilterOption[] {
-  const others = fields.filter((field) => field.id !== fieldId)
+  const variants = variantsById(fields)
+  const conditions = asConditions(filter, fields)
+  const others = conditions.filter((condition) => condition.fieldId !== fieldId)
   // A field that declares its own options keeps them: they carry the labels
   // (`live` shown as "Live") and the order the caller chose, and reading the
   // domain off the rows instead would throw both away and re-sort the list
@@ -648,17 +950,28 @@ export function facetCounts<T>(
     const raw = getValue(row, fieldId)
     if (raw == null || raw === "") continue
     const key = String(raw)
-    const kept = others.every((field) =>
-      matchesFilter(getValue(row, field.id), field.variant, values[field.id]),
+    const kept = others.every((condition) =>
+      matchesFilter(
+        getValue(row, condition.fieldId),
+        condition.variant ?? variants.get(condition.fieldId),
+        condition.value,
+        condition.operator,
+      ),
     )
     counts.set(key, (counts.get(key) ?? 0) + (kept ? 1 : 0))
   }
-  const selected = values[fieldId]
+  // Which options to keep listed however few rows are left under them. A
+  // condition list can hold more than one condition on this field; every value
+  // any of them selected has to stay checkable, since the panel is the only
+  // place any of them can be taken off again.
+  const selected = conditions
+    .filter((condition) => condition.fieldId === fieldId)
+    .flatMap((condition) => (Array.isArray(condition.value) ? condition.value : []))
   return facetedOptions({
     declared: declared && declared.length > 0 ? declared : undefined,
     domain: [...counts.keys()].map(String),
     counts,
-    selected: Array.isArray(selected) ? selected.map(String) : [],
+    selected: selected.map(String),
   })
 }
 
@@ -710,10 +1023,12 @@ function toColumnDef<T extends RowData>(
     sortUndefined: col.sortUndefined ?? "last",
     aggregationFn: col.aggregate,
     sortFn: col.sortFn,
-    filterFn: (row: DataTableRow<T>, id: string, value: unknown) =>
-      col.filterFn
-        ? col.filterFn(row.getValue(id), value, row.original)
-        : matchesFilter(row.getValue(id), col.filterVariant, value),
+    filterFn: (row: DataTableRow<T>, id: string, filter: unknown) => {
+      const { value, operator } = unpackFilter(filter)
+      return col.filterFn
+        ? col.filterFn(row.getValue(id), value, row.original, operator)
+        : matchesFilter(row.getValue(id), col.filterVariant, value, operator)
+    },
     cell: col.cell ? (ctx: Ctx) => col.cell?.(cellContext(ctx)) : undefined,
     aggregatedCell: col.aggregatedCell
       ? (ctx: Ctx) => col.aggregatedCell?.(cellContext(ctx))
@@ -862,11 +1177,18 @@ function unique(values: string[]): string[] {
   return [...new Set(values)]
 }
 
-export interface DataTableFilterValue {
-  column: string
-  variant?: DataTableFilterVariant
-  value: unknown
-}
+/**
+ * A filter on its way to a server, which is a `FilterCondition` and nothing
+ * more — the operator included.
+ *
+ * That is the whole of step three: `matchesFilter` promises that a client
+ * filter and a server query answer the same question for the same filter, so
+ * an operator the client applied and never reported would be a client-side
+ * table and a server-side one disagreeing about what the user asked for. The
+ * `variant` rides along because the server has no `FilterField[]` to look it
+ * up in.
+ */
+export type DataTableFilterValue = FilterCondition
 
 /**
  * Everything a server-driven table knows, in one object. One callback rather
@@ -1026,14 +1348,43 @@ export function queryToSearchParams(query: DataTableQuery): Record<string, strin
   if (query.search) params.q = query.search
   if (query.page > 0) params.page = String(query.page + 1)
   if (query.pageSize !== emptyQuery.pageSize) params.size = String(query.pageSize)
-  for (const filter of query.filters) {
-    if (filter.value == null || filter.value === "") continue
-    params[`f.${filter.column}`] = Array.isArray(filter.value)
-      ? filter.value.map((v) => (v == null ? "" : String(v))).join(",")
-      : String(filter.value)
+  const byField = new Map<string, string[]>()
+  for (const condition of query.filters) {
+    if (!isFilterSet(condition.value)) continue
+    const value = Array.isArray(condition.value)
+      ? condition.value.map((entry) => escapePart(entry)).join(",")
+      : escapePart(condition.value)
+    const isDefault = condition.operator === defaultOperator(condition.variant)
+    const part = isDefault ? value : `${condition.operator}:${value}`
+    byField.set(condition.fieldId, [...(byField.get(condition.fieldId) ?? []), part])
   }
+  for (const [fieldId, parts] of byField) params[`f.${fieldId}`] = parts.join(";")
   return params
 }
+
+/*
+ * `f.<field>` is one or more conditions, `;`-separated, each of them
+ * `operator:value` — with the `operator:` left off when it is the field's
+ * default, and the whole `;` apparatus left off when the field carries one
+ * condition. So every URL this wrote before there were operators is still
+ * exactly what it writes today, and the two new separators cost nothing to a
+ * view that uses neither.
+ *
+ * `:` and `;` are escaped inside a value, `%` with them so the escape itself
+ * round-trips; unescaping takes them in that order for the same reason. `,`
+ * deliberately is not — it is the separator *within* a value, it predates this,
+ * and an enum key or a date containing one has never survived this trip.
+ * Reading the operator is also guarded twice: a prefix is only an operator if
+ * the field's variant offers it, which is what keeps `f.link=https://example.com`
+ * a link and not a filter whose operator is "https".
+ */
+const escapePart = (value: unknown): string =>
+  value == null
+    ? ""
+    : String(value).replaceAll("%", "%25").replaceAll(":", "%3A").replaceAll(";", "%3B")
+
+const unescapePart = (part: string): string =>
+  part.replaceAll("%3A", ":").replaceAll("%3B", ";").replaceAll("%25", "%")
 
 export function queryFromSearchParams(
   params: URLSearchParams,
@@ -1041,17 +1392,30 @@ export function queryFromSearchParams(
   defaults: DataTableQuery = emptyQuery,
 ): DataTableQuery {
   const sortParam = params.get("sort")
-  const filters: DataTableFilterValue[] = []
+  const filters: FilterCondition[] = []
   for (const { id, variant } of columns) {
     const raw = params.get(`f.${id}`)
     if (raw == null) continue
-    const value =
-      variant === "enum"
-        ? raw.split(",").filter(Boolean)
-        : variant === "number" || variant === "date"
-          ? raw.split(",").map((part) => (part === "" ? null : part))
-          : raw
-    filters.push({ column: id, variant, value })
+    const parts = raw.split(";")
+    parts.forEach((part, index) => {
+      const colon = part.indexOf(":")
+      const head = colon < 0 ? undefined : part.slice(0, colon)
+      const named = isOperatorFor(variant, head)
+      const body = named ? part.slice(colon + 1) : part
+      const value =
+        variant === "enum"
+          ? body.split(",").filter(Boolean).map(unescapePart)
+          : variant === "number" || variant === "date"
+            ? body.split(",").map((entry) => (entry === "" ? null : unescapePart(entry)))
+            : unescapePart(body)
+      filters.push({
+        id: parts.length > 1 ? `${id}~${index}` : id,
+        fieldId: id,
+        operator: named && head ? head : defaultOperator(variant),
+        variant,
+        value,
+      })
+    })
   }
   return {
     sort: sortParam

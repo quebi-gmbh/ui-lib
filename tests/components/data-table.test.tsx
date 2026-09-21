@@ -202,7 +202,9 @@ describe("DataTable", () => {
         columns={columns}
         data={ORDERS}
         getRowId={(order) => String(order.id)}
-        columnFilters={[{ column: "reference", value: "nothing-matches" }]}
+        columnFilters={[
+          { id: "reference", fieldId: "reference", operator: "contains", value: "nothing-matches" },
+        ]}
         onColumnFiltersChange={() => undefined}
         emptyMessage="No orders yet."
         noResultsMessage="No orders match your filters."
