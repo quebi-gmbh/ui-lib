@@ -121,7 +121,10 @@ export const scrollAreaExamples: ComponentExample[] = [
       <div className="h-56 w-full max-w-md rounded-quebi-md border border-quebi-line/10">
         <ScrollArea className="p-4">
           <div className="flex w-max flex-col gap-3">
-            {rows(16, "a row wide enough that this viewport scrolls both ways at once.")}
+            {rows(
+              16,
+              "a row that runs well past the right edge of this viewport, so the horizontal bar has a decent run of track to travel along.",
+            )}
           </div>
         </ScrollArea>
       </div>
