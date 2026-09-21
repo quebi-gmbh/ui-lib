@@ -136,6 +136,27 @@ const PickerLabelByMonth = () => {
   )
 }
 
+const PickerLabelByWeek = () => {
+  const [anchor, setAnchor] = useState<CalendarDate>(() => today(TIME_ZONE))
+
+  return (
+    <CalendarToolbar
+      label={calendarRangeLabel(week(anchor), { locale: LOCALE, timeZone: TIME_ZONE })}
+      labelVariant="picker"
+      pickerGranularity="week"
+      // The two things that decide which seven days a row is. Pass what the
+      // grid beneath the toolbar is drawn with, or the row and the view mean
+      // different weeks.
+      locale={LOCALE}
+      date={anchor}
+      onDateChange={setAnchor}
+      onPrevious={() => setAnchor(anchor.subtract({ weeks: 1 }))}
+      onNext={() => setAnchor(anchor.add({ weeks: 1 }))}
+      onToday={() => setAnchor(today(TIME_ZONE))}
+    />
+  )
+}
+
 export const calendarToolbarExamples: ComponentExample[] = [
   {
     title: "Switching views",
@@ -166,6 +187,12 @@ export const calendarToolbarExamples: ComponentExample[] = [
     description:
       "`labelVariant=\"picker\"` turns the heading into a button opening a calendar, the way the Calendar\u2019s own header opens the Month Picker. Without it the only way to a distant day is Today or one chevron press at a time. It needs `date` and `onDateChange` \u2014 the toolbar still owns nothing.",
     render: () => <PickerLabel />,
+  },
+  {
+    title: "A week grid, for a week heading",
+    description:
+      "`pickerGranularity=\"week\"` opens the Week Picker, where the whole row is the target \u2014 what Week View passes for you. A heading reading `21.\u201327. September 2026` names a week, and a day grid there would ask which of the seven you meant when all seven show the same view. The weekday you were anchored on survives the choice, so stepping back to Day lands where you were.",
+    render: () => <PickerLabelByWeek />,
   },
   {
     title: "A month grid, for a month heading",

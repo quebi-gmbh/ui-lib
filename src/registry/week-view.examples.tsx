@@ -12,6 +12,7 @@ import {
   CalendarLegend,
   type CalendarSource,
 } from "@/components/calendar-shell"
+import { ToggleGroup, ToggleGroupItem } from "@/components/toggle-group"
 import { WeekView } from "@/components/week-view"
 import type { ComponentExample } from "./types"
 
@@ -217,6 +218,176 @@ const DragToMove = () => {
   )
 }
 
+/**
+ * The three things the toolbar's heading can be, and the two props that decide
+ * which. `labelVariant` says whether it is a control at all; `pickerGranularity`
+ * says what it offers when it is.
+ */
+type HeadingVariant = "week" | "day" | "static"
+
+const HEADING_VARIANTS: readonly { id: HeadingVariant; label: string }[] = [
+  { id: "week", label: "Week grid (default)" },
+  { id: "day", label: "Day grid" },
+  { id: "static", label: "Plain heading" },
+]
+
+const HeadingVariants = () => {
+  const [variant, setVariant] = useState<HeadingVariant>("week")
+  const [anchor, setAnchor] = useState<CalendarDate>(() => weekStart())
+  // The fixture follows the view rather than being pinned to this week, so a
+  // jump lands on a week that has something on it.
+  const start = startOfWeek(anchor, FIXTURE_LOCALE)
+
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <ToggleGroup
+        size="sm"
+        selectionMode="single"
+        aria-label="Heading variant"
+        selectedKeys={new Set([variant])}
+        onSelectionChange={(keys) => {
+          const [next] = keys
+          if (next) setVariant(next as HeadingVariant)
+        }}
+      >
+        {HEADING_VARIANTS.map((option) => (
+          <ToggleGroupItem key={option.id} id={option.id}>
+            {option.label}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+
+      <WeekView
+        events={week(start)}
+        calendars={CALENDARS}
+        timeZone={TIME_ZONE}
+        startHour={8}
+        endHour={18}
+        height={360}
+        date={anchor}
+        onDateChange={setAnchor}
+        labelVariant={variant === "static" ? "static" : "picker"}
+        pickerGranularity={variant === "day" ? "day" : "week"}
+      />
+      <p className="text-quebi-fg-muted text-sm">
+        {variant === "week"
+          ? "The heading names a week, so the grid it opens offers weeks: the row is the target and the ISO number is in the gutter."
+          : variant === "day"
+            ? "A day grid works too — every day in a row leads to the same week — but it asks which of the seven you meant when the answer does not matter."
+            : "labelVariant=\"static\" puts the text back. Today and the chevrons are then the only way out of this week."}
+      </p>
+    </div>
+  )
+}
+
+/**
+ * Where a legend can sit. Four of these are pure layout — the legend is a child
+ * and CSS puts it somewhere — and only the last one asks the library for
+ * anything, because only the last one has a calendar behind it.
+ */
+type LegendPlacement = "above" | "beside" | "below" | "overlay"
+
+const LEGEND_PLACEMENTS: readonly { id: LegendPlacement; label: string }[] = [
+  { id: "above", label: "Above" },
+  { id: "beside", label: "Beside" },
+  { id: "below", label: "Below" },
+  { id: "overlay", label: "Over the grid" },
+]
+
+const LegendPlacements = () => {
+  const start = weekStart()
+  const [placement, setPlacement] = useState<LegendPlacement>("above")
+
+  const view = (
+    <WeekView
+      events={week(start)}
+      calendars={CALENDARS}
+      timeZone={TIME_ZONE}
+      startHour={8}
+      endHour={18}
+      height={340}
+      className={placement === "beside" ? "min-w-0 flex-1" : undefined}
+    />
+  )
+
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <ToggleGroup
+        size="sm"
+        selectionMode="single"
+        aria-label="Legend placement"
+        selectedKeys={new Set([placement])}
+        // Single selection still lets you press the selected item to clear it;
+        // there is no "no placement", so an empty set keeps the current one.
+        onSelectionChange={(keys) => {
+          const [next] = keys
+          if (next) setPlacement(next as LegendPlacement)
+        }}
+      >
+        {LEGEND_PLACEMENTS.map((option) => (
+          <ToggleGroupItem key={option.id} id={option.id}>
+            {option.label}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+
+      {placement === "above" ? (
+        <div className="flex w-full flex-col gap-3">
+          <CalendarLegend calendars={CALENDARS} />
+          {view}
+        </div>
+      ) : null}
+
+      {placement === "beside" ? (
+        <div className="flex w-full items-start gap-4">
+          {view}
+          {/* A column rather than a row: direction is layout, so it is a class. */}
+          <CalendarLegend calendars={CALENDARS} className="w-28 shrink-0 flex-col items-start" />
+        </div>
+      ) : null}
+
+      {placement === "below" ? (
+        <div className="flex w-full flex-col gap-3">
+          {view}
+          <CalendarLegend calendars={CALENDARS} className="self-end" />
+        </div>
+      ) : null}
+
+      {placement === "overlay" ? (
+        <div className="relative w-full">
+          {view}
+          <CalendarLegend
+            calendars={CALENDARS}
+            variant="overlay"
+            className="absolute end-3 bottom-3"
+          />
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+const OverlayLegend = () => {
+  const start = weekStart()
+  return (
+    <div className="relative w-full">
+      <WeekView
+        events={week(start)}
+        calendars={CALENDARS}
+        timeZone={TIME_ZONE}
+        startHour={9}
+        endHour={17}
+        height={360}
+      />
+      <CalendarLegend
+        calendars={CALENDARS}
+        variant="overlay"
+        className="absolute start-3 bottom-3"
+      />
+    </div>
+  )
+}
+
 export const weekViewExamples: ComponentExample[] = [
   {
     title: "Default",
@@ -241,6 +412,24 @@ export const weekViewExamples: ComponentExample[] = [
     description:
       "onEventClick fires on every activation and receives the event object you passed in, so you can open your own detail panel from it.",
     render: () => <WithDayReadout />,
+  },
+  {
+    title: "Jumping to another week",
+    description:
+      "The heading is a picker, and it has been the default since the alternative was Today or one chevron press at a time. It opens the unit the heading is spelled in — a week grid, where the row is the target — because every day of a row leads to the same view. pickerGranularity=\"day\" asks for a day instead, and labelVariant=\"static\" turns the heading back into text.",
+    render: () => <HeadingVariants />,
+  },
+  {
+    title: "Where the legend goes",
+    description:
+      "Placement is layout, so the legend takes no prop for it: it is a child, and a class puts it before the view, after it, or in a column beside it. Over the grid is the one case that needs the library — variant=\"overlay\" draws the same row on an elevated surface, because a bare row of small muted text with events behind it is no longer a legend.",
+    render: () => <LegendPlacements />,
+  },
+  {
+    title: "Overlay in the corner the week leaves free",
+    description:
+      "The same overlay in the other corner, with the hour axis and a column of events behind it. The surface is translucent and blurred, so the key stays readable without hiding what it covers — and which corner it takes is yours, one absolute class.",
+    render: () => <OverlayLegend />,
   },
   {
     title: "Drag to move",

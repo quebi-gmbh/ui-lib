@@ -674,8 +674,10 @@ export function DaySchedule({
         data-day-schedule-viewport=""
         className={cn(
           "min-w-0 flex-1 overflow-y-auto overscroll-y-contain",
-          // The map replaces the bar rather than sitting next to it.
-          minimap ? "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : "quebi-scrollbar",
+          // The map replaces the bar rather than sitting next to it — which is
+          // exactly what `quebi-scrollbar-none` is for, so the two browsers'
+          // ways of saying "no bar" are declared in one place and not here.
+          cn("quebi-scrollbar", minimap && "quebi-scrollbar-none"),
         )}
         style={{ height }}
       >

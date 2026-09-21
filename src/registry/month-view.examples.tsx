@@ -155,6 +155,26 @@ const DrillDown = () => {
   )
 }
 
+/**
+ * A month grid ends mid-week, so the last row usually has empty cells in the
+ * corner. That is where a legend can sit for free — and `variant="overlay"` is
+ * what keeps it a legend on the months where it does not.
+ */
+const OverlayLegend = () => {
+  const first = startOfMonth(today(TIME_ZONE))
+  return (
+    <div className="relative w-full">
+      <MonthView
+        events={month(first)}
+        calendars={CALENDARS}
+        timeZone={TIME_ZONE}
+        weekHeight={120}
+      />
+      <CalendarLegend calendars={CALENDARS} variant="overlay" className="absolute end-3 bottom-3" />
+    </div>
+  )
+}
+
 export const monthViewExamples: ComponentExample[] = [
   {
     title: "Default",
@@ -167,6 +187,12 @@ export const monthViewExamples: ComponentExample[] = [
     description:
       "weekHeight decides how many chips a cell holds before the overflow starts — the lane count is derived from it, not configured twice.",
     render: () => <WithLegend />,
+  },
+  {
+    title: "The legend over the grid",
+    description:
+      "The corner a month ends in is usually empty, which makes it the cheapest place to put the key — and the least reliable, because next month the weeks reach it. variant=\"overlay\" settles that: the row sits on an elevated, blurred surface, so it reads the same over a spare Saturday and over a full one. Placement stays a class, not a prop.",
+    render: () => <OverlayLegend />,
   },
   {
     title: "\"+N more\" overflow",

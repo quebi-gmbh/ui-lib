@@ -1208,7 +1208,10 @@ export function TableShell<T extends RowData>({
           {tableElement}
         </Virtualizer>
       ) : height ? (
-        <div className="quebi-scrollbar overflow-auto rounded-quebi-md" style={{ maxHeight: height }}>
+        <div
+          className="quebi-scrollbar quebi-scrollbar-corners overflow-auto rounded-quebi-md"
+          style={{ maxHeight: height }}
+        >
           {tableElement}
         </div>
       ) : (

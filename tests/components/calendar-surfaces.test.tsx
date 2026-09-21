@@ -24,6 +24,7 @@ import { render } from "@testing-library/react"
 import {
   CALENDAR_COLORS,
   type CalendarEvent,
+  CalendarLegend,
   type CalendarSource,
 } from "../../src/components/calendar-shell"
 import { DayView } from "../../src/components/day-view"
@@ -350,5 +351,128 @@ describe("the colour accent is a straight line, not a crescent", () => {
     expect(className).toContain("rounded-br-quebi-sm")
     expect(className).not.toContain("rounded-tl-quebi-sm")
     expect(className).not.toContain("rounded-bl-quebi-sm")
+  })
+})
+
+/**
+ * The scrolling grid draws the library's scrollbar, not the platform's.
+ *
+ * The shell's time grid was the one scroll surface in the library that never
+ * took `quebi-scrollbar`, so a week view painted whatever the OS paints —
+ * stepper arrows at each end under Linux Chromium, a grey slab elsewhere —
+ * inside a card whose every other scroller shows the 6px quebi pill.
+ *
+ * Two halves are pinned, because the bar only lands right when both hold: the
+ * viewport asks for the pill, and the shell above it keeps the
+ * `overflow-hidden` + radius that clips the pill's ends to the card's corner.
+ * That clip is why the viewport itself needs no `quebi-scrollbar-corners` —
+ * drop it from the shell and the bar squares off against the bottom edge again.
+ */
+describe("the calendar grid scrolls behind the quebi bar", () => {
+  const viewport = (container: HTMLElement) =>
+    container.querySelector<HTMLElement>('[data-slot="calendar-viewport"]')
+
+  test("the week view's scrolling grid carries the utility", () => {
+    const { container } = render(
+      <WeekView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[EVENT]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+      />,
+    )
+    const className = viewport(container)?.className ?? ""
+    expect(className).toContain("quebi-scrollbar")
+    expect(className).toContain("overflow-y-auto")
+    // The bar is the flush default: neither variant belongs on a grid whose
+    // content must not scroll under it.
+    expect(className).not.toContain("quebi-scrollbar-floating")
+    expect(className).not.toContain("quebi-scrollbar-none")
+  })
+
+  test("the day view is the same shell, so it gets it too", () => {
+    const { container } = render(
+      <DayView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[EVENT]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+      />,
+    )
+    expect(viewport(container)?.className ?? "").toContain("quebi-scrollbar")
+  })
+
+  test("the shell above it still clips the bar to its own corner", () => {
+    const { container } = render(
+      <WeekView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[EVENT]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+      />,
+    )
+    const shell = container.querySelector<HTMLElement>('[data-slot="calendar-shell"]')
+    expect(shell).not.toBeNull()
+    expect(shell?.className).toContain("overflow-hidden")
+    expect(shell?.className).toContain("rounded-quebi-md")
+    // The clip has to be an ancestor of the bar for it to reach it at all.
+    expect(shell?.contains(viewport(container))).toBe(true)
+  })
+})
+
+/**
+ * The legend has one variant, and it exists for one situation.
+ *
+ * Where a legend sits is layout — above the view, below it, in a column beside
+ * it — and the library owns none of that: it is a child and a className. What
+ * it cannot own is what happens when the legend is laid *over* the grid, where
+ * a row of `text-xs text-quebi-fg-muted` has events, hour rules and column
+ * seams behind it. That is `variant="overlay"`, and pinning it here keeps the
+ * plain row plain: a legend on its own line must not arrive carrying a border
+ * and a shadow.
+ */
+describe("the legend's overlay variant", () => {
+  const legend = (container: HTMLElement) =>
+    container.querySelector<HTMLElement>('[data-slot="calendar-legend"]')
+
+  test("the default is a bare row — no surface, no edge, no lift", () => {
+    const { container } = render(<CalendarLegend calendars={CALENDARS} />)
+    const className = legend(container)?.className ?? ""
+    expect(className).not.toContain("bg-quebi-elevated")
+    expect(className).not.toContain("border")
+    expect(className).not.toContain("shadow")
+  })
+
+  test("the overlay is an elevated surface, so the grid cannot swallow it", () => {
+    const { container } = render(<CalendarLegend calendars={CALENDARS} variant="overlay" />)
+    const className = legend(container)?.className ?? ""
+    expect(className).toContain("bg-quebi-elevated")
+    // A hairline is the token at an alpha, never a raw palette scale.
+    expect(className).toMatch(/border-quebi-line\/\d+/)
+    // Neutral occlusion, not the mint glow — the argument is in popover.tsx.
+    expect(className).toContain("shadow-lg")
+    expect(className).toContain("rounded-quebi-md")
+  })
+
+  test("both variants are still the same row of dots", () => {
+    for (const variant of ["plain", "overlay"] as const) {
+      const { container } = render(<CalendarLegend calendars={CALENDARS} variant={variant} />)
+      expect(container.textContent).toContain("My calendar")
+      expect(legend(container)?.dataset.variant).toBe(variant)
+      expect(legend(container)?.className).toContain("flex-wrap")
+    }
+  })
+
+  test("a className still lands on it, because placement is the caller's", () => {
+    const { container } = render(
+      <CalendarLegend calendars={CALENDARS} variant="overlay" className="absolute end-3 bottom-3" />,
+    )
+    expect(legend(container)?.className).toContain("absolute")
   })
 })

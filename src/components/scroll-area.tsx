@@ -5,21 +5,57 @@ import { cn } from "@/lib/utils"
 
 type ScrollAreaOrientation = "vertical" | "horizontal" | "both"
 
+/**
+ * How the bar meets the surface.
+ *
+ * - `flush` — the default, and the quebi bar: a 6px pill hugging the edge, no
+ *   padding around it, clipped to the surface's own rounded corner.
+ * - `floating` — a 6px pill inside a 12px track, 3px clear of every edge. For
+ *   content that scrolls *under* the bar, and for a bar a pointer user is
+ *   expected to drag: 12px of track is twice the grab width.
+ * - `none` — no bar, still scrollable. Only where something else already shows
+ *   the scroll position.
+ */
+type ScrollAreaScrollbar = "flush" | "floating" | "none"
+
 export interface ScrollAreaProps extends React.ComponentPropsWithRef<"div"> {
   scrollFade?: boolean
   scrollbarGutter?: boolean
   orientation?: ScrollAreaOrientation
+  scrollbar?: ScrollAreaScrollbar
+}
+
+const SCROLLBAR_VARIANTS: Record<ScrollAreaScrollbar, string> = {
+  // The base utility is already flush; the other two are variable overrides on
+  // top of it, so all three are one class and no cascade race.
+  flush: "",
+  floating: "quebi-scrollbar-floating",
+  none: "quebi-scrollbar-none",
 }
 
 /**
  * ScrollArea — quebi design system
  *
- * A scrollable viewport with the quebi native scrollbar (a 6px cyan pill
- * floating 3px clear of the edges, no stepper arrows). Optionally fades content
+ * A scrollable viewport with the quebi native scrollbar: a 6px tinted pill
+ * hugging the edge, no stepper arrows and no padding around it (`scrollbar`
+ * picks a different bar — see `ScrollAreaScrollbar`). Optionally fades content
  * at the scrolled edges (`scrollFade`) and reserves the bar's gutter so content
  * doesn't shift when it appears (`scrollbarGutter`). Self-contained: no Radix,
  * no portals — just a native overflow container with overflow-state data
  * attributes wired up for masking.
+ *
+ * **The corner.** A scrollbar is painted inside the border box but `overflow`
+ * and `border-radius` do not clip it, so on a rounded surface the bar used to
+ * run out through the arc and square off against the top and bottom edges. The
+ * viewport carries `quebi-scrollbar-corners`, whose `clip-path: border-box` is
+ * the same rounded rect the border draws — so the bar's ends curve away with
+ * the corner. It follows whatever radius the surface actually has, including
+ * the `rounded-[inherit]` this element takes from its parent, which is why
+ * there is no radius prop to keep in sync. Two consequences worth knowing:
+ * the clip also trims anything painted *outside* the border box, so a glow or
+ * an `outline` ring on the ScrollArea itself is cut by it; and past roughly
+ * `rounded-[calc(infinity*1px)]` the arc is longer than the bar's travel, so a
+ * capsule-shaped scroll surface wants `scrollbar="floating"` instead.
  *
  * `className` lands on the scroll container itself, which is the only place it
  * can land: the browser paints the scrollbar at the inner edge of the scroll
@@ -37,6 +73,7 @@ export function ScrollArea({
   scrollFade = false,
   scrollbarGutter = false,
   orientation = "both",
+  scrollbar = "flush",
   ...props
 }: ScrollAreaProps) {
   const viewportRef = useRef<HTMLDivElement>(null)
@@ -116,8 +153,10 @@ export function ScrollArea({
       className={cn(
         "size-full min-h-0 overscroll-auto rounded-[inherit] outline-none transition-shadow",
         "data-has-overflow-y:overscroll-y-contain data-has-overflow-x:overscroll-x-contain",
-        // Slim, cyan-tinted scrollbar — the shared quebi native scrollbar.
-        "quebi-scrollbar",
+        // Slim, cyan-tinted scrollbar — the shared quebi native scrollbar,
+        // clipped to this surface's own rounded corner.
+        "quebi-scrollbar quebi-scrollbar-corners",
+        SCROLLBAR_VARIANTS[scrollbar],
         orientation === "vertical"
           ? "overflow-x-hidden overflow-y-auto"
           : orientation === "horizontal"

@@ -100,10 +100,9 @@ describe("scrollbarGutter reserves the gutter with the CSS property", () => {
 describe("the quebi-scrollbar utility declares one scrollbar model per browser", () => {
   const css = Bun.file(`${import.meta.dir}/../../src/quebi-theme.css`)
 
-  /** The body of `@utility quebi-scrollbar { … }`, by brace matching. */
-  const utilityBody = async () => {
-    const source = await css.text()
-    const start = source.indexOf("@utility quebi-scrollbar {")
+  /** The body of a `@utility <name> { … }` / `@theme { … }` block, by brace matching. */
+  const blockBody = (source: string, opener: string) => {
+    const start = source.indexOf(opener)
     expect(start).toBeGreaterThan(-1)
     let depth = 0
     for (let i = source.indexOf("{", start); i < source.length; i++) {
@@ -111,8 +110,11 @@ describe("the quebi-scrollbar utility declares one scrollbar model per browser",
       else if (source[i] === "}" && --depth === 0)
         return source.slice(source.indexOf("{", start) + 1, i)
     }
-    throw new Error("unbalanced braces in @utility quebi-scrollbar")
+    throw new Error(`unbalanced braces in ${opener}`)
   }
+
+  /** The body of `@utility quebi-scrollbar { … }` — the base bar, not a variant. */
+  const utilityBody = async () => blockBody(await css.text(), "@utility quebi-scrollbar {")
 
   /** The body of the nested `@supports <condition> { … }`, by brace matching. */
   const supportsBody = (body: string, condition: string) => {
@@ -185,16 +187,125 @@ describe("the quebi-scrollbar utility declares one scrollbar model per browser",
     expect(os.replace(/transparent/g, "")).not.toMatch(colour)
   })
 
-  test("the thumb floats clear of the edges, matching the OverlayScrollbars theme", async () => {
+  test("the bar's geometry is tokens, and both scrollbar systems read the same ones", async () => {
+    // Taking the padding off the bar was the moment to stop spelling the
+    // numbers twice, so the decision lives in one place. `--q-scroll-size` is
+    // the whole bar and `--q-scroll-pad` the gap to the edge; the utility below
+    // and `.os-theme-quebi` both read them, so the native bars and the app
+    // shell's OverlayScrollbars cannot end up two different scrollbars — the
+    // same argument the colours won in task #146.
     const source = await css.text()
     const webkitOnly = supportsBody(await utilityBody(), "selector(::-webkit-scrollbar)")
-    // A thumb has no padding property: a transparent border plus a padding-box
-    // clip is the only way to inset it off the container's rounded corner.
+    expect(webkitOnly).toContain("width: var(--q-scroll-size)")
+    expect(webkitOnly).toContain("height: var(--q-scroll-size)")
+    // A thumb has no padding property, so a transparent border plus a
+    // padding-box clip is the only way to inset it — and at `pad: 0` that
+    // border is zero-width and the pill fills the track.
     expect(webkitOnly).toContain("background-clip: padding-box")
-    const inset = webkitOnly.match(/border: (\d+)px solid transparent/)?.[1]
-    const track = webkitOnly.match(/&::-webkit-scrollbar \{\s*width: (\d+)px/)?.[1]
-    // The app shell's OverlayScrollbars theme is the source these copy.
-    expect(track).toBe(source.match(/--os-size: (\d+)px/)?.[1])
-    expect(inset).toBe(source.match(/--os-padding-perpendicular: (\d+)px/)?.[1])
+    expect(webkitOnly).toContain("border: var(--q-scroll-pad) solid transparent")
+    // Firefox takes a keyword and not a length, so it reads its own token.
+    const firefoxOnly = supportsBody(await utilityBody(), "not selector(::-webkit-scrollbar)")
+    expect(firefoxOnly).toContain("scrollbar-width: var(--q-scroll-width)")
+
+    const os = blockBody(source, ".os-theme-quebi {")
+    expect(os).toContain("--os-size: var(--q-scroll-size)")
+    // Both paddings, not just the perpendicular one: a bar that hugs the sides
+    // and stops short of the ends is a half-applied decision.
+    expect(os).toContain("--os-padding-perpendicular: var(--q-scroll-pad)")
+    expect(os).toContain("--os-padding-axis: var(--q-scroll-pad)")
+    expect(os).toContain("--os-handle-min-size: var(--q-scroll-min)")
+    // A literal length left in either block is the drift this replaces — in the
+    // declarations, that is; a comment may quote a number. The two exceptions
+    // are not geometry: `0` is how a stepper button is removed, and `9999px` is
+    // "a pill" rather than a measurement.
+    const declarationsOf = (block: string) =>
+      block.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(?:width|height): 0;|9999px/g, "")
+    expect(declarationsOf(webkitOnly)).not.toMatch(/\d+px/)
+    expect(declarationsOf(os)).not.toMatch(/\d+px/)
+  })
+
+  test("the default is no padding, declared once as theme geometry", async () => {
+    // The bar is the same size in both themes, the way a radius is, so these
+    // live in `@theme` next to the radii and not in the per-theme value sets.
+    const theme = blockBody(await css.text(), "@theme {")
+    expect(theme).toMatch(/--q-scroll-size:\s+6px;/)
+    expect(theme).toMatch(/--q-scroll-pad:\s+0px;/)
+    expect(theme).toMatch(/--q-scroll-width:\s+thin;/)
+    expect(theme).toMatch(/--q-scroll-min:\s+32px;/)
+  })
+
+  test("a variant is variable overrides only, so one class picks a bar", async () => {
+    const source = await css.text()
+    for (const [name, declarations] of [
+      ["quebi-scrollbar-floating", ["--q-scroll-size: 12px", "--q-scroll-pad: 3px"]],
+      ["quebi-scrollbar-none", ["--q-scroll-size: 0px", "--q-scroll-width: none"]],
+    ] as const) {
+      const body = blockBody(source, `@utility ${name} {`)
+      for (const declaration of declarations) expect(body).toContain(declaration)
+      // A variant that restated the rules would be a second scrollbar to keep
+      // in step with the first, and its rules would race the base utility's at
+      // equal specificity. Overriding the variables it reads cannot.
+      expect(body).not.toContain("::-webkit-")
+      expect(body).not.toContain("scrollbar-color")
+    }
+  })
+
+  test("the corner clip is its own utility, gated, and never on the page itself", async () => {
+    const source = await css.text()
+    // Not in the base utility. `clip-path` trims everything the element paints
+    // outside its border box — ListBox's `shadow-quebi-glow`, an `outline` ring
+    // — and on `<html>` it would make the page the containing block for every
+    // fixed descendant on the site (which is how tasks #180/#181 started).
+    expect(await utilityBody()).not.toContain("clip-path")
+
+    const corners = blockBody(source, "@utility quebi-scrollbar-corners {")
+    expect(corners).toContain("clip-path: border-box")
+    // `border-box` alone is newer than the shapes; a browser without it keeps a
+    // bar that crosses the arc, which is what every browser had before.
+    expect(corners).toContain("@supports (clip-path: border-box)")
+
+    const root = Bun.file(`${import.meta.dir}/../../src/root.tsx`)
+    // The opening tag, not the first `<html>` in the file — the comment above
+    // it names the element too.
+    const html = (await root.text()).match(/<html\s+lang[\s\S]*?>/)?.[0] ?? ""
+    expect(html).toContain("quebi-scrollbar")
+    expect(html).not.toContain("quebi-scrollbar-corners")
+  })
+})
+
+describe("the bar the viewport wears", () => {
+  test("it hugs the edge and follows the surface's own corner", () => {
+    render(
+      <ScrollArea>
+        <p>content</p>
+      </ScrollArea>,
+    )
+    const className = viewport().className
+    expect(className).toContain("quebi-scrollbar")
+    // The radius is whatever the parent's is — `rounded-[inherit]` — so the
+    // clip has to come from the element's own box rather than from a prop
+    // someone has to keep in sync with the card around it.
+    expect(className).toContain("quebi-scrollbar-corners")
+    expect(className).toContain("rounded-[inherit]")
+    // flush is the default, and the default is the base utility on its own.
+    expect(className).not.toContain("quebi-scrollbar-floating")
+    expect(className).not.toContain("quebi-scrollbar-none")
+  })
+
+  test("a variant adds exactly its own utility", () => {
+    for (const [variant, expected] of [
+      ["floating", "quebi-scrollbar-floating"],
+      ["none", "quebi-scrollbar-none"],
+    ] as const) {
+      const { unmount } = render(
+        <ScrollArea scrollbar={variant}>
+          <p>content</p>
+        </ScrollArea>,
+      )
+      const className = viewport().className
+      expect(className).toContain("quebi-scrollbar")
+      expect(className).toContain(expected)
+      unmount()
+    }
   })
 })

@@ -21,10 +21,11 @@ import { cn } from "@/lib/utils"
  * DayView — quebi design system
  *
  * One day on a time axis, Outlook-style: the hours down the left, an all-day
- * band across the top, overlapping meetings packed side by side, and a marker on
- * the current time. Events carry `ZonedDateTime` and the view carries the zone
- * it is drawn in, so a meeting booked in another zone lands on the right hour
- * here rather than on the hour the reader's laptop happens to think it is.
+ * band across the top for calendars that have all-day events, overlapping
+ * meetings packed side by side, and a marker on the current time. Events carry
+ * `ZonedDateTime` and the view carries the zone it is drawn in, so a meeting
+ * booked in another zone lands on the right hour here rather than on the hour
+ * the reader's laptop happens to think it is.
  *
  * Display and selection only — there is no drag to create, move or resize. See
  * the note in `CalendarShell`, which does the drawing; this file decides the day
@@ -50,7 +51,8 @@ export interface DayViewProps<E extends CalendarEvent = CalendarEvent>
   onViewChange?: (view: CalendarViewName) => void
   /** Replace the heading the toolbar shows. */
   label?: React.ReactNode
-  /** Make the toolbar's date label a picker that jumps to any day. Default "static". */
+  /** The toolbar's date label as a picker that jumps to any day, or as plain
+   * text. Default "picker". */
   labelVariant?: CalendarToolbarLabelVariant
 }
 
@@ -63,7 +65,7 @@ export function DayView<E extends CalendarEvent = CalendarEvent>({
   views,
   onViewChange,
   label,
-  labelVariant,
+  labelVariant = "picker",
   timeZone = DEFAULT_CALENDAR_TIME_ZONE,
   locale: localeProp,
   className,

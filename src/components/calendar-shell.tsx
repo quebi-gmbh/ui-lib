@@ -34,8 +34,9 @@ import { Popover, PopoverContent } from "@/components/popover"
  * CalendarShell — quebi design system
  *
  * The parts every Outlook-style view is drawn from: a time axis, the hour
- * gridlines, the all-day band with its "+N more" overflow, the now-marker, and
- * the event blocks laid out by `@/lib/calendar`'s packing pass. `DayView`,
+ * gridlines, the all-day band with its "+N more" overflow — drawn when there is
+ * something to put in it, see `showAllDayRow` — the now-marker, and the event
+ * blocks laid out by `@/lib/calendar`'s packing pass. `DayView`,
  * `WeekView` and `MonthView` are assemblies over this; `CalendarTimeline` reuses
  * the palette and the blocks and draws its own axis, because its time runs
  * horizontally.
@@ -650,8 +651,23 @@ export interface CalendarShellProps<E extends CalendarEvent = CalendarEvent> {
   height?: number
   /** Pin the now-marker, or pass `null` to omit it. Undefined reads the clock after mount. */
   now?: ZonedDateTime | null
-  /** Draw the all-day band above the grid. Default true. */
-  showAllDayRow?: boolean
+  /**
+   * Draw the all-day band above the grid. Default `"auto"`.
+   *
+   * `"auto"` draws it when `events` holds anything the band would ever take —
+   * an `allDay` event, or one 24 hours or longer, by `isAllDayEvent` — and
+   * omits it otherwise. The question is asked of the whole set rather than of
+   * the days on show, so paging through a calendar that has all-day events
+   * never makes the row appear and disappear under the reader: it is reserved
+   * from the first render, empty weeks included. A calendar that has none of
+   * them has nothing to reserve it for, and the empty 28px strip above the grid
+   * is chrome for a feature that consumer does not have.
+   *
+   * `true` keeps the row whatever the events say — the setting for a view that
+   * loads one week at a time, where "no all-day event" is a fact about the page
+   * in hand rather than about the calendar. `false` never draws it.
+   */
+  showAllDayRow?: boolean | "auto"
   /** Lanes the all-day band may grow to before it folds into "+N more". Default 2. */
   maxAllDayLanes?: number
   /** Accessible name and gutter label for the all-day band. */
@@ -725,7 +741,7 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
   axisWidth = 60,
   height = 520,
   now,
-  showAllDayRow = true,
+  showAllDayRow = "auto",
   maxAllDayLanes = 2,
   allDayLabel = "all day",
   moreLabel = (count) => `+${count} more`,
@@ -774,6 +790,12 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
     () => limitLanes(bands, days.length, maxAllDayLanes),
     [bands, days.length, maxAllDayLanes],
   )
+
+  // Asked of `events`, not of `bands`: `bands` is what the visible days hold,
+  // and a row that came and went as the week changed would move the grid under
+  // the reader on every step. See `showAllDayRow`.
+  const hasAllDayEvents = useMemo(() => events.some(isAllDayEvent), [events])
+  const allDayRow = showAllDayRow === "auto" ? hasAllDayEvents : showAllDayRow
 
   // One direction of the pair. `minutesFromOffset` is the other, and a drag
   // reads its drop back through it.
@@ -858,8 +880,8 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
         </div>
       ) : null}
 
-      {showAllDayRow ? (
-        <div className="flex border-quebi-line/10 border-b">
+      {allDayRow ? (
+        <div data-slot="calendar-all-day-row" className="flex border-quebi-line/10 border-b">
           <div
             className="shrink-0 px-2 py-1 text-right text-quebi-fg-subtle text-xs"
             style={{ width: axisWidth }}
@@ -884,7 +906,19 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
         </div>
       ) : null}
 
-      <div className="relative overflow-y-auto" style={{ maxHeight: height }}>
+      {/* The one scrolling surface in the shell, and it took the platform's bar
+          until now — stepper arrows on Linux, a grey slab everywhere, next to
+          the quebi pill every other scroll surface in the library draws.
+          `quebi-scrollbar` is that pill; see the utility in `quebi-theme.css`.
+          No `quebi-scrollbar-corners` here: this viewport is a square box, and
+          the rounded corner the bar has to curve away from belongs to
+          `calendar-shell` above, whose `overflow-hidden rounded-quebi-md`
+          already clips the bar with it. */}
+      <div
+        data-slot="calendar-viewport"
+        className="quebi-scrollbar relative overflow-y-auto"
+        style={{ maxHeight: height }}
+      >
         <div className="flex" style={{ height: gridHeight }}>
           <div className="relative shrink-0" style={{ width: axisWidth }}>
             {firstDay
@@ -1465,9 +1499,27 @@ function AllDayBand<E extends CalendarEvent>({
   )
 }
 
+/**
+ * `plain` is a bare row of dots for above or below the grid; `overlay` is the
+ * same row on a surface, for a legend that sits *on* the calendar.
+ */
+export type CalendarLegendVariant = "plain" | "overlay"
+
 export interface CalendarLegendProps {
   calendars: readonly CalendarSource[]
+  /** Default "plain". "overlay" adds the surface an overlapping legend needs. */
+  variant?: CalendarLegendVariant
   className?: string
+}
+
+const LEGEND_VARIANTS: Record<CalendarLegendVariant, string> = {
+  plain: "",
+  // The chart tooltip's treatment, for the same reason: a translucent elevated
+  // surface over data reads as floating above it, and the blur keeps the row
+  // legible without hiding what it covers. `shadow-lg` is the neutral occlusion
+  // shadow, never the mint glow — see the note in `popover.tsx`.
+  overlay:
+    "rounded-quebi-md border border-quebi-line/20 bg-quebi-elevated/80 px-2.5 py-1.5 shadow-lg backdrop-blur-sm",
 }
 
 /**
@@ -1479,12 +1531,31 @@ export interface CalendarLegendProps {
  * colours into its own markup, which is the thing `no-hardcoded-design-values`
  * exists to stop; `CalendarTimeline` needs no legend because every row is
  * already labelled with its calendar's name.
+ *
+ * ## Where it goes is yours; what it looks like is not
+ *
+ * The legend takes no placement prop, because placement is layout: put it
+ * before the view or after it, align it with `self-end`, stack it into a column
+ * beside the grid with `className="flex-col items-start"`, or position it over
+ * the calendar from a `relative` wrapper. All of that is one className and none
+ * of it needs the library's permission.
+ *
+ * What the library does owe you is the one thing a placement cannot supply. A
+ * legend laid over the grid has events behind it, so a bare row of small muted
+ * text stops being readable — that is `variant="overlay"`, which is the same
+ * row on an elevated surface. Reach for it whenever the legend overlaps
+ * something, and leave it alone when the legend has a line of its own.
  */
-export function CalendarLegend({ calendars, className }: CalendarLegendProps) {
+export function CalendarLegend({ calendars, variant = "plain", className }: CalendarLegendProps) {
   return (
     <div
       data-slot="calendar-legend"
-      className={cn("flex flex-wrap items-center gap-x-4 gap-y-1", className)}
+      data-variant={variant}
+      className={cn(
+        "flex flex-wrap items-center gap-x-4 gap-y-1",
+        LEGEND_VARIANTS[variant],
+        className,
+      )}
     >
       {calendars.map((calendar) => (
         <span key={calendar.id} className="flex items-center gap-1.5 text-quebi-fg-muted text-xs">

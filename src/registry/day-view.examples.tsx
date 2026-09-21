@@ -117,6 +117,29 @@ const AllDayAndOvernight = () => {
   )
 }
 
+const JumpToADate = () => {
+  const [day, setDay] = useState<CalendarDate>(() => today(TIME_ZONE))
+
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <DayView
+        events={agenda(day)}
+        calendars={CALENDARS}
+        timeZone={TIME_ZONE}
+        startHour={8}
+        endHour={18}
+        height={380}
+        date={day}
+        onDateChange={setDay}
+      />
+      <p className="text-quebi-fg-muted text-sm">
+        Press the heading. The day you pick is reported through onDateChange — the view owns no
+        date here, this state does.
+      </p>
+    </div>
+  )
+}
+
 const WithSelection = () => {
   const day = today(TIME_ZONE)
   const events = agenda(day)
@@ -141,6 +164,27 @@ const WithSelection = () => {
   )
 }
 
+/**
+ * The legend laid over the grid rather than above it. One class positions it;
+ * `variant="overlay"` is what makes it readable once something is behind it.
+ */
+const OverlayLegend = () => {
+  const day = today(TIME_ZONE)
+  return (
+    <div className="relative w-full">
+      <DayView
+        events={agenda(day)}
+        calendars={CALENDARS}
+        timeZone={TIME_ZONE}
+        startHour={8}
+        endHour={18}
+        height={420}
+      />
+      <CalendarLegend calendars={CALENDARS} variant="overlay" className="absolute end-3 bottom-3" />
+    </div>
+  )
+}
+
 export const dayViewExamples: ComponentExample[] = [
   {
     title: "Default",
@@ -161,10 +205,22 @@ export const dayViewExamples: ComponentExample[] = [
     render: () => <WithLegend />,
   },
   {
+    title: "The legend over the grid",
+    description:
+      "A day is one column, so a legend on its own line costs the grid a line it could have spent on hours. Over the grid it costs nothing — and because an event is then behind it, it takes variant=\"overlay\": the same row on an elevated, blurred surface. Which corner is free is a question about your day, so the placement is a class and not a prop; Week View's gallery walks through the others.",
+    render: () => <OverlayLegend />,
+  },
+  {
     title: "All-day and overnight",
     description:
       "An all-day event sits in the band above the grid. An overnight shift stays on the grid and is cut at midnight — its block loses the rounded edge where it continues.",
     render: () => <AllDayAndOvernight />,
+  },
+  {
+    title: "Jumping to another day",
+    description:
+      "The heading is a button opening a day grid, which is the default: without it the only way to a day three weeks out is Today or one chevron press at a time. labelVariant=\"static\" turns it back into plain text for a view whose heading is not somewhere to jump from.",
+    render: () => <JumpToADate />,
   },
   {
     title: "Selection",

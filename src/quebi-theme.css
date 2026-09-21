@@ -213,6 +213,28 @@
   --radius-quebi-md:   0.75rem;  /* 12px — cards */
   --radius-quebi-lg:   1rem;     /* 16px — large surfaces */
 
+  /* ---------------- Scrollbar geometry ---------------- */
+  /* One bar, two implementations: `quebi-scrollbar` paints the native bars and
+     `.os-theme-quebi` the OverlayScrollbars ones, and both read these. Theme
+     tokens rather than theme *values* — a scrollbar is the same size in both
+     themes, the way a radius is.
+
+     `size` is the whole bar: the track's thickness and, at `pad: 0`, the pill's
+     too. `pad` is the gap between pill and container edge, and it is zero
+     because a scrollbar is a chrome element at the edge of a surface — padding
+     it in costs gutter to draw nothing and leaves the pill stranded in the
+     middle of a rounded corner. `width` is Firefox's only lever, which takes a
+     keyword and not a length. Override them per surface with
+     `quebi-scrollbar-floating` / `quebi-scrollbar-none`. */
+  --q-scroll-size:  6px;
+  --q-scroll-pad:   0px;
+  --q-scroll-width: thin;
+  /* The shortest a handle may get, however long the content is — below about
+     this a pill stops reading as a grabbable thing and starts reading as a
+     dot. Shared for the same reason as the rest: two scrollbars that agree on
+     their width and disagree on their minimum are still two scrollbars. */
+  --q-scroll-min:   32px;
+
   /* ---------------- Shadows / glows ---------------- */
   /* Moved to the `@theme inline` block above, where they can flip per theme —
      nothing belongs here that has a light value and a dark one. */
@@ -629,20 +651,28 @@
 }
 
 /* ---------------- Native scrollbar (the page, dropdowns, scroll areas) -------- */
-/* The quebi native scrollbar: a 12px track carrying a 6px tinted pill that
-   floats 3px clear of every edge. That is the same geometry as `.os-theme-quebi`
-   further down, so the native bars and the inner surfaces' OverlayScrollbars
-   read as one system rather than two. Apply to any overflow container (list
-   boxes, menus, popovers, the ScrollArea viewport) so every scrollable surface
-   matches.
+/* The quebi native scrollbar: a 6px tinted pill hugging the edge of whatever
+   scrolls, with no stepper arrows and no padding around it. That is the same
+   geometry as `.os-theme-quebi` further down — both read `--q-scroll-size` and
+   `--q-scroll-pad` rather than each spelling numbers out — so the native bars
+   and the inner surfaces' OverlayScrollbars are one bar with two
+   implementations. Apply to any overflow container (list boxes, menus,
+   popovers, the ScrollArea viewport) so every scrollable surface matches.
 
-   `<html>` is one of them: the page scroller is the platform's bar, painted
-   here, rather than an OverlayScrollbars instance on `document.body`. That
-   instance positioned `<html>`, and react-aria then placed every overlay that
-   flips above its trigger a whole document-minus-viewport too low (tasks #180,
-   #181 — the argument is in `root.tsx`, where the class is applied). `<html>`
-   also carries `scrollbar-gutter: stable`, which is what keeps the 12px the
-   native bar costs from appearing and vanishing with the page's length.
+   The padding is gone. The bar used to be a 6px pill floating 3px clear of
+   every edge inside a 12px track, which cost 12px of gutter to draw 6px of bar
+   and left the pill hanging in the middle of the corner arc on every rounded
+   surface. Flush is the default; `quebi-scrollbar-floating` restores the old
+   geometry for the two cases that still want it (see below).
+
+   `<html>` is one of these surfaces: the page scroller is the platform's bar,
+   painted here, rather than an OverlayScrollbars instance on `document.body`.
+   That instance positioned `<html>`, and react-aria then placed every overlay
+   that flips above its trigger a whole document-minus-viewport too low (tasks
+   #180, #181 — the argument is in `root.tsx`, where the class is applied).
+   `<html>` also carries `scrollbar-gutter: stable`, which is what keeps the
+   width the native bar costs from appearing and vanishing with the page's
+   length.
 
    The colour is `--q-scroll-thumb`, which both systems now name rather than
    each spelling out its own `color-mix`/`rgb()` (task #146). Two blocks that
@@ -662,17 +692,19 @@
    setting both. */
 @utility quebi-scrollbar {
   /* Firefox: no `::-webkit-scrollbar`, so the standard properties are the only
-     lever there is. `thin` is the closest width it offers and the thumb cannot
-     be inset — the colour is what carries the family resemblance. */
+     lever there is. `thin` is the closest width it offers and the thumb can be
+     neither inset nor rounded — the colour is what carries the family
+     resemblance. The keyword is a variable so the variants below can reach it;
+     `scrollbar-width` takes no length, so `--q-scroll-size` means nothing here. */
   @supports not selector(::-webkit-scrollbar) {
-    scrollbar-width: thin;
+    scrollbar-width: var(--q-scroll-width);
     scrollbar-color: var(--q-scroll-thumb) transparent;
   }
 
   @supports selector(::-webkit-scrollbar) {
     &::-webkit-scrollbar {
-      width: 12px;
-      height: 12px;
+      width: var(--q-scroll-size);
+      height: var(--q-scroll-size);
     }
     /* No steppers, ever. They are a platform default we never want: a bar that
        runs the full height with arrows at its ends collides with the rounded
@@ -686,19 +718,21 @@
     &::-webkit-scrollbar-corner {
       background-color: transparent;
     }
-    /* A scrollbar thumb has no padding property, so the 3px transparent border
-       plus a padding-box clip is what floats the pill off all four edges. */
+    /* A scrollbar thumb has no padding property, so a transparent border plus a
+       padding-box clip is the only way to inset the pill off the edges. At the
+       default `--q-scroll-pad: 0px` that border is zero-width and the pill fills
+       the track. */
     &::-webkit-scrollbar-thumb {
-      border: 3px solid transparent;
+      border: var(--q-scroll-pad) solid transparent;
       border-radius: 9999px;
       background-clip: padding-box;
       background-color: var(--q-scroll-thumb);
     }
     &::-webkit-scrollbar-thumb:vertical {
-      min-height: 32px;
+      min-height: var(--q-scroll-min);
     }
     &::-webkit-scrollbar-thumb:horizontal {
-      min-width: 32px;
+      min-width: var(--q-scroll-min);
     }
     &::-webkit-scrollbar-thumb:hover {
       background-color: var(--q-scroll-thumb-hover);
@@ -707,6 +741,55 @@
       background-color: var(--q-scroll-thumb-active);
     }
   }
+}
+
+/* The corner. A scrollbar is painted inside the border box but is *not* clipped
+   by `border-radius`: on a rounded surface a flush bar runs straight out
+   through the arc and squares off against the top and bottom edges, which is
+   what "the bar doesn't follow the corner" looks like. `clip-path: border-box`
+   is exactly the rounded rect the border draws, and unlike `overflow` it does
+   clip the bar — so the ends of the bar curve away with the corner instead of
+   crossing it.
+
+   It is a separate utility rather than part of `quebi-scrollbar` because the
+   clip applies to *everything* the element paints, including what it paints
+   outside its border box. A surface with `shadow-quebi-glow` (ListBox) or an
+   `outline` focus ring loses it to this clip, and `<html>` must never have a
+   clip-path at all — it would become the containing block for every fixed
+   descendant on the page, and the page has square corners anyway. So: take it
+   on a rounded surface that paints nothing outside itself, which is every
+   ScrollArea and both tables.
+
+   A surface whose rounding lives on an ancestor (a popover body inside a
+   rounded popover) has no radius of its own for `border-box` to find; that case
+   wants an explicit `clip-path: inset(0 round …)`, the way `MenuContent` insets
+   its clip by its own padding. */
+@utility quebi-scrollbar-corners {
+  @supports (clip-path: border-box) {
+    clip-path: border-box;
+  }
+}
+
+/* The bar as it was before the padding came off: a 6px pill inside a 12px
+   track, floating 3px clear of every edge. Two cases still want it. One is
+   content that scrolls *under* the bar (a full-bleed image or table that has
+   no gutter to give): the inset keeps the pill off the content's own edge. The
+   other is a drag target — 12px of track is twice the grab width of a flush
+   6px bar, which matters on a surface a pointer user is expected to drag
+   rather than wheel. */
+@utility quebi-scrollbar-floating {
+  --q-scroll-size: 12px;
+  --q-scroll-pad: 3px;
+}
+
+/* No bar at all, still scrollable — for a surface whose scroll position is
+   already shown by something else (a carousel's dots, a minimap, a chat pane
+   pinned to the bottom). Not a way to hide a bar the reader needs: nothing else
+   tells a pointer user there is more, and `overflow: hidden` is the honest
+   answer when there isn't. */
+@utility quebi-scrollbar-none {
+  --q-scroll-size: 0px;
+  --q-scroll-width: none;
 }
 
 /* ---------------- Sensible base styles ---------------- */
@@ -744,20 +827,28 @@
    block, which want a bar that takes no layout width out of a column that has
    none to give. The page scroller is native; see the utility above.
 
-   These numbers are the source the `quebi-scrollbar` utility above copies: a
-   12px track, a handle inset 3px on every side, fully rounded. Change one and
-   change the other, or the app shell and the components stop looking like the
-   same scrollbar. The three colours are no longer among those numbers — both
-   blocks read `--q-scroll-thumb*` now, so they cannot drift (task #146). */
+   Every number here is a `--q-scroll-*` token, which is what stops this block
+   and the `quebi-scrollbar` utility above from drifting into two different
+   scrollbars: they are the same bar, drawn by whichever implementation the
+   surface uses, and a test pins them to each other by token rather than by
+   matching literals (task #146 made the same argument for the colours). Both
+   paddings read the same token — `pad` is the gap between handle and edge
+   whichever edge it is, and a bar that hugs the sides but stops short of the
+   ends is not a design, it is a half-applied one.
+
+   The corner needs nothing here. These handles are ordinary elements inside a
+   host that clips with `overflow: hidden`, so a rounded host already trims them
+   to its own arc — the job `quebi-scrollbar-corners` has to do with a
+   `clip-path` for a *native* bar, which `border-radius` does not clip. */
 .os-theme-quebi {
-  --os-size: 12px;
-  --os-padding-perpendicular: 3px;
-  --os-padding-axis: 3px;
+  --os-size: var(--q-scroll-size);
+  --os-padding-perpendicular: var(--q-scroll-pad);
+  --os-padding-axis: var(--q-scroll-pad);
   --os-track-bg: transparent;
   --os-track-bg-hover: transparent;
   --os-handle-border-radius: 9999px;
   --os-handle-bg: var(--q-scroll-thumb);
   --os-handle-bg-hover: var(--q-scroll-thumb-hover);
   --os-handle-bg-active: var(--q-scroll-thumb-active);
-  --os-handle-min-size: 32px;
+  --os-handle-min-size: var(--q-scroll-min);
 }

@@ -92,7 +92,7 @@ const Table = ({
         */}
         <div
           className={cn(
-            "quebi-scrollbar relative overflow-auto whitespace-nowrap rounded-quebi-md border border-quebi-line/10 bg-quebi-bg [--gutter-y:--spacing(3)]",
+            "quebi-scrollbar quebi-scrollbar-corners relative overflow-auto whitespace-nowrap rounded-quebi-md border border-quebi-line/10 bg-quebi-bg [--gutter-y:--spacing(3)]",
             className,
           )}
         >
