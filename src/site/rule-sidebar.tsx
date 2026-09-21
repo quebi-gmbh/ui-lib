@@ -2,6 +2,7 @@ import { NavLink } from "react-router"
 import { ListChecks, Wrench } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { groupRules, rulesRegistry } from "@/registry/rules"
+import { NAV_PENDING } from "@/site/navigation-status"
 import { ScrollSurface } from "@/site/scroll-surface"
 
 /**
@@ -20,11 +21,12 @@ const BASE = "rounded-quebi-sm px-3 py-1.5 text-sm transition-colors duration-15
 const RESTING = "text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg"
 const CURRENT = "bg-quebi-brand/10 font-medium text-quebi-brand-text"
 
-const itemClasses = ({ isActive }: { isActive: boolean }) =>
-  cn("block", BASE, isActive ? CURRENT : RESTING)
+/** The pending state is ComponentSidebar's; see NAV_PENDING for what it is for. */
+const itemClasses = ({ isActive, isPending }: { isActive: boolean; isPending: boolean }) =>
+  cn("block", BASE, isActive ? CURRENT : isPending ? NAV_PENDING : RESTING)
 
-const rootClasses = ({ isActive }: { isActive: boolean }) =>
-  cn("flex items-center gap-2", BASE, isActive ? CURRENT : RESTING)
+const rootClasses = ({ isActive, isPending }: { isActive: boolean; isPending: boolean }) =>
+  cn("flex items-center gap-2", BASE, isActive ? CURRENT : isPending ? NAV_PENDING : RESTING)
 
 export function RuleSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const groups = groupRules()

@@ -2,6 +2,7 @@ import { I18nProvider } from "react-aria-components"
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLocation } from "react-router"
 import { Header } from "@/site/site-header"
 import { Footer } from "@/site/site-footer"
+import { NavigationStatus } from "@/site/navigation-status"
 import "./main.css"
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -111,6 +112,11 @@ export default function App() {
   return (
     <I18nProvider locale={SITE_LOCALE}>
       <div className="flex min-h-screen flex-col bg-quebi-bg text-quebi-fg">
+        {/* The one global part of the site's pending state. What a navigation
+            looks like is local — the clicked NavLink carries it — but "looks"
+            is the operative word, and a live region is by nature one place for
+            the whole document. */}
+        <NavigationStatus />
         <Header />
         {/* <main> is deliberately full-width: it is the flow slot, not the
             shell. A route decides where its own background stops — the home

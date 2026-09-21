@@ -144,6 +144,48 @@ if they drift from the records.
 See the [`add-component`](.claude/skills/add-component/SKILL.md) skill — source → meta → examples →
 register, plus the quebi styling and self-contained-dependency conventions.
 
+## Adding a route: the frame is synchronous, every chunk is its own boundary
+
+A page on this site is two different things arriving at two different times, and the split is the
+same on every route:
+
+- **The frame paints on the first frame.** Breadcrumb, eyebrow, title, description, badges, section
+  headings, static prose — all of it comes out of `metaRegistry` / `rulesRegistry`, which are plain
+  data the route already holds. None of it goes inside a Suspense boundary, and the loader returns
+  only serializable fields, because `ssr: false` + `prerender()` runs it in Node at build and writes
+  the answer into `build/client/<path>.data`.
+- **Everything that arrives in its own chunk gets its own boundary, one per thing the reader is
+  waiting for** — not one per chunk. `src/routes/components.$slug.tsx` is the worked example: the
+  gallery, each card inside it, and the baked source block are four kinds of boundary, and the
+  fallbacks are in `src/site/page-states.tsx`, whose header is the long form of this section.
+
+Three rules the shapes obey, each of which was once broken here:
+
+1. **A fallback is the shape of what replaces it.** One `h-60` bar for a fifteen-example gallery is
+   a 240px block that becomes several thousand pixels in one frame — the scroll position jumps and
+   the reader learns nothing about how much is coming. The gallery's fallback is its unit repeated
+   `exampleCount` times, and that count is real: the loader counts the examples at prerender.
+2. **A fallback is never also an empty state.** A pulse means "this is coming". The source block
+   used to render the same `<Skeleton>` for "still loading" and for "there is no source", so a
+   component whose source never made it into the build pulsed forever. If it is not coming, say so
+   in words — `SourceUnavailable`.
+3. **Nothing in a fallback is random.** The site is prerendered, so a `Math.random()` width bakes
+   one number into the HTML and rolls another at hydration. Widths cycle through a fixed list by
+   index.
+
+Two things about hydration that are easy to get wrong and are pinned by
+`tests/hydration-boundaries.test.tsx`: the prerendered HTML holds the *resolved* boundary, and React
+19 keeps that markup when the chunk is still in flight at hydration — it does **not** paint the
+fallback over it. It does client-render the boundary, fallback and all, if an ancestor re-renders
+while the boundary is still dehydrated. So state that changes on its own above `<Outlet />` turns
+every component page into a content → skeleton → content flash.
+
+A navigation between routes is a route module download, so it is visible: every NavLink composes
+`NAV_PENDING` when react-router's `isPending` is set on it, and `NavigationStatus` in `src/root.tsx`
+announces it once, politely, for a reader who cannot see the link. The treatment is local on purpose
+— a bar across the top of the window is a second place to look for a site whose pages are this
+small. No route needs a `HydrateFallback`: every one of them is prerendered with its data.
+
 ## Things that will bite you
 
 - `bun run lint` is Biome's recommended set *plus* the rules this repo publishes, over `src/**`,

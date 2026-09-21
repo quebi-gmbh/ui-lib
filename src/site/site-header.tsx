@@ -1,6 +1,19 @@
 import { Link, NavLink } from "react-router"
+import { NAV_PENDING } from "@/site/navigation-status"
 import { ThemeToggle } from "@/site/theme-toggle"
 import { Link as UiLink } from "@/components/link"
+import { cn } from "@/lib/utils"
+
+/** Same three states as the sidebars', in the header's flatter vocabulary. */
+const navClasses = ({ isActive, isPending }: { isActive: boolean; isPending: boolean }) =>
+  cn(
+    "transition-colors duration-200",
+    isActive
+      ? "text-quebi-brand-text"
+      : isPending
+        ? NAV_PENDING
+        : "text-quebi-fg-muted hover:text-quebi-fg",
+  )
 
 export function Header() {
   return (
@@ -14,24 +27,10 @@ export function Header() {
         </Link>
 
         <nav className="flex items-center gap-6 text-sm">
-          <NavLink
-            to="/components"
-            className={({ isActive }) =>
-              `transition-colors duration-200 ${
-                isActive ? "text-quebi-brand-text" : "text-quebi-fg-muted hover:text-quebi-fg"
-              }`
-            }
-          >
+          <NavLink to="/components" className={navClasses}>
             Components
           </NavLink>
-          <NavLink
-            to="/rules"
-            className={({ isActive }) =>
-              `transition-colors duration-200 ${
-                isActive ? "text-quebi-brand-text" : "text-quebi-fg-muted hover:text-quebi-fg"
-              }`
-            }
-          >
+          <NavLink to="/rules" className={navClasses}>
             Rules
           </NavLink>
           {/* Nav, not prose: no resting underline, matching the NavLinks beside it. */}
