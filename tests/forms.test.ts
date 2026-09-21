@@ -125,6 +125,15 @@ describe(FIELD_TEXT, () => {
     expect(fires(FIELD_TEXT, component(`    <span>{props.field.errors?.join(", ")}</span>`))).toBe(true)
   })
 
+  test("true positive: every spelling of a field the message asks the reader to write", () => {
+    // Narrowing $field (task #196) is pinned from both sides: these four are
+    // the shapes the diagnostic's own advice produces, and each has to survive.
+    expect(fires(FIELD_TEXT, component(`    <p>{field.errors}</p>`))).toBe(true)
+    expect(fires(FIELD_TEXT, component(`    <p>{fields.email.errors}</p>`))).toBe(true)
+    expect(fires(FIELD_TEXT, component(`    <p>{props.fields.email.errors}</p>`))).toBe(true)
+    expect(fires(FIELD_TEXT, component(`    <p>{fields.address.street.errors}</p>`))).toBe(true)
+  })
+
   test("true negative: the message carries the error id", () => {
     // Exactly the shape conform.guide's tutorial lands on:
     //   <div id={fields.email.errorId}>{fields.email.errors}</div>
@@ -142,6 +151,43 @@ describe(FIELD_TEXT, () => {
   test("no false positive: an identifier that merely ends in 'errors'", () => {
     const code = component(`    <p>{props.errors.length} problems found</p>`)
     expect(fires(FIELD_TEXT, code)).toBe(false)
+  })
+
+  test("no false positive: a count of a real field's errors is still a count", () => {
+    // The `.length` guard, pinned on an object that does pass the field-shape
+    // test — the case above now has two reasons to stay quiet, so it no longer
+    // says anything about the guard on its own.
+    expect(fires(FIELD_TEXT, component(`    <p>{fields.email.errors.length} problems found</p>`))).toBe(false)
+  })
+
+  test("no false positive: a plain object that happens to carry `.errors`", () => {
+    // Task #196, the same hole as #194 one rule over. `.errors` is an ordinary
+    // property of ordinary objects — a GraphQL response, a validation summary —
+    // and `$field` used to be unbound, so each of these was an error telling the
+    // reader to put `id={field.errorId}` on it, with no suppression comment
+    // available for a GritQL diagnostic and nothing to do but rename the
+    // property. The object has to be spelled like a field now.
+    expect(fires(FIELD_TEXT, component(`    <p>{response.errors}</p>`))).toBe(false)
+    expect(
+      fires(FIELD_TEXT, component(`    <div>{validation.errors.map((e) => e.message)}</div>`)),
+    ).toBe(false)
+    expect(fires(FIELD_TEXT, component(`    <span>{props.result.errors}</span>`))).toBe(false)
+  })
+
+  test("no false positive: a form-level summary, which the record already excepts", () => {
+    // `form.errors` off useForm is the whole form's error, not a field's — the
+    // record's second exception says so in prose, and the check now agrees.
+    expect(fires(FIELD_TEXT, component(`    <p>{form.errors}</p>`))).toBe(false)
+  })
+
+  test("known blind spot: a field reached through an alias", () => {
+    // The price of asking what the object is called: an item out of
+    // getFieldList(), or a field held in a local, is spelled exactly like a
+    // domain object, so these real unreferenced errors go unreported. Missing
+    // one is the right way round for a rule at error severity — the same
+    // trade-off bind-fields-through-conform took in task #194.
+    expect(fires(FIELD_TEXT, component(`    <p>{item.errors}</p>`))).toBe(false)
+    expect(fires(FIELD_TEXT, component(`    <p>{emailField.errors}</p>`))).toBe(false)
   })
 
   test("no false positive: text that is not a field error", () => {

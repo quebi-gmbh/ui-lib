@@ -292,4 +292,46 @@ describe("the repo obeys the rules it publishes", () => {
     expect(spans).toHaveLength(1)
     expect(spans[0]).toContain("fields.plan.name")
   })
+
+  test("a plain object with `.errors` is not reported as an unreferenced field error", () => {
+    // Task #196, the same hole one rule over and reproduced the same way.
+    // `render-field-text-through-the-field` looked for `$field.errors` with
+    // `$field` unbound, so `<p>{response.errors}</p>` was an error telling the
+    // reader to put `id={field.errorId}` on a GraphQL response — nothing that
+    // sentence names exists there, and a GritQL diagnostic cannot be suppressed.
+    // Both paragraphs are in one file so the assertion is not "the rule went
+    // quiet": the second is a real unreferenced field error, and the span below
+    // says it is the one reported.
+    const probe = "src/routes/__lint_probe_errors__.tsx"
+    const source = [
+      "export const Probe = ({",
+      "  response,",
+      "  fields,",
+      "}: {",
+      "  response: { errors: string[] }",
+      "  fields: { email: { errors?: string[] } }",
+      "}) => (",
+      "  <>",
+      "    <p>{response.errors}</p>",
+      "    <p>{fields.email.errors}</p>",
+      "  </>",
+      ")",
+      "",
+    ].join("\n")
+    let diagnostics: Diagnostic[]
+    try {
+      writeFileSync(join(ROOT, probe), source)
+      diagnostics = lint([probe])
+    } finally {
+      rmSync(join(ROOT, probe), { force: true })
+    }
+    const reported = diagnostics.filter((d) =>
+      textOf(d).includes("render-field-text-through-the-field"),
+    )
+    const spans = reported.map((d) =>
+      source.slice(d.location?.span?.[0] ?? 0, d.location?.span?.[1]),
+    )
+    expect(spans).toHaveLength(1)
+    expect(spans[0]).toContain("fields.email.errors")
+  })
 })
