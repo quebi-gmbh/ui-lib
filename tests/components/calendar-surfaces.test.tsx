@@ -240,6 +240,105 @@ describe("selection is drawn in the event's own colour", () => {
 })
 
 /**
+ * A selected block paints above the blocks it touches.
+ *
+ * Selection is an outline, and an outline sits *outside* the border box. The
+ * 2px that separates two blocks is horizontal only — an event ending at noon
+ * and the one starting there share their edge exactly — so a selected block's
+ * outline lands inside its neighbour's rectangle, and every block is
+ * `position: absolute` at `z-index: auto`. Paint order was therefore DOM
+ * order, and the packing emits blocks in start order: selecting the earlier of
+ * two back-to-back events had the later one draw its own fill over the bottom
+ * of the selection outline. Reported against `/components/day-view` — "the
+ * selection border is partially covered by the following date".
+ *
+ * What is pinned is the shape of the fix: the element that carries the
+ * geometry is raised while selected, by one step rather than ten, so the
+ * now-marker and the drag ghost still pass over the top of it.
+ */
+describe("a selected block outranks the blocks it touches", () => {
+  /** 09:30–12:00 and the lunch that starts the minute it ends. */
+  const FOCUS: CalendarEvent = {
+    id: "focus",
+    title: "Focus block",
+    start: at(MONDAY, 9, 30),
+    end: at(MONDAY, 12),
+    calendarId: "me",
+  }
+  const LUNCH: CalendarEvent = {
+    id: "lunch",
+    title: "Lunch",
+    start: at(MONDAY, 12),
+    end: at(MONDAY, 13),
+    calendarId: "me",
+  }
+
+  const day = (selectedEventId: string | null) =>
+    render(
+      <DayView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[FOCUS, LUNCH]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+        selectedEventId={selectedEventId}
+      />,
+    )
+
+  /** The `z-[n]` on an element, or 0 for `z-index: auto`. */
+  const layer = (element: Element | null | undefined) =>
+    Number(element?.className.match(/(?:^|\s)z-\[(\d+)]/)?.[1] ?? 0)
+
+  test("the selected block is raised and the one below it is not", () => {
+    const { container } = day("focus")
+    expect(layer(blockFor(container, "focus"))).toBeGreaterThan(0)
+    expect(layer(blockFor(container, "lunch"))).toBe(0)
+  })
+
+  test("selecting the later block raises that one instead", () => {
+    const { container } = day("lunch")
+    expect(layer(blockFor(container, "lunch"))).toBeGreaterThan(0)
+    expect(layer(blockFor(container, "focus"))).toBe(0)
+  })
+
+  test("nothing is raised while nothing is selected", () => {
+    const { container } = day(null)
+    for (const id of ["focus", "lunch"]) {
+      expect([id, layer(blockFor(container, id))]).toEqual([id, 0])
+    }
+  })
+
+  test("the raise stays under the now-marker and the drag ghost, which are z-10", () => {
+    const { container } = day("focus")
+    expect(layer(blockFor(container, "focus"))).toBeLessThan(10)
+  })
+
+  test("a movable block is raised on the wrapper, which is the positioned element", () => {
+    const { container } = render(
+      <DayView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[FOCUS, LUNCH]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+        selectedEventId="focus"
+        isEventEditable
+        onEventChange={() => {}}
+      />,
+    )
+    const block = blockFor(container, "focus")
+    const wrapper = block?.closest('[data-slot="calendar-event-move"]')
+    expect(wrapper).not.toBeNull()
+    // The button inside the wrapper is `h-full w-full` and statically
+    // positioned, so a z-index on it would do nothing at all.
+    expect(layer(wrapper)).toBeGreaterThan(0)
+    expect(layer(block)).toBe(0)
+  })
+})
+
+/**
  * The accented edge is never rounded (task #176).
  *
  * `--radius-quebi-sm` is 8px and both the month chip and the week all-day band

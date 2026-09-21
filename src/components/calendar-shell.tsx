@@ -1166,6 +1166,14 @@ function TimedBlock<E extends CalendarEvent>({
   // border round each one would be ink that is not data — see the palette note
   // above — and two adjacent borders read as one thick divider.
   const geometry = { top: y, height, left: `${left}%`, width: `calc(${width}% - 2px)` }
+  // A selected block has to paint above its neighbours rather than merely
+  // above the ones that happen to precede it. The 2px inset is horizontal
+  // only — vertically two blocks share an edge exactly, an event ending at
+  // noon and the one starting there — and the selection outline sits
+  // *outside* the border box, so the later of the two painted its own
+  // background over the earlier one's outline. One step, not ten: the
+  // now-marker and the drag ghost are z-10 and stay above a selected block.
+  const raised = isSelected ? "z-[1]" : undefined
 
   // `useMove` rather than a raw `onPointerDown`, for two reasons that are the
   // same reason: it is the hook that already knows the difference between a
@@ -1197,7 +1205,9 @@ function TimedBlock<E extends CalendarEvent>({
         "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
         // Movable blocks are positioned by the wrapper that carries the
         // gesture, and fill it; everything else positions itself.
-        isMovable ? "h-full w-full cursor-grab active:cursor-grabbing" : "absolute",
+        // The raise goes on whichever element carries the geometry: a static
+        // button inside the gesture wrapper has no z-index of its own.
+        isMovable ? "h-full w-full cursor-grab active:cursor-grabbing" : cn("absolute", raised),
         palette.block,
         palette.edge,
         // A segment continuing past midnight loses the radius on that edge, so
@@ -1232,7 +1242,7 @@ function TimedBlock<E extends CalendarEvent>({
   return (
     <div
       data-slot="calendar-event-move"
-      className="absolute touch-none"
+      className={cn("absolute touch-none", raised)}
       style={geometry}
       {...moveProps}
       onPointerDownCapture={(event) => {
