@@ -28,7 +28,6 @@ import {
   type DataTableCellEdit,
   type DataTableColumn,
   type DataTableDensity,
-  type DataTableFilterOption,
   type DataTableFilterValue,
   type DataTableInstance,
   type DataTableRow,
@@ -38,7 +37,10 @@ import {
   dataTableFeatures,
   downloadCsv,
   emptySelection,
+  facetDomains,
+  facetedOptions,
   isRowSelected,
+  leafColumns,
   nextSorting,
   qualifiedLabel,
   readView,
@@ -348,6 +350,28 @@ export function DataTable<T extends RowData>({
   const activeFilterIds = columnFilters.map((f) => f.id)
   const hasQuery = activeFilterIds.length > 0 || Boolean(state.globalFilter)
 
+  // What every enum filter *could* offer, read from the rows before any filter
+  // ran. The counts beside those choices come from the faceted row model and
+  // move with the other filters; the choices themselves must not, or a value
+  // another column has zeroed disappears from the panel that would switch to
+  // it. A column that declares its own `filterOptions` already has a domain.
+  //
+  // Memoised on the pre-filtered rows, whose identity TanStack keeps until
+  // `data` changes, so this pass over every row happens once per dataset
+  // rather than once per render of a header.
+  const facetColumnIds = useMemo(
+    () =>
+      leafColumns(columns)
+        .filter((column) => column.filterVariant === "enum" && !column.filterOptions)
+        .map((column) => column.id),
+    [columns],
+  )
+  const preFilteredRows = table.getPreFilteredRowModel().flatRows
+  const domains = useMemo(
+    () => facetDomains(preFilteredRows, facetColumnIds),
+    [preFilteredRows, facetColumnIds],
+  )
+
   const persist = useCallback(() => {
     if (!storageKey) return
     writeView(storageKey, {
@@ -477,19 +501,20 @@ export function DataTable<T extends RowData>({
         const column = table.getColumn(columnId)
         const meta = column?.columnDef.meta
         if (!column || !meta?.filterVariant) return null
-        const faceted = column.getFacetedUniqueValues?.()
-        const options: DataTableFilterOption[] =
-          meta.filterOptions ??
-          [...(faceted ?? new Map())]
-            .map(([value, count]) => ({ value: String(value), count: Number(count) }))
-            .sort((a, b) => a.value.localeCompare(b.value))
+        const applied = columnFilters.find((f) => f.id === columnId)?.value
+        const options = facetedOptions({
+          declared: meta.filterOptions,
+          domain: domains.get(columnId),
+          counts: column.getFacetedUniqueValues?.(),
+          selected: Array.isArray(applied) ? applied.map(String) : undefined,
+        })
         const minMax = column.getFacetedMinMaxValues?.()
         return (
           <TableFilterPanel
             columnId={columnId}
             label={meta.label}
             variant={meta.filterVariant}
-            value={columnFilters.find((f) => f.id === columnId)?.value}
+            value={applied}
             options={options}
             bounds={minMax ? [Number(minMax[0]), Number(minMax[1])] : undefined}
             onApply={(value) => setColumnFilter(columnId, value)}

@@ -182,6 +182,13 @@ export interface DataTableColumn<T> {
   /** Where null and undefined land. `last` by default, in both directions. */
   sortUndefined?: "first" | "last" | false
   filterVariant?: DataTableFilterVariant
+  /**
+   * The enum filter's domain, in the order you want it listed. Leave it out and
+   * the domain is read from the rows instead. Either way the counts beside the
+   * choices come from the row model's faceting, so a declared option needs no
+   * count of its own — and one the other filters have zeroed is listed at 0
+   * rather than dropped. See `facetedOptions`.
+   */
   filterOptions?: DataTableFilterOption[]
   /** Custom predicate; overrides the one implied by `filterVariant`. */
   filterFn?: (value: unknown, filter: unknown, row: T) => boolean
@@ -422,6 +429,106 @@ export function matchesFilter(
         .toLowerCase()
         .includes(String(filter).toLowerCase())
   }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                           faceted filter options                           */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Every value each of `columnIds` takes across `rows` — the *domain* of an
+ * enum filter, the choices the data can offer at all.
+ *
+ * Read from the unfiltered rows on purpose. TanStack's faceted unique values
+ * are the other half of a counted facet, and they are a map of what the
+ * *current* filters leave: a value another column has filtered away has no
+ * entry there at all. A list built from that map alone therefore drops the
+ * option rather than showing it at zero — so the choice you wanted to switch
+ * to is missing from the panel that would switch to it, and the rows below it
+ * jump up under the cursor as the counts change.
+ *
+ * `getUniqueValues` rather than `getValue`, because that is what TanStack
+ * counts with: a column of arrays (tags) contributes one entry per element,
+ * and the domain has to be keyed the same way or the counts will not land.
+ */
+export function facetDomains<T extends RowData>(
+  rows: DataTableRow<T>[],
+  columnIds: string[],
+): Map<string, string[]> {
+  const domains = new Map(columnIds.map((columnId) => [columnId, new Set<string>()]))
+  for (const row of rows) {
+    for (const columnId of columnIds) {
+      for (const value of row.getUniqueValues(columnId) ?? []) {
+        // A blank is the absence of a value rather than one of the choices —
+        // an empty checkbox labelled nothing, which no filter could apply.
+        if (value == null || value === "") continue
+        domains.get(columnId)?.add(String(value))
+      }
+    }
+  }
+  return new Map([...domains].map(([columnId, values]) => [columnId, [...values]]))
+}
+
+/**
+ * One enum filter's option list: the domain, with the faceted counts written
+ * onto it and a zero for every value the other filters leave nothing of.
+ *
+ * A zero is a listed, disabled row rather than an absent one — you can see
+ * that the choice exists, see that picking it would empty the table, and the
+ * list stops rearranging itself while you read it. That last part is why a
+ * zero keeps its place rather than sinking to the bottom: the order is the
+ * domain's own (declared, else alphabetical), so changing another filter
+ * changes the numbers on this list and never its shape.
+ *
+ * A *selected* value is always listed, whatever the counts say, because this
+ * panel is the only place that filter can be taken off again.
+ *
+ * `counts` absent means nobody counted — every option keeps whatever count it
+ * arrived with, and none is fabricated as zero.
+ */
+export function facetedOptions({
+  declared,
+  domain,
+  counts,
+  selected,
+}: {
+  /** The caller's own domain, in the caller's order — `meta.filterOptions`. */
+  declared?: DataTableFilterOption[]
+  /** Values read from the unfiltered rows; the domain when none is declared. */
+  domain?: Iterable<string>
+  /** TanStack's faceted unique values, keyed by the raw cell value. */
+  counts?: Map<unknown, number>
+  /** The values this column's filter currently applies. */
+  selected?: readonly string[]
+}): DataTableFilterOption[] {
+  const counted = new Map<string, number>()
+  for (const [value, count] of counts ?? []) counted.set(String(value), Number(count))
+
+  // A count lands on an option by its value, which for a declared list is only
+  // true when those values are the cell values — a column with a `filterFn` of
+  // its own may name something else, and zeroing the whole list would disable
+  // every choice it has. Counts that name nothing on the list are not this
+  // list's counts, so they are left off rather than read as absence. An empty
+  // map is different: it means no rows are left, and every zero is honest.
+  const lands =
+    counts != null &&
+    (counted.size === 0 || !declared || declared.some((option) => counted.has(option.value)))
+
+  const options: DataTableFilterOption[] = []
+  const listed = new Set<string>()
+  const push = (option: DataTableFilterOption) => {
+    if (listed.has(option.value)) return
+    listed.add(option.value)
+    options.push({ ...option, count: lands ? (counted.get(option.value) ?? 0) : option.count })
+  }
+
+  if (declared) for (const option of declared) push(option)
+  else for (const value of [...(domain ?? [])].sort((a, b) => a.localeCompare(b))) push({ value })
+  // Last, and whatever the domain says: a selected value nothing matches has to
+  // be on the list, or applying it makes it unremovable from the only panel
+  // that removes it.
+  for (const value of selected ?? []) push({ value })
+  return options
 }
 
 /** Translate the shared vocabulary into TanStack column definitions. */
