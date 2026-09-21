@@ -141,6 +141,27 @@ const WithSelection = () => {
   )
 }
 
+/**
+ * The legend laid over the grid rather than above it. One class positions it;
+ * `variant="overlay"` is what makes it readable once something is behind it.
+ */
+const OverlayLegend = () => {
+  const day = today(TIME_ZONE)
+  return (
+    <div className="relative w-full">
+      <DayView
+        events={agenda(day)}
+        calendars={CALENDARS}
+        timeZone={TIME_ZONE}
+        startHour={8}
+        endHour={18}
+        height={420}
+      />
+      <CalendarLegend calendars={CALENDARS} variant="overlay" className="absolute end-3 bottom-3" />
+    </div>
+  )
+}
+
 export const dayViewExamples: ComponentExample[] = [
   {
     title: "Default",
@@ -159,6 +180,12 @@ export const dayViewExamples: ComponentExample[] = [
     description:
       "Events take their colour from the calendar that owns them. CalendarLegend names the hues, so colour is never the only thing telling them apart.",
     render: () => <WithLegend />,
+  },
+  {
+    title: "The legend over the grid",
+    description:
+      "A day is one column, so a legend on its own line costs the grid a line it could have spent on hours. Over the grid it costs nothing — and because an event is then behind it, it takes variant=\"overlay\": the same row on an elevated, blurred surface. Which corner is free is a question about your day, so the placement is a class and not a prop; Week View's gallery walks through the others.",
+    render: () => <OverlayLegend />,
   },
   {
     title: "All-day and overnight",
