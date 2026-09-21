@@ -170,7 +170,9 @@ describe("committing when the control settles", () => {
     const user = userEvent.setup()
 
     await user.click(cell("1", "stock"))
-    expect(within(cell("1", "stock")).queryByRole("button", { name: "Increase" })).toBeNull()
+    // By label: the role + name query matches nothing this deep inside a grid
+    // whether or not a stepper is drawn. See `data-table-cells.test.tsx`.
+    expect(within(cell("1", "stock")).queryAllByLabelText("Increase")).toHaveLength(0)
 
     await user.keyboard("{ArrowUp}")
     await user.keyboard("{Enter}")
