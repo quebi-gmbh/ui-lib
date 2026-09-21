@@ -72,6 +72,14 @@ import {
  */
 
 export interface ServerTableFilterPage {
+  /**
+   * One page of the column's domain. Count each value over the rows the
+   * *other* filters leave — that is what makes the number answer "and how many
+   * would that leave" — and include the zeroes: the panel lists a zero as a
+   * disabled choice rather than dropping it, so a value another filter has
+   * emptied can still be seen and explained. A value with no count at all is
+   * listed and stays selectable.
+   */
   items: DataTableFilterOption[]
   /** Return a cursor to enable "load more" on scroll; omit when exhausted. */
   cursor?: string

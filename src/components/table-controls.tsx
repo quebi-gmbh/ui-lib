@@ -701,6 +701,14 @@ export function TableFilterPanel({
   const range: [unknown, unknown] = Array.isArray(value)
     ? (value as [unknown, unknown])
     : [null, null]
+  // An option the other filters have left nothing of is drawn, disabled, at 0:
+  // the choice is visible and so is the reason it is unavailable, and picking
+  // it could only empty the table. Except when it is the value already applied
+  // — this panel is the only place that filter can be taken off again, so a
+  // selected option stays checkable however few rows are left under it.
+  const appliedValues = new Set(
+    variant === "enum" && Array.isArray(value) ? (value as unknown[]).map(String) : [],
+  )
   const numberBound = (bound: unknown) => (bound == null ? "" : Number(bound))
   const [form, fields] = useForm<PanelValues>({
     id: `${useId()}-filter-${columnId}`,
@@ -828,7 +836,11 @@ export function TableFilterPanel({
           <div className="quebi-scrollbar max-h-56 overflow-y-auto" onScroll={onListScroll}>
             <ConformCheckboxGroup field={fields.values} aria-label={`${label} values`}>
               {options.map((option) => (
-                <Checkbox key={option.value} value={option.value}>
+                <Checkbox
+                  key={option.value}
+                  value={option.value}
+                  isDisabled={option.count === 0 && !appliedValues.has(option.value)}
+                >
                   <span className="flex w-full items-center justify-between gap-2">
                     <span>{option.label ?? option.value}</span>
                     {option.count != null && (

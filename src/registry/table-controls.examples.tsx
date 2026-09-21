@@ -17,7 +17,7 @@ import type {
   DataTableFilterValue,
   DataTableSelection,
 } from "@/lib/data-table"
-import { emptySelection, selectionCount } from "@/lib/data-table"
+import { emptySelection, facetedOptions, matchesFilter, selectionCount } from "@/lib/data-table"
 import { ORDERS, STATUSES } from "./table-fixtures.examples"
 import type { ComponentExample } from "./types"
 
@@ -98,11 +98,6 @@ const Toolbar = () => {
 /*                           filter panel and chips                           */
 /* -------------------------------------------------------------------------- */
 
-const statusOptions = STATUSES.map((status) => ({
-  value: status,
-  count: ORDERS.filter((order) => order.status === status).length,
-}))
-
 /*
  * Counted, not guessed. Inside DataTable these come from the row model's own
  * faceting and inside ServerTable from the query behind `loadFilterValues`, so
@@ -130,6 +125,38 @@ const Filters = () => {
   }
 
   const appliedValue = (column: string) => filters.find((filter) => filter.column === column)?.value
+
+  /**
+   * The Status facet, counted the way a row model counts one: the number
+   * beside a choice is of the rows the *other* filters leave, so it answers
+   * "and how many would that leave", and the domain is every status there is
+   * rather than the ones currently surviving. Narrow Amount to 400–500 and the
+   * statuses it empties stay on the list as a disabled 0 — visible, explained,
+   * and in the same place they were. `facetedOptions` is the one doing that;
+   * inside DataTable it is handed `column.getFacetedUniqueValues()`.
+   */
+  const statusOptions = facetedOptions({
+    declared: STATUSES.map((status) => ({ value: status })),
+    counts: new Map(
+      STATUSES.map((status) => [
+        status,
+        ORDERS.filter(
+          (order) =>
+            order.status === status &&
+            filters.every(
+              (filter) =>
+                filter.column === "status" ||
+                matchesFilter(
+                  order[filter.column as "amount" | "date"],
+                  filter.variant,
+                  filter.value,
+                ),
+            ),
+        ).length,
+      ]),
+    ),
+    selected: appliedValue("status") as string[] | undefined,
+  })
 
   return (
     <div className="flex w-full flex-col gap-3">
@@ -186,10 +213,13 @@ const Filters = () => {
         Each panel is a Conform form over a valibot schema, and Apply is a real
         submit. Put 900 in <em>From</em> and 100 in <em>To</em> and the error is
         on the field — a range that would have returned nothing never becomes a
-        query. Inside a table these are mounted by the header's filter popover,
-        one at a time, and there Apply dismisses it through <code>onClose</code>.
-        Here nothing hosts them, so the prop is left off and the three stay side
-        by side, all visible at once. There are five variants in all: text and
+        query. Narrow <em>Amount</em> and watch the status counts: a choice the
+        range has emptied is disabled at 0 rather than gone, so you can still
+        see it, and the one you have applied stays checkable whatever it counts.
+        Inside a table these are mounted by the header's filter popover, one at
+        a time, and there Apply dismisses it through <code>onClose</code>. Here
+        nothing hosts them, so the prop is left off and the three stay side by
+        side, all visible at once. There are five variants in all: text and
         boolean are the two not shown.
       </Note>
     </div>
