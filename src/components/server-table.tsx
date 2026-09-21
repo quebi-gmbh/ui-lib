@@ -28,13 +28,17 @@ import {
   type DataTableColumn,
   type DataTableDensity,
   type DataTableFilterOption,
-  type DataTableFilterValue,
   type DataTableQuery,
   type DataTableSelection,
+  type FilterCondition,
+  type FilterOperator,
   dataTableFeatures,
+  defaultOperator,
   emptyQuery,
   emptySelection,
+  isFilterSet,
   nextSorting,
+  packFilter,
   qualifiedLabel,
   sortingToSorts,
   sortsToSorting,
@@ -252,6 +256,7 @@ function ServerFilterPanel({
   label,
   variant,
   value,
+  operator,
   loadFilterValues,
   onApply,
   onClear,
@@ -261,6 +266,7 @@ function ServerFilterPanel({
   label: string
   variant: NonNullable<DataTableColumn<never>["filterVariant"]>
   value: unknown
+  operator?: FilterOperator
   loadFilterValues?: ServerTableLoadFilterValues
   onApply: (value: unknown) => void
   onClear: () => void
@@ -282,6 +288,7 @@ function ServerFilterPanel({
       label={label}
       variant={variant}
       value={value}
+      operator={operator}
       options={options}
       isLoadingOptions={facets.isLoading}
       onSearchOptions={variant === "enum" && loadFilterValues ? facets.onSearch : undefined}
@@ -400,27 +407,46 @@ export function ServerTable<T extends RowData>({
     state: {
       sorting,
       globalFilter: query.search,
-      columnFilters: query.filters.map((filter) => ({ id: filter.column, value: filter.value })),
+      // Nothing here filters — `manualFiltering` is on — but the shape still has
+      // to be the one every other reader of a column filter expects, operator
+      // included, or a custom `filterFn` would see a different filter from the
+      // one the query reports.
+      columnFilters: query.filters.map((condition) => ({
+        id: condition.fieldId,
+        value: packFilter(condition.variant, condition.value, condition.operator),
+      })),
       pagination: { pageIndex: query.page, pageSize: query.pageSize },
     },
   })
 
   const rowModel = table.getRowModel().rows
-  const activeFilters = query.filters.filter(
-    (filter) =>
-      filter.value != null &&
-      filter.value !== "" &&
-      !(Array.isArray(filter.value) && filter.value.every((v) => v == null || v === "")),
-  )
+  const activeFilters = query.filters.filter((condition) => isFilterSet(condition.value))
 
+  const conditionFor = (columnId: string) =>
+    query.filters.find((condition) => condition.fieldId === columnId)
+
+  /*
+   * A column header offers one condition per column, so setting one replaces
+   * whatever that column had. The operator it had is kept rather than reset:
+   * a query arriving from a URL, a saved view or a condition builder may well
+   * say `is not`, and a panel that collects a value has not been asked to
+   * change the question.
+   */
   const setFilter = (columnId: string, value: unknown) => {
-    const isEmpty =
-      value == null ||
-      value === "" ||
-      (Array.isArray(value) && value.every((v) => v == null || v === ""))
     const variant = table.getColumn(columnId)?.columnDef.meta?.filterVariant
-    const next: DataTableFilterValue[] = query.filters.filter((f) => f.column !== columnId)
-    if (!isEmpty) next.push({ column: columnId, variant, value })
+    const previous = conditionFor(columnId)
+    const next: FilterCondition[] = query.filters.filter(
+      (condition) => condition.fieldId !== columnId,
+    )
+    if (isFilterSet(value)) {
+      next.push({
+        id: previous?.id ?? columnId,
+        fieldId: columnId,
+        operator: previous?.operator ?? defaultOperator(variant),
+        variant,
+        value,
+      })
+    }
     // A narrower filter can leave you past the end of the result, so a filter
     // change always returns to the first page rather than to an empty one.
     pushQuery({ ...query, filters: next, page: 0, cursor: null })
@@ -504,15 +530,16 @@ export function ServerTable<T extends RowData>({
       </TableToolbar>
 
       <TableFilterChips
-        filters={activeFilters.map((filter) => ({
-          column: filter.column,
-          label: columnLabel(filter.column),
+        filters={activeFilters.map((condition) => ({
+          column: condition.fieldId,
+          label: columnLabel(condition.fieldId),
           // The same words the client mode puts in a chip. Reading the value
           // by its shape instead of by its variant is how a number range used
           // to arrive here as "10, 50".
           text: describeFilter(
-            filter.variant ?? table.getColumn(filter.column)?.columnDef.meta?.filterVariant,
-            filter.value,
+            condition.variant ?? table.getColumn(condition.fieldId)?.columnDef.meta?.filterVariant,
+            condition.value,
+            condition.operator,
           ),
         }))}
         onClear={(columnId) => setFilter(columnId, undefined)}
@@ -584,7 +611,7 @@ export function ServerTable<T extends RowData>({
         onRetry={onRetry}
         emptyMessage={emptyMessage}
         noResultsMessage={noResultsMessage}
-        activeFilters={activeFilters.map((filter) => filter.column)}
+        activeFilters={activeFilters.map((condition) => condition.fieldId)}
         onLoadMore={
           paginationMode === "load-more" && hasMore
             ? () => pushQuery({ ...query, page: query.page + 1, cursor: nextCursor })
@@ -599,7 +626,8 @@ export function ServerTable<T extends RowData>({
               columnId={columnId}
               label={meta.label}
               variant={meta.filterVariant}
-              value={query.filters.find((filter) => filter.column === columnId)?.value}
+              value={conditionFor(columnId)?.value}
+              operator={conditionFor(columnId)?.operator}
               loadFilterValues={loadFilterValues}
               onApply={(value) => setFilter(columnId, value)}
               onClear={() => setFilter(columnId, undefined)}

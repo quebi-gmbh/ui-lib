@@ -28,19 +28,24 @@ import {
   type DataTableCellEdit,
   type DataTableColumn,
   type DataTableDensity,
-  type DataTableFilterValue,
   type DataTableInstance,
   type DataTableRow,
   type DataTableSelection,
+  type FilterCondition,
+  type FilterOperator,
   clampPage,
   copyToClipboard,
   dataTableFeatures,
+  defaultOperator,
   downloadCsv,
   emptySelection,
   facetDomains,
   facetedOptions,
+  isFilterSet,
   isRowSelected,
   leafColumns,
+  packFilter,
+  unpackFilter,
   nextSorting,
   qualifiedLabel,
   readView,
@@ -101,8 +106,13 @@ export interface DataTableProps<T extends RowData> {
   onSortingChange?: (sorting: SortingState) => void
   globalFilter?: string
   onGlobalFilterChange?: (value: string) => void
-  columnFilters?: DataTableFilterValue[]
-  onColumnFiltersChange?: (filters: DataTableFilterValue[]) => void
+  /**
+   * Controlled column filters, as conditions. The operator rides with the value
+   * — a condition reading `is not` filters as `is not` here, exactly as it does
+   * in `ServerTable` and in `filterRows`, because all three run `matchesFilter`.
+   */
+  columnFilters?: FilterCondition[]
+  onColumnFiltersChange?: (filters: FilterCondition[]) => void
   /** Named filter sets, offered beside the chips. */
   filterPresets?: { id: string; label: string }[]
   onApplyPreset?: (id: string) => void
@@ -272,15 +282,32 @@ export function DataTable<T extends RowData>({
     onSelectionChange?.(next)
   }
 
+  /**
+   * Each filterable column's variant, which is what decides an operator's
+   * default and therefore whether a condition has anything to carry into
+   * TanStack's one-value-per-column filter slot at all.
+   */
+  const filterVariants = useMemo(
+    () => new Map(leafColumns(columns).map((column) => [column.id, column.filterVariant])),
+    [columns],
+  )
+
   const controlledState = useMemo(() => {
     const slices: Record<string, unknown> = {}
     if (sortingProp) slices.sorting = sortingProp
     if (globalFilterProp != null) slices.globalFilter = globalFilterProp
     if (columnFiltersProp) {
-      slices.columnFilters = columnFiltersProp.map((f) => ({ id: f.column, value: f.value }))
+      slices.columnFilters = columnFiltersProp.map((condition) => ({
+        id: condition.fieldId,
+        value: packFilter(
+          condition.variant ?? filterVariants.get(condition.fieldId),
+          condition.value,
+          condition.operator,
+        ),
+      }))
     }
     return Object.keys(slices).length > 0 ? slices : undefined
-  }, [sortingProp, globalFilterProp, columnFiltersProp])
+  }, [sortingProp, globalFilterProp, columnFiltersProp, filterVariants])
 
   const table = useTable<typeof dataTableFeatures, T>({
     features: dataTableFeatures,
@@ -347,6 +374,18 @@ export function DataTable<T extends RowData>({
   const state = table.state
   const sorting = state.sorting ?? []
   const columnFilters = state.columnFilters ?? []
+  /** The active filters as conditions — the operator unpacked back out of the slot. */
+  const conditions: FilterCondition[] = columnFilters.map((filter) => {
+    const { value, operator } = unpackFilter(filter.value)
+    const variant = filterVariants.get(filter.id)
+    return {
+      id: filter.id,
+      fieldId: filter.id,
+      operator: operator ?? defaultOperator(variant),
+      value,
+      variant,
+    }
+  })
   const activeFilterIds = columnFilters.map((f) => f.id)
   const hasQuery = activeFilterIds.length > 0 || Boolean(state.globalFilter)
 
@@ -387,13 +426,25 @@ export function DataTable<T extends RowData>({
     persist()
   }, [persist])
 
-  const setColumnFilter = (columnId: string, value: unknown) => {
-    const isEmpty =
-      value == null || value === "" || (Array.isArray(value) && value.every((v) => v == null || v === ""))
+  const setColumnFilter = (columnId: string, value: unknown, operator?: FilterOperator) => {
     const next = columnFilters.filter((f) => f.id !== columnId)
-    if (!isEmpty) next.push({ id: columnId, value })
+    if (isFilterSet(value)) {
+      next.push({ id: columnId, value: packFilter(filterVariants.get(columnId), value, operator) })
+    }
     if (onColumnFiltersChange) {
-      onColumnFiltersChange(next.map((f) => ({ column: f.id, value: f.value })))
+      onColumnFiltersChange(
+        next.map((filter) => {
+          const unpacked = unpackFilter(filter.value)
+          const variant = filterVariants.get(filter.id)
+          return {
+            id: filter.id,
+            fieldId: filter.id,
+            operator: unpacked.operator ?? defaultOperator(variant),
+            value: unpacked.value,
+            variant,
+          }
+        }),
+      )
     } else {
       table.setColumnFilters(next)
     }
@@ -442,12 +493,16 @@ export function DataTable<T extends RowData>({
     savingCell,
   })
 
-  const chips = columnFilters.map((filter) => {
-    const column = table.getColumn(filter.id)
+  const chips = conditions.map((condition) => {
+    const column = table.getColumn(condition.fieldId)
     return {
-      column: filter.id,
-      label: column?.columnDef.meta?.label ?? filter.id,
-      text: describeFilter(column?.columnDef.meta?.filterVariant, filter.value),
+      column: condition.fieldId,
+      label: column?.columnDef.meta?.label ?? condition.fieldId,
+      text: describeFilter(
+        column?.columnDef.meta?.filterVariant,
+        condition.value,
+        condition.operator,
+      ),
     }
   })
 
@@ -501,7 +556,8 @@ export function DataTable<T extends RowData>({
         const column = table.getColumn(columnId)
         const meta = column?.columnDef.meta
         if (!column || !meta?.filterVariant) return null
-        const applied = columnFilters.find((f) => f.id === columnId)?.value
+        const condition = conditions.find((entry) => entry.fieldId === columnId)
+        const applied = condition?.value
         const options = facetedOptions({
           declared: meta.filterOptions,
           domain: domains.get(columnId),
@@ -515,9 +571,13 @@ export function DataTable<T extends RowData>({
             label={meta.label}
             variant={meta.filterVariant}
             value={applied}
+            /* The header has no operator select, so the panel keeps whatever
+               operator the filter arrived with rather than quietly resetting a
+               controlled `is not` to `is` the first time it is re-applied. */
+            operator={condition?.operator}
             options={options}
             bounds={minMax ? [Number(minMax[0]), Number(minMax[1])] : undefined}
-            onApply={(value) => setColumnFilter(columnId, value)}
+            onApply={(value) => setColumnFilter(columnId, value, condition?.operator)}
             onClear={() => setColumnFilter(columnId, undefined)}
             onClose={close}
           />

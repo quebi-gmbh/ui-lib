@@ -12,12 +12,15 @@ import {
   TableToolbar,
   describeFilter,
 } from "@/components/table-controls"
-import type {
-  DataTableDensity,
-  DataTableFilterValue,
-  DataTableSelection,
+import type { DataTableDensity, DataTableSelection, FilterCondition } from "@/lib/data-table"
+import {
+  defaultOperator,
+  emptySelection,
+  facetedOptions,
+  isFilterSet,
+  matchesFilter,
+  selectionCount,
 } from "@/lib/data-table"
-import { emptySelection, facetedOptions, matchesFilter, selectionCount } from "@/lib/data-table"
 import { ORDERS, STATUSES } from "./table-fixtures.examples"
 import type { ComponentExample } from "./types"
 
@@ -109,22 +112,35 @@ const amounts = ORDERS.map((order) => order.amount)
 const amountBounds: [number, number] = [Math.min(...amounts), Math.max(...amounts)]
 
 const Filters = () => {
-  const [filters, setFilters] = useState<DataTableFilterValue[]>([
-    { column: "status", variant: "enum", value: ["Paid"] },
+  const [filters, setFilters] = useState<FilterCondition[]>([
+    { id: "status", fieldId: "status", operator: "is", variant: "enum", value: ["Paid"] },
   ])
 
-  const apply = (column: string, variant: DataTableFilterValue["variant"], value: unknown) => {
-    const isEmpty =
-      value == null ||
-      value === "" ||
-      (Array.isArray(value) && value.every((entry) => entry == null || entry === ""))
+  const apply = (
+    fieldId: string,
+    variant: FilterCondition["variant"],
+    value: unknown,
+    operator?: FilterCondition["operator"],
+  ) => {
     setFilters((current) => {
-      const next = current.filter((filter) => filter.column !== column)
-      return isEmpty ? next : [...next, { column, variant, value }]
+      const next = current.filter((filter) => filter.fieldId !== fieldId)
+      return isFilterSet(value)
+        ? [
+            ...next,
+            {
+              id: fieldId,
+              fieldId,
+              variant,
+              operator: operator ?? defaultOperator(variant),
+              value,
+            },
+          ]
+        : next
     })
   }
 
-  const appliedValue = (column: string) => filters.find((filter) => filter.column === column)?.value
+  const applied = (fieldId: string) => filters.find((filter) => filter.fieldId === fieldId)
+  const appliedValue = (fieldId: string) => applied(fieldId)?.value
 
   /**
    * The Status facet, counted the way a row model counts one: the number
@@ -145,11 +161,12 @@ const Filters = () => {
             order.status === status &&
             filters.every(
               (filter) =>
-                filter.column === "status" ||
+                filter.fieldId === "status" ||
                 matchesFilter(
-                  order[filter.column as "amount" | "date"],
+                  order[filter.fieldId as "amount" | "date"],
                   filter.variant,
                   filter.value,
+                  filter.operator,
                 ),
             ),
         ).length,
@@ -162,17 +179,26 @@ const Filters = () => {
     <div className="flex w-full flex-col gap-3">
       <TableFilterChips
         filters={filters.map((filter) => ({
-          column: filter.column,
-          label: filter.column[0].toUpperCase() + filter.column.slice(1),
+          column: filter.fieldId,
+          label: filter.fieldId[0].toUpperCase() + filter.fieldId.slice(1),
           // The same function the chips inside both tables are labelled with:
-          // the variant decides the words, not the shape of the value.
-          text: describeFilter(filter.variant, filter.value),
+          // the variant decides the words, not the shape of the value — and the
+          // operator is named only when it is not the one the variant implies.
+          text: describeFilter(filter.variant, filter.value, filter.operator),
         }))}
-        onClear={(column) => apply(column, undefined, undefined)}
+        onClear={(fieldId) => apply(fieldId, undefined, undefined)}
         onClearAll={() => setFilters([])}
         presets={[{ id: "open", label: "Open orders" }]}
         onApplyPreset={() =>
-          setFilters([{ column: "status", variant: "enum", value: ["Pending", "Shipped"] }])
+          setFilters([
+            {
+              id: "status",
+              fieldId: "status",
+              operator: "is",
+              variant: "enum",
+              value: ["Pending", "Shipped"],
+            },
+          ])
         }
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

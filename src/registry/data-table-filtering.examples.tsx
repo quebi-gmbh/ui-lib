@@ -2,7 +2,7 @@ import { useState } from "react"
 import { DataTable } from "@/components/data-table"
 import { FormattedDate } from "@/components/formatted-date"
 import { Note } from "@/components/note"
-import type { DataTableColumn, DataTableFilterValue } from "@/lib/data-table"
+import type { DataTableColumn, FilterCondition } from "@/lib/data-table"
 import { Money, ORDERS, type Order, SMALL_ORDERS, StatusBadge } from "./table-fixtures.examples"
 import type { ComponentExample } from "./types"
 
@@ -74,7 +74,7 @@ const FilterShowcase = () => (
 interface Preset {
   id: string
   label: string
-  filters: DataTableFilterValue[]
+  filters: FilterCondition[]
 }
 
 const BUILT_IN_PRESETS: Preset[] = [
@@ -82,14 +82,22 @@ const BUILT_IN_PRESETS: Preset[] = [
     id: "unpaid",
     label: "Unpaid, high value",
     filters: [
-      { column: "status", variant: "enum", value: ["Pending"] },
-      { column: "amount", variant: "number", value: [500, null] },
+      { id: "status", fieldId: "status", operator: "is", variant: "enum", value: ["Pending"] },
+      { id: "amount", fieldId: "amount", operator: "between", variant: "number", value: [500, null] },
     ],
   },
   {
     id: "dach",
     label: "DACH region",
-    filters: [{ column: "country", variant: "enum", value: ["Germany", "Austria"] }],
+    filters: [
+      {
+        id: "country",
+        fieldId: "country",
+        operator: "is",
+        variant: "enum",
+        value: ["Germany", "Austria"],
+      },
+    ],
   },
 ]
 
@@ -99,7 +107,7 @@ const BUILT_IN_PRESETS: Preset[] = [
  * table keeps them itself and there is nothing to save.
  */
 const PresetShowcase = () => {
-  const [filters, setFilters] = useState<DataTableFilterValue[]>([])
+  const [filters, setFilters] = useState<FilterCondition[]>([])
   const [presets, setPresets] = useState<Preset[]>(BUILT_IN_PRESETS)
 
   return (

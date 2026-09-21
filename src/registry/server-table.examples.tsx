@@ -63,8 +63,16 @@ async function queryOrders(
     (order) =>
       (search === "" ||
         `${order.reference} ${order.customer} ${order.country}`.toLowerCase().includes(search)) &&
-      query.filters.every((filter) =>
-        matchesFilter(order[filter.column as keyof Order], filter.variant, filter.value),
+      // The operator is part of the query, so the "server" answers the question
+      // the user actually asked — `matchesFilter` is the same predicate the
+      // client mode runs, which is the whole point of both taking a condition.
+      query.filters.every((condition) =>
+        matchesFilter(
+          order[condition.fieldId as keyof Order],
+          condition.variant,
+          condition.value,
+          condition.operator,
+        ),
       ),
   )
   const ordered = [...matching]

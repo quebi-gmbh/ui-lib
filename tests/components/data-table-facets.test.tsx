@@ -46,7 +46,7 @@ describe("DataTable facets", () => {
         data={KIOSKS}
         getRowId={(kiosk) => String(kiosk.id)}
         enablePagination={false}
-        columnFilters={[{ column: "room", value: ["Atrium"] }]}
+        columnFilters={[{ id: "room", fieldId: "room", operator: "is", value: ["Atrium"] }]}
         onColumnFiltersChange={() => undefined}
       />,
     )
@@ -77,8 +77,8 @@ describe("DataTable facets", () => {
         getRowId={(kiosk) => String(kiosk.id)}
         enablePagination={false}
         columnFilters={[
-          { column: "room", value: ["Foyer"] },
-          { column: "status", value: ["live"] },
+          { id: "room", fieldId: "room", operator: "is", value: ["Foyer"] },
+          { id: "status", fieldId: "status", operator: "is", value: ["live"] },
         ]}
         onColumnFiltersChange={() => undefined}
       />,

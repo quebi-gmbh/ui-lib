@@ -8,7 +8,11 @@
  * rather than in a rendering test for one of them.
  */
 import { describe, expect, test } from "bun:test"
-import type { DataTableColumn, DataTableSelection } from "../src/lib/data-table"
+import type {
+  DataTableColumn,
+  DataTableSelection,
+  FilterCondition,
+} from "../src/lib/data-table"
 import {
   applySelection,
   clampPage,
@@ -19,7 +23,6 @@ import {
   emptySelection,
   isRowSelected,
   leafColumns,
-  matchesFilter,
   nextEditableCell,
   nextSorting,
   pageItems,
@@ -263,27 +266,7 @@ describe("the page window", () => {
   })
 })
 
-describe("the shared filter predicate", () => {
-  test("an unset filter matches everything", () => {
-    expect(matchesFilter("x", "text", "")).toBe(true)
-    expect(matchesFilter("x", "enum", [])).toBe(true)
-    expect(matchesFilter("x", "text", null)).toBe(true)
-  })
 
-  test("each variant asks its own question", () => {
-    expect(matchesFilter("Nova GmbH", "text", "nova")).toBe(true)
-    expect(matchesFilter("Nova GmbH", "text", "apex")).toBe(false)
-    expect(matchesFilter("Paid", "enum", ["Paid", "Pending"])).toBe(true)
-    expect(matchesFilter("Shipped", "enum", ["Paid"])).toBe(false)
-    expect(matchesFilter(true, "boolean", "true")).toBe(true)
-    expect(matchesFilter(false, "boolean", "true")).toBe(false)
-    expect(matchesFilter(50, "number", [10, 100])).toBe(true)
-    expect(matchesFilter(50, "number", [60, null])).toBe(false)
-    expect(matchesFilter(50, "number", [null, 40])).toBe(false)
-    expect(matchesFilter("2026-03-04", "date", ["2026-01-01", "2026-06-01"])).toBe(true)
-    expect(matchesFilter("2026-09-04", "date", ["2026-01-01", "2026-06-01"])).toBe(false)
-  })
-})
 
 describe("the query as search params", () => {
   test("round-trips sort, search, page and filters", () => {
@@ -297,8 +280,20 @@ describe("the query as search params", () => {
       page: 2,
       pageSize: 50,
       filters: [
-        { column: "status", variant: "enum" as const, value: ["Paid", "Pending"] },
-        { column: "amount", variant: "number" as const, value: [10, null] },
+        {
+          id: "status",
+          fieldId: "status",
+          operator: "is" as const,
+          variant: "enum" as const,
+          value: ["Paid", "Pending"],
+        },
+        {
+          id: "amount",
+          fieldId: "amount",
+          operator: "between" as const,
+          variant: "number" as const,
+          value: [10, null],
+        },
       ],
     }
     const params = new URLSearchParams(queryToSearchParams(query))
@@ -315,13 +310,74 @@ describe("the query as search params", () => {
     expect(parsed.page).toBe(2)
     expect(parsed.pageSize).toBe(50)
     expect(parsed.filters).toEqual([
-      { column: "status", variant: "enum", value: ["Paid", "Pending"] },
-      { column: "amount", variant: "number", value: ["10", null] },
+      {
+        id: "status",
+        fieldId: "status",
+        operator: "is",
+        variant: "enum",
+        value: ["Paid", "Pending"],
+      },
+      {
+        id: "amount",
+        fieldId: "amount",
+        operator: "between",
+        variant: "number",
+        value: ["10", null],
+      },
     ])
   })
 
   test("the default query writes nothing, so a clean URL stays clean", () => {
     expect(queryToSearchParams(emptyQuery)).toEqual({})
+  })
+
+  test("an operator is written only when it is not the variant's default", () => {
+    const params = queryToSearchParams({
+      ...emptyQuery,
+      filters: [
+        { id: "a", fieldId: "status", operator: "is", variant: "enum", value: ["live"] },
+        { id: "b", fieldId: "name", operator: "doesNotContain", variant: "text", value: "nova" },
+      ],
+    })
+    // Every URL this wrote before there were operators is the one it writes now.
+    expect(params["f.status"]).toBe("live")
+    expect(params["f.name"]).toBe("doesNotContain:nova")
+  })
+
+  test("two conditions on one field round-trip as one param", () => {
+    const filters: FilterCondition[] = [
+      { id: "a", fieldId: "name", operator: "contains", variant: "text", value: "nova" },
+      { id: "b", fieldId: "name", operator: "doesNotContain", variant: "text", value: "ii" },
+    ]
+    const params = queryToSearchParams({ ...emptyQuery, filters })
+    expect(params["f.name"]).toBe("nova;doesNotContain:ii")
+
+    const parsed = queryFromSearchParams(new URLSearchParams(params), [
+      { id: "name", variant: "text" },
+    ])
+    expect(parsed.filters).toEqual([
+      { id: "name~0", fieldId: "name", operator: "contains", variant: "text", value: "nova" },
+      { id: "name~1", fieldId: "name", operator: "doesNotContain", variant: "text", value: "ii" },
+    ])
+  })
+
+  test("a value that looks like an operator, or holds a separator, survives the trip", () => {
+    const filters: FilterCondition[] = [
+      // "https" is not an operator, so this stays a link rather than becoming a filter.
+      { id: "a", fieldId: "link", operator: "contains", variant: "text", value: "https://q.de" },
+      // "is" *is* a text operator, and ";" is the separator — both escaped.
+      { id: "b", fieldId: "note", operator: "contains", variant: "text", value: "is:a;b 100%" },
+    ]
+    const params = new URLSearchParams(queryToSearchParams({ ...emptyQuery, filters }))
+    const parsed = queryFromSearchParams(params, [
+      { id: "link", variant: "text" },
+      { id: "note", variant: "text" },
+    ])
+    expect(parsed.filters.map((condition) => condition.value)).toEqual([
+      "https://q.de",
+      "is:a;b 100%",
+    ])
+    expect(parsed.filters.every((condition) => condition.operator === "contains")).toBe(true)
   })
 })
 

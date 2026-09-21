@@ -31,9 +31,12 @@ import {
 import {
   type DataTableFilterOption,
   type DataTableFilterVariant,
+  defaultOperator,
   type FilterField,
+  type FilterOperator,
   type FilterValues,
   isFilterSet,
+  operatorLabel,
 } from "@/lib/data-table"
 import { cn } from "@/lib/utils"
 
@@ -59,6 +62,13 @@ import { cn } from "@/lib/utils"
  * - **Narrow** — the whole set collapses to one counted `Filters (2)` button
  *   opening a `Sheet`, with `FilterChips` left on the page to say what is
  *   active. Nothing about the fields changes; only where they are drawn.
+ *
+ * `FilterBuilder` is the third surface over the same model, and the one this
+ * bar cannot be: a list of `Where [Field] [operator] [Value]` rows. A pill is
+ * one control per field, so `values` is a map keyed by field and that is all it
+ * can ever hold — "is not", and two conditions on one field, need the condition
+ * list instead (task #193). The two share this panel; only the operator differs,
+ * and here it is always the variant's default.
  *
  * `FilterPanel` and `FilterChips` are the table's own filter chrome, renamed:
  * `table-controls` re-exports them as `TableFilterPanel` / `TableFilterChips`,
@@ -184,6 +194,14 @@ export interface FilterPanelProps {
   variant: DataTableFilterVariant
   /** Current applied value, in the shape `matchesFilter` expects for `variant`. */
   value: unknown
+  /**
+   * The question the value answers. The panel neither picks it nor changes it —
+   * it collects a value, and whatever mounted it owns the operator: a column
+   * header has only ever had one, a condition row draws its own select. All the
+   * panel does with it is say it, so `Name contains` does not sit above a box
+   * whose result the row beside it reads as `does not contain`.
+   */
+  operator?: FilterOperator
   onApply: (value: unknown) => void
   onClear: () => void
   /**
@@ -240,6 +258,7 @@ export function FilterPanel({
   label,
   variant,
   value,
+  operator,
   onApply,
   onClear,
   onClose,
@@ -330,7 +349,7 @@ export function FilterPanel({
       {variant === "text" && (
         <ConformField
           field={fields.text}
-          label={`${label} contains`}
+          label={`${label} ${operatorLabel(operator ?? defaultOperator("text"))}`}
           placeholder="Type to match…"
           onChange={live("text")}
         />
@@ -590,7 +609,19 @@ export function FilterChips({
 export function describeFilter(
   variant: DataTableFilterVariant | undefined,
   value: unknown,
+  operator?: FilterOperator,
 ): string {
+  const text = describeFilterValue(variant, value)
+  // The default operator is the one the variant has always implied, and naming
+  // it turns every chip that was ever drawn into "Status is Paid". Only a
+  // question the reader would otherwise get wrong is worth the words — which is
+  // exactly the negated and narrowed ones.
+  return operator == null || operator === defaultOperator(variant)
+    ? text
+    : `${operatorLabel(operator)} ${text}`
+}
+
+function describeFilterValue(variant: DataTableFilterVariant | undefined, value: unknown): string {
   if (variant === "number" || variant === "date") {
     const [from, to] = Array.isArray(value) ? value : [null, null]
     if (from != null && from !== "" && to != null && to !== "") return `${from} – ${to}`
