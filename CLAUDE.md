@@ -169,9 +169,22 @@ Three rules the shapes obey, each of which was once broken here:
    used to render the same `<Skeleton>` for "still loading" and for "there is no source", so a
    component whose source never made it into the build pulsed forever. If it is not coming, say so
    in words — `SourceUnavailable`.
-3. **Nothing in a fallback is random.** The site is prerendered, so a `Math.random()` width bakes
-   one number into the HTML and rolls another at hydration. Widths cycle through a fixed list by
-   index.
+3. **Nothing in a fallback is random.** A `Math.random()` width draws a different skeleton every
+   time the same section suspends, and in a prerendered page it would bake one number into the HTML
+   and roll another at hydration. Widths cycle through a fixed list by index.
+
+None of these fallbacks reaches a built file, and that is deliberate rather than incidental. The
+prerender renders with `onAllReady` *and* an unbounded `progressiveChunkSize` — two settings, both
+needed, both in `src/lib/document-shape.ts` with the argument for each. Without them React writes
+the page as the transcript of a stream: the fallback in the content position behind a `<!--$?-->`
+marker, the real content appended at the end of the document in a `<div hidden id="S:n">` with a
+`$RC` call to swap them. A browser cannot tell the difference. Everything the prerender exists for
+— SEO, social, AI readers, anything that reads the HTML without executing it — finds a skeleton
+where the gallery belongs, which is what every component page shipped until task #200.
+`onAllReady` alone does not fix it: React outlines a boundary that has *already resolved* if its
+content is larger than `progressiveChunkSize`, whose default is 12800 bytes, and a gallery is tens
+of kilobytes. `scripts/check-prerender.ts` greps the built HTML for all three marks and fails
+`bun run build`; `tests/prerender-completeness.test.tsx` is the half CI can run without a build.
 
 Two things about hydration that are easy to get wrong and are pinned by
 `tests/hydration-boundaries.test.tsx`: the prerendered HTML holds the *resolved* boundary, and React

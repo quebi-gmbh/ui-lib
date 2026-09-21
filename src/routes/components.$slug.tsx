@@ -61,15 +61,13 @@ export function meta({ loaderData: d }: Route.MetaArgs) {
  * would run after the markup was already emitted — the examples would simply be
  * missing from the static page.
  *
- * What the build writes for this route is worth knowing exactly, because it is
- * not quite what `src/entry.server.tsx` reads like. The prerender streams: the
- * fallback goes out in place with a `<!--$?-->` marker, and each boundary's real
- * content lands at the end of the document in a `<div hidden id="S:n">` with a
- * `$RC` call after it. The browser's parser runs that script and swaps the
- * content in before hydration, so the finished HTML does hold the resolved
- * gallery and the DOM React hydrates is the same one `onAllReady` would have
- * produced — but a reader of the file who greps the built page for an example
- * will not find it where the fallback is.
+ * What the build writes for this route is the resolved gallery, inline, inside
+ * the boundary's `<!--$-->` markers, where the fallback would otherwise be —
+ * `grep 'data-slot="card"' build/client/components/badge/index.html` finds the
+ * example cards. That is not React's default and it is not free: the two
+ * settings that buy it are in `src/lib/document-shape.ts`, and until task #200
+ * this page shipped its gallery in a `<div hidden>` at the end of the document
+ * with a skeleton in its place.
  *
  * Which raises the question this route's boundaries had to answer before any of
  * the skeletons below were worth drawing: that markup is in place when React
