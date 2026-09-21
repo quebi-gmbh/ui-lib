@@ -177,6 +177,46 @@ const WithDayReadout = () => {
   )
 }
 
+const DragToMove = () => {
+  const start = weekStart()
+  const [events, setEvents] = useState<CalendarEvent[]>(() => week(start))
+  const [moved, setMoved] = useState<string | null>(null)
+
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <WeekView
+        events={events}
+        calendars={CALENDARS}
+        timeZone={TIME_ZONE}
+        startHour={8}
+        endHour={20}
+        height={440}
+        // Movable is a question about the event, not about the view: the
+        // standups belong to the team and nobody drags those.
+        isEventEditable={(event) => !event.id.startsWith("standup")}
+        // The view moves nothing. It reports where the event was dropped, and
+        // this is the state that decides whether it goes there — refuse the
+        // change by not writing it, and the block stays where it was.
+        onEventChange={(event, next) => {
+          setEvents((current) =>
+            current.map((candidate) =>
+              candidate.id === event.id
+                ? { ...candidate, start: next.start, end: next.end }
+                : candidate,
+            ),
+          )
+          setMoved(event.title)
+        }}
+      />
+      <p className="text-quebi-fg-muted text-sm">
+        {moved
+          ? `Moved: ${moved}`
+          : "Drag an event to another time or another day — or tab to one and use the arrow keys."}
+      </p>
+    </div>
+  )
+}
+
 export const weekViewExamples: ComponentExample[] = [
   {
     title: "Default",
@@ -201,5 +241,11 @@ export const weekViewExamples: ComponentExample[] = [
     description:
       "onEventClick fires on every activation and receives the event object you passed in, so you can open your own detail panel from it.",
     render: () => <WithDayReadout />,
+  },
+  {
+    title: "Drag to move",
+    description:
+      "isEventEditable says which events may be picked up and onEventChange reports where one was dropped, snapped to the slot grid and never outside the hours the axis draws. The arrow keys do the same thing from the keyboard — a slot up or down, a day left or right — and the ghost shows where the event is about to land. Your state decides whether it actually lands there.",
+    render: () => <DragToMove />,
   },
 ]
