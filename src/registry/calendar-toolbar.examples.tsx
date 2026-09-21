@@ -138,24 +138,32 @@ const TodayInThePopover = () => {
 }
 
 const EverythingInThePopover = () => {
+  const [view, setView] = useState<CalendarViewName>("week")
   const [anchor, setAnchor] = useState<CalendarDate>(() => today(TIME_ZONE))
+
+  const byMonth = view === "month"
+  const step = byMonth ? { months: 1 } : { weeks: 1 }
 
   return (
     <CalendarToolbar
-      label={calendarRangeLabel(week(anchor), { locale: LOCALE, timeZone: TIME_ZONE })}
+      label={
+        byMonth
+          ? calendarMonthLabel(anchor, { locale: LOCALE, timeZone: TIME_ZONE })
+          : calendarRangeLabel(week(anchor), { locale: LOCALE, timeZone: TIME_ZONE })
+      }
       labelVariant="picker"
-      pickerGranularity="week"
+      pickerGranularity={byMonth ? "month" : "week"}
       locale={LOCALE}
       date={anchor}
       onDateChange={setAnchor}
       navigationPlacement="popover"
       todayPlacement="popover"
       todayLabel="Heute"
-      view="week"
+      view={view}
       views={["week", "month"]}
-      onViewChange={() => {}}
-      onPrevious={() => setAnchor(anchor.subtract({ weeks: 1 }))}
-      onNext={() => setAnchor(anchor.add({ weeks: 1 }))}
+      onViewChange={setView}
+      onPrevious={() => setAnchor(anchor.subtract(step))}
+      onNext={() => setAnchor(anchor.add(step))}
       onToday={() => setAnchor(today(TIME_ZONE))}
     >
       <CalendarLegend calendars={CALENDARS} />
@@ -259,7 +267,7 @@ export const calendarToolbarExamples: ComponentExample[] = [
   {
     title: "Nothing in the bar but the date",
     description:
-      "`navigationPlacement` moves the chevrons too, which leaves the toolbar with the date, the view switcher and whatever chrome you put beside it \u2014 the shape to reach for when the row is crowded. The chevrons then step the *view* while the grid above them pages its own month, so they name their unit: `Previous week`, not `Previous`. That second chevron pair is the cost of this variant; a toolbar with room for a bar is better off keeping them in it.",
+      "`navigationPlacement` moves the chevrons too, which leaves the toolbar with the date, the view switcher and whatever chrome you put beside it \u2014 the shape to reach for when the row is crowded. The chevrons then step the *view* while the grid above them pages its own month, so they name their unit: `Previous week` here, `Previous month` once the switcher is moved, never a bare `Previous`. The switcher is wired to state like every other one \u2014 a handler that does nothing would leave it looking pressable and re-asserting the same selection, which is the shape `onViewChange` being absent is drawn disabled to avoid. That second chevron pair is the cost of this variant; a toolbar with room for a bar is better off keeping them in it.",
     render: () => <EverythingInThePopover />,
   },
   {
