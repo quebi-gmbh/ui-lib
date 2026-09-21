@@ -70,6 +70,7 @@ import { dataTableMeta } from "./data-table.meta"
 import { dateFieldMeta } from "./date-field.meta"
 import { datePickerMeta } from "./date-picker.meta"
 import { dateRangePickerMeta } from "./date-range-picker.meta"
+import { dayScheduleMinimapMeta } from "./day-schedule-minimap.meta"
 import { dayScheduleMeta } from "./day-schedule.meta"
 import { dayViewMeta } from "./day-view.meta"
 import { descriptionListMeta } from "./description-list.meta"
@@ -226,6 +227,7 @@ export const metaRegistry: ComponentMeta[] = [
   datePickerMeta,
   dateRangePickerMeta,
   dayScheduleMeta,
+  dayScheduleMinimapMeta,
   dayViewMeta,
   descriptionListMeta,
   dialogMeta,

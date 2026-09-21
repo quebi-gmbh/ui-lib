@@ -1,9 +1,10 @@
 "use client"
 
 import { Time } from "@internationalized/date"
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useLayoutEffect, useRef, useState } from "react"
 import type { TimeValue } from "react-aria-components"
 import { cn } from "@/lib/utils"
+import { DayScheduleMinimap, minimapScrollTop } from "@/components/day-schedule-minimap"
 import { TimeField, TimeInput } from "@/components/time-field"
 
 /**
@@ -385,8 +386,51 @@ export interface DayScheduleProps extends Omit<React.ComponentProps<"div">, "onC
   minDuration?: number
   /** Gap between axis labels and gridlines, in minutes. */
   tickInterval?: number
-  /** Track height in pixels. */
+  /**
+   * Height in pixels of the part you can see. At the default `zoom` of 1 that
+   * is also the track's height, because the whole day fits in it.
+   */
   height?: number
+  /**
+   * How many viewports tall the day is drawn. `1` is the whole day at once —
+   * every schedule that existed before this. Above it the track becomes
+   * `height × zoom` and the viewport scrolls, which is what buys a 15-minute
+   * meeting enough pixels to aim a pointer at.
+   *
+   * Everything the component positions is a percentage of the track, so zoom
+   * costs the layout nothing: the names de-overlap against the taller track and
+   * therefore collide less, and a drag still reads its minute from the track's
+   * own box rather than from what happens to be on screen.
+   *
+   * What a drag does not do is scroll. Dragging a span to an hour that is off
+   * screen means scrolling there first — by the map, the wheel, or the arrow
+   * keys on the span itself, which the browser scrolls into view as focus
+   * moves. Auto-scrolling at the viewport's edges is the other answer, and it
+   * is one that has to be tuned against a pointer that is merely near the edge
+   * on its way somewhere else; the keyboard path already covers the case.
+   */
+  zoom?: number
+  /**
+   * Draw a {@link DayScheduleMinimap} beside the viewport — the whole day at
+   * 36px wide, one line per span, with a rectangle marking the slice on screen.
+   * Click or drag it to scroll there.
+   *
+   * It replaces the viewport's scrollbar rather than joining it: two bars down
+   * one side of a schedule, one of which is also a map, is a choice nobody
+   * wants to make. Useful precisely when `zoom` is above 1 — at 1 the rectangle
+   * covers the strip, because the window really is the day.
+   */
+  minimap?: boolean
+  /**
+   * The minute to open scrolled to, centred in the viewport. Only does anything
+   * with a `zoom` above 1, where there is somewhere else to be.
+   *
+   * Without it a zoomed schedule opens at 00:00, which is the one hour of the
+   * day nothing is ever booked in — every consumer would write the same
+   * scroll-on-mount effect, against a viewport this component does not hand
+   * out. `540` is nine in the morning.
+   */
+  startMinute?: number
   /**
    * Horizontal distance between lanes, in pixels. Defaults to 18, to 24 in
    * `timeLabels="editable"` — where the rotated control wants to be separately
@@ -436,6 +480,9 @@ export function DaySchedule({
   minDuration = 30,
   tickInterval = 120,
   height = 560,
+  zoom = 1,
+  minimap = false,
+  startMinute,
   laneGap: laneGapProp,
   laneOffset = 24,
   timeLabels,
@@ -462,6 +509,26 @@ export function DaySchedule({
   const isControlled = controlledSpans !== undefined
   const spans = isControlled ? controlledSpans : uncontrolled
   const trackRef = useRef<HTMLDivElement>(null)
+  const viewportRef = useRef<HTMLDivElement>(null)
+
+  // Zoom below 1 would be a track shorter than the box holding it, which is a
+  // gap at the bottom rather than a smaller day.
+  const scale = Math.max(1, zoom)
+  const trackHeight = Math.round(height * scale)
+
+  // Before paint rather than after it: this is where the viewport *starts*, and
+  // a scroll applied in a passive effect is a visible jump away from midnight.
+  // It runs on mount and when the minute asked for changes — not on every
+  // render, which would fight the user's own scrolling.
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current
+    if (!viewport || startMinute === undefined) return
+    viewport.scrollTop = minimapScrollTop(
+      startMinute / DAY_MINUTES,
+      viewport.scrollHeight,
+      viewport.clientHeight,
+    )
+  }, [startMinute])
 
   const interactive = !isDisabled && !isReadOnly
 
@@ -585,197 +652,232 @@ export function DaySchedule({
     Math.max(0, spans.length - 1) * laneGap +
     (isUpright ? UPRIGHT_NAME_CLEARANCE : NAME_CLEARANCE)
   // …and clear of each other, which the column on its own does not give you.
-  const nameTops = layoutNames(spans, height)
+  const nameTops = layoutNames(spans, trackHeight)
 
   return (
     <div
       className={cn(
-        "flex w-full gap-2.5 font-sans select-none",
+        "flex w-full gap-2 font-sans select-none",
         isDisabled && "pointer-events-none opacity-50",
         className,
       )}
       {...props}
     >
-      {/* Hour axis */}
+      {/* The viewport. At zoom 1 the track exactly fills it and it never
+          scrolls, which is why this wrapper changes nothing for a schedule that
+          does not ask for a zoom. */}
       <div
-        className="relative w-10 flex-none border-r border-quebi-line/10"
+        ref={viewportRef}
+        // Named so something outside can find the thing that scrolls — a test
+        // asserting where the window landed, a scene posing one for a
+        // screenshot. The minimap does not need it; it is handed the ref.
+        data-day-schedule-viewport=""
+        className={cn(
+          "min-w-0 flex-1 overflow-y-auto overscroll-y-contain",
+          // The map replaces the bar rather than sitting next to it.
+          minimap ? "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : "quebi-scrollbar",
+        )}
         style={{ height }}
-        aria-hidden="true"
       >
-        {tickMinutes.map((minute) => (
+        <div className="flex w-full gap-2.5">
+          {/* Hour axis */}
           <div
-            key={minute}
-            className="absolute left-0 -translate-y-1/2 text-[9.5px] text-quebi-fg-subtle tabular-nums"
-            style={{ top: toPercent(minute) }}
-          >
-            {minute === DAY_MINUTES ? "24:00" : formatTime(minute)}
-          </div>
-        ))}
-      </div>
-
-      {/* Span track */}
-      <div ref={trackRef} className="relative flex-1" style={{ height }}>
-        {tickMinutes.map((minute) => (
-          <div
-            key={minute}
+            className="relative w-10 flex-none border-r border-quebi-line/10"
+            style={{ height: trackHeight }}
             aria-hidden="true"
-            className="absolute inset-x-0 h-px bg-quebi-line/[0.06]"
-            style={{ top: toPercent(minute) }}
-          />
-        ))}
-
-        {spans.map((span, index) => {
-          const tone = TONES[span.tone ?? (index % 2 === 0 ? "brand" : "cyan")]
-          const laneX = laneOffset + index * laneGap
-          const lane = `${laneX}px`
-          const valueText = `${span.label}, ${formatTime(span.start)} to ${formatTime(span.end)}`
-          // Rotated, a span's two times run away from each other along the
-          // lane and cannot collide; upright they are one column, kept apart
-          // by the sweep rather than by the span happening to be long enough.
-          const edgeTops = isUpright ? layoutEdgeTimes(span, height) : null
-          const edgeTop = (edge: SpanEdge) =>
-            edgeTops ? `${edgeTops[edge]}px` : toPercent(span[edge])
-          const edgeTransform = EDGE_TRANSFORM[isUpright ? "upright" : "rotated"]
-          // Where the name would sit if nothing were in its way, and where it
-          // actually sits. A name that had to move gets a leader line back to
-          // its own span, because the tone alone repeats every other lane.
-          const midpointY = round((((span.start + span.end) / 2) * height) / DAY_MINUTES)
-          const nameTop = nameTops[index]
-          const isNameMoved = Math.abs(nameTop - midpointY) >= 1
-
-          return (
-            // biome-ignore lint/a11y/useSemanticElements: <fieldset> is the element for this role, but this wrapper only exists to name the three sliders below it and has no box of its own — a fieldset brings a UA border, padding and `min-inline-size: min-content` into a track whose children are absolutely positioned against it.
-            <div key={span.id} role="group" aria-label={span.label}>
-              {/* Body — drag to move the whole span */}
+          >
+            {tickMinutes.map((minute) => (
               <div
-                role="slider"
-                tabIndex={interactive ? 0 : -1}
-                aria-label={`${span.label} span`}
-                aria-valuemin={0}
-                aria-valuemax={DAY_MINUTES}
-                aria-valuenow={span.start}
-                aria-valuetext={valueText}
-                aria-disabled={isDisabled || undefined}
-                aria-readonly={isReadOnly || undefined}
-                onPointerDown={(e) => startDrag(e, index, "body")}
-                onKeyDown={(e) => handleKeyDown(e, index, "body")}
-                className={cn(
-                  "absolute w-[5px] -translate-x-1/2 rounded-[3px] outline-hidden",
-                  "touch-none transition-shadow duration-150",
-                  tone.bar,
-                  interactive ? "cursor-grab active:cursor-grabbing" : "cursor-default",
-                  "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-                )}
-                style={{
-                  left: lane,
-                  top: toPercent(span.start),
-                  height: toPercent(span.end - span.start),
-                }}
-              />
-
-              {/* Start / end handles */}
-              {(["start", "end"] as const).map((part) => (
-                <div
-                  key={part}
-                  role="slider"
-                  tabIndex={interactive ? 0 : -1}
-                  aria-label={`${span.label} ${part} time`}
-                  aria-valuemin={0}
-                  aria-valuemax={DAY_MINUTES}
-                  aria-valuenow={span[part]}
-                  aria-valuetext={formatTime(span[part])}
-                  aria-disabled={isDisabled || undefined}
-                  aria-readonly={isReadOnly || undefined}
-                  onPointerDown={(e) => startDrag(e, index, part)}
-                  onKeyDown={(e) => handleKeyDown(e, index, part)}
-                  className={cn(
-                    "absolute size-[11px] -translate-x-1/2 -translate-y-1/2 rounded-full",
-                    "border-2 bg-quebi-bg outline-hidden touch-none",
-                    "transition-transform duration-150",
-                    tone.node,
-                    interactive ? "cursor-ns-resize hover:scale-110" : "cursor-default",
-                    "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-                  )}
-                  style={{ left: lane, top: toPercent(span[part]) }}
-                />
-              ))}
-
-              {/* Leader line — only drawn for a name that had to move.
-                  `currentColor` and not a `stroke` attribute on purpose: a
-                  colour that reaches the DOM only as an attribute value is a
-                  name Tailwind never scans, so the variable behind it may not
-                  be emitted at all. A utility class on the <svg> is scanned. */}
-              {isNameMoved && (
-                <svg
-                  aria-hidden="true"
-                  focusable="false"
-                  className={cn(
-                    "pointer-events-none absolute inset-0 h-full w-full opacity-40",
-                    tone.text,
-                  )}
-                >
-                  <line
-                    x1={laneX + 6}
-                    y1={midpointY}
-                    x2={labelOffset - 4}
-                    y2={nameTop}
-                    stroke="currentColor"
-                    strokeWidth={1}
-                    strokeDasharray="2 3"
-                  />
-                </svg>
-              )}
-
-              {/* Name */}
-              <div
-                className={cn(
-                  "absolute -translate-y-1/2 whitespace-nowrap text-xs",
-                  tone.text,
-                )}
-                style={{ left: `${labelOffset}px`, top: `${nameTop}px` }}
+                key={minute}
+                className="absolute left-0 -translate-y-1/2 text-[9.5px] text-quebi-fg-subtle tabular-nums"
+                style={{ top: toPercent(minute) }}
               >
-                {span.label}
+                {minute === DAY_MINUTES ? "24:00" : formatTime(minute)}
               </div>
+            ))}
+          </div>
 
-              {/* Edge times — text, or a field to type one into */}
-              {labelMode === "static" &&
-                (["start", "end"] as const).map((edge) => (
+          {/* Span track */}
+          <div ref={trackRef} className="relative flex-1" style={{ height: trackHeight }}>
+            {tickMinutes.map((minute) => (
+              <div
+                key={minute}
+                aria-hidden="true"
+                className="absolute inset-x-0 h-px bg-quebi-line/[0.06]"
+                style={{ top: toPercent(minute) }}
+              />
+            ))}
+
+            {spans.map((span, index) => {
+              const tone = TONES[span.tone ?? (index % 2 === 0 ? "brand" : "cyan")]
+              const laneX = laneOffset + index * laneGap
+              const lane = `${laneX}px`
+              const valueText = `${span.label}, ${formatTime(span.start)} to ${formatTime(span.end)}`
+              // Rotated, a span's two times run away from each other along the
+              // lane and cannot collide; upright they are one column, kept apart
+              // by the sweep rather than by the span happening to be long enough.
+              const edgeTops = isUpright ? layoutEdgeTimes(span, trackHeight) : null
+              const edgeTop = (edge: SpanEdge) =>
+                edgeTops ? `${edgeTops[edge]}px` : toPercent(span[edge])
+              const edgeTransform = EDGE_TRANSFORM[isUpright ? "upright" : "rotated"]
+              // Where the name would sit if nothing were in its way, and where it
+              // actually sits. A name that had to move gets a leader line back to
+              // its own span, because the tone alone repeats every other lane.
+              const midpointY = round((((span.start + span.end) / 2) * trackHeight) / DAY_MINUTES)
+              const nameTop = nameTops[index]
+              const isNameMoved = Math.abs(nameTop - midpointY) >= 1
+
+              return (
+                // biome-ignore lint/a11y/useSemanticElements: <fieldset> is the element for this role, but this wrapper only exists to name the three sliders below it and has no box of its own — a fieldset brings a UA border, padding and `min-inline-size: min-content` into a track whose children are absolutely positioned against it.
+                <div key={span.id} role="group" aria-label={span.label}>
+                  {/* Body — drag to move the whole span */}
                   <div
-                    key={edge}
-                    aria-hidden="true"
-                    className="absolute origin-top-left whitespace-nowrap text-[10.5px] text-quebi-fg-muted tabular-nums"
+                    role="slider"
+                    tabIndex={interactive ? 0 : -1}
+                    aria-label={`${span.label} span`}
+                    aria-valuemin={0}
+                    aria-valuemax={DAY_MINUTES}
+                    aria-valuenow={span.start}
+                    aria-valuetext={valueText}
+                    aria-disabled={isDisabled || undefined}
+                    aria-readonly={isReadOnly || undefined}
+                    onPointerDown={(e) => startDrag(e, index, "body")}
+                    onKeyDown={(e) => handleKeyDown(e, index, "body")}
+                    className={cn(
+                      "absolute w-[5px] -translate-x-1/2 rounded-[3px] outline-hidden",
+                      "touch-none transition-shadow duration-150",
+                      tone.bar,
+                      interactive ? "cursor-grab active:cursor-grabbing" : "cursor-default",
+                      "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+                    )}
                     style={{
                       left: lane,
-                      top: edgeTop(edge),
-                      transform: edgeTransform[edge],
+                      top: toPercent(span.start),
+                      height: toPercent(span.end - span.start),
                     }}
-                  >
-                    {formatTime(span[edge])}
-                  </div>
-                ))}
-
-              {labelMode === "editable" &&
-                (["start", "end"] as const).map((edge) => (
-                  <EdgeTimeField
-                    key={edge}
-                    label={`${span.label} ${edge} time`}
-                    minutes={span[edge]}
-                    lane={lane}
-                    top={edgeTop(edge)}
-                    transform={edgeTransform[edge]}
-                    isDisabled={isDisabled}
-                    isReadOnly={isReadOnly}
-                    // Through the same clamp a drag uses, so `minDuration` and
-                    // the day bounds stay in one place. It does not snap, and
-                    // that is deliberate: typing 13:07 and getting 13:00 back
-                    // would be the control disagreeing with the keyboard.
-                    onCommit={(minute) => applyMove(index, edge, minute, span)}
                   />
-                ))}
-            </div>
-          )
-        })}
+
+                  {/* Start / end handles */}
+                  {(["start", "end"] as const).map((part) => (
+                    <div
+                      key={part}
+                      role="slider"
+                      tabIndex={interactive ? 0 : -1}
+                      aria-label={`${span.label} ${part} time`}
+                      aria-valuemin={0}
+                      aria-valuemax={DAY_MINUTES}
+                      aria-valuenow={span[part]}
+                      aria-valuetext={formatTime(span[part])}
+                      aria-disabled={isDisabled || undefined}
+                      aria-readonly={isReadOnly || undefined}
+                      onPointerDown={(e) => startDrag(e, index, part)}
+                      onKeyDown={(e) => handleKeyDown(e, index, part)}
+                      className={cn(
+                        "absolute size-[11px] -translate-x-1/2 -translate-y-1/2 rounded-full",
+                        "border-2 bg-quebi-bg outline-hidden touch-none",
+                        "transition-transform duration-150",
+                        tone.node,
+                        interactive ? "cursor-ns-resize hover:scale-110" : "cursor-default",
+                        "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+                      )}
+                      style={{ left: lane, top: toPercent(span[part]) }}
+                    />
+                  ))}
+
+                  {/* Leader line — only drawn for a name that had to move.
+                      `currentColor` and not a `stroke` attribute on purpose: a
+                      colour that reaches the DOM only as an attribute value is a
+                      name Tailwind never scans, so the variable behind it may not
+                      be emitted at all. A utility class on the <svg> is scanned. */}
+                  {isNameMoved && (
+                    <svg
+                      aria-hidden="true"
+                      focusable="false"
+                      className={cn(
+                        "pointer-events-none absolute inset-0 h-full w-full opacity-40",
+                        tone.text,
+                      )}
+                    >
+                      <line
+                        x1={laneX + 6}
+                        y1={midpointY}
+                        x2={labelOffset - 4}
+                        y2={nameTop}
+                        stroke="currentColor"
+                        strokeWidth={1}
+                        strokeDasharray="2 3"
+                      />
+                    </svg>
+                  )}
+
+                  {/* Name */}
+                  <div
+                    className={cn(
+                      "absolute -translate-y-1/2 whitespace-nowrap text-xs",
+                      tone.text,
+                    )}
+                    style={{ left: `${labelOffset}px`, top: `${nameTop}px` }}
+                  >
+                    {span.label}
+                  </div>
+
+                  {/* Edge times — text, or a field to type one into */}
+                  {labelMode === "static" &&
+                    (["start", "end"] as const).map((edge) => (
+                      <div
+                        key={edge}
+                        aria-hidden="true"
+                        className="absolute origin-top-left whitespace-nowrap text-[10.5px] text-quebi-fg-muted tabular-nums"
+                        style={{
+                          left: lane,
+                          top: edgeTop(edge),
+                          transform: edgeTransform[edge],
+                        }}
+                      >
+                        {formatTime(span[edge])}
+                      </div>
+                    ))}
+
+                  {labelMode === "editable" &&
+                    (["start", "end"] as const).map((edge) => (
+                      <EdgeTimeField
+                        key={edge}
+                        label={`${span.label} ${edge} time`}
+                        minutes={span[edge]}
+                        lane={lane}
+                        top={edgeTop(edge)}
+                        transform={edgeTransform[edge]}
+                        isDisabled={isDisabled}
+                        isReadOnly={isReadOnly}
+                        // Through the same clamp a drag uses, so `minDuration` and
+                        // the day bounds stay in one place. It does not snap, and
+                        // that is deliberate: typing 13:07 and getting 13:00 back
+                        // would be the control disagreeing with the keyboard.
+                        onCommit={(minute) => applyMove(index, edge, minute, span)}
+                      />
+                    ))}
+                </div>
+              )
+            })}
+          </div>
+        </div>
       </div>
+
+      {minimap && (
+        <DayScheduleMinimap
+          // The tone the schedule actually drew, not the one the span declared:
+          // the default alternates by array position, and a line whose colour
+          // disagrees with its bar is worse than no colour at all.
+          spans={spans.map((span, index) => ({
+            id: span.id,
+            start: span.start,
+            end: span.end,
+            tone: span.tone ?? (index % 2 === 0 ? ("brand" as const) : ("cyan" as const)),
+          }))}
+          viewportRef={viewportRef}
+          scale={scale}
+        />
+      )}
     </div>
   )
 }

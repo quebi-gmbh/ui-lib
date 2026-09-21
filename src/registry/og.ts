@@ -80,6 +80,7 @@ import { dataTableOgScene } from "./data-table.og"
 import { dateFieldOgScene } from "./date-field.og"
 import { datePickerOgScene } from "./date-picker.og"
 import { dateRangePickerOgScene } from "./date-range-picker.og"
+import { dayScheduleMinimapOgScene } from "./day-schedule-minimap.og"
 import { dayScheduleOgScene } from "./day-schedule.og"
 import { dayViewOgScene } from "./day-view.og"
 import { descriptionListOgScene } from "./description-list.og"
@@ -235,6 +236,7 @@ export const ogScenes: Record<string, OgScene> = {
   "date-picker": datePickerOgScene,
   "date-range-picker": dateRangePickerOgScene,
   "day-schedule": dayScheduleOgScene,
+  "day-schedule-minimap": dayScheduleMinimapOgScene,
   "day-view": dayViewOgScene,
   "description-list": descriptionListOgScene,
   "dialog": dialogOgScene,

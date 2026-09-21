@@ -71,6 +71,7 @@ import { dataTableExamples } from "./data-table.examples"
 import { dateFieldExamples } from "./date-field.examples"
 import { datePickerExamples } from "./date-picker.examples"
 import { dateRangePickerExamples } from "./date-range-picker.examples"
+import { dayScheduleMinimapExamples } from "./day-schedule-minimap.examples"
 import { dayScheduleExamples } from "./day-schedule.examples"
 import { dayViewExamples } from "./day-view.examples"
 import { descriptionListExamples } from "./description-list.examples"
@@ -227,6 +228,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "date-picker": datePickerExamples,
   "date-range-picker": dateRangePickerExamples,
   "day-schedule": dayScheduleExamples,
+  "day-schedule-minimap": dayScheduleMinimapExamples,
   "day-view": dayViewExamples,
   "description-list": descriptionListExamples,
   "dialog": dialogExamples,
