@@ -78,6 +78,17 @@ describe("the table family's dependency arrows", () => {
     }
   })
 
+  test("the rail borrows the bar's chips, and the bar knows nothing of the rail", () => {
+    // Two filter surfaces for two jobs — a bar above a working list, a rail
+    // beside a browse surface — over one model. `FilterRailSummary` is
+    // `FilterChips` with the rail's values poured into it, so the arrow runs
+    // rail → bar. Back the other way and the two surfaces are one component
+    // that has to know which of them it currently is, which is the shape this
+    // pair was split to avoid.
+    expect(graph.get("filter-rail")).toContain("filter-bar")
+    expect([...closure("filter-bar")]).not.toContain("filter-rail")
+  })
+
   test("neither shared part depends on a mode", () => {
     for (const part of ["table-shell", "table-controls"]) {
       expect(graph.get(part)).not.toContain("data-table")

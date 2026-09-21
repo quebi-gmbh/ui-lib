@@ -562,6 +562,13 @@ export interface FilterField {
   options?: DataTableFilterOption[]
   /** Faceted min/max, used to label a number range. */
   bounds?: [number, number]
+  /**
+   * The granularity of a bounded range, for a surface that draws it as a
+   * slider rather than as two typed bounds — `FilterRail` does. 1 is right for
+   * a price in whole euros and useless for one in cents over a million, which
+   * is why it is the field's to say and not the control's to guess.
+   */
+  step?: number
 }
 
 /** Every field's current filter, by field id, in the shape its variant expects. */
@@ -629,6 +636,13 @@ export function facetCounts<T>(
   getValue: (row: T, fieldId: string) => unknown = fieldValue,
 ): DataTableFilterOption[] {
   const others = fields.filter((field) => field.id !== fieldId)
+  // A field that declares its own options keeps them: they carry the labels
+  // (`live` shown as "Live") and the order the caller chose, and reading the
+  // domain off the rows instead would throw both away and re-sort the list
+  // alphabetically. Counts land on them by value, which is `facetedOptions`'
+  // own rule — a declared list whose values name something else is left
+  // uncounted rather than zeroed.
+  const declared = fields.find((field) => field.id === fieldId)?.options
   const counts = new Map<unknown, number>()
   for (const row of rows) {
     const raw = getValue(row, fieldId)
@@ -641,6 +655,7 @@ export function facetCounts<T>(
   }
   const selected = values[fieldId]
   return facetedOptions({
+    declared: declared && declared.length > 0 ? declared : undefined,
     domain: [...counts.keys()].map(String),
     counts,
     selected: Array.isArray(selected) ? selected.map(String) : [],
