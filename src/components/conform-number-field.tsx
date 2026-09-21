@@ -19,7 +19,6 @@ export interface ConformNumberFieldProps
     | "form"
     | "value"
     | "defaultValue"
-    | "onChange"
     | "minValue"
     | "maxValue"
     | "isRequired"
@@ -32,6 +31,14 @@ export interface ConformNumberFieldProps
   field: FieldMetadata<number | string>
   label?: string
   description?: string
+  /*
+   * `onChange` is forwarded rather than omitted with `value` / `defaultValue`.
+   * Those are bound — the field metadata owns them, and setting one by hand is
+   * the bug the conform-* variants exist to prevent. A change callback binds
+   * nothing: it is how a caller watches a field it does not control, which is
+   * what `FilterPanel`'s live-apply mode needs to commit a range as it is
+   * typed. The form value still comes from the input, not from the callback.
+   */
   /**
    * Hide the increment / decrement steppers. Forwarded to `NumberInput`,
    * because a narrow field has no room for them: they are ~74px wide and the

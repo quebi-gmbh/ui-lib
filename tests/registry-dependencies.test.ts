@@ -64,6 +64,20 @@ describe("the table family's dependency arrows", () => {
     expect(graph.get("table-controls")).not.toContain("table-shell")
   })
 
+  test("the filter chrome depends on no table, which is what lets the table import it", () => {
+    // `FilterPanel` and `FilterChips` live in `filter-bar` and are re-exported
+    // by `table-controls` under the names the table family already used. The
+    // arrow runs that way and never back: a list, a gallery and a card grid
+    // filter through the same five variants, so the general surface cannot know
+    // about the special one. Any table in `filter-bar`'s closure closes the loop
+    // from the new direction.
+    expect(graph.get("table-controls")).toContain("filter-bar")
+    const reach = closure("filter-bar")
+    for (const table of ["table", "table-shell", "table-controls", "data-table", "server-table"]) {
+      expect([...reach]).not.toContain(table)
+    }
+  })
+
   test("neither shared part depends on a mode", () => {
     for (const part of ["table-shell", "table-controls"]) {
       expect(graph.get(part)).not.toContain("data-table")

@@ -91,6 +91,7 @@ import { dropZoneOgScene } from "./drop-zone.og"
 import { dropdownOgScene } from "./dropdown.og"
 import { energyClassBadgeOgScene } from "./energy-class-badge.og"
 import { fieldOgScene } from "./field.og"
+import { filterBarOgScene } from "./filter-bar.og"
 import { fileTriggerOgScene } from "./file-trigger.og"
 import { formattedDateOgScene } from "./formatted-date.og"
 import { formattedNumberOgScene } from "./formatted-number.og"
@@ -247,6 +248,7 @@ export const ogScenes: Record<string, OgScene> = {
   "energy-class-badge": energyClassBadgeOgScene,
   "field": fieldOgScene,
   "file-trigger": fileTriggerOgScene,
+  "filter-bar": filterBarOgScene,
   "formatted-date": formattedDateOgScene,
   "formatted-number": formattedNumberOgScene,
   "formatted-storage": formattedStorageOgScene,
