@@ -259,8 +259,12 @@ describe("a cell that opens in place", () => {
     const user = userEvent.setup()
     await user.click(cell("1", "stock"))
 
-    expect(within(cell("1", "stock")).queryByRole("button", { name: "Increase" })).toBeNull()
-    expect(within(cell("1", "stock")).queryByRole("button", { name: "Decrease" })).toBeNull()
+    // By label and not by role + name: a stepper's accessible *name* computes
+    // to nothing this deep inside a grid, so the role query finds no button
+    // called "Increase" whether or not one is drawn. Asserted by role, this
+    // passed with `densityFieldSizing`'s `hideStepper` flipped off.
+    expect(within(cell("1", "stock")).queryAllByLabelText("Increase")).toHaveLength(0)
+    expect(within(cell("1", "stock")).queryAllByLabelText("Decrease")).toHaveLength(0)
   })
 
   test("an end-aligned column stays end-aligned while it is being edited", async () => {
