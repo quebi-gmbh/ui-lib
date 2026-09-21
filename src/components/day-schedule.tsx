@@ -131,6 +131,30 @@ const EDGE_TRANSFORM: Record<DayScheduleTimeLabelOrientation, Record<SpanEdge, s
   },
 }
 
+/**
+ * How a tick's label and its gridline are shifted against the minute they mark.
+ *
+ * A label is centred on its minute and a rule is drawn at it, which is right
+ * for every tick with track above it and below it, and wrong for the two that
+ * have track on one side only: half of `00:00` sits above the track, half of
+ * `24:00` below it, and the rule at `100%` lands on the row *after* the last
+ * one. While the track was the outermost box that overhang was merely untidy.
+ * Inside the viewport `zoom` put around it, it is seven pixels of scrollable
+ * overflow at the bottom — so the browser paints a scrollbar on a schedule at
+ * zoom 1, the one zoom documented never to scroll, and the clip cuts the two
+ * labels a reader looks for first in half.
+ *
+ * So the ends tuck in: the first label hangs below its rule, the last sits
+ * above its own, and the last rule moves up onto the track's final pixel. Every
+ * tick with track on both sides is untouched, which on an ordinary
+ * `tickInterval` is all the rest of them.
+ */
+function tickShift(minute: number) {
+  if (minute === 0) return "translate-y-0"
+  if (minute === DAY_MINUTES) return "-translate-y-full"
+  return "-translate-y-1/2"
+}
+
 export type DayScheduleTone = "brand" | "cyan"
 
 export interface DaySpan {
@@ -515,6 +539,9 @@ export function DaySchedule({
   // gap at the bottom rather than a smaller day.
   const scale = Math.max(1, zoom)
   const trackHeight = Math.round(height * scale)
+  // Whether the track is taller than the box around it — which is the same
+  // question as whether that box has anything at all to scroll.
+  const isZoomed = scale > 1
 
   // Before paint rather than after it: this is where the viewport *starts*, and
   // a scroll applied in a passive effect is a visible jump away from midnight.
@@ -663,9 +690,14 @@ export function DaySchedule({
       )}
       {...props}
     >
-      {/* The viewport. At zoom 1 the track exactly fills it and it never
-          scrolls, which is why this wrapper changes nothing for a schedule that
-          does not ask for a zoom. */}
+      {/* The viewport. At zoom 1 the track exactly fills it, so it does not
+          become a scroll container at all: an `overflow` of anything but
+          `visible` clips, and a box whose content is its own height to the
+          pixel is one stray half-line-box away from a scrollbar it has nothing
+          to scroll. That is what this wrapper changing nothing for a schedule
+          which does not ask for a zoom has to mean — the `tickShift` above
+          keeps the hour axis inside the track, and this keeps anything else
+          that overhangs (a handle sitting on midnight) drawn rather than cut. */}
       <div
         ref={viewportRef}
         // Named so something outside can find the thing that scrolls — a test
@@ -673,11 +705,18 @@ export function DaySchedule({
         // screenshot. The minimap does not need it; it is handed the ref.
         data-day-schedule-viewport=""
         className={cn(
-          "min-w-0 flex-1 overflow-y-auto overscroll-y-contain",
-          // The map replaces the bar rather than sitting next to it — which is
-          // exactly what `quebi-scrollbar-none` is for, so the two browsers'
-          // ways of saying "no bar" are declared in one place and not here.
-          cn("quebi-scrollbar", minimap && "quebi-scrollbar-none"),
+          "min-w-0 flex-1",
+          isZoomed
+            ? cn(
+                "overflow-y-auto overscroll-y-contain",
+                // The map replaces the bar rather than sitting next to it — which
+                // is exactly what `quebi-scrollbar-none` is for, so the two
+                // browsers' ways of saying "no bar" are declared in one place and
+                // not here.
+                "quebi-scrollbar",
+                minimap && "quebi-scrollbar-none",
+              )
+            : "overflow-visible",
         )}
         style={{ height }}
       >
@@ -691,7 +730,10 @@ export function DaySchedule({
             {tickMinutes.map((minute) => (
               <div
                 key={minute}
-                className="absolute left-0 -translate-y-1/2 text-[9.5px] text-quebi-fg-subtle tabular-nums"
+                className={cn(
+                  "absolute left-0 text-[9.5px] text-quebi-fg-subtle tabular-nums",
+                  tickShift(minute),
+                )}
                 style={{ top: toPercent(minute) }}
               >
                 {minute === DAY_MINUTES ? "24:00" : formatTime(minute)}
@@ -705,7 +747,11 @@ export function DaySchedule({
               <div
                 key={minute}
                 aria-hidden="true"
-                className="absolute inset-x-0 h-px bg-quebi-line/[0.06]"
+                className={cn(
+                  "absolute inset-x-0 h-px bg-quebi-line/[0.06]",
+                  // Only the last rule moves: a 1px line has no half to centre.
+                  minute === DAY_MINUTES && "-translate-y-full",
+                )}
                 style={{ top: toPercent(minute) }}
               />
             ))}
