@@ -10,6 +10,7 @@ import {
 import { useState } from "react"
 import type { CalendarEvent, CalendarSource } from "@/components/calendar-shell"
 import { CalendarTimeline } from "@/components/calendar-timeline"
+import { FormattedDate } from "@/components/formatted-date"
 import type { ComponentExample } from "./types"
 
 /** Pinned rather than read from the runtime — see the note in Day View. */
@@ -257,6 +258,99 @@ const WithSelection = () => {
   )
 }
 
+/**
+ * Move and resize (task #183).
+ *
+ * The events are state here because they have to be: `onEventChange` reports
+ * the drop and applies nothing, so a caller that does not store the answer
+ * watches the bar snap back — which is the same contract `ServerTable` has with
+ * `onQueryChange`, and the reason a rejected change needs no undo.
+ */
+const DragToEdit = () => {
+  const day = today(TIME_ZONE)
+  const [events, setEvents] = useState<CalendarEvent[]>(() => bookings(day))
+  const [last, setLast] = useState<CalendarEvent | null>(null)
+  const [selected, setSelected] = useState<string | null>(null)
+
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <CalendarTimeline
+        calendars={ROOMS.slice(0, 4)}
+        events={events}
+        timeZone={TIME_ZONE}
+        startHour={8}
+        endHour={18}
+        selectedEventId={selected}
+        onSelectionChange={setSelected}
+        isEventEditable
+        onEventChange={(event, next) => {
+          const moved = {
+            ...event,
+            start: next.start,
+            end: next.end,
+            calendarId: next.calendarId ?? event.calendarId,
+          }
+          setEvents((current) => current.map((entry) => (entry.id === event.id ? moved : entry)))
+          setLast(moved)
+        }}
+      />
+      <p className="text-quebi-fg-muted text-sm">
+        {selected && !last ? (
+          `Selected: ${events.find((entry) => entry.id === selected)?.title} — a drag moves it, a click still picks it.`
+        ) : last ? (
+          <>
+            {last.title} is now{" "}
+            <FormattedDate date={last.start.toDate()} timeStyle="short" timeZone={TIME_ZONE} />
+            {" – "}
+            <FormattedDate date={last.end.toDate()} timeStyle="short" timeZone={TIME_ZONE} />
+            {" in "}
+            {ROOMS.find((room) => room.id === last.calendarId)?.name}
+          </>
+        ) : (
+          "Drag a bar along the axis, drop it on another room, or pull either end. Arrow keys do the same once a bar has focus; Shift with them changes the length."
+        )}
+      </p>
+    </div>
+  )
+}
+
+/**
+ * The same gesture at the scale that changes it (task #183).
+ *
+ * Thirty days is 8px an hour, where one pixel is seven and a half minutes: the
+ * snap step is an hour rather than a quarter of one, and a two-hour booking is
+ * drawn at the 24px minimum, which is narrower than two resize handles. So the
+ * bars here are move-only by pointer and resized with Shift and an arrow key.
+ */
+const DragAMonthPlan = () => {
+  const [events, setEvents] = useState<CalendarEvent[]>(() => monthPlan())
+
+  return (
+    <CalendarTimeline
+      calendars={PEOPLE}
+      events={events}
+      defaultDate={SPAN_START}
+      days={30}
+      timeZone={TIME_ZONE}
+      isEventEditable
+      onEventChange={(event, next) => {
+        setEvents((current) =>
+          current.map((entry) =>
+            entry.id === event.id
+              ? {
+                  ...entry,
+                  start: next.start,
+                  end: next.end,
+                  calendarId: next.calendarId ?? entry.calendarId,
+                }
+              : entry,
+          ),
+        )
+      }}
+    />
+  )
+}
+
 const JumpToADay = () => {
   const [day, setDay] = useState<CalendarDate>(() => today(TIME_ZONE))
 
@@ -314,6 +408,18 @@ export const calendarTimelineExamples: ComponentExample[] = [
     description:
       "selectedEventId and onSelectionChange behave exactly as they do in Day, Week and Month — one event model, one selection contract, four views.",
     render: () => <WithSelection />,
+  },
+  {
+    title: "Drag to move and resize",
+    description:
+      "`isEventEditable` and `onEventChange` turn a bar into something you can drag: along the axis to another time, onto another row to change which room owns it, and by either end to change how long it runs. The snap step comes from the scale rather than a fixed quarter hour, a ghost shows where the drop will land, and the lanes are repacked once — on the drop, not per frame. Selection is untouched: a press that goes nowhere is still a press, so a plain click picks a bar and the arrow keys move whichever one has focus.",
+    render: () => <DragToEdit />,
+  },
+  {
+    title: "Drag on a month plan",
+    description:
+      "The same two props at the other end of the scale. One pixel is seven and a half minutes at 8px an hour, so the snap step is an hour — and a bar drawn at the 24px minimum has no room for two resize handles, which makes it move-only by pointer and resizable with Shift and an arrow key.",
+    render: () => <DragAMonthPlan />,
   },
   {
     title: "Jump to a day",

@@ -8,11 +8,13 @@ import {
   toZoned,
   type ZonedDateTime,
 } from "@internationalized/date"
-import { useMemo } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { mergeProps, useMove } from "react-aria"
 import { Button } from "react-aria-components"
 import {
   CALENDAR_COLORS,
   type CalendarEvent,
+  type CalendarEventChange,
   type CalendarSource,
   DEFAULT_CALENDAR_TIME_ZONE,
   formatEventTime,
@@ -27,7 +29,7 @@ import {
   useCalendarLocale,
   useCalendarNavigation,
 } from "@/components/calendar-toolbar"
-import { packBands, packIntervals, segmentByDay } from "@/lib/calendar"
+import { packBands, packIntervals, segmentByDay, wallMinutes } from "@/lib/calendar"
 import { getDateTimeFormat } from "@/lib/intl"
 import { cn } from "@/lib/utils"
 
@@ -56,7 +58,15 @@ import { cn } from "@/lib/utils"
  *
  * Each row is labelled with its calendar's name in a column that stays put while
  * the time axis scrolls, so the colour is the second channel and never the only
- * one. Display and selection only; see the note in `CalendarShell`.
+ * one.
+ *
+ * A bar is display and selection until `isEventEditable` and `onEventChange`
+ * are both given, and then it is also something to drag: along the axis to
+ * another time, onto another row to change which calendar owns it, and by
+ * either end to change how long it is (task #183). The component never edits
+ * `events` — it reports the result of the gesture and the caller applies it,
+ * which is `ServerTable.onQueryChange`'s contract. What is still display-only
+ * is an all-day band, and drag-to-create, which is not a gesture this has.
  */
 export interface CalendarTimelineProps<E extends CalendarEvent = CalendarEvent> {
   /** The rows, top to bottom. Their `color` is what the bars in each row wear. */
@@ -106,6 +116,44 @@ export interface CalendarTimelineProps<E extends CalendarEvent = CalendarEvent> 
   onEventClick?: (event: E) => void
   selectedEventId?: string | null
   onSelectionChange?: (id: string | null) => void
+  /**
+   * Which events may be dragged to another time, row or length. Default: none.
+   *
+   * A predicate rather than a flag, because editability is usually a property
+   * of the event — someone else's booking, a past one, one the reader may see
+   * and not touch — and a caller that had to filter `events` first would lose
+   * the bars it filtered out rather than freezing them. `false`, or an omitted
+   * `onEventChange`, leaves a bar exactly what it was before this existed: a
+   * press target that selects.
+   *
+   * Two kinds of bar are never editable, whatever this returns. An all-day
+   * band fills each day's window instead of occupying a time, so it has no edge
+   * to pull and no minute to be dropped on. And a segment the axis *cut* — one
+   * carrying `continuesBefore` or `continuesAfter`, which is how an event
+   * running through midnight or past the last hour of the window is drawn — has
+   * no edge of its own either: the one you would grab is the window's, so the
+   * delta from it is a delta from the edge of the grid. Task #182 draws the same
+   * line in the week view.
+   */
+  isEventEditable?: boolean | ((event: E) => boolean)
+  /**
+   * A move or resize finished: the event it was, and the times it now wants.
+   *
+   * The change is the family's `CalendarEventChange`, so a handler written for
+   * `CalendarShell`'s drag (task #182) takes this one unchanged. Its
+   * `calendarId` is the row the bar was dropped on — the timeline's way of
+   * saying "this booking moved to another room", since a row *is* a calendar
+   * here, and the field the grid views leave undefined because their columns
+   * are days. It is reported on every change and equals the event's own when the
+   * drag stayed in one row, so one handler can apply all three fields without
+   * asking which gesture produced them; ignore it to refuse cross-row moves.
+   *
+   * Nothing is applied here. The component draws a preview while the gesture
+   * runs and repacks only once the new `events` come back, so a caller that
+   * validates, rejects or round-trips the change through a server sees the bar
+   * stay where it was rather than jump and return.
+   */
+  onEventChange?: (event: E, next: CalendarEventChange) => void
   showToolbar?: boolean
   view?: CalendarViewName
   views?: readonly CalendarViewName[]
@@ -148,6 +196,78 @@ const BAR_TITLE_WIDTH = 46
  * for its time has no room for its padding either.
  */
 const BAR_TIME_WIDTH = 104
+
+/**
+ * The hit area at each end of an editable bar, in pixels.
+ *
+ * Ten is the width at which an edge can be aimed at without the body behind it
+ * becoming something you cannot grab — see `MIN_RESIZABLE_BAR_WIDTH`, which is
+ * the same number read as a floor on the bar rather than on the handle.
+ */
+const RESIZE_HANDLE_WIDTH = 10
+
+/**
+ * Below this an editable bar is move-only and draws no resize handles.
+ *
+ * Two handles either side of a body that is still a legal touch target:
+ * 24 + 2 × 10 = 44. A bar at `MIN_BAR_WIDTH` has room for the handles or for
+ * itself and not for both, and a bar that is all handle cannot be moved at all
+ * — which is the worse loss, because moving works at every span and resizing
+ * only means something once a bar is long enough to have ends. At the thirty-day
+ * default of 8px an hour, 44px is five and a half hours, so most bars on a month
+ * plan are move-only by pointer.
+ *
+ * The keyboard is not subject to it: `Shift` + `←`/`→` on the bar itself
+ * resizes at any width, so the sliver that has no room for a handle is still
+ * adjustable without a pointer.
+ */
+const MIN_RESIZABLE_BAR_WIDTH = MIN_BAR_WIDTH + 2 * RESIZE_HANDLE_WIDTH
+
+/**
+ * The narrowest a snap step may be drawn, in pixels.
+ *
+ * A step is the smallest movement the component will make, so it has to be one
+ * the reader can see and aim at. Eight pixels is a third of the minimum touch
+ * target; below it a drag either appears not to move or moves by an amount
+ * nobody asked for.
+ */
+const MIN_SNAP_WIDTH = 8
+
+/**
+ * Snap steps in minutes, finest first. The first to clear `MIN_SNAP_WIDTH` wins.
+ *
+ * Derived from `pixelsPerHour` rather than fixed at a quarter of an hour,
+ * because the axis is not one scale: at the one-day default of 72px an hour a
+ * quarter hour is 18px and fifteen minutes is the obvious step, and at the
+ * thirty-day default of 8px an hour one *pixel* is 7.5 minutes — a
+ * fifteen-minute step there is two pixels, which is not a step but a jitter.
+ * The ladder lands on 15 minutes for a day or three, half an hour for a week,
+ * and an hour from a fortnight out.
+ *
+ * It is also the shortest an event may be made by dragging its end: one step is
+ * the smallest difference this scale can express, so it is the smallest one the
+ * component will produce.
+ */
+const SNAP_STEPS = [15, 30, 60, 120, 240, 480] as const
+
+/**
+ * How far a pointer may travel before a press becomes a drag, in pixels.
+ *
+ * `useMove` starts reporting on the first pointer *movement*, and a hand on a
+ * trackpad moves a pixel or two while clicking. Without a threshold that jitter
+ * begins a gesture which changes nothing — every candidate is snapped, so a
+ * two-pixel drag lands where it started — and then swallows the click that was
+ * supposed to select, because the click arrives after the gesture has ended.
+ * Three pixels is the figure task #182 settled on for the week view, and the
+ * two views should not disagree about what counts as a click.
+ */
+const DRAG_SLOP = 3
+
+/**
+ * The width of the drag preview's time label, so a label near the right-hand
+ * edge of the grid can be kept on it rather than scrolled off it.
+ */
+const DRAG_LABEL_WIDTH = 132
 
 /**
  * The narrowest an hour tick may be drawn.
@@ -208,6 +328,8 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
   onEventClick,
   selectedEventId,
   onSelectionChange,
+  isEventEditable,
+  onEventChange,
   showToolbar = true,
   view,
   views,
@@ -326,6 +448,249 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
     onEventClick?.(event)
   }
 
+  // --- moving and resizing (task #183) ---------------------------------------
+
+  const snapMinutes = snapStepFor(pixelsPerHour)
+  const windowStart = axisStart * 60
+  const windowEnd = axisEnd * 60
+
+  // The gesture in flight. A ref rather than state because it is written on
+  // every pointer frame and read by the next one; the only part of it the
+  // render needs is the preview, which is state.
+  const dragRef = useRef<DragOrigin<E> | null>(null)
+  const previewRef = useRef<DragPreview | null>(null)
+  const [preview, setPreview] = useState<DragPreview | null>(null)
+  const rowRefs = useRef(new Map<string, HTMLElement>())
+  const barRefs = useRef(new Map<string, HTMLElement>())
+  const refocusRef = useRef<string | null>(null)
+
+  // A keyboard gesture commits on every keypress, and the element that came
+  // back may not be the one that was focused: a lane, a day or a row later, it
+  // is a different node with a different key. So the bars register themselves
+  // and the focus is put back on whichever one now stands for the same edge.
+  useEffect(() => {
+    const key = refocusRef.current
+    if (!key) return
+    refocusRef.current = null
+    barRefs.current.get(key)?.focus()
+  })
+
+  const editableFor = (span: TimelineSpan<E>) => {
+    if (!onEventChange || !isEventEditable) return false
+    // An all-day band has no time to move, and a segment the axis cut has no
+    // edge of its own: its `start` or `end` is the window's, so a delta measured
+    // from it is a delta from the edge of the grid rather than from the event.
+    // Task #182 draws the same line in the week view.
+    if (span.allDay || span.continuesBefore || span.continuesAfter) return false
+    return typeof isEventEditable === "function" ? isEventEditable(span.event) : true
+  }
+
+  const publish = (next: DragPreview | null) => {
+    previewRef.current = next
+    setPreview(next)
+  }
+
+  /**
+   * The inverse of `toLeft`: pixels from the left of the grid back to the day
+   * and the clock minute under them.
+   *
+   * Two-dimensional for the same reason `toLeft` is — a pixel on a thirty-day
+   * axis is a time *and* a date, and dropping the date would land every bar on
+   * the anchor day.
+   */
+  const fromLeft = (px: number) => {
+    const onGrid = clampTo(px, 0, Math.max(0, gridWidth - 0.001))
+    const dayIndex = clampTo(Math.floor(onGrid / dayWidth), 0, dayCount - 1)
+    return {
+      dayIndex,
+      minutes: windowStart + ((onGrid - dayIndex * dayWidth) / dayWidth) * axisMinutes,
+    }
+  }
+
+  const snap = (minutes: number) => Math.round(minutes / snapMinutes) * snapMinutes
+
+  /** The time the preview is showing, spelled the way the bar spells its own. */
+  const previewLabel = (dayIndex: number, start: number, end: number) => {
+    const target = visibleDays[dayIndex] ?? day
+    const from = formatEventTime(atMinute(target, start, timeZone), locale, timeZone)
+    const to = formatEventTime(atMinute(target, end, timeZone), locale, timeZone)
+    const times = `${from} – ${to}`
+    // On a span the day is half of where the bar has landed, so the label says
+    // it; on one day it would repeat the heading.
+    return dayCount > 1 ? `${dayCells[dayIndex]?.label ?? ""} ${times}` : times
+  }
+
+  /**
+   * Which row the gesture is over. Rows are the drop targets, and only rows:
+   * a lane is what packing produced, not something a bar can be dropped into.
+   */
+  const rowUnder = (drag: DragOrigin<E>, keyboard: boolean) => {
+    if (drag.dy === 0) return drag.calendarId
+    if (keyboard) {
+      const from = calendars.findIndex((calendar) => calendar.id === drag.calendarId)
+      const to = clampTo(from + Math.sign(drag.dy), 0, calendars.length - 1)
+      return calendars[to]?.id ?? drag.calendarId
+    }
+    if (drag.pointerY === null) return drag.calendarId
+    const y = drag.pointerY + drag.dy
+    const hit = drag.rows.find((row) => y >= row.top && y < row.bottom)
+    if (hit) return hit.id
+    const first = drag.rows[0]
+    const last = drag.rows[drag.rows.length - 1]
+    if (first && y < first.top) return first.id
+    return last?.id ?? drag.calendarId
+  }
+
+  /**
+   * Where the gesture currently points, as a segment on a day and a row.
+   *
+   * All of it is model arithmetic — the grabbed edge's own clock minute plus
+   * the pixels the pointer has travelled — and none of it reads the bar's box.
+   * That box is not the event: `MIN_BAR_WIDTH` makes a short one wider than its
+   * span and the clamp onto the grid moves the left edge of one at the end of
+   * the axis, so a resize measured from the rectangle would resize to whatever
+   * the floor had invented.
+   */
+  const computePreview = (drag: DragOrigin<E>, pointerType: string): DragPreview | null => {
+    const keyboard = pointerType === "keyboard"
+    // Shift + arrow is the keyboard's resize, and the only one a bar too narrow
+    // for handles has. It ends the event rather than starting it because a
+    // length is the thing being changed and the start is where the bar is.
+    const part = drag.part === "body" && keyboard && drag.shiftKey ? "end" : drag.part
+    const edge = part === "end" ? drag.spanEnd : drag.spanStart
+    const drawn = Math.min(drag.spanEnd - drag.spanStart, axisMinutes)
+
+    let dayIndex = drag.dayIndex
+    let minutes = edge
+
+    if (drag.dx !== 0) {
+      if (keyboard) {
+        minutes = snap(edge + Math.sign(drag.dx) * snapMinutes)
+      } else if (part === "body") {
+        const landed = fromLeft(toLeft(drag.dayIndex, edge) + drag.dx)
+        dayIndex = landed.dayIndex
+        minutes = snap(landed.minutes)
+      } else {
+        // An edge stays on the day it was grabbed on. The night between two
+        // days is not drawn, so an edge dropped in it would be a time nobody
+        // pointed at — a move carries the whole event across a boundary, a
+        // resize does not reach through one.
+        const px = toLeft(drag.dayIndex, edge) + drag.dx - drag.dayIndex * dayWidth
+        minutes = snap(windowStart + (px / dayWidth) * axisMinutes)
+      }
+    }
+
+    if (part === "body") {
+      const latest = Math.max(windowStart, windowEnd - drawn)
+      // A keyboard step has no pixels to cross a day boundary with, so the step
+      // that runs off the end of a day arrives at the start of the next one —
+      // which is what the same gesture does with a pointer.
+      if (keyboard && minutes > latest && dayIndex < dayCount - 1) {
+        dayIndex += 1
+        minutes = windowStart
+      } else if (keyboard && minutes < windowStart && dayIndex > 0) {
+        dayIndex -= 1
+        minutes = latest
+      }
+      minutes = clampTo(minutes, windowStart, latest)
+    } else {
+      // The edge that is not moving, measured on the day the moving one sits on
+      // — which is not always inside the window, because half of a clipped
+      // event is off the axis by construction.
+      const anchor = wallMinutes(
+        part === "start" ? drag.event.end : drag.event.start,
+        visibleDays[drag.dayIndex] ?? day,
+        timeZone,
+      )
+      minutes = clampTo(
+        part === "start"
+          ? Math.min(minutes, anchor - snapMinutes)
+          : Math.max(minutes, anchor + snapMinutes),
+        windowStart,
+        windowEnd,
+      )
+      // The window can win against the minimum: an event whose other end is off
+      // the axis has nowhere inside the window to be shortened to. Refusing the
+      // frame leaves the preview where it was, which is the honest answer —
+      // the alternative is drawing a length the drop would not produce.
+      if ((part === "start" ? anchor - minutes : minutes - anchor) < snapMinutes) {
+        return previewRef.current
+      }
+    }
+
+    const calendarId = part === "body" ? rowUnder(drag, keyboard) : drag.calendarId
+    const start = part === "end" ? drag.spanStart : minutes
+    const end = part === "start" ? drag.spanEnd : part === "end" ? minutes : minutes + drawn
+
+    return {
+      eventId: drag.event.id,
+      part,
+      calendarId,
+      // Staying in the row keeps the bar's own lane, so the preview tracks the
+      // pointer; arriving in another row has no lane yet, because lanes are
+      // what the drop repacks.
+      lane: calendarId === drag.calendarId ? drag.lane : 0,
+      dayIndex,
+      start,
+      end: Math.min(end, windowEnd),
+      label: previewLabel(dayIndex, start, Math.min(end, windowEnd)),
+    }
+  }
+
+  const editing: TimelineEditing<E> = {
+    onDragStart(init) {
+      // The rows as boxes, measured once: they are the drop targets, and
+      // measuring them per frame would read a layout the drag is changing.
+      const rows = calendars.flatMap((calendar) => {
+        const box = rowRefs.current.get(calendar.id)?.getBoundingClientRect()
+        return box ? [{ id: calendar.id, top: box.top, bottom: box.bottom }] : []
+      })
+      const drag: DragOrigin<E> = { ...init, rows, dx: 0, dy: 0, shiftKey: false }
+      dragRef.current = drag
+      publish(computePreview(drag, init.pointerType))
+    },
+    onDragMove(deltaX, deltaY, pointerType, shiftKey) {
+      const drag = dragRef.current
+      if (!drag) return
+      drag.dx += deltaX
+      drag.dy += deltaY
+      drag.shiftKey = shiftKey
+      publish(computePreview(drag, pointerType))
+    },
+    onDragEnd(pointerType) {
+      const drag = dragRef.current
+      const landed = previewRef.current
+      dragRef.current = null
+      publish(null)
+      if (!drag || !landed) return
+
+      const dayDelta = landed.dayIndex - drag.dayIndex
+      const minuteDelta =
+        (landed.part === "end" ? landed.end : landed.start) -
+        (landed.part === "end" ? drag.spanEnd : drag.spanStart)
+      const movedRow = landed.calendarId !== drag.calendarId
+      if (dayDelta === 0 && minuteDelta === 0 && !movedRow) return
+
+      if (pointerType === "keyboard") refocusRef.current = `${drag.event.id}:${drag.part}`
+
+      // Wall-clock arithmetic on purpose. The grid is drawn in wall minutes
+      // (`wallMinutes`), so a bar dropped on 09:00 means 09:00 on the day it
+      // landed on — including the day a daylight-saving change makes 23 hours
+      // long, where the same delta in absolute minutes would land an hour out.
+      const shift = { days: dayDelta, minutes: minuteDelta }
+      onEventChange?.(drag.event, {
+        start: landed.part === "end" ? drag.event.start : drag.event.start.add(shift),
+        end: landed.part === "start" ? drag.event.end : drag.event.end.add(shift),
+        calendarId: landed.calendarId,
+      })
+    },
+  }
+
+  const previewLeft = preview ? toLeft(preview.dayIndex, preview.start) : 0
+  const previewWidth = preview
+    ? Math.max(MIN_BAR_WIDTH, toLeft(preview.dayIndex, preview.end) - previewLeft - 2)
+    : 0
+
   return (
     <div data-slot="calendar-timeline" className={cn("flex w-full flex-col gap-3", className)}>
       {showToolbar ? (
@@ -391,7 +756,14 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
           </div>
 
           {rows.map((row) => (
-            <div key={row.calendar.id} className="flex border-quebi-line/10 border-b last:border-b-0">
+            <div
+              key={row.calendar.id}
+              ref={(node) => {
+                if (node) rowRefs.current.set(row.calendar.id, node)
+                else rowRefs.current.delete(row.calendar.id)
+              }}
+              className="flex border-quebi-line/10 border-b last:border-b-0"
+            >
               <div
                 className="sticky left-0 z-20 flex shrink-0 items-start gap-2 bg-quebi-bg px-3 py-2"
                 style={{ width: nameWidth }}
@@ -455,6 +827,60 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                   // a screen reader, `title` for a pointer. Without them the only
                   // way to find out what an 18px bar is was to click it.
                   const name = barName(bar.span, dayNames, dayCount, locale, timeZone)
+                  const editable = editableFor(bar.span)
+                  const surface = barSurface(
+                    palette,
+                    bar.span,
+                    width,
+                    selectedEventId === bar.span.event.id,
+                    editable,
+                  )
+                  const geometry = {
+                    left: Math.max(0, Math.min(left, gridWidth - width)),
+                    width,
+                    top: 4 + bar.lane * laneHeight,
+                    height: laneHeight - 4,
+                  }
+                  // The lane is deliberately not in the key. A keyboard edit
+                  // commits on every keypress, and a bar that was remounted
+                  // because packing moved it one lane would have dropped the
+                  // focus that was driving it.
+                  const key = `${bar.span.event.id}:${bar.span.allDay ? "band" : bar.span.startDayIndex}`
+                  const text = (
+                    <BarText
+                      event={bar.span.event}
+                      allDay={bar.span.allDay}
+                      width={width}
+                      locale={locale}
+                      timeZone={timeZone}
+                    />
+                  )
+
+                  if (editable) {
+                    return (
+                      <EditableTimelineBar
+                        key={key}
+                        span={bar.span}
+                        lane={bar.lane}
+                        calendarId={row.calendar.id}
+                        name={name}
+                        width={width}
+                        style={geometry}
+                        className={surface}
+                        isDragging={preview?.eventId === bar.span.event.id}
+                        windowStart={windowStart}
+                        windowEnd={windowEnd}
+                        locale={locale}
+                        timeZone={timeZone}
+                        editing={editing}
+                        register={barRefs.current}
+                        onActivate={activate}
+                      >
+                        {text}
+                      </EditableTimelineBar>
+                    )
+                  }
+
                   return (
                     // The geometry and the tooltip sit on the wrapper, not on the
                     // button. `react-aria-components`' `Button` forwards exactly
@@ -464,46 +890,60 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                     // a lint rule about. `aria-label` is labelable and does reach
                     // the element, so the two channels are split across the two.
                     <div
-                      key={`${bar.span.event.id}:${bar.span.startDayIndex}:${bar.lane}`}
+                      key={key}
                       data-slot="calendar-bar"
                       data-event-id={bar.span.event.id}
                       title={name}
                       className="absolute"
-                      style={{
-                        left: Math.max(0, Math.min(left, gridWidth - width)),
-                        width,
-                        top: 4 + bar.lane * laneHeight,
-                        height: laneHeight - 4,
-                      }}
+                      style={geometry}
                     >
                       <Button
                         data-slot="calendar-bar-button"
                         aria-label={name}
                         onPress={() => activate(bar.span.event)}
-                        className={cn(
-                          "flex h-full w-full cursor-pointer items-center gap-1.5 overflow-hidden text-left",
-                          width < BAR_TIME_WIDTH ? "px-1" : "px-2",
-                          "border-l-2 text-xs transition-colors duration-150",
-                          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
-                          palette.block,
-                          palette.edge,
-                          bar.span.continuesBefore ? "rounded-l-none" : "rounded-l-quebi-sm",
-                          bar.span.continuesAfter ? "rounded-r-none" : "rounded-r-quebi-sm",
-                          selectedEventId === bar.span.event.id &&
-                            cn("outline-2 outline-solid outline-offset-0", palette.selected),
-                        )}
+                        className={surface}
                       >
-                        <BarText
-                          event={bar.span.event}
-                          allDay={bar.span.allDay}
-                          width={width}
-                          locale={locale}
-                          timeZone={timeZone}
-                        />
+                        {text}
                       </Button>
                     </div>
                   )
                 })}
+
+                {preview && preview.calendarId === row.calendar.id ? (
+                  <>
+                    <div
+                      data-slot="calendar-bar-preview"
+                      aria-hidden="true"
+                      className={cn(
+                        "pointer-events-none absolute z-10 rounded-quebi-sm",
+                        "border-2 border-quebi-brand-mark border-dashed bg-quebi-brand/10",
+                      )}
+                      style={{
+                        left: Math.max(0, Math.min(previewLeft, gridWidth - previewWidth)),
+                        width: previewWidth,
+                        top: 4 + preview.lane * laneHeight,
+                        height: laneHeight - 4,
+                      }}
+                    />
+                    <span
+                      data-slot="calendar-bar-preview-label"
+                      aria-hidden="true"
+                      className={cn(
+                        "pointer-events-none absolute z-20 flex items-center justify-center",
+                        "truncate rounded-quebi-sm border border-quebi-line/20 bg-quebi-elevated px-1.5",
+                        "text-quebi-fg text-xs tabular-nums shadow-quebi-glow",
+                      )}
+                      style={{
+                        left: Math.max(0, Math.min(previewLeft, gridWidth - DRAG_LABEL_WIDTH)),
+                        width: DRAG_LABEL_WIDTH,
+                        top: 4 + preview.lane * laneHeight,
+                        height: laneHeight - 4,
+                      }}
+                    >
+                      {preview.label}
+                    </span>
+                  </>
+                ) : null}
 
                 {showNow && nowPosition ? (
                   <div
@@ -560,6 +1000,293 @@ function BarText({ event, allDay, width, locale, timeZone }: BarTextProps) {
       )}
     </>
   )
+}
+
+/** Which part of a bar a gesture has hold of. */
+type DragPart = "body" | "start" | "end"
+
+/** What the bar knows about a gesture at the moment it begins. */
+interface DragInit<E extends CalendarEvent> {
+  event: E
+  part: DragPart
+  /** The row the bar started in — a calendar id, because a row is a calendar. */
+  calendarId: string
+  lane: number
+  /** The day the grabbed segment sits on. Editable spans are always one day. */
+  dayIndex: number
+  /** The segment's drawn clock minutes, clamped to the window. */
+  spanStart: number
+  spanEnd: number
+  /** Where the pointer went down, for the row hit test. Null for the keyboard. */
+  pointerY: number | null
+  pointerType: string
+}
+
+/** A gesture in flight: where it started, and how far it has travelled. */
+interface DragOrigin<E extends CalendarEvent> extends DragInit<E> {
+  rows: { id: string; top: number; bottom: number }[]
+  dx: number
+  dy: number
+  shiftKey: boolean
+}
+
+/** Where the gesture currently points — the ghost bar, and its time label. */
+interface DragPreview {
+  eventId: string
+  /** The part being applied, which is not the part grabbed under Shift + arrow. */
+  part: DragPart
+  calendarId: string
+  lane: number
+  dayIndex: number
+  start: number
+  end: number
+  label: string
+}
+
+/** The three callbacks a bar needs to hand a gesture back to the timeline. */
+interface TimelineEditing<E extends CalendarEvent> {
+  onDragStart: (init: DragInit<E>) => void
+  onDragMove: (deltaX: number, deltaY: number, pointerType: string, shiftKey: boolean) => void
+  onDragEnd: (pointerType: string) => void
+}
+
+interface EditableTimelineBarProps<E extends CalendarEvent> {
+  span: TimelineSpan<E>
+  lane: number
+  calendarId: string
+  name: string
+  width: number
+  style: React.CSSProperties
+  className: string
+  isDragging: boolean
+  windowStart: number
+  windowEnd: number
+  locale: string
+  timeZone: string
+  editing: TimelineEditing<E>
+  /** Where a bar records its elements, so a keyboard edit can find them again. */
+  register: Map<string, HTMLElement>
+  onActivate: (event: E) => void
+  children: React.ReactNode
+}
+
+/**
+ * A bar that can be dragged, dropped on another row, and pulled by either end.
+ *
+ * It is not the read-only bar with handlers added, and the difference is
+ * `react-aria-components`' `Button`: it captures the pointer for its own press
+ * handling and stops `pointerdown` propagating, so a `useMove` anywhere in the
+ * tree above it never sees a gesture begin. What replaces it is `useMove`
+ * itself, which gives pointer *and* keyboard movement from one hook — the
+ * reason this does not have to hand-roll arrow keys the way `DaySchedule` did —
+ * over an element that says what it is with `role="slider"`, as that component's
+ * handles do.
+ *
+ * Pressing it still selects, because `useMove` only starts reporting once the
+ * pointer has actually moved: a press that goes nowhere raises no move events
+ * at all and arrives here as the plain click it was.
+ */
+function EditableTimelineBar<E extends CalendarEvent>({
+  span,
+  lane,
+  calendarId,
+  name,
+  width,
+  style,
+  className,
+  isDragging,
+  windowStart,
+  windowEnd,
+  locale,
+  timeZone,
+  editing,
+  register,
+  onActivate,
+  children,
+}: EditableTimelineBarProps<E>) {
+  const pointerY = useRef<number | null>(null)
+  // How far this gesture has travelled, and whether that is far enough to have
+  // been a drag rather than a press — see `DRAG_SLOP`.
+  const travel = useRef(0)
+  const dragged = useRef(false)
+  // Below the threshold there is no room for two handles and a body, so the bar
+  // is move-only by pointer. Shift + arrow still resizes it.
+  const showHandles = width >= MIN_RESIZABLE_BAR_WIDTH
+
+  const gesture = (part: DragPart) => ({
+    onMoveStart(event: { pointerType: string }) {
+      editing.onDragStart({
+        event: span.event,
+        part,
+        calendarId,
+        lane,
+        dayIndex: span.startDayIndex,
+        spanStart: span.start,
+        spanEnd: span.end,
+        pointerY: pointerY.current,
+        pointerType: event.pointerType,
+      })
+    },
+    onMove(event: { deltaX: number; deltaY: number; pointerType: string; shiftKey: boolean }) {
+      if (event.pointerType !== "keyboard") {
+        travel.current += Math.abs(event.deltaX) + Math.abs(event.deltaY)
+        if (travel.current > DRAG_SLOP) dragged.current = true
+      }
+      editing.onDragMove(event.deltaX, event.deltaY, event.pointerType, event.shiftKey)
+    },
+    onMoveEnd(event: { pointerType: string }) {
+      editing.onDragEnd(event.pointerType)
+    },
+  })
+
+  const body = useMove(gesture("body"))
+  const startEdge = useMove(gesture("start"))
+  const endEdge = useMove(gesture("end"))
+
+  const bind = (part: DragPart) => (node: HTMLElement | null) => {
+    const key = `${span.event.id}:${part}`
+    if (node) register.set(key, node)
+    else register.delete(key)
+  }
+
+  // `useMove` calls `preventDefault` on `pointerdown` — which is what keeps a
+  // drag from selecting the text under it, and also what stops the press from
+  // focusing the bar. So the focus is taken here, where the pointer's own
+  // position is recorded for the row hit test.
+  const grab = (event: React.PointerEvent<HTMLElement>) => {
+    pointerY.current = event.clientY
+    travel.current = 0
+    dragged.current = false
+    event.currentTarget.focus()
+  }
+
+  const handleClass = cn(
+    "absolute inset-y-0 z-10 flex cursor-ew-resize touch-none items-center justify-center",
+    "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
+  )
+  const gripClass = cn(
+    "h-1/2 w-[3px] rounded-full bg-quebi-fg/60 opacity-0 transition-opacity duration-150",
+    "group-hover/edge:opacity-100 group-focus-visible/edge:opacity-100",
+  )
+
+  return (
+    <div
+      data-slot="calendar-bar"
+      data-event-id={span.event.id}
+      data-editable="true"
+      title={name}
+      className="absolute"
+      style={style}
+    >
+      <div
+        {...mergeProps(body.moveProps, {
+          onPointerDown: grab,
+          // The click arrives after the gesture: `pointerup` ends the move and
+          // then the browser raises the click it was part of. A drag that
+          // selected as well as moved would be one gesture doing two things.
+          onClick: () => {
+            if (dragged.current) {
+              dragged.current = false
+              return
+            }
+            onActivate(span.event)
+          },
+          onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => {
+            if (event.key !== "Enter" && event.key !== " ") return
+            event.preventDefault()
+            onActivate(span.event)
+          },
+        })}
+        ref={bind("body")}
+        data-slot="calendar-bar-button"
+        data-drag-part="body"
+        role="slider"
+        tabIndex={0}
+        aria-label={name}
+        aria-valuemin={windowStart}
+        aria-valuemax={windowEnd}
+        aria-valuenow={span.start}
+        aria-valuetext={name}
+        className={cn(className, isDragging && "opacity-40")}
+      >
+        {children}
+      </div>
+
+      {showHandles ? (
+        <div
+          {...mergeProps(startEdge.moveProps, { onPointerDown: grab })}
+          ref={bind("start")}
+          data-drag-part="start"
+          role="slider"
+          tabIndex={0}
+          aria-label={`${span.event.title}, start time`}
+          aria-valuemin={windowStart}
+          aria-valuemax={windowEnd}
+          aria-valuenow={span.start}
+          aria-valuetext={formatEventTime(span.event.start, locale, timeZone)}
+          className={cn("group/edge left-0", handleClass)}
+          style={{ width: RESIZE_HANDLE_WIDTH }}
+        >
+          <span aria-hidden="true" className={gripClass} />
+        </div>
+      ) : null}
+
+      {showHandles ? (
+        <div
+          {...mergeProps(endEdge.moveProps, { onPointerDown: grab })}
+          ref={bind("end")}
+          data-drag-part="end"
+          role="slider"
+          tabIndex={0}
+          aria-label={`${span.event.title}, end time`}
+          aria-valuemin={windowStart}
+          aria-valuemax={windowEnd}
+          aria-valuenow={span.end}
+          aria-valuetext={formatEventTime(span.event.end, locale, timeZone)}
+          className={cn("group/edge right-0", handleClass)}
+          style={{ width: RESIZE_HANDLE_WIDTH }}
+        >
+          <span aria-hidden="true" className={gripClass} />
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * The bar's surface, shared by the two elements that can draw it.
+ *
+ * A read-only bar is a `Button` and an editable one is a slider, and neither
+ * fact is visible: the box, the palette, the cut corners and the selected ring
+ * are the same thing wearing a different element, so they are written once.
+ */
+function barSurface<E extends CalendarEvent>(
+  palette: (typeof CALENDAR_COLORS)[keyof typeof CALENDAR_COLORS],
+  span: TimelineSpan<E>,
+  width: number,
+  isSelected: boolean,
+  isEditable: boolean,
+): string {
+  return cn(
+    "flex h-full w-full items-center gap-1.5 overflow-hidden text-left",
+    isEditable ? "cursor-grab touch-none select-none active:cursor-grabbing" : "cursor-pointer",
+    width < BAR_TIME_WIDTH ? "px-1" : "px-2",
+    "border-l-2 text-xs transition-colors duration-150",
+    "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
+    palette.block,
+    palette.edge,
+    span.continuesBefore ? "rounded-l-none" : "rounded-l-quebi-sm",
+    span.continuesAfter ? "rounded-r-none" : "rounded-r-quebi-sm",
+    isSelected && cn("outline-2 outline-solid outline-offset-0", palette.selected),
+  )
+}
+
+/** Clamp, for the geometry this file does that `@/lib/calendar` keeps to itself. */
+const clampTo = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
+
+/** The snap step for a scale, finest first — see `SNAP_STEPS`. */
+function snapStepFor(pixelsPerHour: number): number {
+  return SNAP_STEPS.find((step) => (step / 60) * pixelsPerHour >= MIN_SNAP_WIDTH) ?? 480
 }
 
 /** One event's presence on the axis: a run of days, and minutes within the ends. */
@@ -712,6 +1439,16 @@ function dayLabelOptions(dayWidth: number): Intl.DateTimeFormatOptions {
   }
   return { day: "numeric" }
 }
+
+/**
+ * A day at a given clock minute, as the instant the grid means by that pixel.
+ *
+ * Built by adding minutes to midnight rather than by constructing a `Time`, so
+ * a minute past the end of the day, or one inside an hour a daylight-saving
+ * change removed, resolves rather than throws.
+ */
+const atMinute = (day: CalendarDate, minutes: number, timeZone: string) =>
+  toZoned(toCalendarDateTime(day, new Time(0)), timeZone).add({ minutes })
 
 /** A day at a given hour, as the `Date` the Intl formatters take. */
 const atHour = (day: CalendarDate, hour: number, timeZone: string) =>
