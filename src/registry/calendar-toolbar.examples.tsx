@@ -119,6 +119,68 @@ const PickerLabel = () => {
   )
 }
 
+const TodayInThePopover = () => {
+  const [anchor, setAnchor] = useState<CalendarDate>(() => today(TIME_ZONE))
+
+  return (
+    <CalendarToolbar
+      label={calendarRangeLabel([anchor], { locale: LOCALE, timeZone: TIME_ZONE })}
+      labelVariant="picker"
+      date={anchor}
+      onDateChange={setAnchor}
+      todayPlacement="popover"
+      todayLabel="Heute"
+      onPrevious={() => setAnchor(anchor.subtract({ days: 1 }))}
+      onNext={() => setAnchor(anchor.add({ days: 1 }))}
+      onToday={() => setAnchor(today(TIME_ZONE))}
+    />
+  )
+}
+
+const EverythingInThePopover = () => {
+  const [anchor, setAnchor] = useState<CalendarDate>(() => today(TIME_ZONE))
+
+  return (
+    <CalendarToolbar
+      label={calendarRangeLabel(week(anchor), { locale: LOCALE, timeZone: TIME_ZONE })}
+      labelVariant="picker"
+      pickerGranularity="week"
+      locale={LOCALE}
+      date={anchor}
+      onDateChange={setAnchor}
+      navigationPlacement="popover"
+      todayPlacement="popover"
+      todayLabel="Heute"
+      view="week"
+      views={["week", "month"]}
+      onViewChange={() => {}}
+      onPrevious={() => setAnchor(anchor.subtract({ weeks: 1 }))}
+      onNext={() => setAnchor(anchor.add({ weeks: 1 }))}
+      onToday={() => setAnchor(today(TIME_ZONE))}
+    >
+      <CalendarLegend calendars={CALENDARS} />
+    </CalendarToolbar>
+  )
+}
+
+const TodayAsAnIcon = () => {
+  const [anchor, setAnchor] = useState<CalendarDate>(() => today(TIME_ZONE))
+
+  return (
+    <CalendarToolbar
+      label={calendarRangeLabel([anchor], { locale: LOCALE, timeZone: TIME_ZONE })}
+      labelVariant="picker"
+      date={anchor}
+      onDateChange={setAnchor}
+      todayVariant="icon"
+      todayLabel="Heute"
+      onPrevious={() => setAnchor(anchor.subtract({ days: 1 }))}
+      onNext={() => setAnchor(anchor.add({ days: 1 }))}
+      onToday={() => setAnchor(today(TIME_ZONE))}
+    />
+  )
+}
+
 const PickerLabelByMonth = () => {
   const [anchor, setAnchor] = useState<CalendarDate>(() => today(TIME_ZONE))
 
@@ -185,8 +247,26 @@ export const calendarToolbarExamples: ComponentExample[] = [
   {
     title: "Jump to a date",
     description:
-      "`labelVariant=\"picker\"` turns the heading into a button opening a calendar, the way the Calendar\u2019s own header opens the Month Picker. Without it the only way to a distant day is Today or one chevron press at a time. It needs `date` and `onDateChange` \u2014 the toolbar still owns nothing.",
+      "`labelVariant=\"picker\"` turns the heading into a button opening a calendar, the way the Calendar\u2019s own header opens the Month Picker. Without it the only way to a distant day is Today or one chevron press at a time. It needs `date` and `onDateChange` \u2014 the toolbar still owns nothing. Being a button, the heading joins the chevrons and Today in one bar rather than standing beside their box: everything that moves the date is one control, and the only gap left in the toolbar is the one before the view switcher.",
     render: () => <PickerLabel />,
+  },
+  {
+    title: "Today in the popover",
+    description:
+      "`todayPlacement=\"popover\"` moves the today button under the grid the heading opens, so the bar is the date and the two chevrons. The word is still `todayLabel`, and pressing it closes the popover \u2014 a jump is a destination, so the surface gets out of the way exactly as it does when a day is picked.",
+    render: () => <TodayInThePopover />,
+  },
+  {
+    title: "Nothing in the bar but the date",
+    description:
+      "`navigationPlacement` moves the chevrons too, which leaves the toolbar with the date, the view switcher and whatever chrome you put beside it \u2014 the shape to reach for when the row is crowded. The chevrons then step the *view* while the grid above them pages its own month, so they name their unit: `Previous week`, not `Previous`. That second chevron pair is the cost of this variant; a toolbar with room for a bar is better off keeping them in it.",
+    render: () => <EverythingInThePopover />,
+  },
+  {
+    title: "Today as an icon",
+    description:
+      "`todayVariant=\"icon\"` keeps the button in the bar and drops the word, which is the one control in it whose width is a language \u2014 `Aujourd\u2019hui` beside a heading spelling out a date in full is the difference between a bar and a bar that wraps. `todayLabel` is still the accessible name, so nothing is said less.",
+    render: () => <TodayAsAnIcon />,
   },
   {
     title: "A week grid, for a week heading",

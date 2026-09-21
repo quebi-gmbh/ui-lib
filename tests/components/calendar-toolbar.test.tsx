@@ -33,6 +33,7 @@
  */
 import { CalendarDate } from "@internationalized/date"
 import { describe, expect, test } from "bun:test"
+import { useState } from "react"
 import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { CalendarToolbar } from "../../src/components/calendar-toolbar"
@@ -307,5 +308,234 @@ describe("the picker variant", () => {
     // on and nowhere to send a choice. The span carries the same text, so
     // unlike the old view switcher nothing pressable is left behind.
     expect(trigger().tagName).toBe("SPAN")
+  })
+})
+
+/**
+ * One bar, and the two ways out of it.
+ *
+ * A picker heading is a button, so it is the first segment of the navigation
+ * group rather than a separate item in front of it — that is what "one button
+ * bar" means here, and it is why the heading's vertical padding is tightened:
+ * `sm` around `text-base` is a rung taller than the `sq-sm` squares it now
+ * shares a box with.
+ *
+ * `navigationPlacement` and `todayPlacement` then move their control out of
+ * that bar and into the grid the heading opens. They are separate props because
+ * the two are separate decisions — arrows in the bar and `Today` behind the
+ * date is a real toolbar — and both fall back to the bar when there is no
+ * picker to open, which is the same fallback `labelVariant` makes and for the
+ * same reason: a control that moved somewhere that does not exist would not be
+ * drawn at all.
+ */
+const bars = () => screen.getAllByRole("group", { name: "Calendar navigation" })
+
+/** The one holding the heading — the popover's footer carries the same name. */
+const bar = () => bars().find((group) => group.contains(trigger())) as HTMLElement
+
+const names = (scope: HTMLElement) =>
+  within(scope)
+    .getAllByRole("button")
+    .map((button) => button.getAttribute("aria-label") ?? button.textContent)
+
+describe("the bar", () => {
+  test("is one group: the heading, then back / today / forward", () => {
+    render(
+      <CalendarToolbar
+        label="Sunday, 20 September 2026"
+        labelVariant="picker"
+        date={SEPTEMBER}
+        onDateChange={() => {}}
+        onPrevious={() => {}}
+        onNext={() => {}}
+        onToday={() => {}}
+      />,
+    )
+
+    // The heading used to sit outside the group, separated by the same gap that
+    // separates the date from the view switcher — so the toolbar had two
+    // divisions and only one of them meant anything.
+    expect(names(bar())).toEqual(["Sunday, 20 September 2026", "Previous", "Today", "Next"])
+  })
+
+  test("is not drawn around a heading with nothing to join it to", () => {
+    render(
+      <CalendarToolbar
+        label="Sunday, 20 September 2026"
+        labelVariant="picker"
+        date={SEPTEMBER}
+        onDateChange={() => {}}
+      />,
+    )
+
+    // A lone button in a group named for navigation it does not contain says
+    // something untrue, and `ButtonGroup` draws no box of its own to lose.
+    expect(screen.queryByRole("group", { name: "Calendar navigation" })).toBeNull()
+  })
+
+  test("stays a box of its own behind a static heading, which cannot join it", () => {
+    render(
+      <CalendarToolbar label="13.–19. Juli 2026" onPrevious={() => {}} onToday={() => {}} />,
+    )
+
+    expect(trigger().tagName).toBe("SPAN")
+    expect(bars()).toHaveLength(1)
+    expect(names(bars()[0] as HTMLElement)).toEqual(["Previous", "Today"])
+  })
+})
+
+describe("a control placed in the popover", () => {
+  test("leaves the bar and turns up under the grid", async () => {
+    const user = userEvent.setup()
+    render(
+      <CalendarToolbar
+        label="Sunday, 20 September 2026"
+        labelVariant="picker"
+        date={SEPTEMBER}
+        onDateChange={() => {}}
+        onPrevious={() => {}}
+        onNext={() => {}}
+        onToday={() => {}}
+        todayPlacement="popover"
+      />,
+    )
+
+    expect(names(bar())).toEqual(["Sunday, 20 September 2026", "Previous", "Next"])
+
+    await user.click(trigger())
+
+    const footer = bars().find((group) => !group.contains(trigger())) as HTMLElement
+    expect(names(footer)).toEqual(["Today"])
+  })
+
+  test("still reports, and `Today` closes the surface behind it", async () => {
+    const user = userEvent.setup()
+    const pressed: string[] = []
+    render(
+      <CalendarToolbar
+        label="Sunday, 20 September 2026"
+        labelVariant="picker"
+        date={SEPTEMBER}
+        onDateChange={() => {}}
+        onToday={() => pressed.push("today")}
+        todayPlacement="popover"
+      />,
+    )
+
+    await user.click(trigger())
+    await user.click(screen.getByRole("button", { name: "Today" }))
+
+    expect(pressed).toEqual(["today"])
+    // A jump is a destination: the grid gets out of the way exactly as it does
+    // when a day is picked, rather than sitting over the view the press moved.
+    expect(screen.queryByRole("application")).toBeNull()
+  })
+
+  test("leaves the surface open when it is a chevron, and the grid follows", async () => {
+    const user = userEvent.setup()
+    const Controlled = () => {
+      const [date, setDate] = useState(SEPTEMBER)
+      return (
+        <CalendarToolbar
+          label="A day"
+          labelVariant="picker"
+          date={date}
+          onDateChange={setDate}
+          onPrevious={() => setDate(date.subtract({ days: 1 }))}
+          onNext={() => setDate(date.add({ days: 1 }))}
+          navigationPlacement="popover"
+        />
+      )
+    }
+    render(<Controlled />)
+
+    // Nothing but the heading is left in the toolbar, so there is no bar.
+    expect(screen.queryByRole("group", { name: "Calendar navigation" })).toBeNull()
+
+    await user.click(trigger())
+
+    // `Previous day`, not `Previous`: the grid under it pages its own month
+    // with a chevron pair, and the two would otherwise be one name apiece.
+    await user.click(screen.getByRole("button", { name: "Previous day" }))
+
+    // A step, not a destination: the grid is the feedback, so it stays open and
+    // the selection walks back a day with the press.
+    expect(screen.queryByRole("application")).not.toBeNull()
+    expect(
+      screen.getByRole("button", { name: "Saturday, September 19, 2026 selected" }),
+    ).toBeInTheDocument()
+  })
+
+  test("names the unit it steps, so the grid's own pair is a different button", async () => {
+    const user = userEvent.setup()
+    const openWith = async (props: Partial<React.ComponentProps<typeof CalendarToolbar>>) => {
+      const { unmount } = render(
+        <CalendarToolbar
+          label="A range"
+          labelVariant="picker"
+          date={WEDNESDAY}
+          onDateChange={() => {}}
+          onPrevious={() => {}}
+          navigationPlacement="popover"
+          {...props}
+        />,
+      )
+      await user.click(trigger())
+      const named = screen.getAllByRole("button").map((b) => b.getAttribute("aria-label"))
+      unmount()
+      return named
+    }
+
+    // The grid pages itself with a bare `Previous`; the footer steps the view.
+    expect(await openWith({ pickerGranularity: "week" })).toContain("Previous week")
+    expect(await openWith({ pickerGranularity: "month" })).toContain("Previous month")
+    expect(await openWith({})).toContain("Previous day")
+
+    // One prop still names it in both places — which is what a translation
+    // needs, and what makes the two defaults a default rather than a rule.
+    const translated = await openWith({ previousLabel: "Zurück" })
+    expect(translated).toContain("Zurück")
+    expect(translated).not.toContain("Previous day")
+  })
+
+  test("goes back to the bar when there is no popover to go to", () => {
+    render(
+      <CalendarToolbar
+        label="13.–19. Juli 2026"
+        onPrevious={() => {}}
+        onToday={() => {}}
+        navigationPlacement="popover"
+        todayPlacement="popover"
+      />,
+    )
+
+    // A static heading opens nothing, so both placements fall back rather than
+    // dropping the controls — the fallback `labelVariant` already makes.
+    expect(names(bars()[0] as HTMLElement)).toEqual(["Previous", "Today"])
+  })
+})
+
+describe("the today button as an icon", () => {
+  test("keeps the word as its accessible name", () => {
+    render(
+      <CalendarToolbar label="13.–19. Juli 2026" onToday={() => {}} todayVariant="icon" />,
+    )
+
+    const button = screen.getByRole("button", { name: "Today" })
+    expect(button.textContent).toBe("")
+    expect(button.querySelector("svg")).not.toBeNull()
+  })
+
+  test("is translated by the same prop the word is", () => {
+    render(
+      <CalendarToolbar
+        label="13.–19. Juli 2026"
+        onToday={() => {}}
+        todayVariant="icon"
+        todayLabel="Heute"
+      />,
+    )
+
+    expect(screen.getByRole("button", { name: "Heute" })).toBeInTheDocument()
   })
 })

@@ -2,7 +2,7 @@
 
 import type { CalendarDate, DateDuration, DateValue } from "@internationalized/date"
 import { startOfWeek, today } from "@internationalized/date"
-import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { CalendarCheck, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { useState } from "react"
 import { useLocale } from "react-aria-components"
 import { Button } from "@/components/button"
@@ -44,6 +44,20 @@ import { cn } from "@/lib/utils"
  * inner corners off `:first-child` / `:last-child` rather than off a fixed count,
  * so `‹ ›` with no today button and a lone `Today` with no chevrons both come out
  * as one properly rounded control.
+ *
+ * When the heading is a picker it is a button, so it joins that group rather
+ * than standing beside it: one bar reading `[21. September 2026 ⌄][‹][Today][›]`
+ * instead of a button, a gap, and a second box holding three more. Everything
+ * that changes the date is then one control, and the gap that is left in the
+ * toolbar separates the date from the view switcher — which is the only
+ * division in it that means anything. A `static` heading is a `<span>` and
+ * cannot join a group of buttons, so there the old two-box shape stands.
+ *
+ * Where the three of them are drawn is the caller's, one control at a time:
+ * `navigationPlacement` and `todayPlacement` each move their control into the
+ * picker's popover, so a toolbar can be as small as the date itself with
+ * everything that moves it one press away, and `todayVariant` swaps the word
+ * for a square icon when the bar is what has to stay short.
  *
  * The view switcher is the one that cannot be — it doubles as the read-only "which
  * view am I in" indicator, and dropping it would take that away — so it is
@@ -90,6 +104,35 @@ export type CalendarToolbarLabelVariant = "static" | "picker"
  * - `month` — a `MonthPicker`. `MonthView`.
  */
 export type CalendarToolbarPickerGranularity = "day" | "week" | "month"
+
+/**
+ * Where one of the date controls is drawn.
+ *
+ * - `bar` — in the toolbar, joined to the heading. The default, and the only
+ *   answer a static heading can give.
+ * - `popover` — inside the grid the heading opens, under the grid and a rule.
+ *   The toolbar then carries the date and the view switcher and nothing else,
+ *   which is what a page with its own chrome to fit in the same row wants.
+ *
+ * `popover` needs the picker label, for the same reason the picker needs
+ * `date` and `onDateChange`: there is no popover to put a control in, and a
+ * control placed in one that does not exist would not be drawn at all. So it
+ * falls back to `bar` rather than vanishing — the same fallback, and the same
+ * argument, as `labelVariant`.
+ */
+export type CalendarToolbarControlPlacement = "bar" | "popover"
+
+/**
+ * How the today button is drawn.
+ *
+ * - `text` — the word, which is also where it is translated (`todayLabel`).
+ * - `icon` — a square button carrying `todayLabel` as its accessible name, so
+ *   the word is still what a screen reader reads. Everything else in the bar is
+ *   a square; this is the one control in it whose width is a word, and
+ *   `Aujourd\u2019hui` next to a heading spelling out a date in full is the
+ *   difference between a bar and a bar that wraps.
+ */
+export type CalendarToolbarTodayVariant = "text" | "icon"
 
 /** The views a toolbar can switch between. A subset is fine; the order is yours. */
 export type CalendarViewName = "day" | "week" | "month" | "timeline"
@@ -157,7 +200,23 @@ export interface CalendarToolbarProps {
   onPrevious?: () => void
   onNext?: () => void
   onToday?: () => void
-  /** Accessible names for the two chevrons, and the text on the today button. */
+  /** Where the two chevrons are drawn. Default `bar`. */
+  navigationPlacement?: CalendarToolbarControlPlacement
+  /** Where the today button is drawn. Default `bar`; independent of the chevrons. */
+  todayPlacement?: CalendarToolbarControlPlacement
+  /** The word or a square icon. Default `text`. */
+  todayVariant?: CalendarToolbarTodayVariant
+  /**
+   * Accessible names for the two chevrons, and the text on the today button.
+   *
+   * The chevrons have no default string but two, because where they are drawn
+   * decides how much they have to say. In the bar they are the only chevrons
+   * in sight and `Previous` is enough. In the popover they sit under a grid
+   * that pages itself with a chevron pair of its own — the ambiguity
+   * `CalendarHeader` drops its paging pair to avoid — so there they name their
+   * unit, `Previous week`, the way `CalendarStepper` names months and years.
+   * Pass one and it is used in both places, which is what a translation wants.
+   */
   previousLabel?: string
   nextLabel?: string
   todayLabel?: string
@@ -187,76 +246,109 @@ export function CalendarToolbar({
   onPrevious,
   onNext,
   onToday,
-  previousLabel = "Previous",
-  nextLabel = "Next",
+  navigationPlacement = "bar",
+  todayPlacement = "bar",
+  todayVariant = "text",
+  previousLabel,
+  nextLabel,
   todayLabel = "Today",
   navigationLabel = "Calendar navigation",
   children,
   className,
 }: CalendarToolbarProps) {
+  const barPreviousLabel = previousLabel ?? "Previous"
+  const barNextLabel = nextLabel ?? "Next"
+  const popoverPreviousLabel = previousLabel ?? `Previous ${pickerGranularity}`
+  const popoverNextLabel = nextLabel ?? `Next ${pickerGranularity}`
+
+  // Computed as the element rather than as a boolean, because the two things
+  // that decide it are also the two the picker needs, and TypeScript only
+  // narrows them here.
+  const picker =
+    labelVariant === "picker" && date && onDateChange ? (
+      <CalendarToolbarPicker
+        label={label}
+        date={date}
+        onDateChange={onDateChange}
+        granularity={pickerGranularity}
+        pickerLabel={pickerLabel}
+        locale={locale}
+        firstDayOfWeek={firstDayOfWeek}
+        minValue={minValue}
+        maxValue={maxValue}
+        isDisabled={isDisabled}
+        onPrevious={navigationPlacement === "popover" ? onPrevious : undefined}
+        onNext={navigationPlacement === "popover" ? onNext : undefined}
+        onToday={todayPlacement === "popover" ? onToday : undefined}
+        previousLabel={popoverPreviousLabel}
+        nextLabel={popoverNextLabel}
+        todayLabel={todayLabel}
+        todayVariant={todayVariant}
+        navigationLabel={navigationLabel}
+      />
+    ) : null
+
+  // A placement of `popover` only moves a control when there is a popover; with
+  // a static heading the control stays in the bar rather than going nowhere.
+  const movedToPopover = (placement: CalendarToolbarControlPlacement) =>
+    picker !== null && placement === "popover"
+
+  const barPrevious = movedToPopover(navigationPlacement) ? undefined : onPrevious
+  const barNext = movedToPopover(navigationPlacement) ? undefined : onNext
+  const barToday = movedToPopover(todayPlacement) ? undefined : onToday
+  const hasBarControls = Boolean(barPrevious || barToday || barNext)
+
+  const barControls = (
+    <DateControls
+      onPrevious={barPrevious}
+      onNext={barNext}
+      onToday={barToday}
+      previousLabel={barPreviousLabel}
+      nextLabel={barNextLabel}
+      todayLabel={todayLabel}
+      todayVariant={todayVariant}
+      isDisabled={isDisabled}
+    />
+  )
+
   return (
     <div
       data-slot="calendar-toolbar"
       className={cn("flex flex-wrap items-center justify-between gap-3", className)}
     >
       <div className="flex flex-wrap items-center gap-3">
-        {labelVariant === "picker" && date && onDateChange ? (
-          <CalendarToolbarPicker
-            label={label}
-            date={date}
-            onDateChange={onDateChange}
-            granularity={pickerGranularity}
-            pickerLabel={pickerLabel}
-            locale={locale}
-            firstDayOfWeek={firstDayOfWeek}
-            minValue={minValue}
-            maxValue={maxValue}
-            isDisabled={isDisabled}
-          />
+        {picker ? (
+          // No `data-slot` of its own on either group: `ButtonGroup` sets its
+          // own before the spread, so one here would replace it and quietly
+          // unhook the `has-[>[data-slot=button-group]]` rule a nested group
+          // relies on. `role="group"` plus the name below is the handle, and it
+          // is the one a test or a screen reader already reaches for.
+          //
+          // The heading is a button, so it is the first segment of the bar
+          // rather than a separate item in front of it. With nothing left in
+          // the bar to join it to there is no bar: a lone button in a group
+          // named for navigation it does not contain says something untrue.
+          hasBarControls ? (
+            <ButtonGroup aria-label={navigationLabel}>
+              {picker}
+              {barControls}
+            </ButtonGroup>
+          ) : (
+            picker
+          )
         ) : (
-          <span
-            data-slot="calendar-toolbar-label"
-            className="font-semibold text-base text-quebi-fg tracking-tight"
-          >
-            {label}
-          </span>
+          <>
+            <span
+              data-slot="calendar-toolbar-label"
+              className="font-semibold text-base text-quebi-fg tracking-tight"
+            >
+              {label}
+            </span>
+            {hasBarControls ? (
+              <ButtonGroup aria-label={navigationLabel}>{barControls}</ButtonGroup>
+            ) : null}
+          </>
         )}
-        {onPrevious || onToday || onNext ? (
-          // No `data-slot` of its own: `ButtonGroup` sets its own before the
-          // spread, so one here would replace it and quietly unhook the
-          // `has-[>[data-slot=button-group]]` rule a nested group relies on.
-          // `role="group"` plus the name below is the handle, and it is the one
-          // a test or a screen reader already reaches for.
-          <ButtonGroup aria-label={navigationLabel}>
-            {onPrevious ? (
-              <Button
-                intent="outline"
-                size="sq-sm"
-                aria-label={previousLabel}
-                isDisabled={isDisabled}
-                onPress={onPrevious}
-              >
-                <ChevronLeft data-slot="icon" className="size-4" aria-hidden="true" />
-              </Button>
-            ) : null}
-            {onToday ? (
-              <Button intent="outline" size="sm" isDisabled={isDisabled} onPress={onToday}>
-                {todayLabel}
-              </Button>
-            ) : null}
-            {onNext ? (
-              <Button
-                intent="outline"
-                size="sq-sm"
-                aria-label={nextLabel}
-                isDisabled={isDisabled}
-                onPress={onNext}
-              >
-                <ChevronRight data-slot="icon" className="size-4" aria-hidden="true" />
-              </Button>
-            ) : null}
-          </ButtonGroup>
-        ) : null}
       </div>
 
       <div className="flex items-center gap-2">
@@ -285,6 +377,89 @@ export function CalendarToolbar({
   )
 }
 
+interface DateControlsProps {
+  onPrevious: (() => void) | undefined
+  onNext: (() => void) | undefined
+  onToday: (() => void) | undefined
+  previousLabel: string
+  nextLabel: string
+  todayLabel: string
+  todayVariant: CalendarToolbarTodayVariant
+  isDisabled: boolean | undefined
+}
+
+/**
+ * Back, today and forward, in that order, as bare buttons.
+ *
+ * A fragment rather than a group, because the box around them is the caller's
+ * question and it has two answers: in the bar they share the heading's box, and
+ * in the popover they are a row of their own under the grid. `ButtonGroup`
+ * squares its inner corners off `:first-child` / `:last-child` rather than off a
+ * fixed count, so any subset of the three — with or without a heading in front
+ * of them — still comes out as one properly rounded control.
+ *
+ * Each is gated on its handler: no `onToday`, no today button. `Today` is the
+ * middle of a symmetric unit — back on one side, forward on the other, home in
+ * between — which is what stops it reading as a word in the date the way it did
+ * when the three of them came first.
+ */
+function DateControls({
+  onPrevious,
+  onNext,
+  onToday,
+  previousLabel,
+  nextLabel,
+  todayLabel,
+  todayVariant,
+  isDisabled,
+}: DateControlsProps) {
+  return (
+    <>
+      {onPrevious ? (
+        <Button
+          intent="outline"
+          size="sq-sm"
+          aria-label={previousLabel}
+          isDisabled={isDisabled}
+          onPress={onPrevious}
+        >
+          <ChevronLeft data-slot="icon" className="size-4" aria-hidden="true" />
+        </Button>
+      ) : null}
+      {onToday ? (
+        todayVariant === "icon" ? (
+          // The word is still the accessible name: the icon is a width
+          // decision, not a decision to say less.
+          <Button
+            intent="outline"
+            size="sq-sm"
+            aria-label={todayLabel}
+            isDisabled={isDisabled}
+            onPress={onToday}
+          >
+            <CalendarCheck data-slot="icon" className="size-4" aria-hidden="true" />
+          </Button>
+        ) : (
+          <Button intent="outline" size="sm" isDisabled={isDisabled} onPress={onToday}>
+            {todayLabel}
+          </Button>
+        )
+      ) : null}
+      {onNext ? (
+        <Button
+          intent="outline"
+          size="sq-sm"
+          aria-label={nextLabel}
+          isDisabled={isDisabled}
+          onPress={onNext}
+        >
+          <ChevronRight data-slot="icon" className="size-4" aria-hidden="true" />
+        </Button>
+      ) : null}
+    </>
+  )
+}
+
 interface CalendarToolbarPickerProps {
   label: React.ReactNode
   date: CalendarDate
@@ -296,6 +471,15 @@ interface CalendarToolbarPickerProps {
   minValue: DateValue | undefined
   maxValue: DateValue | undefined
   isDisabled: boolean | undefined
+  /** The date controls placed in here rather than in the bar. Any subset. */
+  onPrevious: (() => void) | undefined
+  onNext: (() => void) | undefined
+  onToday: (() => void) | undefined
+  previousLabel: string
+  nextLabel: string
+  todayLabel: string
+  todayVariant: CalendarToolbarTodayVariant
+  navigationLabel: string
 }
 
 /**
@@ -312,6 +496,19 @@ interface CalendarToolbarPickerProps {
  * - **The popover closes in `onChange`.** The toolbar keeps no date, so the
  *   choice goes upward and the surface gets out of the way; leaving it open
  *   would sit a grid over the view the press just changed.
+ *
+ * Whatever `navigationPlacement` / `todayPlacement` send in here is drawn under
+ * the grid, behind a rule, as the same `‹ Today ›` unit the bar would have
+ * drawn. `Today` is the easy one. The chevrons put a second chevron pair in a
+ * surface that already has one — the day grid pages its month with `‹ ›`, the
+ * month grid its year — and that is the exact ambiguity `CalendarHeader` drops
+ * its own pair to avoid in month mode. Three things keep the two apart here,
+ * and a toolbar that does not need it is better off leaving the chevrons in the
+ * bar: they are named for the unit they step (`Previous week`, against the
+ * grid's bare `Previous`), they are outline buttons in a group rather than
+ * ghost circles in a header, and they are below a rule with `Today` between
+ * them. The grid moving its selection with every press is what confirms which
+ * is which.
  *
  * A month choice keeps the day the view was anchored on, and a week choice
  * keeps the weekday. `MonthPicker` reports the first of the month and
@@ -332,6 +529,14 @@ function CalendarToolbarPicker({
   minValue,
   maxValue,
   isDisabled,
+  onPrevious,
+  onNext,
+  onToday,
+  previousLabel,
+  nextLabel,
+  todayLabel,
+  todayVariant,
+  navigationLabel,
 }: CalendarToolbarPickerProps) {
   const { locale: ambientLocale } = useLocale()
   const [isOpen, setIsOpen] = useState(false)
@@ -349,7 +554,10 @@ function CalendarToolbarPicker({
         intent="outline"
         size="sm"
         isDisabled={isDisabled}
-        className="font-semibold text-base tracking-tight"
+        // `sq-sm` is 9.5 and `sm`'s own `py-2` around `text-base` is 10.5, so
+        // the heading used to stand a rung taller than the chevrons beside it.
+        // Unnoticeable across a gap; inside one box it is a step in the edge.
+        className="py-1.5 font-semibold text-base tracking-tight"
       >
         {label}
         <ChevronDown data-slot="icon" className="text-quebi-fg-muted" />
@@ -403,6 +611,35 @@ function CalendarToolbarPicker({
             }}
           />
         )}
+        {onPrevious || onToday || onNext ? (
+          <div className="mt-3 flex justify-center border-quebi-line/10 border-t pt-3">
+            <ButtonGroup aria-label={navigationLabel}>
+              <DateControls
+                onPrevious={onPrevious}
+                onNext={onNext}
+                // A step and a jump are different things. The chevrons leave the
+                // popover open, because the grid is the feedback — press back
+                // twice and you watch the selection walk back two weeks. `Today`
+                // is a destination, so it gets out of the way exactly as picking
+                // a day does; leaving it open would sit a grid over the view the
+                // press just changed.
+                onToday={
+                  onToday
+                    ? () => {
+                        setIsOpen(false)
+                        onToday()
+                      }
+                    : undefined
+                }
+                previousLabel={previousLabel}
+                nextLabel={nextLabel}
+                todayLabel={todayLabel}
+                todayVariant={todayVariant}
+                isDisabled={isDisabled}
+              />
+            </ButtonGroup>
+          </div>
+        ) : null}
       </PopoverContent>
     </Popover>
   )
