@@ -73,7 +73,18 @@ export function Checkbox({ className, children, ...props }: CheckboxProps) {
             ) : null}
           </span>
           {children != null && (
-            <span data-slot="label" className="text-sm text-quebi-fg select-none">
+            <span
+              data-slot="label"
+              // `min-w-0 flex-1`, so a label that wants to be a *row* can be
+              // one. A facet option is "name … count", and the count is a
+              // column: without this the label shrinks to its text and a
+              // `w-full justify-between` inside it has nothing to justify
+              // against, so every count lands right after its own label — eight
+              // rows, eight x positions, and a third of each row empty to the
+              // right of the number. It changes nothing for a label that is
+              // only text, which is every other checkbox in the library.
+              className="min-w-0 flex-1 text-sm text-quebi-fg select-none"
+            >
               {children}
             </span>
           )}

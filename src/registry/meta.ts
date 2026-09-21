@@ -82,6 +82,7 @@ import { dropdownMeta } from "./dropdown.meta"
 import { energyClassBadgeMeta } from "./energy-class-badge.meta"
 import { fieldMeta } from "./field.meta"
 import { filterBarMeta } from "./filter-bar.meta"
+import { filterRailMeta } from "./filter-rail.meta"
 import { fileTriggerMeta } from "./file-trigger.meta"
 import { formattedDateMeta } from "./formatted-date.meta"
 import { formattedNumberMeta } from "./formatted-number.meta"
@@ -240,6 +241,7 @@ export const metaRegistry: ComponentMeta[] = [
   fieldMeta,
   fileTriggerMeta,
   filterBarMeta,
+  filterRailMeta,
   formattedDateMeta,
   formattedNumberMeta,
   formattedStorageMeta,
