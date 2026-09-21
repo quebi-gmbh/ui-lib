@@ -1,8 +1,40 @@
-import { ActivityPulse } from "@/components/activity-pulse"
+import { useCallback, useRef } from "react"
+import { ActivityPulse, useActivityPulse } from "@/components/activity-pulse"
 import { SignalBars } from "@/components/signal-bars"
 import type { ComponentExample } from "./types"
 
-const PULSE = [0, 0, 40, 180, 520, 300, 90, 0, 0, 0, 0, 0, 0, 240, 610, 880, 420, 150, 60, 20]
+/**
+ * The last example on this page contrasts a level with a rhythm, so the rhythm
+ * has to be one: a frozen strip would make the pair look like two levels.
+ */
+const PULSE_LOOP = [
+  40, 180, 520, 300, 90, 0, 0, 0, 240, 610, 880, 420, 150, 60, 20, 0, 0, 0, 0, 120, 380, 240, 90,
+  30, 0, 0, 70, 260, 540, 700, 330, 120, 0, 0, 0, 0, 0, 45, 160, 90,
+]
+
+function LevelOrRhythm() {
+  const tick = useRef(0)
+  const total = useRef(0)
+  const read = useCallback(() => {
+    total.current += PULSE_LOOP[tick.current % PULSE_LOOP.length]
+    tick.current += 1
+    return total.current
+  }, [])
+  const samples = useActivityPulse(read, true)
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-3">
+        <SignalBars value={3} className="text-quebi-brand-text" label="Connection: 3 of 4" />
+        <span className="text-sm text-quebi-fg-muted">SignalBars — a level, out of four</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <ActivityPulse samples={samples} className="text-quebi-brand-text" />
+        <span className="text-sm text-quebi-fg-muted">ActivityPulse — a rhythm, out of nothing</span>
+      </div>
+    </div>
+  )
+}
 
 const CONNECTIONS = [
   { name: "eu-central-1", value: 4, text: "Excellent" },
@@ -65,20 +97,7 @@ export const signalBarsExamples: ComponentExample[] = [
   {
     title: "A level, or a rhythm?",
     description:
-      "The two components share a geometry so that the question which chooses between them is the only thing you have to answer. Signal Bars is a level: absolute, no time in it, the same picture a second later. Activity Pulse is a rhythm: a self-normalising window over the last five seconds, which is why it carries no number and never claims to.",
-    render: () => (
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-3">
-          <SignalBars value={3} className="text-quebi-brand-text" label="Connection: 3 of 4" />
-          <span className="text-sm text-quebi-fg-muted">SignalBars — a level, out of four</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <ActivityPulse samples={PULSE} className="text-quebi-brand-text" />
-          <span className="text-sm text-quebi-fg-muted">
-            ActivityPulse — a rhythm, out of nothing
-          </span>
-        </div>
-      </div>
-    ),
+      "The two components share a geometry so that the question which chooses between them is the only thing you have to answer. Signal Bars is a level: absolute, no time in it, the same picture a second later — as the top row is. Activity Pulse is a rhythm: a self-normalising window over the last five seconds, which is why it carries no number and never claims to.",
+    render: () => <LevelOrRhythm />,
   },
 ]
