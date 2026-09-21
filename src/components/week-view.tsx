@@ -28,8 +28,11 @@ import { cn } from "@/lib/utils"
  * `de-DE` and Sunday to Thursday under `en-US` unless `firstDayOfWeek` says
  * otherwise.
  *
- * Display and selection only — see the note in `CalendarShell`. This file
- * decides which seven days, and nothing else.
+ * Display, selection, and — given `isEventEditable` and `onEventChange` —
+ * dragging an event to another time or another day, by pointer or by arrow key.
+ * The machinery for that is `CalendarShell`'s; see the note there, including
+ * what it will and will not let you drop. This file decides which seven days,
+ * and nothing else.
  */
 export interface WeekViewProps<E extends CalendarEvent = CalendarEvent>
   extends CalendarGridViewProps<E> {

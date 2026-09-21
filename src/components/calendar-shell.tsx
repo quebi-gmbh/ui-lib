@@ -9,7 +9,8 @@ import {
   toZoned,
   type ZonedDateTime,
 } from "@internationalized/date"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
+import { useMove } from "react-aria"
 import { Button, Dialog, Heading, useLocale } from "react-aria-components"
 import {
   type CalendarColorName,
@@ -43,14 +44,22 @@ import { Popover, PopoverContent } from "@/components/popover"
  * decide. Which days are visible, what the toolbar says and who owns the date
  * are the assembly's business, and none of it is reachable from here.
  *
- * ## Read-only plus selection
+ * ## Display, selection and move
  *
- * There is no drag-to-create, drag-to-move or resize. That is a deliberate v1
- * line, not an oversight — `DaySchedule` is the component that owns dragging a
- * time span around, and porting its interaction surface onto four views is more
- * work than all of the layout put together. What is here is the display and the
- * two things a display still has to answer: `onEventClick` when something is
- * activated, and `onSelectionChange` for the one event drawn as selected.
+ * What the shell reports is what a display can honestly know: `onEventClick`
+ * when something is activated, `onSelectionChange` for the one event drawn as
+ * selected, and — since task #182 — `onEventChange` when an event is dragged to
+ * another time or another day. Move is opt-in per event through
+ * `isEventEditable` and it changes nothing by itself: the shell reports the
+ * drop, the consumer owns the events array, which is the contract
+ * `ServerTable`'s `onQueryChange` has. `DayView` and `WeekView` pass both props
+ * straight through, so the machinery is here once rather than in each view.
+ *
+ * Drag-to-create and drag-to-resize are still out, and that is the half of the
+ * old v1 line that holds: `DaySchedule` is the component that owns dragging a
+ * time span's *edges* around. `onEventChange` reports a start, an end and a
+ * calendar rather than a delta so that resize can arrive behind this same prop
+ * instead of beside it.
  */
 
 /**
@@ -261,6 +270,354 @@ export function useCalendarToday(
   return instant ? toCalendarDate(instant) : null
 }
 
+/**
+ * The axis as the four numbers any conversion between minutes and pixels needs.
+ *
+ * The grid positions with `offsetOfMinutes` and reads a drop back with
+ * `minutesFromOffset`. They are written as a pair, and the pair is why an event
+ * dropped on a gridline lands on the time that line is labelled with.
+ */
+export interface CalendarAxis {
+  /** First hour drawn. */
+  startHour: number
+  /** Last hour drawn, exclusive. */
+  endHour: number
+  /** Pixels per hour. */
+  hourHeight: number
+  /** The snap step in minutes — the sub-slot lines the grid draws. */
+  slotMinutes: number
+}
+
+/** Clock minutes → pixels down the grid. What every block is positioned by. */
+export function offsetOfMinutes(minutes: number, axis: CalendarAxis): number {
+  return ((minutes - axis.startHour * 60) * axis.hourHeight) / 60
+}
+
+/**
+ * Pixels down the grid → clock minutes: the inverse of `offsetOfMinutes`,
+ * snapped and clamped (task #182).
+ *
+ * The snap is to the sub-slot the grid actually draws, anchored at the top of
+ * the axis, so a dropped block sits *on* a line rather than near one — and a
+ * 09:15 event dragged anywhere lands at :00 or :30 under the default
+ * `slotMinutes`, because the grid it is being dropped onto has no other lines
+ * on it. With `slotMinutes` at 0 the only lines are the hours and the snap
+ * follows them.
+ *
+ * The clamp takes `durationMinutes` because what has to fit is the block, not
+ * its top edge: a block lands whole inside `[startHour, endHour)` or it does
+ * not land there at all. The axis is the grid's extent rather than a scroll
+ * position — `startHour` says so, and `segmentByDay` cuts against it — so a
+ * drop half an hour past `endHour` would hand the reader an event the grid
+ * cannot draw, which is an event that vanished under their own hand. The upper
+ * bound is floored back onto the snap grid, so the last legal position is still
+ * on a line, and an event longer than the axis pins to the top of it.
+ */
+export function minutesFromOffset(top: number, axis: CalendarAxis, durationMinutes = 0): number {
+  const first = axis.startHour * 60
+  const last = axis.endHour * 60
+  const step = axis.slotMinutes > 0 ? axis.slotMinutes : 60
+  const raw = axis.hourHeight > 0 ? first + (top * 60) / axis.hourHeight : first
+  const snapped = first + Math.round((raw - first) / step) * step
+  const latest = first + Math.floor(Math.max(0, last - durationMinutes - first) / step) * step
+  return Math.min(Math.max(snapped, first), Math.max(first, latest))
+}
+
+/**
+ * Which day column `x` pixels across the grid falls in.
+ *
+ * The columns are equal fractions of the one `relative grid flex-1` container,
+ * so the hit test needs that container's width and nothing else — which is what
+ * makes a drag that leaves its own day answerable at all: the per-day wrappers
+ * the blocks live in are laid out by the grid and have no coordinate space a
+ * neighbouring column is expressible in. An x outside the grid clamps to the
+ * first or last day rather than reporting a column that is not there, so a drag
+ * off the side lands on the edge it left by.
+ */
+export function dayIndexAtOffset(x: number, gridWidth: number, dayCount: number): number {
+  if (dayCount <= 1 || gridWidth <= 0) return 0
+  return Math.min(dayCount - 1, Math.max(0, Math.floor(x / (gridWidth / dayCount))))
+}
+
+/** A `CalendarDate` plus clock minutes as an instant, rolling over midnight. */
+function zonedAt(day: CalendarDate, minutes: number, timeZone: string): ZonedDateTime {
+  const dayOffset = Math.floor(minutes / MINUTES_PER_DAY)
+  const within = minutes - dayOffset * MINUTES_PER_DAY
+  const base = dayOffset === 0 ? day : day.add({ days: dayOffset })
+  return toZoned(
+    toCalendarDateTime(base, new Time(Math.floor(within / 60), within % 60)),
+    timeZone,
+  )
+}
+
+/**
+ * Where an event was dropped.
+ *
+ * A start, an end and a calendar rather than a delta, because the consumer owns
+ * the events array and what it needs is the event it should write back — the
+ * same shape `ServerTable` hands to `onQueryChange`. Move preserves the
+ * duration, so `end` is `start` plus what the event already lasted; the field
+ * is here for the resize that will arrive behind this same prop.
+ */
+export interface CalendarEventChange {
+  start: ZonedDateTime
+  end: ZonedDateTime
+  /**
+   * The calendar the event landed on, when the thing a column stands for is a
+   * calendar. Undefined from the grid views, whose columns are days.
+   */
+  calendarId?: string
+}
+
+/** The ghost drawn at the snapped target while a drag is in flight. */
+export interface CalendarMovePreview<E extends CalendarEvent = CalendarEvent> {
+  event: E
+  /** Column the ghost sits in. */
+  dayIndex: number
+  /** Clock minutes on that day — the ghost's geometry. */
+  startMinutes: number
+  endMinutes: number
+  /** The drop it stands for, which is what `onEventChange` is handed. */
+  start: ZonedDateTime
+  end: ZonedDateTime
+}
+
+/** How far a pointer has to travel before the gesture is a drag and not a click. */
+const DRAG_THRESHOLD = 3
+
+interface MoveOrigin<E extends CalendarEvent> {
+  event: E
+  dayIndex: number
+  startMinutes: number
+  durationMinutes: number
+  /** Page coordinates of the press. Null for a keyboard move, which has none. */
+  pointer: { x: number; y: number } | null
+  /** The grid's box in page coordinates, read once — see `start`. */
+  grid: { left: number; width: number } | null
+  deltaX: number
+  deltaY: number
+  target: { dayIndex: number; startMinutes: number } | null
+  dragged: boolean
+}
+
+interface EventMoveOptions<E extends CalendarEvent> {
+  days: readonly CalendarDate[]
+  timeZone: string
+  axis: CalendarAxis
+  gridRef: React.RefObject<HTMLDivElement | null>
+  isEventEditable: boolean | ((event: E) => boolean) | undefined
+  onEventChange: ((event: E, next: CalendarEventChange) => void) | undefined
+  announce: (event: E, next: CalendarMovePreview<E>) => void
+  hintId: string
+}
+
+interface EventMoveController<E extends CalendarEvent> {
+  /** Is anything movable at all? Gates the hint and the live region. */
+  enabled: boolean
+  /** The sr-only line describing the gesture, for `aria-describedby`. */
+  hintId: string
+  preview: CalendarMovePreview<E> | null
+  isMovable: (segment: DaySegment<E>) => boolean
+  start: (segment: DaySegment<E>, pointer: { x: number; y: number } | null) => void
+  move: (deltaX: number, deltaY: number, pointerType: string) => void
+  end: (pointerType: string) => void
+  /** Was the press that just fired the tail of a drag? Consumes the flag. */
+  consumePress: () => boolean
+}
+
+/** `CSS.escape`, where there is one — happy-dom and older engines have none. */
+const escapeId = (id: string) =>
+  typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(id) : id
+
+/**
+ * Dragging an event to another time or another day (task #182).
+ *
+ * Three decisions are in here rather than in the caller, because all three are
+ * about what the grid can honestly draw:
+ *
+ * - **Nothing repacks mid-drag.** The feedback is a ghost at the snapped
+ *   target, so the real blocks never leave their column while the pointer is
+ *   down — `packColumns` is a pass over the whole day, and re-running it per
+ *   frame would reflow the dragged event's neighbours under a reader who is
+ *   looking at something else. The drop reports, the consumer re-renders, and
+ *   the packer runs once, on the new events.
+ * - **A cut segment is not movable.** `continuesBefore` / `continuesAfter` mean
+ *   the block is a slice of an event whose real start is off the axis, so a
+ *   drop position for *it* says nothing about where the event goes. The 22:00
+ *   → 06:00 shift is the case: it draws as two blocks on two days, and neither
+ *   of them is the thing you would be moving.
+ * - **A press is not a drag.** react-aria's press fires from a document-level
+ *   `pointerup` and `useMove`'s end from a window-level one, so the press
+ *   always arrives first and cannot be suppressed from `onMoveEnd`. The flag is
+ *   therefore set on the first `onMove` past `DRAG_THRESHOLD` and consumed by
+ *   the press, which is what keeps a plain click selecting.
+ */
+function useEventMove<E extends CalendarEvent>(
+  options: EventMoveOptions<E>,
+): EventMoveController<E> {
+  const { days, timeZone, axis, gridRef, isEventEditable, onEventChange, announce, hintId } =
+    options
+  const [preview, setPreview] = useState<CalendarMovePreview<E> | null>(null)
+  const originRef = useRef<MoveOrigin<E> | null>(null)
+  const draggedRef = useRef(false)
+  const refocusRef = useRef<string | null>(null)
+
+  // A keyboard move commits on every key press, and a commit that changes the
+  // day remounts the block under another column's wrapper — React has no way to
+  // carry focus across that, and a focus lost after the first ArrowRight is the
+  // keyboard path gone. So the block is found again by the id it carries and
+  // re-focused, once, on the render that follows the commit.
+  useEffect(() => {
+    const id = refocusRef.current
+    if (!id) return
+    refocusRef.current = null
+    gridRef.current
+      ?.querySelector<HTMLElement>(
+        `[data-slot="calendar-event"][data-event-id="${escapeId(id)}"]`,
+      )
+      ?.focus()
+  })
+
+  const enabled = onEventChange !== undefined && isEventEditable !== undefined
+
+  const isMovable = (segment: DaySegment<E>) => {
+    if (!enabled) return false
+    if (segment.continuesBefore || segment.continuesAfter) return false
+    return typeof isEventEditable === "function"
+      ? isEventEditable(segment.event)
+      : isEventEditable === true
+  }
+
+  const previewAt = (
+    origin: MoveOrigin<E>,
+    dayIndex: number,
+    startMinutes: number,
+  ): CalendarMovePreview<E> | null => {
+    const day = days[dayIndex]
+    if (!day) return null
+    const start = zonedAt(day, startMinutes, timeZone)
+    return {
+      event: origin.event,
+      dayIndex,
+      startMinutes,
+      endMinutes: startMinutes + origin.durationMinutes,
+      start,
+      // Wall-clock arithmetic, so a 90-minute meeting is 90 minutes on the
+      // clock it is read from even on the day a zone changes offset.
+      end: start.add({ minutes: origin.durationMinutes }),
+    }
+  }
+
+  const commit = (origin: MoveOrigin<E>, pointerType: string) => {
+    const target = origin.target
+    if (!target) return
+    if (target.dayIndex === origin.dayIndex && target.startMinutes === origin.startMinutes) return
+    const next = previewAt(origin, target.dayIndex, target.startMinutes)
+    if (!next) return
+    if (pointerType === "keyboard") refocusRef.current = origin.event.id
+    onEventChange?.(origin.event, { start: next.start, end: next.end })
+    announce(origin.event, next)
+  }
+
+  return {
+    enabled,
+    hintId,
+    preview,
+    isMovable,
+
+    start(segment, pointer) {
+      draggedRef.current = false
+      if (!isMovable(segment)) {
+        originRef.current = null
+        return
+      }
+      // The grid's box is read once, at the press. Reading it per frame would
+      // pick up the scroll the drag itself can cause and walk the ghost.
+      const rect = gridRef.current?.getBoundingClientRect()
+      originRef.current = {
+        event: segment.event,
+        dayIndex: segment.dayIndex,
+        startMinutes: segment.start,
+        durationMinutes: segment.end - segment.start,
+        pointer,
+        grid: rect ? { left: rect.left + window.scrollX, width: rect.width } : null,
+        deltaX: 0,
+        deltaY: 0,
+        target: null,
+        dragged: false,
+      }
+    },
+
+    move(deltaX, deltaY, pointerType) {
+      const origin = originRef.current
+      if (!origin) return
+
+      // `useMove` reports one unit per arrow press whatever the pointer type,
+      // so the keyboard's unit is chosen here: a slot down the axis, a day
+      // across it. Each press commits on its own `moveend`, which is what makes
+      // the move announceable step by step instead of only at the end.
+      if (pointerType === "keyboard") {
+        const step = axis.slotMinutes > 0 ? axis.slotMinutes : 60
+        origin.target = {
+          dayIndex: Math.min(days.length - 1, Math.max(0, origin.dayIndex + Math.sign(deltaX))),
+          startMinutes: minutesFromOffset(
+            offsetOfMinutes(origin.startMinutes + Math.sign(deltaY) * step, axis),
+            axis,
+            origin.durationMinutes,
+          ),
+        }
+        return
+      }
+
+      origin.deltaX += deltaX
+      origin.deltaY += deltaY
+      if (
+        Math.abs(origin.deltaX) > DRAG_THRESHOLD ||
+        Math.abs(origin.deltaY) > DRAG_THRESHOLD
+      ) {
+        origin.dragged = true
+        draggedRef.current = true
+      }
+
+      // An unmeasurable grid keeps the event in its own column rather than
+      // guessing at the first one: a drag that cannot answer "which day" has
+      // not been told the event moved days.
+      const dayIndex =
+        origin.grid && origin.grid.width > 0 && origin.pointer
+          ? dayIndexAtOffset(
+              origin.pointer.x + origin.deltaX - origin.grid.left,
+              origin.grid.width,
+              days.length,
+            )
+          : origin.dayIndex
+      const startMinutes = minutesFromOffset(
+        offsetOfMinutes(origin.startMinutes, axis) + origin.deltaY,
+        axis,
+        origin.durationMinutes,
+      )
+      origin.target = { dayIndex, startMinutes }
+      setPreview(previewAt(origin, dayIndex, startMinutes))
+    },
+
+    end(pointerType) {
+      const origin = originRef.current
+      originRef.current = null
+      setPreview(null)
+      if (!origin) return
+      // A wobble under the threshold is the click it looked like, and the press
+      // that follows it is left to do its job.
+      if (pointerType !== "keyboard" && !origin.dragged) return
+      commit(origin, pointerType)
+    },
+
+    consumePress() {
+      if (!draggedRef.current) return false
+      draggedRef.current = false
+      return true
+    },
+  }
+}
+
 export interface CalendarShellProps<E extends CalendarEvent = CalendarEvent> {
   /** The visible days, left to right. One for a day view, seven for a week. */
   days: readonly CalendarDate[]
@@ -315,6 +672,38 @@ export interface CalendarShellProps<E extends CalendarEvent = CalendarEvent> {
   onEventClick?: (event: E) => void
   /** Fires when an overflow link is activated, with everything on that day. */
   onMoreClick?: (day: CalendarDate, events: E[]) => void
+  /**
+   * Which events may be dragged to another time or another day. Default none.
+   *
+   * Opt-in per event, because "can this be moved" is a question about the
+   * event and not about the view: a meeting someone else owns, a booking past
+   * its cut-off and a holiday are all things a calendar draws and nobody may
+   * drag. Pass `true` for all of them, or a predicate.
+   *
+   * It takes two to turn the gesture on: without `onEventChange` a drop has
+   * nowhere to go, so nothing is movable however this prop reads. An event the
+   * axis *cuts* — a shift running past midnight, drawn as two blocks — is not
+   * movable either, whatever the predicate says, because neither of its blocks
+   * is the event you would be moving.
+   */
+  isEventEditable?: boolean | ((event: E) => boolean)
+  /**
+   * Fires once on drop, with the event and where it landed.
+   *
+   * The shell moves nothing. It reports the drop and re-renders from the
+   * `events` you hand back, the same contract `ServerTable`'s `onQueryChange`
+   * has — so an app that validates the move, refuses it, or rounds it to its
+   * own booking grid does that by not writing the event it was given, and the
+   * block stays where it was with nothing to undo.
+   *
+   * The duration is preserved, and `calendarId` is undefined from the grid
+   * views: their columns are days.
+   */
+  onEventChange?: (event: E, next: CalendarEventChange) => void
+  /** What a screen reader is told a movable event can do. */
+  moveHintLabel?: string
+  /** The line announced after a move. Defaults to the event and its new slot. */
+  moveAnnouncement?: (event: E, next: CalendarEventChange) => string
   className?: string
 }
 
@@ -347,6 +736,10 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
   onSelectionChange,
   onEventClick,
   onMoreClick,
+  isEventEditable,
+  onEventChange,
+  moveHintLabel = "Press the arrow keys to move this event.",
+  moveAnnouncement,
   className,
 }: CalendarShellProps<E>) {
   const { locale: contextLocale } = useLocale()
@@ -356,8 +749,13 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
 
   const axisStart = Math.max(0, Math.min(23, Math.trunc(startHour)))
   const axisEnd = Math.max(axisStart + 1, Math.min(24, Math.trunc(endHour)))
-  const axisMinutes = (axisEnd - axisStart) * 60
   const gridHeight = (axisEnd - axisStart) * hourHeight
+  const axis: CalendarAxis = {
+    startHour: axisStart,
+    endHour: axisEnd,
+    hourHeight,
+    slotMinutes,
+  }
 
   // Cut against the axis, not against midnight: `toTop` is a linear map with no
   // clamp in it, so a segment the window does not contain is drawn outside the
@@ -377,7 +775,9 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
     [bands, days.length, maxAllDayLanes],
   )
 
-  const toTop = (minutes: number) => ((minutes - axisStart * 60) / axisMinutes) * gridHeight
+  // One direction of the pair. `minutesFromOffset` is the other, and a drag
+  // reads its drop back through it.
+  const toTop = (minutes: number) => offsetOfMinutes(minutes, axis)
   const hours = Array.from({ length: axisEnd - axisStart }, (_, index) => axisStart + index)
   const firstDay = days[0]
 
@@ -393,6 +793,30 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
       : null
 
   const columns = { gridTemplateColumns: `repeat(${Math.max(1, days.length)}, minmax(0, 1fr))` }
+
+  const gridRef = useRef<HTMLDivElement>(null)
+  const hintId = useId()
+  const [announcement, setAnnouncement] = useState("")
+  const move = useEventMove<E>({
+    days,
+    timeZone,
+    axis,
+    gridRef,
+    isEventEditable,
+    onEventChange,
+    hintId,
+    announce: (event, next) =>
+      setAnnouncement(
+        moveAnnouncement
+          ? moveAnnouncement(event, { start: next.start, end: next.end })
+          : `${event.title}: ${getDateTimeFormat(locale, {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              timeZone,
+            }).format(next.start.toDate())}, ${formatEventTime(next.start, locale, timeZone)} – ${formatEventTime(next.end, locale, timeZone)}`,
+      ),
+  })
 
   const activate = (event: E) => {
     selection.toggle(event.id)
@@ -476,7 +900,12 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
               : null}
           </div>
 
-          <div className="relative grid flex-1" style={columns}>
+          <div
+            ref={gridRef}
+            data-slot="calendar-grid"
+            className="relative grid flex-1"
+            style={columns}
+          >
             <div className="pointer-events-none absolute inset-0" aria-hidden="true">
               {hours.map((hour) => (
                 <div
@@ -516,6 +945,9 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
                       locale={locale}
                       timeZone={timeZone}
                       isSelected={selection.value === segment.event.id}
+                      isMovable={move.isMovable(segment)}
+                      isDragging={move.preview?.event.id === segment.event.id}
+                      move={move}
                       onActivate={activate}
                     />
                   ))}
@@ -527,9 +959,38 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
                 ) : null}
               </div>
             ))}
+
+            {move.preview ? (
+              <MovePreviewBlock
+                preview={move.preview}
+                color={resolveEventColor(move.preview.event, calendars)}
+                dayCount={Math.max(1, days.length)}
+                top={toTop(move.preview.startMinutes)}
+                bottom={toTop(move.preview.endMinutes)}
+                locale={locale}
+                timeZone={timeZone}
+              />
+            ) : null}
           </div>
         </div>
       </div>
+
+      {/* The keyboard half of the gesture needs saying out loud, twice over:
+          a movable block is described as movable before anyone tries, and
+          every landing is announced, because the ghost and the snapped
+          position are pictures and a picture is not a channel every reader
+          has. The region is `polite` — a move is the reader's own doing, so it
+          waits its turn rather than interrupting. */}
+      {move.enabled ? (
+        <>
+          <span id={hintId} className="sr-only">
+            {moveHintLabel}
+          </span>
+          <span role="status" aria-live="polite" className="sr-only">
+            {announcement}
+          </span>
+        </>
+      ) : null}
     </div>
   )
 }
@@ -603,11 +1064,40 @@ interface TimedBlockProps<E extends CalendarEvent> {
   locale: string
   timeZone: string
   isSelected: boolean
+  /** May this block be dragged? See `isEventEditable`. */
+  isMovable: boolean
+  /** Is this the block the ghost currently stands for? */
+  isDragging: boolean
+  move: EventMoveController<E>
   onActivate: (event: E) => void
 }
 
 /** The shortest block that still holds a line of text. */
 const MIN_BLOCK_HEIGHT = 18
+
+const NO_OP = () => {}
+
+/**
+ * The event, minus its ability to cancel the press it may still turn out to be.
+ *
+ * `useMove` stops propagation and prevents the default on `pointerdown`, which
+ * is right when it owns the element and wrong when it is being started from
+ * above one that is also a button: stopping propagation there would cancel the
+ * press, and preventing the default would cancel the click the press is
+ * triggered from. Everything else about the event is passed through.
+ */
+function withoutCancelling<T extends Element>(event: React.PointerEvent<T>): React.PointerEvent<T> {
+  return new Proxy(event, {
+    get(target, key) {
+      if (key === "stopPropagation" || key === "preventDefault") return NO_OP
+      const value = Reflect.get(target, key) as unknown
+      return typeof value === "function" ? value.bind(target) : value
+    },
+  })
+}
+
+/** The keys `useMove` turns into a move, and so the keys that start one. */
+const MOVE_KEYS = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Up", "Down", "Left", "Right"])
 
 function TimedBlock<E extends CalendarEvent>({
   segment,
@@ -618,6 +1108,9 @@ function TimedBlock<E extends CalendarEvent>({
   locale,
   timeZone,
   isSelected,
+  isMovable,
+  isDragging,
+  move,
   onActivate,
 }: TimedBlockProps<E>) {
   const palette = CALENDAR_COLORS[color]
@@ -628,20 +1121,42 @@ function TimedBlock<E extends CalendarEvent>({
   const y = Math.max(0, Math.min(top, gridHeight - height))
   const left = (segment.column / segment.columns) * 100
   const width = (segment.span / segment.columns) * 100
+  // The 2px inset is the negative space that separates touching blocks. A
+  // border round each one would be ink that is not data — see the palette note
+  // above — and two adjacent borders read as one thick divider.
+  const geometry = { top: y, height, left: `${left}%`, width: `calc(${width}% - 2px)` }
 
-  return (
+  // `useMove` rather than a raw `onPointerDown`, for two reasons that are the
+  // same reason: it is the hook that already knows the difference between a
+  // pointer and an arrow key, and the block it would be attached to is a
+  // react-aria `Button` that captures the pointer for its own press handling.
+  // What it gives back is pointer *and* keyboard movement from one surface —
+  // `DaySchedule` had to hand-roll `role="slider"` plus arrow keys to get the
+  // same thing, and got it for one component.
+  const { moveProps } = useMove({
+    onMove: (event) => move.move(event.deltaX, event.deltaY, event.pointerType),
+    onMoveEnd: (event) => move.end(event.pointerType),
+  })
+
+  const block = (
     <Button
       data-slot="calendar-event"
       data-event-id={segment.event.id}
-      onPress={() => onActivate(segment.event)}
-      // The 2px inset is the negative space that separates touching blocks. A
-      // border round each one would be ink that is not data — see the palette
-      // note above — and two adjacent borders read as one thick divider.
-      style={{ top: y, height, left: `${left}%`, width: `calc(${width}% - 2px)` }}
+      data-dragging={isDragging || undefined}
+      aria-describedby={isMovable ? move.hintId : undefined}
+      onPress={() => {
+        // The press that ends a drag is still a press. See `useEventMove`.
+        if (isMovable && move.consumePress()) return
+        onActivate(segment.event)
+      }}
+      style={isMovable ? undefined : geometry}
       className={cn(
-        "absolute cursor-pointer overflow-hidden text-left",
+        "cursor-pointer overflow-hidden text-left",
         "border-l-2 px-1.5 py-0.5 transition-colors duration-150",
         "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
+        // Movable blocks are positioned by the wrapper that carries the
+        // gesture, and fill it; everything else positions itself.
+        isMovable ? "h-full w-full cursor-grab active:cursor-grabbing" : "absolute",
         palette.block,
         palette.edge,
         // A segment continuing past midnight loses the radius on that edge, so
@@ -654,6 +1169,10 @@ function TimedBlock<E extends CalendarEvent>({
         // load-bearing — it is what displaces the `outline-none` above,
         // which would otherwise leave the outline styled away.
         isSelected && cn("outline-2 outline-solid outline-offset-0", palette.selected),
+        // The block being dragged stays where it is and steps back; the ghost
+        // is the thing that moves. Repacking it into its new column per frame
+        // would reflow its neighbours under a reader watching the ghost.
+        isDragging && "opacity-40",
       )}
     >
       <BlockText
@@ -663,6 +1182,104 @@ function TimedBlock<E extends CalendarEvent>({
         height={height}
       />
     </Button>
+  )
+
+  if (!isMovable) return block
+
+  // `touch-none` is what makes a touch drag a drag: without it the browser
+  // claims the gesture for scrolling before `useMove` sees the second frame.
+  return (
+    <div
+      data-slot="calendar-event-move"
+      className="absolute touch-none"
+      style={geometry}
+      {...moveProps}
+      onPointerDownCapture={(event) => {
+        if (event.button !== 0) return
+        move.start(segment, { x: event.pageX, y: event.pageY })
+        // react-aria's press handling stops `pointerdown` dead on the block
+        // itself — `usePress` calls `stopPropagation` unless a press handler
+        // opts out, and none of them do — so the bubble-phase listener
+        // `useMove` installs on this wrapper would never see one. Starting the
+        // move from the capture phase is what gets both halves: the gesture
+        // begins here, and the event carries on down to the button where the
+        // press it might still be is waiting for it. `useMove` ignores a second
+        // `pointerdown` while a pointer is down, so the listener it also
+        // installed costs nothing.
+        moveProps.onPointerDown?.(withoutCancelling(event))
+      }}
+      onKeyDownCapture={(event) => {
+        if (MOVE_KEYS.has(event.key)) move.start(segment, null)
+      }}
+    >
+      {block}
+    </div>
+  )
+}
+
+interface MovePreviewBlockProps<E extends CalendarEvent> {
+  preview: CalendarMovePreview<E>
+  color: CalendarColorName
+  dayCount: number
+  top: number
+  bottom: number
+  locale: string
+  timeZone: string
+}
+
+/**
+ * The ghost at the snapped target, labelled with the time it would land on.
+ *
+ * It is drawn in the grid container rather than in a day column, because the
+ * column is the one place a drag that left it cannot be drawn: the per-day
+ * wrappers are grid cells with no coordinate space their neighbours are
+ * expressible in. One box, `left: (dayIndex / days.length) * 100%`, is that
+ * space — and with the ghost carrying every frame of the feedback, the real
+ * blocks never have to leave their wrapper, which is what kept the layout all
+ * four views share out of this change.
+ */
+function MovePreviewBlock<E extends CalendarEvent>({
+  preview,
+  color,
+  dayCount,
+  top,
+  bottom,
+  locale,
+  timeZone,
+}: MovePreviewBlockProps<E>) {
+  const palette = CALENDAR_COLORS[color]
+  const height = Math.max(MIN_BLOCK_HEIGHT, bottom - top)
+
+  return (
+    <div
+      data-slot="calendar-move-preview"
+      // The ghost is a picture of the drag in progress; the drop itself is
+      // announced through the shell's live region, where it is one line rather
+      // than one per frame.
+      aria-hidden="true"
+      style={{
+        top,
+        height,
+        left: `${(preview.dayIndex / dayCount) * 100}%`,
+        width: `calc(${100 / dayCount}% - 2px)`,
+      }}
+      className={cn(
+        "pointer-events-none absolute z-10 overflow-hidden px-1.5 py-0.5",
+        "rounded-quebi-sm outline-2 outline-quebi-brand-mark outline-dashed",
+        palette.block,
+        palette.edge,
+        "border-l-2",
+      )}
+    >
+      <span className="flex flex-col gap-0.5 text-xs leading-tight">
+        <span className="truncate font-semibold text-quebi-fg">{preview.event.title}</span>
+        <span className="truncate text-quebi-fg-muted tabular-nums">
+          {formatEventTime(preview.start, locale, timeZone)}
+          {" – "}
+          {formatEventTime(preview.end, locale, timeZone)}
+        </span>
+      </span>
+    </div>
   )
 }
 
@@ -1104,6 +1721,10 @@ export interface CalendarGridViewProps<E extends CalendarEvent = CalendarEvent>
     | "onSelectionChange"
     | "onEventClick"
     | "onMoreClick"
+    | "isEventEditable"
+    | "onEventChange"
+    | "moveHintLabel"
+    | "moveAnnouncement"
     | "className"
   > {}
 
