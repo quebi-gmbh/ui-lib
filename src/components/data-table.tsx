@@ -473,7 +473,7 @@ export function DataTable<T extends RowData>({
       emptyMessage={emptyMessage}
       noResultsMessage={noResultsMessage}
       activeFilters={activeFilterIds}
-      renderFilter={(columnId) => {
+      renderFilter={(columnId, close) => {
         const column = table.getColumn(columnId)
         const meta = column?.columnDef.meta
         if (!column || !meta?.filterVariant) return null
@@ -494,6 +494,7 @@ export function DataTable<T extends RowData>({
             bounds={minMax ? [Number(minMax[0]), Number(minMax[1])] : undefined}
             onApply={(value) => setColumnFilter(columnId, value)}
             onClear={() => setColumnFilter(columnId, undefined)}
+            onClose={close}
           />
         )
       }}

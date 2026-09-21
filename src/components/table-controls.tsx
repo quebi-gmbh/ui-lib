@@ -590,6 +590,14 @@ export interface TableFilterPanelProps {
   value: unknown
   onApply: (value: unknown) => void
   onClear: () => void
+  /**
+   * Dismiss whatever is hosting the panel, once Apply or Clear has been acted
+   * on. The panel asks; the host decides what dismissing means — a popover
+   * closes, a sheet slides away, a faceted rail does nothing and leaves this
+   * undefined. Reading the overlay state from context instead would be silent
+   * in exactly the hosts that are not overlays.
+   */
+  onClose?: () => void
   /** Enum choices — faceted unique values client-side, a query result server-side. */
   options?: DataTableFilterOption[]
   /** Faceted min/max, used to label a number range. */
@@ -668,6 +676,13 @@ const asIsoDate = (value: unknown): string | null => {
  * returns nothing and looks like an empty table. Applying is an explicit
  * submit, which is what keeps a server-driven table to one round-trip per
  * change; dismissing the popover discards the pending edit.
+ *
+ * Applying is also the end of the interaction, so the panel calls `onClose`
+ * once it has — a host that is an overlay closes, and the result of the filter
+ * is visible instead of hidden behind the panel that asked for it. Clear ends
+ * it the same way. The panel does not reach for react-aria's overlay state
+ * itself: it is meant to be hosted outside an overlay too, and there that
+ * reach would be a silent no-op rather than a prop a host can decline.
  */
 export function TableFilterPanel({
   columnId,
@@ -676,6 +691,7 @@ export function TableFilterPanel({
   value,
   onApply,
   onClear,
+  onClose,
   options = [],
   bounds,
   isLoadingOptions,
@@ -728,6 +744,9 @@ export function TableFilterPanel({
           onApply([asIsoDate(parsed.from), asIsoDate(parsed.to)])
           break
       }
+      // Only a submission that got as far as applying dismisses the host: a
+      // validation error keeps the panel up, with the message on the field.
+      onClose?.()
     },
   })
 
@@ -817,7 +836,15 @@ export function TableFilterPanel({
       )}
 
       <div className="flex items-center gap-2 border-quebi-line/10 border-t pt-3">
-        <Button intent="ghost" size="xs" className="flex-1" onPress={onClear}>
+        <Button
+          intent="ghost"
+          size="xs"
+          className="flex-1"
+          onPress={() => {
+            onClear()
+            onClose?.()
+          }}
+        >
           Clear
         </Button>
         <Button type="submit" intent="primary" size="xs" className="flex-1">

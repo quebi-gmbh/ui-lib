@@ -247,6 +247,7 @@ function ServerFilterPanel({
   loadFilterValues,
   onApply,
   onClear,
+  onClose,
 }: {
   columnId: string
   label: string
@@ -255,6 +256,7 @@ function ServerFilterPanel({
   loadFilterValues?: ServerTableLoadFilterValues
   onApply: (value: unknown) => void
   onClear: () => void
+  onClose?: () => void
 }) {
   const facets = useFilterOptions(columnId, loadFilterValues)
   const selected = Array.isArray(value) ? (value as string[]) : []
@@ -278,6 +280,7 @@ function ServerFilterPanel({
       onLoadMoreOptions={variant === "enum" ? facets.onLoadMore : undefined}
       onApply={onApply}
       onClear={onClear}
+      onClose={onClose}
     />
   )
 }
@@ -580,7 +583,7 @@ export function ServerTable<T extends RowData>({
             : undefined
         }
         isLoadingMore={paginationMode === "load-more" && isRefreshing}
-        renderFilter={(columnId) => {
+        renderFilter={(columnId, close) => {
           const meta = table.getColumn(columnId)?.columnDef.meta
           if (!meta?.filterVariant) return null
           return (
@@ -592,6 +595,7 @@ export function ServerTable<T extends RowData>({
               loadFilterValues={loadFilterValues}
               onApply={(value) => setFilter(columnId, value)}
               onClear={() => setFilter(columnId, undefined)}
+              onClose={close}
             />
           )
         }}
