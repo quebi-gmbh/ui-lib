@@ -531,6 +531,122 @@ export function facetedOptions({
   return options
 }
 
+/* -------------------------------------------------------------------------- */
+/*                       the filter model without a table                     */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * `matchesFilter` above takes a value and a filter and has never known what a
+ * column is — which is what makes the five variants usable over a card grid, a
+ * gallery or any other list that has no header row to hang a filter popover
+ * from. What was missing was the other half: a way to say *which* fields are
+ * filterable without writing a `DataTableColumn` for something that is not a
+ * column. That is `FilterField`, and the three functions under it are the whole
+ * of what a list surface needs on top of the predicate.
+ */
+
+/**
+ * A filterable field on a surface that has no columns.
+ *
+ * Deliberately not a `DataTableColumn`: a column carries an accessor, a cell
+ * template, a width, a sort function and a pin state, none of which a filter
+ * reads. What is left when you take those away is this — an id, a name for a
+ * human, and the variant that decides both the control and the predicate.
+ */
+export interface FilterField {
+  /** Also the property read off a row, unless the caller passes its own getter. */
+  id: string
+  label: string
+  variant: DataTableFilterVariant
+  /** Enum choices. `facetCounts` computes them from the rows; a server sends them. */
+  options?: DataTableFilterOption[]
+  /** Faceted min/max, used to label a number range. */
+  bounds?: [number, number]
+}
+
+/** Every field's current filter, by field id, in the shape its variant expects. */
+export type FilterValues = Record<string, unknown>
+
+/**
+ * True when a filter would narrow anything — i.e. when it is worth a chip.
+ *
+ * The empty cases differ by variant and all four have to read the same: no
+ * value at all, the empty string, no enum choices selected, and a range with
+ * neither end set. `matchesFilter` lets all four through; this is the same
+ * question asked from the outside, by the chrome that has to decide whether to
+ * draw a chip and count a filter.
+ */
+export function isFilterSet(value: unknown): boolean {
+  if (value == null || value === "") return false
+  if (Array.isArray(value)) return value.some((entry) => entry != null && entry !== "")
+  return true
+}
+
+/** Read a field off a row by its id. The default when no getter is supplied. */
+function fieldValue(row: unknown, fieldId: string): unknown {
+  return (row as Record<string, unknown>)[fieldId]
+}
+
+/**
+ * The rows every field's filter accepts — the list-shaped counterpart of the
+ * `filteredRowModel` a table gets from TanStack.
+ *
+ * `getValue` is the escape hatch for a row whose shape is not flat: by default
+ * a field's id *is* the property, which is what makes the common case a
+ * one-liner.
+ */
+export function filterRows<T>(
+  rows: T[],
+  fields: FilterField[],
+  values: FilterValues,
+  getValue: (row: T, fieldId: string) => unknown = fieldValue,
+): T[] {
+  return rows.filter((row) =>
+    fields.every((field) => matchesFilter(getValue(row, field.id), field.variant, values[field.id])),
+  )
+}
+
+/**
+ * One field's choices, counted over the rows the *other* fields leave — what
+ * `facetDomains` + `facetedOptions` do for a table, for a plain array.
+ *
+ * Counting against the other filters rather than against the result is what
+ * makes a facet answer "and how many would that leave" instead of "how many of
+ * what you are already looking at" — the latter shows every unselected option
+ * at zero the moment one is picked.
+ *
+ * Only the counting is done here. The list itself is assembled by
+ * `facetedOptions` above, so a list and a table make the same two promises from
+ * the same code: a value the other filters have zeroed keeps its place at 0
+ * rather than vanishing, and a selected value is listed whatever the counts say
+ * — because this is the only place it can be taken off again.
+ */
+export function facetCounts<T>(
+  rows: T[],
+  fields: FilterField[],
+  fieldId: string,
+  values: FilterValues,
+  getValue: (row: T, fieldId: string) => unknown = fieldValue,
+): DataTableFilterOption[] {
+  const others = fields.filter((field) => field.id !== fieldId)
+  const counts = new Map<unknown, number>()
+  for (const row of rows) {
+    const raw = getValue(row, fieldId)
+    if (raw == null || raw === "") continue
+    const key = String(raw)
+    const kept = others.every((field) =>
+      matchesFilter(getValue(row, field.id), field.variant, values[field.id]),
+    )
+    counts.set(key, (counts.get(key) ?? 0) + (kept ? 1 : 0))
+  }
+  const selected = values[fieldId]
+  return facetedOptions({
+    domain: [...counts.keys()].map(String),
+    counts,
+    selected: Array.isArray(selected) ? selected.map(String) : [],
+  })
+}
+
 /** Translate the shared vocabulary into TanStack column definitions. */
 export function toColumnDefs<T extends RowData>(
   columns: DataTableColumn<T>[],

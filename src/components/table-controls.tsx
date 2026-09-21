@@ -10,11 +10,9 @@ import {
   RotateCcw,
   Rows2,
   Rows3,
-  X,
 } from "lucide-react"
 import { Fragment, type ReactNode, useEffect, useId, useMemo, useRef, useState } from "react"
 import * as v from "valibot"
-import { Badge } from "@/components/badge"
 import { Button, buttonStyles } from "@/components/button"
 import { Checkbox } from "@/components/checkbox"
 import { ConformCheckboxGroup } from "@/components/conform-checkbox-group"
@@ -24,6 +22,14 @@ import { ConformNumberField } from "@/components/conform-number-field"
 import { ConformSearchField } from "@/components/conform-search-field"
 import { ConformSelect } from "@/components/conform-select"
 import { ConformSwitch } from "@/components/conform-switch"
+import {
+  describeFilter,
+  type FilterChip,
+  FilterChips,
+  type FilterChipsProps,
+  FilterPanel,
+  type FilterPanelProps,
+} from "@/components/filter-bar"
 import { FormattedNumber } from "@/components/formatted-number"
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/menu"
 import {
@@ -48,8 +54,6 @@ import {
   type DataTableColumn,
   type DataTableDensity,
   type DataTableFieldContext,
-  type DataTableFilterOption,
-  type DataTableFilterVariant,
   type DataTableSelection,
   editValuesFor,
   isSameCell,
@@ -68,13 +72,22 @@ import { cn } from "@/lib/utils"
  * per-column filter panel, the pager, the bulk-action bar, the unsaved-changes
  * bar, and the two editors — a row's and a cell's.
  *
+ * Two of those now live one file over. The filter panel and the chips are the
+ * same parts a list, a gallery or a card grid needs and have nothing table-shaped
+ * in them, so they are `@/components/filter-bar`'s `FilterPanel` and
+ * `FilterChips`; `TableFilterPanel` and `TableFilterChips` below are the names
+ * the table family already used, kept as thin wrappers that say `columnId` where
+ * the general ones say `fieldId`.
+ *
  * It is one of the two halves DataTable and ServerTable are assembled from, and
  * it is a sibling of the other: **`table-shell` renders rows, `table-controls`
  * renders chrome, and neither imports the other.** The shell asks for a filter
  * popover's body through a `renderFilter(columnId)` prop; the mode component is
  * what passes a `<TableFilterPanel>` into it. Keeping that seam is what makes
  * the family a tree rather than a cycle — and it is why this module imports no
- * table at all.
+ * table at all. `filter-bar` does not either, so importing it keeps the tree a
+ * tree: the arrow runs from the table's chrome to the general chrome and never
+ * back.
  *
  * Every control here is controlled: it takes a value and a callback and holds
  * no query of its own. That is what lets the same nine components serve a
@@ -492,400 +505,55 @@ export function TableDensityToggle({ value, onChange }: TableDensityToggleProps)
   )
 }
 
-export interface TableFilterChipsProps {
+/* -------------------------------------------------------------------------- */
+/*                  the filter chrome, which is not the table's               */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * The filter panel, the chips and `describeFilter` moved to
+ * `@/components/filter-bar` in task #191, and the four names below are what is
+ * left of them here.
+ *
+ * Nothing about any of the three was ever table-specific: the panel is a bare
+ * form over `matchesFilter`, which takes a value and a filter and knows nothing
+ * about columns, and the chips are a strip of words over the same. What made
+ * them table chrome was the prop being called `columnId` and the file they sat
+ * in. A list, a gallery and a card grid have the same five variants and no
+ * header row to hang a popover from, so the panel went where both surfaces can
+ * reach it and the bar for the second one went beside it.
+ *
+ * These stay because renaming a published export to move a file is a cost paid
+ * by every consumer for nothing: `TableShell` asks for a filter body through
+ * `renderFilter(columnId)`, and `DataTable` and `ServerTable` pass one in under
+ * the name they always used. The direction of the import is the reason this is
+ * the thin side — `filter-bar` imports no table, so the family stays a tree.
+ */
+
+export type { FilterChip, FilterChipsProps, FilterPanelProps }
+export { describeFilter, FilterChips, FilterPanel }
+
+export interface TableFilterChipsProps extends Omit<FilterChipsProps, "filters" | "onClear"> {
   filters: { column: string; label: string; text: string }[]
   onClear: (column: string) => void
-  onClearAll: () => void
-  /** Saved presets: a named set of filters the user can re-apply. */
-  presets?: { id: string; label: string }[]
-  onApplyPreset?: (id: string) => void
-  onSavePreset?: () => void
 }
 
 /** Every active filter, named and removable, with the clear-all beside them. */
-export function TableFilterChips({
-  filters,
-  onClear,
-  onClearAll,
-  presets,
-  onApplyPreset,
-  onSavePreset,
-}: TableFilterChipsProps) {
-  if (filters.length === 0 && !presets?.length) return null
+export function TableFilterChips({ filters, ...props }: TableFilterChipsProps) {
   return (
-    <div className="flex min-h-7 flex-wrap items-center gap-1.5 print:hidden">
-      {filters.map((filter) => (
-        <span
-          key={filter.column}
-          className="inline-flex items-center gap-x-1 rounded-full border border-quebi-brand/30 bg-quebi-brand/10 py-0.5 pe-1 ps-2.5 font-medium text-quebi-brand-text text-xs"
-        >
-          <span>
-            {filter.label}
-            <span className="text-quebi-brand-text/70"> · {filter.text}</span>
-          </span>
-          {/*
-            The variants are named, not fought with a className (task #187).
-            A `Button` given only a `className` still takes `buttonStyles`'
-            defaults — `intent="primary"` and `size="md"` — and `size-4` merges
-            away only the *size*: `px-5 py-2.5` is a different group, so it
-            survived and left a 16px box with 20px of padding a side. The
-            content box collapsed to 0 and the × vanished inside a solid mint
-            blob. `ghost` + a square size is the shape this actually wants; the
-            className is then only what is particular to a chip — its 16px box,
-            and mint ink instead of the muted default. `isCircle` is a variant
-            for the reason button.tsx gives: `rounded-full` in a className loses
-            to `rounded-quebi-sm` on sheet order. The ring loses its offset
-            because a 2px halo in the page colour around a 16px button inside a
-            22px pill paints over the chip's own tint.
-          */}
-          <Button
-            intent="ghost"
-            size="sq-xs"
-            isCircle
-            aria-label={`Clear ${filter.label} filter`}
-            onPress={() => onClear(filter.column)}
-            className="size-4 shrink-0 text-quebi-brand-text/80 hover:bg-quebi-brand/20 hover:text-quebi-brand-text focus-visible:ring-offset-0"
-          >
-            <X className="size-3" strokeWidth={2.5} aria-hidden="true" />
-          </Button>
-        </span>
-      ))}
-      {filters.length > 1 && (
-        <Button intent="ghost" size="xs" onPress={onClearAll}>
-          Clear all
-        </Button>
-      )}
-      {presets && presets.length > 0 && onApplyPreset && (
-        <Menu>
-          <MenuTrigger aria-label="Saved filters">
-            <Badge intent="neutral">Presets</Badge>
-          </MenuTrigger>
-          <MenuContent onAction={(key) => onApplyPreset(String(key))}>
-            {presets.map((preset) => (
-              <MenuItem key={preset.id} id={preset.id}>
-                {preset.label}
-              </MenuItem>
-            ))}
-          </MenuContent>
-        </Menu>
-      )}
-      {onSavePreset && filters.length > 0 && (
-        <Button intent="ghost" size="xs" onPress={onSavePreset}>
-          Save as preset
-        </Button>
-      )}
-    </div>
+    <FilterChips
+      {...props}
+      filters={filters.map(({ column, label, text }) => ({ id: column, label, text }))}
+    />
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/*                              the filter panel                              */
-/* -------------------------------------------------------------------------- */
-
-export interface TableFilterPanelProps {
+export interface TableFilterPanelProps extends Omit<FilterPanelProps, "fieldId"> {
   columnId: string
-  label: string
-  variant: DataTableFilterVariant
-  /** Current applied value, in the shape `matchesFilter` expects for `variant`. */
-  value: unknown
-  onApply: (value: unknown) => void
-  onClear: () => void
-  /**
-   * Dismiss whatever is hosting the panel, once Apply or Clear has been acted
-   * on. The panel asks; the host decides what dismissing means — a popover
-   * closes, a sheet slides away, a faceted rail does nothing and leaves this
-   * undefined. Reading the overlay state from context instead would be silent
-   * in exactly the hosts that are not overlays.
-   */
-  onClose?: () => void
-  /** Enum choices — faceted unique values client-side, a query result server-side. */
-  options?: DataTableFilterOption[]
-  /** Faceted min/max, used to label a number range. */
-  bounds?: [number, number]
-  isLoadingOptions?: boolean
-  onSearchOptions?: (search: string) => void
-  onLoadMoreOptions?: () => void
 }
 
-// A control the current variant does not render submits nothing at all, so
-// every entry is optional and the array defaults are thunks — valibot only
-// applies a non-function default to a *present* undefined, which a form field
-// that was never rendered is not.
-const panelSchemas: Record<DataTableFilterVariant, v.GenericSchema> = {
-  text: v.object({ text: v.optional(v.string()) }),
-  boolean: v.object({ bool: v.optional(v.string()) }),
-  enum: v.object({
-    search: v.optional(v.string()),
-    values: v.optional(v.array(v.string()), () => []),
-  }),
-  number: v.pipe(
-    v.object({
-      min: v.optional(v.union([v.number(), v.literal("")])),
-      max: v.optional(v.union([v.number(), v.literal("")])),
-    }),
-    v.forward(
-      v.check(
-        ({ min, max }) => min === "" || max === "" || min == null || max == null || min <= max,
-        "The lower bound must not be above the upper one",
-      ),
-      ["max"],
-    ),
-  ),
-  date: v.pipe(
-    v.object({
-      from: v.optional(v.union([v.string(), v.date()])),
-      to: v.optional(v.union([v.string(), v.date()])),
-    }),
-    v.forward(
-      v.check(
-        ({ from, to }) => !from || !to || String(from) <= String(to),
-        "The end date must not be before the start date",
-      ),
-      ["to"],
-    ),
-  ),
-}
-
-/**
- * The form behind every variant. One shape rather than five keeps the field
- * metadata typed — `useForm` infers its fields from this, and a per-variant
- * union would infer `any` and hand every conform-* control an untyped field.
- */
-interface PanelValues {
-  text: string
-  bool: string
-  values: string[]
-  search: string
-  min: number | string
-  max: number | string
-  from: string
-  to: string
-}
-
-const asIsoDate = (value: unknown): string | null => {
-  if (!value) return null
-  if (value instanceof Date) return value.toISOString().slice(0, 10)
-  return String(value).slice(0, 10)
-}
-
-/**
- * One column's filter, as a real Conform form with a real valibot schema.
- *
- * Every variant validates before it can be applied — a number range whose
- * lower bound is above its upper one is a form error rather than a query that
- * returns nothing and looks like an empty table. Applying is an explicit
- * submit, which is what keeps a server-driven table to one round-trip per
- * change; dismissing the popover discards the pending edit.
- *
- * Applying is also the end of the interaction, so the panel calls `onClose`
- * once it has — a host that is an overlay closes, and the result of the filter
- * is visible instead of hidden behind the panel that asked for it. Clear ends
- * it the same way. The panel does not reach for react-aria's overlay state
- * itself: it is meant to be hosted outside an overlay too, and there that
- * reach would be a silent no-op rather than a prop a host can decline.
- */
-export function TableFilterPanel({
-  columnId,
-  label,
-  variant,
-  value,
-  onApply,
-  onClear,
-  onClose,
-  options = [],
-  bounds,
-  isLoadingOptions,
-  onSearchOptions,
-  onLoadMoreOptions,
-}: TableFilterPanelProps) {
-  const range: [unknown, unknown] = Array.isArray(value)
-    ? (value as [unknown, unknown])
-    : [null, null]
-  // An option the other filters have left nothing of is drawn, disabled, at 0:
-  // the choice is visible and so is the reason it is unavailable, and picking
-  // it could only empty the table. Except when it is the value already applied
-  // — this panel is the only place that filter can be taken off again, so a
-  // selected option stays checkable however few rows are left under it.
-  const appliedValues = new Set(
-    variant === "enum" && Array.isArray(value) ? (value as unknown[]).map(String) : [],
-  )
-  const numberBound = (bound: unknown) => (bound == null ? "" : Number(bound))
-  const [form, fields] = useForm<PanelValues>({
-    id: `${useId()}-filter-${columnId}`,
-    defaultValue: {
-      text: variant === "text" ? ((value as string) ?? "") : "",
-      bool: variant === "boolean" ? ((value as string) ?? "") : "",
-      values: variant === "enum" ? ((value as string[]) ?? []) : [],
-      search: "",
-      min: variant === "number" ? numberBound(range[0]) : "",
-      max: variant === "number" ? numberBound(range[1]) : "",
-      from: variant === "date" ? (asIsoDate(range[0]) ?? "") : "",
-      to: variant === "date" ? (asIsoDate(range[1]) ?? "") : "",
-    },
-    // The schema is chosen at runtime from the column's variant, so its parsed
-    // type is not statically the form's; the switch below narrows it by hand.
-    onValidate: ({ formData }) =>
-      parseWithValibot(formData, {
-        schema: panelSchemas[variant],
-      }) as unknown as Submission<PanelValues>,
-    onSubmit: (event, { submission }) => {
-      event.preventDefault()
-      if (submission?.status !== "success") return
-      const parsed = submission.value as unknown as Record<string, unknown>
-      switch (variant) {
-        case "text":
-          onApply(String(parsed.text ?? ""))
-          break
-        case "boolean":
-          onApply(String(parsed.bool ?? ""))
-          break
-        case "enum":
-          onApply((parsed.values as string[]) ?? [])
-          break
-        case "number":
-          onApply([
-            parsed.min === "" || parsed.min == null ? null : Number(parsed.min),
-            parsed.max === "" || parsed.max == null ? null : Number(parsed.max),
-          ])
-          break
-        case "date":
-          onApply([asIsoDate(parsed.from), asIsoDate(parsed.to)])
-          break
-      }
-      // Only a submission that got as far as applying dismisses the host: a
-      // validation error keeps the panel up, with the message on the field.
-      onClose?.()
-    },
-  })
-
-  const onListScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    const el = event.currentTarget
-    if (el.scrollHeight - el.scrollTop - el.clientHeight < 60) onLoadMoreOptions?.()
-  }
-
-  return (
-    <ChromeForm id={form.id} onSubmit={form.onSubmit} className="flex flex-col gap-3 p-3">
-      {variant === "text" && (
-        <ConformField field={fields.text} label={`${label} contains`} placeholder="Type to match…" />
-      )}
-
-      {variant === "boolean" && (
-        <ConformSelect field={fields.bool} label={label} aria-label={label}>
-          <SelectItem id="">Any</SelectItem>
-          <SelectItem id="true">Yes</SelectItem>
-          <SelectItem id="false">No</SelectItem>
-        </ConformSelect>
-      )}
-
-      {variant === "number" && (
-        // Two bounds side by side while there is room for them, stacked when
-        // there is not — and both halves of that are about the same ~74px.
-        //
-        // The stepper pair is a fixed width that a `w-full min-w-0` input
-        // gives up its own width to rather than overflow, so in a ~210px-wide
-        // host (this panel inside a `sm:max-w-80` sheet) the two inputs
-        // measured 26px each and neither the value nor the placeholder was
-        // legible (task #189). A filter bound is typed, not nudged, and ↑ / ↓
-        // still step — so the pair is hidden here rather than shrunk, which is
-        // exactly the width the two inputs were missing.
-        //
-        // The container query is the floor under that: below 16rem even a
-        // stepper-less pair is too narrow to read, so the row becomes a column
-        // instead of slivering again. It is a *container* query and not a
-        // breakpoint because this panel's width is its host's — a 288px column
-        // popover, a sheet, a filter rail — and the viewport does not predict
-        // which. The 288px popover stays a row, which is what it should be.
-        <div className="@container">
-          <div className="flex flex-col gap-2 @3xs:flex-row @3xs:items-end">
-            <ConformNumberField
-              field={fields.min}
-              label="From"
-              hideStepper
-              description={bounds ? `lowest ${bounds[0]}` : undefined}
-            />
-            <ConformNumberField
-              field={fields.max}
-              label="To"
-              hideStepper
-              description={bounds ? `highest ${bounds[1]}` : undefined}
-            />
-          </div>
-        </div>
-      )}
-
-      {variant === "date" && (
-        <div className="flex flex-col gap-2">
-          <ConformDateField field={fields.from} label="From" />
-          <ConformDateField field={fields.to} label="To" />
-        </div>
-      )}
-
-      {variant === "enum" && (
-        <div className="flex flex-col gap-2">
-          {onSearchOptions && (
-            <ConformSearchField
-              field={fields.search}
-              aria-label={`Search ${label} values`}
-              placeholder="Search values…"
-              onChange={onSearchOptions}
-            />
-          )}
-          {/* The scroll listener is what drives "load more on scroll". It adds
-              no interaction of its own: every option inside is a real checkbox,
-              and the list is fully reachable by keyboard without scrolling. */}
-          <div className="quebi-scrollbar max-h-56 overflow-y-auto" onScroll={onListScroll}>
-            <ConformCheckboxGroup field={fields.values} aria-label={`${label} values`}>
-              {options.map((option) => (
-                <Checkbox
-                  key={option.value}
-                  value={option.value}
-                  isDisabled={option.count === 0 && !appliedValues.has(option.value)}
-                >
-                  <span className="flex w-full items-center justify-between gap-2">
-                    <span>{option.label ?? option.value}</span>
-                    {option.count != null && (
-                      <span className="text-quebi-fg-subtle text-xs tabular-nums">
-                        <FormattedNumber value={option.count} />
-                      </span>
-                    )}
-                  </span>
-                </Checkbox>
-              ))}
-            </ConformCheckboxGroup>
-            {options.length === 0 && (
-              <div className="flex items-center justify-center gap-2 py-6 text-quebi-fg-subtle text-sm">
-                {isLoadingOptions ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                    Loading…
-                  </>
-                ) : (
-                  "No values"
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      <div className="flex items-center gap-2 border-quebi-line/10 border-t pt-3">
-        <Button
-          intent="ghost"
-          size="xs"
-          className="flex-1"
-          onPress={() => {
-            onClear()
-            onClose?.()
-          }}
-        >
-          Clear
-        </Button>
-        <Button type="submit" intent="primary" size="xs" className="flex-1">
-          Apply
-        </Button>
-      </div>
-    </ChromeForm>
-  )
+/** One column's filter. `FilterPanel`, with the column as the field. */
+export function TableFilterPanel({ columnId, ...props }: TableFilterPanelProps) {
+  return <FilterPanel {...props} fieldId={columnId} />
 }
 
 /* -------------------------------------------------------------------------- */
@@ -1737,33 +1405,4 @@ export function TableUnsavedBar({
       </div>
     </div>
   )
-}
-
-/**
- * A filter, in a chip's worth of words. The variant decides, not the shape:
- * two selected enum values and a two-ended range are both arrays of length
- * two, and reading one as the other is how a chip ends up saying
- * "Paid – Pending".
- *
- * It lives here, beside `TableFilterChips`, rather than with either mode: the
- * text is a property of the filter *variant*, which both modes share, and the
- * component that renders it is in this file. Both call it, so a range now reads
- * "10 – 50" in a server-driven table too, where it used to read "10, 50".
- */
-export function describeFilter(
-  variant: DataTableFilterVariant | undefined,
-  value: unknown,
-): string {
-  if (variant === "number" || variant === "date") {
-    const [from, to] = Array.isArray(value) ? value : [null, null]
-    if (from != null && from !== "" && to != null && to !== "") return `${from} – ${to}`
-    if (from != null && from !== "") return `≥ ${from}`
-    if (to != null && to !== "") return `≤ ${to}`
-    return "any"
-  }
-  if (Array.isArray(value)) {
-    return value.length === 1 ? String(value[0]) : `${value.length} selected`
-  }
-  if (variant === "boolean") return value === "true" ? "Yes" : value === "false" ? "No" : "any"
-  return String(value)
 }
