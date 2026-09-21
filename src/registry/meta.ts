@@ -1,4 +1,5 @@
 import type { ComponentMeta } from "./types"
+import { activityPulseMeta } from "./activity-pulse.meta"
 import { alertDialogMeta } from "./alert-dialog.meta"
 import { areaChartMeta } from "./area-chart.meta"
 import { asyncMultipleSelectMeta } from "./async-multiple-select.meta"
@@ -79,6 +80,7 @@ import { disclosureGroupMeta } from "./disclosure-group.meta"
 import { drawerMeta } from "./drawer.meta"
 import { dropZoneMeta } from "./drop-zone.meta"
 import { dropdownMeta } from "./dropdown.meta"
+import { elapsedTimeMeta } from "./elapsed-time.meta"
 import { energyClassBadgeMeta } from "./energy-class-badge.meta"
 import { fieldMeta } from "./field.meta"
 import { filterBarMeta } from "./filter-bar.meta"
@@ -129,9 +131,12 @@ import { serverTableMeta } from "./server-table.meta"
 import { sheetMeta } from "./sheet.meta"
 import { showMoreMeta } from "./show-more.meta"
 import { sidebarMeta } from "./sidebar.meta"
+import { signalBarsMeta } from "./signal-bars.meta"
 import { skeletonMeta } from "./skeleton.meta"
 import { sliderMeta } from "./slider.meta"
 import { snippetMeta } from "./snippet.meta"
+import { sparklineMeta } from "./sparkline.meta"
+import { statusDotMeta } from "./status-dot.meta"
 import { stepperMeta } from "./stepper.meta"
 import { sunburstChartMeta } from "./sunburst-chart.meta"
 import { switchMeta } from "./switch.meta"
@@ -153,11 +158,13 @@ import { tooltipMeta } from "./tooltip.meta"
 import { trackerMeta } from "./tracker.meta"
 import { treemapMeta } from "./treemap.meta"
 import { treeMeta } from "./tree.meta"
+import { typingIndicatorMeta } from "./typing-indicator.meta"
 import { weekPickerMeta } from "./week-picker.meta"
 import { weekViewMeta } from "./week-view.meta"
 import { yearPickerMeta } from "./year-picker.meta"
 
 export const metaRegistry: ComponentMeta[] = [
+  activityPulseMeta,
   alertDialogMeta,
   areaChartMeta,
   asyncMultipleSelectMeta,
@@ -238,6 +245,7 @@ export const metaRegistry: ComponentMeta[] = [
   drawerMeta,
   dropZoneMeta,
   dropdownMeta,
+  elapsedTimeMeta,
   energyClassBadgeMeta,
   fieldMeta,
   fileTriggerMeta,
@@ -288,9 +296,12 @@ export const metaRegistry: ComponentMeta[] = [
   sheetMeta,
   showMoreMeta,
   sidebarMeta,
+  signalBarsMeta,
   skeletonMeta,
   sliderMeta,
   snippetMeta,
+  sparklineMeta,
+  statusDotMeta,
   stepperMeta,
   sunburstChartMeta,
   switchMeta,
@@ -312,6 +323,7 @@ export const metaRegistry: ComponentMeta[] = [
   trackerMeta,
   treemapMeta,
   treeMeta,
+  typingIndicatorMeta,
   weekPickerMeta,
   weekViewMeta,
   yearPickerMeta,
