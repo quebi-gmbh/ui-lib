@@ -17,9 +17,10 @@
  * 2. **The three date controls are one segmented group.** Back, `Today` and
  *    forward used to be three loose buttons drawn before the heading, so a
  *    reader met "Today 13.–19. Juli 2026" and `Today` read as a word in the
- *    date. They are joined now, in that order, after the heading — and the
- *    gating still holds inside the group: any subset is a group, none of them
- *    is no group rather than an empty box.
+ *    date. They are joined now — with a picker heading between back and
+ *    `Today`, so the chevrons bracket the bar — and the gating still holds
+ *    inside the group: any subset is a group, none of them is no group rather
+ *    than an empty box.
  * 3. **`labelVariant="picker"` makes the label a date picker** (task #166).
  *    The toolbar owns no state, so the popover reports the day it was given
  *    and closes; what the view does with it is the view's business. The grid it
@@ -314,9 +315,9 @@ describe("the picker variant", () => {
 /**
  * One bar, and the two ways out of it.
  *
- * A picker heading is a button, so it is the first segment of the navigation
- * group rather than a separate item in front of it — that is what "one button
- * bar" means here, and it is why the heading's vertical padding is tightened:
+ * A picker heading is a button, so it is a segment of the navigation group
+ * rather than a separate item in front of it — that is what "one button bar"
+ * means here, and it is why the heading's vertical padding is tightened:
  * `sm` around `text-base` is a rung taller than the `sq-sm` squares it now
  * shares a box with.
  *
@@ -339,7 +340,7 @@ const names = (scope: HTMLElement) =>
     .map((button) => button.getAttribute("aria-label") ?? button.textContent)
 
 describe("the bar", () => {
-  test("is one group: the heading, then back / today / forward", () => {
+  test("is one group: back, the heading, then today / forward", () => {
     render(
       <CalendarToolbar
         label="Sunday, 20 September 2026"
@@ -354,8 +355,10 @@ describe("the bar", () => {
 
     // The heading used to sit outside the group, separated by the same gap that
     // separates the date from the view switcher — so the toolbar had two
-    // divisions and only one of them meant anything.
-    expect(names(bar())).toEqual(["Sunday, 20 September 2026", "Previous", "Today", "Next"])
+    // divisions and only one of them meant anything. Inside it, back comes
+    // before the heading: the two chevrons are the ends of the bar and what
+    // they move sits between them.
+    expect(names(bar())).toEqual(["Previous", "Sunday, 20 September 2026", "Today", "Next"])
   })
 
   test("is not drawn around a heading with nothing to join it to", () => {
@@ -400,7 +403,7 @@ describe("a control placed in the popover", () => {
       />,
     )
 
-    expect(names(bar())).toEqual(["Sunday, 20 September 2026", "Previous", "Next"])
+    expect(names(bar())).toEqual(["Previous", "Sunday, 20 September 2026", "Next"])
 
     await user.click(trigger())
 

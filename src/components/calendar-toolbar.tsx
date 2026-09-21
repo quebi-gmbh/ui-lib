@@ -25,18 +25,17 @@ import { cn } from "@/lib/utils"
  * of the state and reports every press, so the same toolbar drives a view that
  * keeps its own date and one whose date lives in a URL.
  *
- * The heading comes first and the three date controls after it, joined into one
- * `ButtonGroup` as `‹ Today ›`. They used to be four loose items in the order
- * Today, back, forward, heading — two bordered buttons with two borderless
- * circles between them, and the one thing that says what you are looking at
- * arriving last. Read left to right that spelled "Today 13.–19. Juli 2026", as
- * though `Today` were a word in the heading rather than a button. One segmented
- * control fixes both halves: the chevrons get a box, so all three read as the
- * same kind of thing, and `Today` is the middle of a symmetric unit — back on
- * one side, forward on the other, home in between — instead of a stray label in
- * front of the date. The heading takes `text-base` in both variants for the same
- * reason: the picker trigger used to be a rung smaller than the static span, so
- * the one line naming the view was the smallest text in the toolbar.
+ * The heading and the three date controls are joined into one `ButtonGroup`.
+ * They used to be four loose items in the order Today, back, forward, heading
+ * — two bordered buttons with two borderless circles between them, and the one
+ * thing that says what you are looking at arriving last. Read left to right
+ * that spelled "Today 13.–19. Juli 2026", as though `Today` were a word in the
+ * heading rather than a button. One segmented control fixes both halves: the
+ * chevrons get a box, so all of them read as the same kind of thing, and the
+ * heading is a segment in the bar instead of a stray label beside it. The
+ * heading takes `text-base` in both variants for the same reason: the picker
+ * trigger used to be a rung smaller than the static span, so the one line
+ * naming the view was the smallest text in the toolbar.
  *
  * Every control is gated on its handler: no `onToday`, no today button, and no
  * group at all when none of the three is wired — an empty bordered box is worse
@@ -46,12 +45,16 @@ import { cn } from "@/lib/utils"
  * as one properly rounded control.
  *
  * When the heading is a picker it is a button, so it joins that group rather
- * than standing beside it: one bar reading `[21. September 2026 ⌄][‹][Today][›]`
+ * than standing beside it: one bar reading `[‹][21. September 2026 ⌄][Today][›]`
  * instead of a button, a gap, and a second box holding three more. Everything
  * that changes the date is then one control, and the gap that is left in the
  * toolbar separates the date from the view switcher — which is the only
- * division in it that means anything. A `static` heading is a `<span>` and
- * cannot join a group of buttons, so there the old two-box shape stands.
+ * division in it that means anything. Back sits left of the heading rather than
+ * after it so the two chevrons bracket the bar: the ends point the two ways the
+ * date moves, and what they move sits between them. A `static` heading is a
+ * `<span>` and cannot join a group of buttons, so there the old two-box shape
+ * stands — and with it the old `‹ Today ›`, which is symmetric because it has
+ * no heading to bracket.
  *
  * Where the three of them are drawn is the caller's, one control at a time:
  * `navigationPlacement` and `todayPlacement` each move their control into the
@@ -298,8 +301,12 @@ export function CalendarToolbar({
   const barToday = movedToPopover(todayPlacement) ? undefined : onToday
   const hasBarControls = Boolean(barPrevious || barToday || barNext)
 
+  // `heading` is the picker or nothing: a static heading is a `<span>` and
+  // cannot join a group of buttons, so there the slot renders nothing and the
+  // bar is the three date controls exactly as it was.
   const barControls = (
     <DateControls
+      heading={picker}
       onPrevious={barPrevious}
       onNext={barNext}
       onToday={barToday}
@@ -324,15 +331,13 @@ export function CalendarToolbar({
           // relies on. `role="group"` plus the name below is the handle, and it
           // is the one a test or a screen reader already reaches for.
           //
-          // The heading is a button, so it is the first segment of the bar
-          // rather than a separate item in front of it. With nothing left in
-          // the bar to join it to there is no bar: a lone button in a group
-          // named for navigation it does not contain says something untrue.
+          // The heading is a button, so it joins the bar rather than standing
+          // in front of it — `DateControls` draws it between the back chevron
+          // and `Today`. With nothing left in the bar to join it to there is no
+          // bar: a lone button in a group named for navigation it does not
+          // contain says something untrue.
           hasBarControls ? (
-            <ButtonGroup aria-label={navigationLabel}>
-              {picker}
-              {barControls}
-            </ButtonGroup>
+            <ButtonGroup aria-label={navigationLabel}>{barControls}</ButtonGroup>
           ) : (
             picker
           )
@@ -378,6 +383,8 @@ export function CalendarToolbar({
 }
 
 interface DateControlsProps {
+  /** The picker heading, drawn between back and today. Nothing in the popover. */
+  heading?: React.ReactNode
   onPrevious: (() => void) | undefined
   onNext: (() => void) | undefined
   onToday: (() => void) | undefined
@@ -389,21 +396,31 @@ interface DateControlsProps {
 }
 
 /**
- * Back, today and forward, in that order, as bare buttons.
+ * Back, the heading, today and forward, in that order, as bare buttons.
  *
  * A fragment rather than a group, because the box around them is the caller's
  * question and it has two answers: in the bar they share the heading's box, and
  * in the popover they are a row of their own under the grid. `ButtonGroup`
  * squares its inner corners off `:first-child` / `:last-child` rather than off a
- * fixed count, so any subset of the three — with or without a heading in front
- * of them — still comes out as one properly rounded control.
+ * fixed count, so any subset — with or without a heading among them — still
+ * comes out as one properly rounded control.
  *
- * Each is gated on its handler: no `onToday`, no today button. `Today` is the
- * middle of a symmetric unit — back on one side, forward on the other, home in
- * between — which is what stops it reading as a word in the date the way it did
- * when the three of them came first.
+ * Back comes before the heading because the two chevrons are then the ends of
+ * the bar, and everything between them is what they move: the date you are
+ * looking at, and the one press that goes home. With the heading first the bar
+ * read `[13.–19. Juli 2026 ⌄][‹][Today][›]`, which puts a date, a step back and
+ * a step forward on the same side of the thing they step; bracketed, the shape
+ * says which way each end goes and the heading stays the widest segment in the
+ * middle rather than the one the eye starts at and then has to leave.
+ *
+ * Each is gated on its handler: no `onToday`, no today button. Without a
+ * heading — in the popover, or behind a static label — the three of them are
+ * back / today / forward again, `Today` in the middle of a symmetric unit,
+ * which is what stops it reading as a word in the date the way it did when the
+ * three of them came first.
  */
 function DateControls({
+  heading,
   onPrevious,
   onNext,
   onToday,
@@ -426,6 +443,7 @@ function DateControls({
           <ChevronLeft data-slot="icon" className="size-4" aria-hidden="true" />
         </Button>
       ) : null}
+      {heading}
       {onToday ? (
         todayVariant === "icon" ? (
           // The word is still the accessible name: the icon is a width
