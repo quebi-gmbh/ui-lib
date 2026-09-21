@@ -31,7 +31,7 @@ const OpenOnTarget = () => {
 }
 
 export const contextMenuOgScene: OgScene = {
-  scale: 1.2,
+  scale: 1.3,
   align: "top",
   render: () => <OpenOnTarget />,
 }

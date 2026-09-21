@@ -37,10 +37,10 @@ const config: ChartConfig = {}
 
 /** Two rings: top-level branches inside, their children outside in the same hue. */
 export const sunburstChartOgScene: OgScene = {
-  scale: 1.1,
+  scale: 1.5,
   render: () => (
     <div className="w-144">
-      <SunburstChart config={config} data={traffic} containerHeight={290} />
+      <SunburstChart config={config} data={traffic} containerHeight={240} />
     </div>
   ),
 }

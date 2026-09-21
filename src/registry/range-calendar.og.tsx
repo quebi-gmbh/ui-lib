@@ -4,7 +4,7 @@ import type { OgScene } from "./types"
 
 /** A five-day range, because the fill between the endpoints is the component. */
 export const rangeCalendarOgScene: OgScene = {
-  scale: 1.5,
+  scale: 1.35,
   render: () => (
     <RangeCalendar
       aria-label="Trip dates"

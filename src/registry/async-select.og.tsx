@@ -11,7 +11,6 @@ const OWNERS: Owner[] = [
   { id: "ada", name: "Ada Lovelace" },
   { id: "grace", name: "Grace Hopper" },
   { id: "alan", name: "Alan Turing" },
-  { id: "margaret", name: "Margaret Hamilton" },
 ]
 
 /**
@@ -37,6 +36,7 @@ const OpenOwnerPicker = () => {
 }
 
 export const asyncSelectOgScene: OgScene = {
-  scale: 1.25,
+  scale: 1.3,
+  align: "top",
   render: () => <OpenOwnerPicker />,
 }

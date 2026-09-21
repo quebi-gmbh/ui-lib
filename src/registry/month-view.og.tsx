@@ -3,7 +3,7 @@ import { MonthView } from "@/components/month-view"
 import { OG_CALENDARS, OG_MONTH_START, OG_TIME_ZONE, at } from "./og-calendar-data"
 import type { OgScene } from "./types"
 
-/** A month with a handful of events spread across it, including a multi-day one. */
+/** A month with three events in it, one of them running across a weekend. */
 const MONTH: CalendarEvent[] = [
   {
     id: "kickoff",
@@ -21,23 +21,22 @@ const MONTH: CalendarEvent[] = [
     calendarId: "me",
   },
   {
-    id: "review",
-    title: "Design review",
-    start: at(14, 0, OG_MONTH_START.add({ days: 19 })),
-    end: at(15, 0, OG_MONTH_START.add({ days: 19 })),
-    calendarId: "team",
-  },
-  {
     id: "release",
     title: "Release",
-    start: at(16, 0, OG_MONTH_START.add({ days: 25 })),
-    end: at(17, 0, OG_MONTH_START.add({ days: 25 })),
+    start: at(9, 0, OG_MONTH_START.add({ days: 25 })),
+    end: at(10, 0, OG_MONTH_START.add({ days: 25 })),
     calendarId: "me",
   },
 ]
 
+/**
+ * A month is six rows of seven days whatever the scene does, so the only room
+ * left to make is in the rows themselves: no toolbar, a shorter week, and three
+ * events rather than four. `Design review` went with the fourth — it is the one
+ * title in the fixture the component had to elide at this width.
+ */
 export const monthViewOgScene: OgScene = {
-  scale: 0.95,
+  scale: 1.5,
   render: () => (
     <div className="w-192">
       <MonthView
@@ -45,7 +44,8 @@ export const monthViewOgScene: OgScene = {
         calendars={OG_CALENDARS}
         timeZone={OG_TIME_ZONE}
         defaultDate={OG_MONTH_START}
-        weekHeight={62}
+        showToolbar={false}
+        weekHeight={36}
       />
     </div>
   ),

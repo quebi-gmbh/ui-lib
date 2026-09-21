@@ -17,7 +17,7 @@ const BOOKINGS: CalendarEvent[] = [
 
 /** A room plan that is a form value: the label above it is the giveaway. */
 export const conformCalendarTimelineOgScene: OgScene = {
-  scale: 1.1,
+  scale: 1.5,
   render: () => (
     <OgForm<{ bookings: string }> className="w-176">
       {(fields) => (

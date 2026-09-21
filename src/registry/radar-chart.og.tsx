@@ -18,14 +18,14 @@ const config: ChartConfig = {
 
 /** One polygon over six axes. */
 export const radarChartOgScene: OgScene = {
-  scale: 1.45,
+  scale: 1.5,
   render: () => (
     <div className="w-112">
       <RadarChart
         config={config}
         data={data}
         dataKey="skill"
-        containerHeight={260}
+        containerHeight={240}
         radarProps={NO_ANIMATION}
       />
     </div>

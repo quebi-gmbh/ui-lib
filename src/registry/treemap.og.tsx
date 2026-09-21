@@ -15,10 +15,10 @@ const config: ChartConfig = {}
 
 /** Area is the value. The component switches its own animation off already. */
 export const treemapOgScene: OgScene = {
-  scale: 1.2,
+  scale: 1.5,
   render: () => (
     <div className="w-144">
-      <Treemap config={config} data={flat} dataKey="size" containerHeight={260} />
+      <Treemap config={config} data={flat} dataKey="size" containerHeight={240} />
     </div>
   ),
 }

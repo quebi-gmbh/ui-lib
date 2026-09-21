@@ -1,7 +1,10 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2023"],
+    // `scripts/og-audit.ts` measures the share images from inside Chromium:
+    // its measurement function is serialized by Playwright and runs in the page,
+    // so it is browser code living in a Node script and needs the DOM types.
+    "lib": ["ES2023", "DOM"],
     "types": ["bun", "node"],
     "module": "ESNext",
     "skipLibCheck": true,

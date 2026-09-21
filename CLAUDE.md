@@ -135,6 +135,22 @@ checked without one — that every slug has a scene or a written `noOgScene` rea
 scene reads the clock, rolls a die, or leaves a recharts animation on, each of which would publish
 a different image every deploy.
 
+A scene is also *measured*, in the same browser, by `scripts/og-audit.ts`: its bounding rect has to
+sit inside the stage, no text may render under 18px after the stage's `scale`, and nothing may be
+ellipsis-truncated. A scene that breaks one of those fails the build by name, exactly like a scene
+that throws — the three failures are silent otherwise, because the stage is `overflow-hidden` and a
+share image is a file nobody opens. `bun run og:audit --base http://localhost:5173` runs the same
+measurement against `bun run dev` and writes nothing; `--report` prints every scene's size and
+smallest type. The floor, and the two lists of scenes excused from part of it (a surface pinned to
+the window's edge; a month grid the component draws at a fixed cell size), are argued in that
+file's header, and `tests/og-scenes.test.ts` checks the half of it that is data.
+
+One thing the frame does that no scene can: every overlay in this library is portalled to
+`document.body`, and a `transform` reaches only its own subtree, so the stage's magnification stops
+at the edge of the popover. `magnifyOverlays` in `src/routes/og.$slug.tsx` applies it a second time
+to each portalled surface, anchored where the surface meets its trigger — which is why a Select
+scene photographs a listbox the same size as the control above it.
+
 `biome.jsonc` and `ui-lib-rules/` are committed on purpose: the hook and CI need them without a
 build step, and a rule change showing up as a config diff in the same PR is the point. A test fails
 if they drift from the records.

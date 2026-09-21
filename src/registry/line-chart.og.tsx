@@ -7,7 +7,7 @@ const config: ChartConfig = TWO_SERIES
 
 /** Two lines over six months, with the legend that focuses one of them. */
 export const lineChartOgScene: OgScene = {
-  scale: 1.4,
+  scale: 1.5,
   render: () => (
     <div className="w-144">
       <LineChart

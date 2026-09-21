@@ -4,9 +4,10 @@ import { Money, type Order, SMALL_ORDERS, StatusBadge } from "./table-fixtures.e
 import type { OgScene } from "./types"
 
 /**
- * Five columns and four rows of the shared order fixture — the same data the
- * gallery uses, cut to what fits. The toolbar is left on: the chrome above the
- * rows is half of what separates a DataTable from a Table.
+ * Four columns and three rows of the shared order fixture — the same data the
+ * gallery uses, cut to what fits. One control is left on above the rows: the
+ * search is what separates a DataTable from a Table, and Density and Columns
+ * are two more 12px words in a picture that already had four too many.
  */
 const columns: DataTableColumn<Order>[] = [
   { id: "reference", header: "Reference", accessorKey: "reference", width: 130 },
@@ -27,16 +28,18 @@ const columns: DataTableColumn<Order>[] = [
 ]
 
 export const dataTableOgScene: OgScene = {
-  scale: 1.1,
+  scale: 1.5,
   render: () => (
-    <div className="w-192">
+    <div className="w-176">
       <DataTable<Order>
         aria-label="Orders"
         columns={columns}
-        data={SMALL_ORDERS.slice(0, 4)}
+        data={SMALL_ORDERS.slice(0, 3)}
         getRowId={(order) => String(order.id)}
         defaultSorting={[{ id: "amount", desc: true }]}
         enablePagination={false}
+        enableColumnChooser={false}
+        enableDensityToggle={false}
       />
     </div>
   ),

@@ -21,17 +21,22 @@ const SPANS: DaySpan[] = [
  * somewhere, and clearly moveable. Read-only because a drag handle photographs
  * as a dot, and without the edge times because a rotated 09:15 is four grey
  * pixels at thumbnail size and the subject of the picture is on the right.
+ *
+ * Short and narrow so that the 2× the axis labels need still fits the stage —
+ * the same arithmetic as `day-schedule.og.tsx`, one hour of which is spelled
+ * out there.
  */
 export const dayScheduleMinimapOgScene: OgScene = {
-  scale: 1.35,
+  scale: 1.95,
   render: () => (
-    <div className="w-112">
+    <div className="w-96">
       <DaySchedule
         spans={SPANS}
         zoom={3}
         minimap
         startMinute={750}
-        height={260}
+        height={160}
+        tickInterval={360}
         timeLabels="none"
         isReadOnly
       />

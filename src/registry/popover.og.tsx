@@ -14,7 +14,7 @@ import type { OgScene } from "./types"
 
 /** Open on its trigger — a popover is an anchored surface, so both are in shot. */
 export const popoverOgScene: OgScene = {
-  scale: 1.2,
+  scale: 1.3,
   align: "top",
   render: () => (
     <Popover defaultOpen>

@@ -8,7 +8,7 @@ import type { OgScene } from "./types"
  * label, control, and the error that replaces the description.
  */
 export const fieldOgScene: OgScene = {
-  scale: 1.8,
+  scale: 1.75,
   render: () => (
     <div className="flex w-72 flex-col gap-5">
       <TextField defaultValue="Acme Inc.">

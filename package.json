@@ -13,6 +13,7 @@
     "build": "bun run generate:api && react-router build && bun run check:prerender && bun run screenshot:og",
     "check:prerender": "bun run scripts/check-prerender.ts",
     "screenshot:og": "bun run scripts/screenshot-og.ts",
+    "og:audit": "bun run scripts/screenshot-og.ts --audit-only",
     "start": "react-router-serve ./build/server/index.js",
     "preview": "vite preview",
     "typecheck": "bun run generate:api && react-router typegen && tsc -b",
