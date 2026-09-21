@@ -1,0 +1,23 @@
+{
+  "name": "rac-calculate-position-repro",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Standalone repro for react-aria's calculatePosition mispositioning bottom-anchored overlays when <html>/<body> is positioned, plus a verified candidate fix.",
+  "scripts": {
+    "repro": "node harness.mjs repro",
+    "verify-fix": "node harness.mjs verify"
+  },
+  "dependencies": {
+    "react": "19.3.0",
+    "react-aria": "3.52.1",
+    "react-aria-components": "1.21.1",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "esbuild": "0.25.12",
+    "playwright": "1.56.1"
+  }
+}
