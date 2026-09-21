@@ -225,10 +225,18 @@
      it in costs gutter to draw nothing and leaves the pill stranded in the
      middle of a rounded corner. `width` is Firefox's only lever, which takes a
      keyword and not a length. Override them per surface with
-     `quebi-scrollbar-floating` / `quebi-scrollbar-none`. */
+     `quebi-scrollbar-floating` / `quebi-scrollbar-none` /
+     `quebi-scrollbar-arrows`. */
   --q-scroll-size:  6px;
   --q-scroll-pad:   0px;
   --q-scroll-width: thin;
+  /* Steppers, as a switch rather than a rule. `none` is the default and the
+     right answer nearly everywhere; `quebi-scrollbar-arrows` sets it to `block`
+     on a surface that has square corners for the buttons to square off
+     against. It is a `display` value and not a boolean because that is the
+     property it lands in, and a variant that has to restate the button's rules
+     to turn them on is a second scrollbar racing the first. */
+  --q-scroll-button: none;
   /* The shortest a handle may get, however long the content is — below about
      this a pill stops reading as a grabbable thing and starts reading as a
      dot. Shared for the same reason as the rest: two scrollbars that agree on
@@ -652,7 +660,8 @@
 
 /* ---------------- Native scrollbar (the page, dropdowns, scroll areas) -------- */
 /* The quebi native scrollbar: a 6px tinted pill hugging the edge of whatever
-   scrolls, with no stepper arrows and no padding around it. That is the same
+   scrolls, with no stepper arrows and no padding around it (see
+   `quebi-scrollbar-arrows` for the one surface shape that wants them). That is the same
    geometry as `.os-theme-quebi` further down — both read `--q-scroll-size` and
    `--q-scroll-pad` rather than each spelling numbers out — so the native bars
    and the inner surfaces' OverlayScrollbars are one bar with two
@@ -706,13 +715,77 @@
       width: var(--q-scroll-size);
       height: var(--q-scroll-size);
     }
-    /* No steppers, ever. They are a platform default we never want: a bar that
-       runs the full height with arrows at its ends collides with the rounded
-       corner of every surface this utility is used on. */
+    /* Steppers, off unless `--q-scroll-button` says otherwise. They are a
+       platform default we don't want by default: a bar that runs the full
+       height with arrows at its ends collides with the rounded corner of most
+       surfaces this utility is used on, and on Linux Chromium the platform
+       draws them unasked. The blanket `none` here is what kills the platform's
+       *doubled* pair — Chromium offers a decrement **and** an increment button
+       at each end, four per bar — so only the two named below can ever show,
+       and only when a variant switches them on.
+
+       The glyph is two linear-gradients rather than a data-URI arrow because
+       Chromium paints no `clip-path` and no `mask-image` on this
+       pseudo-element (both are silently ignored; `background-image` is the only
+       lever it gives you) and a data URI would bake the ink colour into a
+       string, out of reach of `--q-scroll-thumb` and of the theme flip. Each
+       gradient is a half-plane — one diagonal edge of the triangle — and the
+       pair meets at the apex. `background-size` is a third of the button, so
+       the arrow scales with `--q-scroll-size` and nothing here is a length. */
     &::-webkit-scrollbar-button {
       display: none;
       width: 0;
       height: 0;
+      /* Read by the gradients below, so hover and active are a colour swap on
+         one variable rather than four more copies of the arrow. It is declared
+         on the bare selector and not alongside the sizing: the two rules that
+         size a stepper name two pseudo-classes each, which would out-specify
+         the single one `:hover` has and pin the ink to its resting colour. */
+      --q-scroll-ink: var(--q-scroll-thumb);
+    }
+    &::-webkit-scrollbar-button:hover {
+      --q-scroll-ink: var(--q-scroll-thumb-hover);
+    }
+    &::-webkit-scrollbar-button:active {
+      --q-scroll-ink: var(--q-scroll-thumb-active);
+    }
+    &::-webkit-scrollbar-button:start:decrement,
+    &::-webkit-scrollbar-button:end:increment {
+      display: var(--q-scroll-button);
+      width: var(--q-scroll-size);
+      height: var(--q-scroll-size);
+      background-color: transparent;
+      background-repeat: no-repeat;
+      background-size: 33.333% 33.333%;
+    }
+    /* The two halves sit side by side across a vertical bar and stacked down a
+       horizontal one; which way each half-plane faces is what points the
+       arrow. */
+    &::-webkit-scrollbar-button:vertical {
+      background-position: 25% 50%, 75% 50%;
+    }
+    &::-webkit-scrollbar-button:horizontal {
+      background-position: 50% 25%, 50% 75%;
+    }
+    &::-webkit-scrollbar-button:vertical:start:decrement {
+      background-image:
+        linear-gradient(to bottom right, transparent 50%, var(--q-scroll-ink) 50%),
+        linear-gradient(to bottom left, transparent 50%, var(--q-scroll-ink) 50%);
+    }
+    &::-webkit-scrollbar-button:vertical:end:increment {
+      background-image:
+        linear-gradient(to top right, transparent 50%, var(--q-scroll-ink) 50%),
+        linear-gradient(to top left, transparent 50%, var(--q-scroll-ink) 50%);
+    }
+    &::-webkit-scrollbar-button:horizontal:start:decrement {
+      background-image:
+        linear-gradient(to bottom right, transparent 50%, var(--q-scroll-ink) 50%),
+        linear-gradient(to top right, transparent 50%, var(--q-scroll-ink) 50%);
+    }
+    &::-webkit-scrollbar-button:horizontal:end:increment {
+      background-image:
+        linear-gradient(to bottom left, transparent 50%, var(--q-scroll-ink) 50%),
+        linear-gradient(to top left, transparent 50%, var(--q-scroll-ink) 50%);
     }
     &::-webkit-scrollbar-track,
     &::-webkit-scrollbar-corner {
@@ -790,6 +863,30 @@
 @utility quebi-scrollbar-none {
   --q-scroll-size: 0px;
   --q-scroll-width: none;
+}
+
+/* The bar with its steppers back: the floating geometry — a 6px pill in a 12px
+   track — plus an arrow button at each end, drawn in the thumb's own colour.
+
+   It is the one bar that asks something of the surface rather than the other
+   way round: it wants square corners. A stepper sits exactly where
+   `quebi-scrollbar-corners` cuts, so on a rounded surface the clip takes a bite
+   out of the arrow, and without the clip the bar runs out through the arc — the
+   two failures that made "no steppers, ever" the rule everywhere else. Give it
+   a square-cornered surface and both go away: the button squares off against a
+   corner that is already square, which is what a stepper has always done. The
+   ScrollArea's `scrollbar="arrows"` drops the corner clip for exactly this
+   reason, so the variant is one word and not a word plus a caveat.
+
+   12px because a 6px button is a 2px arrow. Firefox has no steppers to give at
+   any width — it dropped them, and `scrollbar-width` has no lever for them — so
+   there it is the flush pill, which is the same bar minus an affordance rather
+   than a different one. Use it where the reader is expected to step: a log, a
+   diff, a long table on a square-cornered panel. */
+@utility quebi-scrollbar-arrows {
+  --q-scroll-size: 12px;
+  --q-scroll-pad: 3px;
+  --q-scroll-button: block;
 }
 
 /* ---------------- Sensible base styles ---------------- */
