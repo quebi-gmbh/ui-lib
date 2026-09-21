@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>calculatePosition / positioned html or body</title>
+    <style>
+      body { margin: 0; font: 14px system-ui, sans-serif; }
+      /* The overlay needs a real box for its rect to mean anything. These are the
+         stock react-aria-components class names, styled minimally on purpose. */
+      .react-aria-Popover {
+        background: #fff;
+        border: 1px solid #999;
+        border-radius: 6px;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      .react-aria-ListBoxItem,
+      .react-aria-MenuItem { padding: 4px 8px; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>
