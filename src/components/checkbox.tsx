@@ -41,7 +41,15 @@ export function Checkbox({ className, children, ...props }: CheckboxProps) {
           <span
             data-slot="indicator"
             className={cn(
-              "relative flex size-[18px] shrink-0 items-center justify-center rounded-quebi-sm border bg-transparent",
+              // `rounded-quebi-xs` (4px), not the `sm` every other control
+              // takes: on an 18px box the maximum radius is 9px, so `sm`'s 8px
+              // left a 2px flat run per side and the checkbox was the radio's
+              // circle with four dents in it. Shape is the only thing that
+              // tells a reader whether a group takes one answer or several, so
+              // that made every multi-select in the library read as
+              // single-select (task #199). See the token's comment in
+              // quebi-theme.css for why a mark has its own step.
+              "relative flex size-[18px] shrink-0 items-center justify-center rounded-quebi-xs border bg-transparent",
               "transition-colors duration-150",
               "border-quebi-line/30",
               // The checked box's boundary against the page is drawn in the

@@ -25,7 +25,7 @@ export const noHardcodedDesignValuesRule: RuleMeta = {
       "bg-quebi-*",
       "text-quebi-*",
       "border-quebi-line/*",
-      "rounded-quebi-{sm,md,lg}",
+      "rounded-quebi-{xs,sm,md,lg}",
       "rounded-full",
       "shadow-quebi-glow",
       "shadow-quebi-glow-strong",
@@ -111,7 +111,7 @@ export const noHardcodedDesignValuesRule: RuleMeta = {
   $value <: r".*(?:\\[#[0-9a-fA-F]{3,8}\\]|\\[[0-9]+(?:px|rem|em)\\]|\\b(?:bg|text|border|ring|fill|stroke|from|via|to)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-[0-9]{2,3}\\b).*"`,
     },
     message:
-      "Hardcoded design value. Use a quebi token: colours -> bg-quebi-*/text-quebi-*/border-quebi-line, radii -> rounded-quebi-{sm,md,lg}, elevation -> shadow-quebi-glow. Raw palette scales (text-gray-500) are hardcoded values too — they do not follow the theme. See https://ui-lib.quebi.de/rules/no-hardcoded-design-values",
+      "Hardcoded design value. Use a quebi token: colours -> bg-quebi-*/text-quebi-*/border-quebi-line, radii -> rounded-quebi-{xs,sm,md,lg}, elevation -> shadow-quebi-glow. Raw palette scales (text-gray-500) are hardcoded values too — they do not follow the theme. See https://ui-lib.quebi.de/rules/no-hardcoded-design-values",
     grep: "\\[#[0-9a-fA-F]{3,8}\\]|\\b(bg|text|border|ring|fill|stroke)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-[0-9]{2,3}",
     note: "The check reads .tsx/.jsx only, so a hex in a stylesheet slips past — pair it with a CSS-side check everywhere except the file that defines your theme. A value mandated from outside the design system is not always a whole file you can except, so the last snippet shows how to claim that carve-out inline.",
   },

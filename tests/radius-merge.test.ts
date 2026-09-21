@@ -21,7 +21,9 @@ describe("cn merges the quebi token scales", () => {
   // Each pair is a token the theme adds under a name tailwind-merge has no
   // reason to recognise. The later class must win, as it would for a built-in.
   test.each([
+    ["rounded-quebi-xs rounded-full", "rounded-full"],
     ["rounded-quebi-sm rounded-full", "rounded-full"],
+    ["rounded-quebi-xs rounded-quebi-sm", "rounded-quebi-sm"],
     ["rounded-full rounded-quebi-md", "rounded-quebi-md"],
     ["rounded-t-quebi-md rounded-t-full", "rounded-t-full"],
     ["shadow-quebi-glow shadow-none", "shadow-none"],
@@ -33,6 +35,24 @@ describe("cn merges the quebi token scales", () => {
 
   test("leaves classes that do not conflict alone", () => {
     expect(cn("rounded-quebi-sm px-4")).toBe("rounded-quebi-sm px-4")
+  })
+
+  /**
+   * The list above is hand-written, and so is the one `cn` extends
+   * tailwind-merge with — a token added to the theme and not to `utils.ts` is
+   * a token `cn` cannot merge, which is the original bug wearing a new name
+   * and which nothing about the new token looks like. Task #199 added
+   * `--radius-quebi-xs` and had to touch both; this makes the next one fail
+   * loudly instead of silently reintroducing the sheet-order lottery.
+   */
+  test("cn knows every --radius-quebi-* the theme declares", () => {
+    const theme = readFileSync(join(import.meta.dir, "..", "src", "quebi-theme.css"), "utf8")
+    const declared = [...theme.matchAll(/--radius-(quebi-[a-z0-9-]+)\s*:/g)].map((m) => m[1])
+    const utils = readFileSync(join(import.meta.dir, "..", "src", "lib", "utils.ts"), "utf8")
+    const extended = utils.match(/radius:\s*\[([^\]]*)\]/)
+    if (!extended) throw new Error("no `radius:` list in the cn() twMerge config")
+    const known = [...extended[1].matchAll(/"([^"]+)"/g)].map((m) => m[1])
+    expect(new Set(known)).toEqual(new Set(declared))
   })
 })
 

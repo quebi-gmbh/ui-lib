@@ -198,6 +198,17 @@
   --font-sans: "Outfit", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   /* ---------------- Radii ---------------- */
+  /* `xs` is not a smaller `sm`, it is the radius of a *mark* — a glyph small
+     enough that the control radius would round it away. `sm` is 8px because a
+     38px button wants 8px; on the 18px checkbox indicator the maximum possible
+     radius is 9px, so 8px left a 2px flat run per side and the checkbox was a
+     circle with four dents. Shape is the only thing that says whether a group
+     takes one answer or several, so at 8px every multi-select in the library
+     read as single-select (task #199). 4px is half the maximum: a rounded
+     square at a glance, still a member of the same family as the input above
+     it. Use it for a mark under about 24px, not for a small surface — a chip
+     or a swatch is a surface and keeps `sm`. */
+  --radius-quebi-xs:   0.25rem;  /* 4px  — marks: checkbox indicator */
   --radius-quebi-sm:   0.5rem;   /* 8px  — buttons, inputs */
   --radius-quebi-md:   0.75rem;  /* 12px — cards */
   --radius-quebi-lg:   1rem;     /* 16px — large surfaces */
