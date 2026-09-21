@@ -44,7 +44,13 @@ function RangeCalendar<T extends DateValue>({
 }: RangeCalendarProps<T>) {
   const now = today(getLocalTimeZone())
   return (
-    <RangeCalendarPrimitive data-slot="calendar" visibleDuration={visibleDuration} {...props}>
+    /* `w-fit` for the reason `Calendar` carries it — see the note there. */
+    <RangeCalendarPrimitive
+      data-slot="calendar"
+      className="w-fit"
+      visibleDuration={visibleDuration}
+      {...props}
+    >
       <CalendarBodyModeProvider>
         <CalendarHeader variant={variant} />
         <CalendarBody>

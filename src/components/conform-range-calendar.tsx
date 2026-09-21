@@ -105,8 +105,10 @@ export function ConformRangeCalendar({
   return (
     <Field
       // `w-fit` rather than the `w-full` every other field root wears: this is
-      // a grid of fixed-size cells with an intrinsic width, and stretching the
-      // root only pulls its header chrome away from the grid under it.
+      // a grid of fixed-size cells with an intrinsic width, and a field root
+      // stretched across a column leaves it stranded at one end. Keeping the
+      // calendar's own chrome over its grid is `RangeCalendar`'s job, not this
+      // one's — see the note on `Calendar`'s root.
       className={cn("w-fit", className)}
     >
       {/* First, before the label: the stack is spaced with `label + control`
