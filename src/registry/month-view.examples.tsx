@@ -155,6 +155,44 @@ const DrillDown = () => {
   )
 }
 
+const DragToMove = () => {
+  const first = startOfMonth(today(TIME_ZONE))
+  const [events, setEvents] = useState<CalendarEvent[]>(() => month(first))
+  const [moved, setMoved] = useState<string | null>(null)
+
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <MonthView
+        events={events}
+        calendars={CALENDARS}
+        timeZone={TIME_ZONE}
+        weekHeight={124}
+        // Movable is a question about the event, not about the view: the
+        // release freeze is the one date here nobody gets to drag.
+        isEventEditable={(event) => event.id !== "freeze"}
+        // The view moves nothing. It reports the day the chip was dropped on,
+        // and this is the state that decides whether it goes there — refuse the
+        // change by not writing it, and the chip stays where it was.
+        onEventChange={(event, next) => {
+          setEvents((current) =>
+            current.map((candidate) =>
+              candidate.id === event.id
+                ? { ...candidate, start: next.start, end: next.end }
+                : candidate,
+            ),
+          )
+          setMoved(event.title)
+        }}
+      />
+      <p className="text-quebi-fg-muted text-sm">
+        {moved
+          ? `Moved: ${moved}`
+          : "Drag a chip onto another day — or tab to one and use the arrow keys."}
+      </p>
+    </div>
+  )
+}
+
 /**
  * A month grid ends mid-week, so the last row usually has empty cells in the
  * corner. That is where a legend can sit for free — and `variant="overlay"` is
@@ -205,6 +243,12 @@ export const monthViewExamples: ComponentExample[] = [
     description:
       "The \"+N more\" is a popover trigger by default: it opens onto the whole day — all-day bands first, then the timed events — and a row selects and reports itself exactly as a chip does. A day this full scrolls inside the panel rather than off the screen.",
     render: () => <OverflowPanel />,
+  },
+  {
+    title: "Drag to move",
+    description:
+      "isEventEditable says which events may be picked up and onEventChange reports which day one was dropped on. A month cell has no time axis, so a move is a whole number of days and the clock is untouched: a 10:00 meeting dropped on Thursday is at 10:00 on Thursday, and a multi-day chip keeps its length. The arrow keys do the same thing from the keyboard — a day left or right, a week up or down — and the ghost is drawn in the lane the drop would really give it. Your state decides whether it lands there.",
+    render: () => <DragToMove />,
   },
   {
     title: "Drilling down",

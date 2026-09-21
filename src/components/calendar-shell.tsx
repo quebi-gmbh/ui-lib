@@ -385,8 +385,14 @@ export interface CalendarMovePreview<E extends CalendarEvent = CalendarEvent> {
   end: ZonedDateTime
 }
 
-/** How far a pointer has to travel before the gesture is a drag and not a click. */
-const DRAG_THRESHOLD = 3
+/**
+ * How far a pointer has to travel before the gesture is a drag and not a click.
+ *
+ * Exported because `MonthView` starts the same gesture over a grid with no
+ * time axis: two views disagreeing about what counts as a drag would be two
+ * different answers to "did I just click this?" in one calendar.
+ */
+export const DRAG_THRESHOLD = 3
 
 interface MoveOrigin<E extends CalendarEvent> {
   event: E
@@ -1126,8 +1132,14 @@ const NO_OP = () => {}
  * above one that is also a button: stopping propagation there would cancel the
  * press, and preventing the default would cancel the click the press is
  * triggered from. Everything else about the event is passed through.
+ *
+ * Exported for `MonthView`, whose chips are the same react-aria `Button` under
+ * the same gesture. The proxy is the subtle half of starting a move from the
+ * capture phase, and a second copy of it is a second thing to get wrong.
  */
-function withoutCancelling<T extends Element>(event: React.PointerEvent<T>): React.PointerEvent<T> {
+export function withoutCancelling<T extends Element>(
+  event: React.PointerEvent<T>,
+): React.PointerEvent<T> {
   return new Proxy(event, {
     get(target, key) {
       if (key === "stopPropagation" || key === "preventDefault") return NO_OP
@@ -1138,7 +1150,7 @@ function withoutCancelling<T extends Element>(event: React.PointerEvent<T>): Rea
 }
 
 /** The keys `useMove` turns into a move, and so the keys that start one. */
-const MOVE_KEYS = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Up", "Down", "Left", "Right"])
+export const MOVE_KEYS = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Up", "Down", "Left", "Right"])
 
 function TimedBlock<E extends CalendarEvent>({
   segment,
@@ -1653,6 +1665,19 @@ export interface CalendarEventRowProps<E extends CalendarEvent = CalendarEvent> 
   style?: React.CSSProperties
   /** `data-slot`; the month grid's chips answer to `calendar-chip`. */
   slot?: string
+  /** `aria-describedby` — the move hint, on a row that can be dragged. */
+  describedBy?: string
+  /**
+   * Draw the row as the ghost at a drag's target rather than as the event.
+   *
+   * Same chip, dashed in the brand mark, and inert: not a button, not in the
+   * tab order, and hidden from the accessibility tree, because the drop is
+   * announced in words by the view's live region and one ghost per frame is
+   * not. It is here rather than in `MonthView` for the reason the rest of this
+   * component is: a ghost that drew the dot, the time and the title itself
+   * would be a second answer to "what does an event look like".
+   */
+  isPreview?: boolean
 }
 
 /**
@@ -1680,30 +1705,36 @@ export function CalendarEventRow<E extends CalendarEvent>({
   className,
   style,
   slot = "calendar-chip",
+  describedBy,
+  isPreview,
 }: CalendarEventRowProps<E>) {
   const palette = CALENDAR_COLORS[resolveEventColor(event, calendars)]
   const filled = isAllDayEvent(event)
 
-  return (
-    <Button
-      data-slot={slot}
-      data-event-id={event.id}
-      onPress={() => onActivate(event)}
-      style={style}
-      className={cn(
-        "flex h-5 cursor-pointer items-center gap-1.5 overflow-hidden px-1.5 text-left text-xs",
-        "transition-colors duration-150",
-        "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
-        filled ? cn(palette.band, "border-l-2", palette.edge) : "hover:bg-quebi-surface/[0.06]",
-        // Selection is an outline, not the inset ring focus uses: it sits
-        // outside the border box, so it neither overpaints `edge` nor vanishes
-        // when the same row takes focus. `outline-solid` is load-bearing — it
-        // is what displaces the `outline-none` above, which would otherwise
-        // leave the outline styled away (task #168).
-        isSelected && cn("outline-2 outline-solid outline-offset-0", palette.selected),
-        className,
-      )}
-    >
+  const classes = cn(
+    "flex h-5 cursor-pointer items-center gap-1.5 overflow-hidden px-1.5 text-left text-xs",
+    "transition-colors duration-150",
+    "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
+    filled ? cn(palette.band, "border-l-2", palette.edge) : "hover:bg-quebi-surface/[0.06]",
+    // Selection is an outline, not the inset ring focus uses: it sits
+    // outside the border box, so it neither overpaints `edge` nor vanishes
+    // when the same row takes focus. `outline-solid` is load-bearing — it
+    // is what displaces the `outline-none` above, which would otherwise
+    // leave the outline styled away (task #168).
+    isSelected && cn("outline-2 outline-solid outline-offset-0", palette.selected),
+    className,
+    // Last, and after `className`, because the ghost's dashed edge is the one
+    // thing about it the caller does not get to place: it is what says this is
+    // a picture of a drop and not an event.
+    isPreview &&
+      cn(
+        "pointer-events-none z-10 outline-2 outline-quebi-brand-mark outline-dashed",
+        !filled && "bg-quebi-bg",
+      ),
+  )
+
+  const content = (
+    <>
       {filled ? null : (
         <span className={cn("size-1.5 shrink-0 rounded-full", palette.dot)} aria-hidden="true" />
       )}
@@ -1713,6 +1744,27 @@ export function CalendarEventRow<E extends CalendarEvent>({
         </span>
       )}
       <span className="truncate font-semibold text-quebi-fg">{event.title}</span>
+    </>
+  )
+
+  if (isPreview) {
+    return (
+      <div data-slot={slot} data-event-id={event.id} aria-hidden="true" style={style} className={classes}>
+        {content}
+      </div>
+    )
+  }
+
+  return (
+    <Button
+      data-slot={slot}
+      data-event-id={event.id}
+      aria-describedby={describedBy}
+      onPress={() => onActivate(event)}
+      style={style}
+      className={classes}
+    >
+      {content}
     </Button>
   )
 }
