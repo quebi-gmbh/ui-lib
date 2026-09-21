@@ -12,6 +12,7 @@
     "test": "bun test",
     "build": "bun run generate:api && react-router build && bun run screenshot:og",
     "screenshot:og": "bun run scripts/screenshot-og.ts",
+    "og:audit": "bun run scripts/screenshot-og.ts --audit-only",
     "start": "react-router-serve ./build/server/index.js",
     "preview": "vite preview",
     "typecheck": "bun run generate:api && react-router typegen && tsc -b",

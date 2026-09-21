@@ -20,7 +20,7 @@ const config: ChartConfig = {
 
 /** One ring per row, coloured by the row rather than by the series. */
 export const radialBarChartOgScene: OgScene = {
-  scale: 1.2,
+  scale: 1.5,
   render: () => (
     <div className="w-144">
       <RadialBarChart
@@ -28,7 +28,7 @@ export const radialBarChartOgScene: OgScene = {
         data={browsers}
         dataKey="browser"
         colorByCategory
-        containerHeight={260}
+        containerHeight={240}
         radialBarProps={NO_ANIMATION}
       />
     </div>

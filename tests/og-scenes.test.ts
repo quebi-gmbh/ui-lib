@@ -16,11 +16,17 @@
  *   that — the clock, the dice, and an animation — are all visible in the
  *   source. None of them would fail the build; they would just quietly publish
  *   a different file every deploy.
+ * - **The measurement's exemptions are still about something.** Whether a scene
+ *   fits the stage and how big its type came out needs the browser, and
+ *   `scripts/og-audit.ts` measures both in the deploy. What can be checked
+ *   here is the half of that check which is data: every scene it excuses still
+ *   exists, still says why, and still holds to a number.
  */
 import { readdirSync, readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { describe, expect, test } from "bun:test"
+import { FLOOR_EXCEPTIONS, OFF_STAGE, TEXT_FLOOR_PX } from "../scripts/og-audit"
 import { metaRegistry } from "../src/registry/meta"
 import { ogScenes } from "../src/registry/og"
 
@@ -95,5 +101,56 @@ describe("a scene is the same picture twice", () => {
       return !source.includes("NO_ANIMATION") && !source.includes("isAnimationActive={false}")
     })
     expect(animated).toEqual([])
+  })
+})
+
+describe("the audit's exemptions are about scenes that exist", () => {
+  const exempted = [...Object.keys(OFF_STAGE), ...Object.keys(FLOOR_EXCEPTIONS)]
+
+  test("every exempted slug is a scene", () => {
+    // A renamed or deleted scene leaves its excuse behind, and an excuse with
+    // nothing under it reads like a rule about a component that is still there.
+    expect(exempted.filter((slug) => !ogScenes[slug]).sort()).toEqual([])
+  })
+
+  test("every exemption says why, in a sentence", () => {
+    for (const [slug, reason] of Object.entries(OFF_STAGE)) {
+      expect(`${slug}: ${reason}`.length).toBeGreaterThan(50)
+    }
+    for (const [slug, exception] of Object.entries(FLOOR_EXCEPTIONS)) {
+      expect(`${slug}: ${exception.reason}`.length).toBeGreaterThan(50)
+    }
+  })
+
+  test("a floor exception is still a floor", () => {
+    for (const exception of Object.values(FLOOR_EXCEPTIONS)) {
+      // Below the floor — an exception at or above it is not one, it is a line
+      // that would never fire — and above the size at which type stops being
+      // type, so the scene that was excused still fails if it shrinks further.
+      expect(exception.px).toBeLessThan(TEXT_FLOOR_PX)
+      expect(exception.px).toBeGreaterThanOrEqual(10)
+    }
+  })
+})
+
+describe("the frame keeps the hooks the measurement reaches for", () => {
+  const route = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "..", "src", "routes", "og.$slug.tsx"),
+    "utf8",
+  )
+
+  test("the stage and the scene are named in the DOM", () => {
+    // `scripts/og-audit.ts` measures the scene's rect against the stage's by
+    // querying these. Renaming one throws in the deploy, a few minutes after
+    // the build has already photographed 157 images; this says it in a second.
+    expect(route).toContain("data-og-stage")
+    expect(route).toContain("data-og-scene")
+  })
+
+  test("the overlays that are portalled out of the stage are magnified back", () => {
+    // The stage magnifies with a transform, which reaches only its own subtree,
+    // so every scene that opens an overlay depends on this call happening —
+    // and the difference is invisible in the source of the scene itself.
+    expect(route).toContain("magnifyOverlays(scale)")
   })
 })

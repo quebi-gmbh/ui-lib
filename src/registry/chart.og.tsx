@@ -17,7 +17,7 @@ import type { OgScene } from "./types"
  * escape hatch, because here there is nothing in between.
  */
 export const chartOgScene: OgScene = {
-  scale: 1.4,
+  scale: 1.5,
   render: () => (
     <div className="w-144">
       <Chart config={TWO_SERIES} data={SIX_MONTHS} dataKey="month" containerHeight={220}>

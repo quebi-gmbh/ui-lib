@@ -4,6 +4,6 @@ import type { OgScene } from "./types"
 
 /** One decade per page, the year either side dimmed in place. */
 export const yearPickerOgScene: OgScene = {
-  scale: 1.8,
+  scale: 1.7,
   render: () => <YearPicker aria-label="Year" defaultValue={OG_DAY} />,
 }

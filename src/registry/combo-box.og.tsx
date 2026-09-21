@@ -30,6 +30,6 @@ const OpenFruitPicker = () => {
 }
 
 export const comboBoxOgScene: OgScene = {
-  scale: 1.25,
+  scale: 1.4,
   render: () => <OpenFruitPicker />,
 }

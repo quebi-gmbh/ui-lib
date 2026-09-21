@@ -1,4 +1,4 @@
-import { BarChart3, Home, Settings, Users } from "lucide-react"
+import { Home, Settings, Users } from "lucide-react"
 import { Card } from "@/components/card"
 import {
   Sidebar,
@@ -17,11 +17,15 @@ import type { OgScene } from "./types"
 /**
  * The rail and the inset it pushes, in a box the size of a small window —
  * a sidebar photographed on its own is a list, and the point is the split.
+ *
+ * Three rows and no count badge. The badge is a 10px numeral, the smallest type
+ * in the component and four pixels wide in an unfurl, and it was setting the
+ * scale for everything else in the picture.
  */
 export const sidebarOgScene: OgScene = {
-  scale: 1.2,
+  scale: 1.6,
   render: () => (
-    <Card className="h-80 w-160 overflow-hidden p-0">
+    <Card className="h-52 w-144 overflow-hidden p-0">
       <SidebarProvider className="h-full">
         <Sidebar>
           <SidebarHeader>
@@ -33,13 +37,9 @@ export const sidebarOgScene: OgScene = {
                 <Home data-slot="icon" aria-hidden="true" />
                 <SidebarLabel>Dashboard</SidebarLabel>
               </SidebarItem>
-              <SidebarItem href="#roster" badge={12}>
+              <SidebarItem href="#roster">
                 <Users data-slot="icon" aria-hidden="true" />
                 <SidebarLabel>Roster</SidebarLabel>
-              </SidebarItem>
-              <SidebarItem href="#reports">
-                <BarChart3 data-slot="icon" aria-hidden="true" />
-                <SidebarLabel>Reports</SidebarLabel>
               </SidebarItem>
               <SidebarItem href="#settings">
                 <Settings data-slot="icon" aria-hidden="true" />

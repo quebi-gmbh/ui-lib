@@ -14,6 +14,13 @@
  *   bun run screenshot:og                    # serve build/client (the deploy path)
  *   bun run screenshot:og --base http://localhost:5173   # against `bun run dev`
  *   bun run screenshot:og --only badge,dialog            # while composing a scene
+ *   bun run og:audit --base http://localhost:5173        # measure, write nothing
+ *
+ * Every scene is also measured while the page is open, by `./og-audit.ts` —
+ * a scene that leaves the stage, sets type under the legibility floor or lets
+ * the browser elide a label fails the build by name, the same way a scene that
+ * throws does. `--no-audit` photographs without measuring; `--audit-only`
+ * measures without photographing, which is what `bun run og:audit` is.
  *
  * This is the repo's only browser dependency — the test suite renders in
  * happy-dom — so the ways it can fail are handled here rather than left to
@@ -26,6 +33,13 @@ import { dirname, join, normalize, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { chromium } from "playwright"
 import { metaRegistry } from "../src/registry/meta"
+import {
+  auditFindings,
+  measureOgScene,
+  OFF_STAGE,
+  STAGE_MARGIN_PX,
+  TEXT_FLOOR_PX,
+} from "./og-audit"
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const DIST = join(ROOT, "build/client")
@@ -46,6 +60,10 @@ const QUALITY = 85
 
 /** How long one scene may take to settle before it is called broken. */
 const READY_TIMEOUT_MS = 30_000
+
+function hasFlag(name: string): boolean {
+  return process.argv.includes(`--${name}`)
+}
 
 function arg(name: string): string | undefined {
   const flag = `--${name}`
@@ -77,9 +95,19 @@ function serveDist(root: string) {
 }
 
 async function main() {
+  const auditOnly = hasFlag("audit-only")
+  const audit = auditOnly || !hasFlag("no-audit")
+  const report = hasFlag("report")
   const only = arg("only")?.split(",").filter(Boolean)
   const slugs = ["default", ...metaRegistry.map((m) => m.slug)].filter(
     (slug) => !only || only.includes(slug),
+  )
+  // Which slugs have something on the stage to measure. Read off the metadata
+  // rather than out of `ogScenes`, because importing that map here would pull
+  // 157 `.tsx` scenes into a tsconfig that compiles scripts and has no `jsx`.
+  // `tests/og-scenes.test.ts` is what keeps the two halves in step.
+  const hasScene = new Set(
+    metaRegistry.filter((meta) => !meta.noOgScene).map((meta) => meta.slug),
   )
 
   const externalBase = arg("base")
@@ -87,9 +115,11 @@ async function main() {
   const base = externalBase ?? `http://localhost:${server?.port}`
 
   // A full run owns the directory; a `--only` run is someone iterating on one
-  // scene and must not delete the other 152.
-  if (!only) await rm(OUT, { recursive: true, force: true })
-  await mkdir(OUT, { recursive: true })
+  // scene and must not delete the other 152. An audit writes nothing at all.
+  if (!auditOnly) {
+    if (!only) await rm(OUT, { recursive: true, force: true })
+    await mkdir(OUT, { recursive: true })
+  }
 
   const browser = await chromium.launch({
     // Chromium will happily rasterize the same DOM into two slightly different
@@ -138,14 +168,41 @@ async function main() {
       await page.goto(`${base}/og/${slug}`, { waitUntil: "load" })
       const canvas = page.locator('[data-og-ready="true"]')
       await canvas.waitFor({ state: "visible", timeout: READY_TIMEOUT_MS })
-      await canvas.screenshot({
-        path: join(OUT, `${slug}.jpg`),
-        type: "jpeg",
-        quality: QUALITY,
-        // Fast-forwards CSS animations and transitions to their end state, so
-        // an overlay caught mid-entrance is not a different image every run.
-        animations: "disabled",
-      })
+      if (!auditOnly) {
+        await canvas.screenshot({
+          path: join(OUT, `${slug}.jpg`),
+          type: "jpeg",
+          quality: QUALITY,
+          // Fast-forwards CSS animations and transitions to their end state, so
+          // an overlay caught mid-entrance is not a different image every run.
+          animations: "disabled",
+        })
+      }
+      // `default` is the site card: the frame with no scene in it, so there is
+      // nothing here that the floor or the stage is about.
+      if (audit && hasScene.has(slug)) {
+        const measurement = await page.evaluate(measureOgScene, {
+          floorPx: TEXT_FLOOR_PX,
+          marginPx: STAGE_MARGIN_PX,
+          offStage: slug in OFF_STAGE,
+        })
+        if (report) {
+          const { size, smallest, overflow } = measurement
+          console.log(
+            [
+              slug,
+              `${size.width}×${size.height}`,
+              smallest ? `${smallest.px}px` : "—",
+              `${overflow.top}/${overflow.right}/${overflow.bottom}/${overflow.left}`,
+            ].join("\t"),
+          )
+        }
+        const findings = auditFindings(slug, measurement)
+        if (findings.length > 0) {
+          failures.push(`${slug}: ${findings.join("; ")}`)
+          console.error(`✗ ${slug} — ${findings.join("; ")}`)
+        }
+      }
     } catch (error) {
       const reason = pageError ?? (error as Error).message.split("\n")[0]
       failures.push(`${slug}: ${reason}`)
@@ -161,7 +218,11 @@ async function main() {
     process.exit(1)
   }
 
-  console.log(`Photographed ${slugs.length} OG images into build/client/og/`)
+  console.log(
+    auditOnly
+      ? `Measured ${slugs.length} OG scene(s): every one inside its stage, no text under ${TEXT_FLOOR_PX}px, nothing elided.`
+      : `Photographed ${slugs.length} OG images into build/client/og/`,
+  )
 }
 
 main().catch((error) => {

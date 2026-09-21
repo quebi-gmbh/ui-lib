@@ -14,7 +14,6 @@ const OWNERS: Owner[] = [
   { id: "ada", name: "Ada Lovelace" },
   { id: "grace", name: "Grace Hopper" },
   { id: "alan", name: "Alan Turing" },
-  { id: "margaret", name: "Margaret Hamilton" },
 ]
 
 /** The same already-settled page as the single-value scene, with two chips in. */
@@ -36,6 +35,7 @@ const OpenOwnerPicker = () => {
 }
 
 export const asyncMultipleSelectOgScene: OgScene = {
-  scale: 1.25,
+  scale: 1.5,
+  align: "top",
   render: () => <OpenOwnerPicker />,
 }

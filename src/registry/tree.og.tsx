@@ -20,7 +20,6 @@ const FILES: Node[] = [
           { id: "tree", name: "tree.tsx" },
         ],
       },
-      { id: "index", name: "index.ts" },
     ],
   },
   { id: "package", name: "package.json" },
@@ -33,7 +32,11 @@ const renderItem = (node: Node) => (
   </TreeItem>
 )
 
-/** Two levels expanded, so the indent and the chevrons are both in the frame. */
+/**
+ * Two levels expanded, so the indent and the chevrons are both in the frame,
+ * and five rows rather than six — at the scale the labels need, a sixth row is
+ * the difference between fitting the stage and being cut off by it.
+ */
 export const treeOgScene: OgScene = {
   scale: 1.8,
   render: () => (

@@ -7,7 +7,7 @@ const config: ChartConfig = TWO_SERIES
 
 /** Two series side by side, the grouped default. */
 export const barChartOgScene: OgScene = {
-  scale: 1.4,
+  scale: 1.5,
   render: () => (
     <div className="w-144">
       <BarChart

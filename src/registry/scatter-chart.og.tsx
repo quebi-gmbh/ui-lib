@@ -20,7 +20,7 @@ const config: ChartConfig = {
 
 /** One cloud of points: x from `dataKey`, y from `yKey`. */
 export const scatterChartOgScene: OgScene = {
-  scale: 1.4,
+  scale: 1.5,
   render: () => (
     <div className="w-144">
       <ScatterChart

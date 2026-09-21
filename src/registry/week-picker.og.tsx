@@ -4,6 +4,6 @@ import type { OgScene } from "./types"
 
 /** A whole week selected at once, with the ISO week numbers in the gutter. */
 export const weekPickerOgScene: OgScene = {
-  scale: 1.5,
+  scale: 1.34,
   render: () => <WeekPicker aria-label="Week" defaultValue={{ start: OG_DAY, end: OG_DAY }} />,
 }

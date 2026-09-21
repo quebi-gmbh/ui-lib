@@ -26,7 +26,7 @@ const series: ComposedSeries[] = [
 
 /** Bars and a line on one axis — two marks is the whole point of this one. */
 export const composedChartOgScene: OgScene = {
-  scale: 1.4,
+  scale: 1.5,
   render: () => (
     <div className="w-144">
       <ComposedChart

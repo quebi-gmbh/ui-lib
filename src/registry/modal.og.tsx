@@ -16,6 +16,9 @@ import type { OgScene } from "./types"
  * behind it would not be one.
  */
 export const modalOgScene: OgScene = {
+  // The panel is centred on the canvas and magnified about its own middle, so
+  // the frame's default 1.5 puts its top edge a few pixels off the image.
+  scale: 1.4,
   render: () => (
     <ModalContent defaultOpen size="md" aria-label="Invite your team">
       <ModalHeader>
