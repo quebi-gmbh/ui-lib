@@ -104,7 +104,20 @@ export function ConformStoragePicker({
   const hasErrors = !field.valid && !!field.errors
 
   return (
-    <Field ref={fieldRef} className={cn("space-y-2", className)}>
+    <Field ref={fieldRef} className={cn(className)}>
+      {/* First, before the label: the stack is spaced with `label + control`
+          selectors, and an `sr-only` element between the two is still an
+          element the selector cannot see past. */}
+      <BaseControl
+        name={field.name}
+        form={field.formId}
+        ref={selection.register}
+        defaultValue={selection.defaultValue}
+        hidden={false}
+        tabIndex={-1}
+        className="sr-only"
+      />
+
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>
           {label}
@@ -117,21 +130,12 @@ export function ConformStoragePicker({
           reference. */}
       {description && <Description id={field.descriptionId}>{description}</Description>}
 
-      <BaseControl
-        name={field.name}
-        form={field.formId}
-        ref={selection.register}
-        defaultValue={selection.defaultValue}
-        hidden={false}
-        tabIndex={-1}
-        className="sr-only"
-      />
-
       {/* A <fieldset> rather than a div wearing role="group": these chips are a
           group of form controls, which is the one thing the element is for.
           `min-w-0` undoes the UA `min-inline-size: min-content` Tailwind's
           preflight leaves in place, so the group wraps exactly as the div did. */}
       <fieldset
+        data-slot="control"
         className="flex min-w-0 flex-wrap gap-2"
         aria-label={label ?? "Storage"}
         aria-invalid={hasErrors || undefined}

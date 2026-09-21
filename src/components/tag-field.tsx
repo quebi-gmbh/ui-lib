@@ -17,6 +17,7 @@ import {
   TextField,
   type TextFieldProps,
 } from "react-aria-components"
+import { useFieldSizing } from "@/lib/field-size"
 import { cn } from "@/lib/utils"
 
 /**
@@ -29,6 +30,23 @@ import { cn } from "@/lib/utils"
  * remove button. Casing-insensitive de-duplication, optional split pattern,
  * and a hidden mirror input so the comma-joined value submits with a form.
  */
+
+/**
+ * The field size scale — `Input`'s three steps, on the text input a TagField
+ * draws: `xs` is 30px, `sm` 38px, `md` 42px and the default. The chips under
+ * the input keep their own `text-xs`; they are chips, not a line of the field.
+ *
+ * Written out rather than imported from `input.tsx`, as in `select.tsx` and
+ * `number-field.tsx`: three strings are not worth making `Input` a registry
+ * dependency of this file.
+ */
+const tagFieldSizeStyles = {
+  xs: "text-xs px-2.5 py-1.5",
+  sm: "text-sm px-3 py-2",
+  md: "text-sm px-3 py-2.5",
+} as const
+
+type TagFieldSize = keyof typeof tagFieldSizeStyles
 
 export interface TagFieldProps
   extends Pick<
@@ -67,6 +85,12 @@ export interface TagFieldProps
   /** Muted hint shown under the field. */
   description?: React.ReactNode
   placeholder?: string
+  /**
+   * Control height. Matches `Input`'s scale and `Button`'s `xs` / `sm`. Left
+   * out, it is whatever the surrounding surface asked for — a table cell being
+   * the one that does. See `@/lib/field-size`.
+   */
+  size?: TagFieldSize
 }
 
 export function TagField({
@@ -86,8 +110,10 @@ export function TagField({
   label,
   description,
   placeholder,
+  size: sizeProp,
   ...props
 }: TagFieldProps) {
+  const { size } = useFieldSizing({ size: sizeProp })
   const [internalSelection, setInternalSelection] = useState<Selection>(new Set(defaultValue))
   const [uncontrolledInput, setUncontrolledInput] = useState("")
   const [touched, setTouched] = useState(false)
@@ -162,7 +188,7 @@ export function TagField({
   }
 
   return (
-    <div className={cn("flex w-full flex-col gap-y-1.5", className)}>
+    <div data-slot="control" className={cn("flex w-full flex-col gap-y-1.5", className)}>
       <TextField
         value={inputValue}
         onChange={setInputValue}
@@ -186,8 +212,9 @@ export function TagField({
           <Input
             placeholder={placeholder}
             className={cn(
-              "relative block w-full appearance-none text-sm text-quebi-fg placeholder:text-quebi-fg-subtle",
-              "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
+              "relative block w-full appearance-none text-quebi-fg placeholder:text-quebi-fg-subtle",
+              "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
+              tagFieldSizeStyles[size],
               "transition-[border-color,box-shadow] duration-200",
               // `not-focus` guards against hover *beating* focus: `enabled:hover:` is
               // (0,3,0) specificity and `focus:` is (0,2,0), so unguarded a hovered,

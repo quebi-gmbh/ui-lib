@@ -73,14 +73,10 @@ export function ConformFileTrigger({
   const select = (list: FileList | null) => control.change(list ? Array.from(list) : [])
 
   return (
-    <Field ref={fieldRef} className={cn("flex flex-col gap-1.5", className)}>
-      {label && (
-        <Label className={cn(hasErrors && "text-red-500")}>
-          {label}
-          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
-        </Label>
-      )}
-
+    <Field ref={fieldRef} className={cn(className)}>
+      {/* First, before the label: the stack is spaced with `label + control`
+          selectors, and an `sr-only` element between the two is still an
+          element the selector cannot see past. */}
       <BaseControl
         type="file"
         name={field.name}
@@ -96,34 +92,46 @@ export function ConformFileTrigger({
         className="sr-only"
       />
 
-      {hasDropZone ? (
-        <DropZone
-          onDrop={async (event) => {
-            const dropped = await Promise.all(
-              event.items
-                .filter((item) => item.kind === "file")
-                .map((item) => (item as { getFile: () => Promise<File> }).getFile()),
-            )
-            if (dropped.length > 0) {
-              control.change(props.allowsMultiple ? [...files, ...dropped] : [dropped[0]])
-            }
-          }}
-          className={cn("flex-col gap-3", hasErrors && "border-red-500")}
-        >
-          <span>{dropZoneLabel}</span>
-          <FileTrigger {...props} onSelect={select} />
-        </DropZone>
-      ) : (
-        <FileTrigger {...props} onSelect={select} />
+      {label && (
+        <Label className={cn(hasErrors && "text-red-500")}>
+          {label}
+          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
+        </Label>
       )}
 
-      {files.length > 0 && (
-        <ul className="flex flex-col gap-1 text-[12px] text-quebi-fg-muted">
-          {files.map((file) => (
-            <li key={`${file.name}-${file.size}-${file.lastModified}`}>{file.name}</li>
-          ))}
-        </ul>
-      )}
+      {/* The picker and the list of what it has picked are one control: the
+          list is part of the field's answer, not a hint under it, so it stays
+          on the control row of a `FieldRow` rather than in the hint row. */}
+      <div data-slot="control" className="flex flex-col gap-1.5">
+        {hasDropZone ? (
+          <DropZone
+            onDrop={async (event) => {
+              const dropped = await Promise.all(
+                event.items
+                  .filter((item) => item.kind === "file")
+                  .map((item) => (item as { getFile: () => Promise<File> }).getFile()),
+              )
+              if (dropped.length > 0) {
+                control.change(props.allowsMultiple ? [...files, ...dropped] : [dropped[0]])
+              }
+            }}
+            className={cn("flex-col gap-3", hasErrors && "border-red-500")}
+          >
+            <span>{dropZoneLabel}</span>
+            <FileTrigger {...props} onSelect={select} />
+          </DropZone>
+        ) : (
+          <FileTrigger {...props} onSelect={select} />
+        )}
+
+        {files.length > 0 && (
+          <ul className="flex flex-col gap-1 text-[12px] text-quebi-fg-muted">
+            {files.map((file) => (
+              <li key={`${file.name}-${file.size}-${file.lastModified}`}>{file.name}</li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {/* These ids are ours to set: the control above is not a react-aria
           field, so nothing generates them and its aria-describedby is their

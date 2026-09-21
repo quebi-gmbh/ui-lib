@@ -18,6 +18,12 @@ import { cn } from "@/lib/utils"
  * accessible form fields: a Label, a muted Description hint, a red FieldError
  * message, plus Field/Fieldset/Legend wrappers that lay out the
  * label → control → hint stack with consistent spacing.
+ *
+ * Three of those wrappers are the layout convention the whole library shares.
+ * `Field` (and `fieldStyles`, which is the same rules for a root that is
+ * already a react-aria field) is the stack down one field; `FieldRow` puts
+ * fields side by side on one subgrid so their labels, controls and hints share
+ * three baselines; `FieldGroup` stacks fields and rows down a form.
  */
 
 export function Label({ className, ...props }: LabelProps) {
@@ -189,19 +195,155 @@ export function focusFirstControl(container: HTMLElement | null | undefined): bo
   return false
 }
 
+/**
+ * The label → control → hint stack, in one place.
+ *
+ * Every field root in this library wears this: `Field` below, and the root of
+ * each `conform-*` variant, whether that root is a `Field` or the react-aria
+ * field itself (`TextField`, `Select`, `NumberField`, …). Before task #186 the
+ * stack was written five ways with four different values — these selectors,
+ * verbatim copies of them in `TextField`, `NumberField`, `TimeField` and
+ * `ColorField`, and a `gap-1.5` / `gap-2` / `gap-3` / nothing flex root in
+ * thirty of the variants — so a `ConformField` and a `ConformCheckbox` in the
+ * same column had label→control gaps of 6px and 8px. That was drift, not a
+ * decision. `tests/field-stack.test.ts` fails on the sixth copy.
+ *
+ * Sibling selectors rather than a flex `gap` for three reasons: they are the
+ * older and documented primitive here; they let a description sit *above* the
+ * control (`ConformStoragePicker` and `ConformColorSwatchPicker` do) as well
+ * as below; and they give label→description its own 4px, which one `gap` on
+ * the root cannot. Like `gap`, they produce nothing for a child that is not
+ * rendered, which is what a field with no label or no error needs.
+ *
+ * The cost is that the control must say it is the control:
+ * `data-slot="control"` on the element the label points at. Every field
+ * primitive in this library already sets it (`Input`, `SelectTrigger`,
+ * `DateInput`, `Textarea`, `Switch`, …); where a control does not — a
+ * calendar, a `role="group"` box, a `<fieldset>` of chips — the variant that
+ * wraps it marks it. `FieldRow` reads the same marks to place the parts on its
+ * grid, so one convention pays for both.
+ */
+export const fieldStackStyles = [
+  // label → control → hint stack with 6px between siblings.
+  "[&>[data-slot=label]+[data-slot=control]]:mt-1.5",
+  "[&>[data-slot=label]+[slot='description']]:mt-1",
+  "[&>[slot=description]+[data-slot=control]]:mt-1.5",
+  "[&>[data-slot=control]+[slot=description]]:mt-1.5",
+  "[&>[data-slot=control]+[slot=errorMessage]]:mt-1.5",
+].join(" ")
+
+/**
+ * The whole look of a field root: the stack above, one footprint rule, and the
+ * disabled dimming.
+ *
+ * `w-full` is the footprint rule, and it is one rule on purpose. Fields used
+ * to be `w-full`, `w-fit` or nothing at all depending on which variant you
+ * reached for, so half of them did not fill their cell in a
+ * `grid sm:grid-cols-2`. The only fields that keep `w-fit` are the four built
+ * on a calendar grid, which say why in their own source.
+ */
+export const fieldStyles = cn(
+  "w-full",
+  fieldStackStyles,
+  "in-disabled:opacity-50 disabled:opacity-50",
+)
+
 export function Field({ className, ...props }: React.ComponentProps<"div">) {
+  return <div {...props} className={cn(fieldStyles, className)} />
+}
+
+/**
+ * FieldRow — fields side by side, sharing one label / control / hint grid.
+ *
+ * Fields of different shapes do not line up beside each other, and no amount
+ * of agreeing on the gap inside a field fixes it: a `Textarea` is ~40px taller
+ * than a `Select`, so the two hints below them sit 40px apart, and the moment
+ * one field goes invalid its row grows and everything under it jumps. Both are
+ * questions about the *row*, which is why they are answered here rather than
+ * in each of the thirty-three variants.
+ *
+ * The row is a three-row grid — label, control, hint — and each field is
+ * handed a `grid-template-rows: subgrid` spanning all three, so every label
+ * lands on row 1, every control on row 2 and every description-or-error on row
+ * 3. Each row then sizes to its tallest member and the fields share three
+ * baselines whatever their heights.
+ *
+ * The hint row carries a floor of one line of 12px text, so a field going
+ * invalid fills reserved space instead of pushing the page down. That
+ * reservation is only affordable because of the subgrid: under a plain stack
+ * it would cost ~18px under every field on the page forever, whereas here the
+ * row is already as tall as the tallest hint in it.
+ *
+ * Placement is by the same marks the stack above uses — `data-slot="label"`,
+ * `data-slot="control"`, `slot="description"` / `slot="errorMessage"`. Anything
+ * else a variant renders (a hidden `BaseControl`, a popover) is out of flow or
+ * portalled and takes no cell; anything else that is *not* goes to the control
+ * row, which is why each variant keeps its control in a single marked element.
+ *
+ * Subgrid is guarded, as it is everywhere else in this repo (`sidebar.tsx`,
+ * `navbar.tsx`, `dropdown.tsx`): without support the row is a plain
+ * `grid-cols-*` with a 24px gap, which is exactly what consumers write by hand
+ * today. Below `sm` it is a stack and each field spaces its own parts, because
+ * one field per line has nothing to align with.
+ *
+ * Usage:
+ *   <FieldRow>
+ *     <ConformField field={fields.firstName} label="First name" />
+ *     <ConformSelect field={fields.country} label="Country">…</ConformSelect>
+ *   </FieldRow>
+ */
+const fieldRowColumns = {
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-3",
+  4: "sm:grid-cols-4",
+} as const
+
+export interface FieldRowProps extends React.ComponentProps<"div"> {
+  /** How many fields stand side by side from `sm` up. Default 2. */
+  columns?: keyof typeof fieldRowColumns
+}
+
+export function FieldRow({ className, columns = 2, ...props }: FieldRowProps) {
   return (
     <div
+      data-slot="control"
       {...props}
       className={cn(
-        "w-full",
-        // label → control → hint stack with 6px between siblings.
-        "[&>[data-slot=label]+[data-slot=control]]:mt-1.5",
-        "[&>[data-slot=label]+[slot='description']]:mt-1",
-        "[&>[slot=description]+[data-slot=control]]:mt-1.5",
-        "[&>[data-slot=control]+[slot=description]]:mt-1.5",
-        "[&>[data-slot=control]+[slot=errorMessage]]:mt-1.5",
-        "in-disabled:opacity-50 disabled:opacity-50",
+        // Narrow: one field per line, each spacing its own parts.
+        "flex w-full flex-col gap-6",
+        // From `sm`: side by side. Without subgrid this is the whole component,
+        // and it is the `grid sm:grid-cols-2` a consumer writes today.
+        "sm:grid sm:gap-x-4 sm:gap-y-6",
+        fieldRowColumns[columns],
+        // With subgrid: three rows, the last with a floor of one line of hint.
+        "sm:supports-[grid-template-rows:subgrid]:[grid-template-rows:auto_auto_minmax(--spacing(4.5),auto)]",
+        // `!` for the same reason as the margins below: `sm:gap-y-6` above and
+        // this differ only by a variant, so tailwind-merge keeps both and the
+        // winner would be sheet order.
+        "sm:supports-[grid-template-rows:subgrid]:gap-y-1.5!",
+        // A field spans all three rows and lays its parts out on them.
+        "sm:supports-[grid-template-rows:subgrid]:*:row-span-3",
+        // `!` on the display: a field root that keeps a flex column of its own
+        // (`Slider` does, for its thumb row) is a plain `.flex` at the same
+        // specificity as this rule, and the winner would be sheet order.
+        "sm:supports-[grid-template-rows:subgrid]:*:grid!",
+        "sm:supports-[grid-template-rows:subgrid]:*:grid-rows-subgrid",
+        "sm:supports-[grid-template-rows:subgrid]:[&>*>[data-slot=label]]:row-start-1",
+        "sm:supports-[grid-template-rows:subgrid]:[&>*>[slot=description]]:row-start-3",
+        "sm:supports-[grid-template-rows:subgrid]:[&>*>[slot=errorMessage]]:row-start-3",
+        "sm:supports-[grid-template-rows:subgrid]:[&>*>*:not([data-slot=label]):not([slot=description]):not([slot=errorMessage])]:row-start-2",
+        // The row's gap replaces the stack's margins. The `!` is load-bearing
+        // for the same reason it is in `pagination.tsx`: tailwind-merge groups
+        // by utility name and leaves two `mt-*` that differ only by an
+        // arbitrary variant both standing, so this would otherwise win or lose
+        // on sheet order.
+        "sm:supports-[grid-template-rows:subgrid]:[&>*>*]:mt-0!",
+        // A row that overflows its columns wraps, and the 6px row gap is then
+        // also the gap between the two lines — far too tight. The margin puts
+        // 24px back between them; the negative one on the row takes the last
+        // line's copy of it off again.
+        "sm:supports-[grid-template-rows:subgrid]:-mb-6",
+        "sm:supports-[grid-template-rows:subgrid]:*:mb-6",
         className,
       )}
     />
@@ -217,6 +359,15 @@ export function Fieldset({ className, ...props }: React.ComponentProps<"fieldset
   )
 }
 
+/**
+ * FieldGroup — the vertical counterpart to `FieldRow`: fields, and rows of
+ * fields, stacked down a form.
+ *
+ * Its 24px is the same 24px `FieldRow` puts between two lines that wrapped, so
+ * a form built from `FieldGroup` and `FieldRow` has one vertical rhythm however
+ * the fields are arranged. It carries `data-slot="control"` so a `Fieldset`
+ * treats the whole group as one control under its legend.
+ */
 export function FieldGroup({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
   return <div data-slot="control" className={cn("space-y-6", className)} {...props} />
 }

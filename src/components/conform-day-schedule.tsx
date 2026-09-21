@@ -73,14 +73,10 @@ export function ConformDaySchedule({
   const spans = parseSpans(control.value, defaultSpans)
 
   return (
-    <Field ref={fieldRef} className={cn("flex flex-col gap-2", className)}>
-      {label && (
-        <Label className={cn("text-sm", hasErrors && "text-red-500")}>
-          {label}
-          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
-        </Label>
-      )}
-
+    <Field ref={fieldRef} className={cn(className)}>
+      {/* First, before the label: the stack is spaced with `label + control`
+          selectors, and an `sr-only` element between the two is still an
+          element the selector cannot see past. */}
       <BaseControl
         name={field.name}
         form={field.formId}
@@ -91,7 +87,15 @@ export function ConformDaySchedule({
         className="sr-only"
       />
 
+      {label && (
+        <Label className={cn("text-sm", hasErrors && "text-red-500")}>
+          {label}
+          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
+        </Label>
+      )}
+
       <div
+        data-slot="control"
         className={cn(
           "rounded-quebi-md border p-4 transition-colors duration-150",
           hasErrors ? "border-red-500" : "border-quebi-line/10",

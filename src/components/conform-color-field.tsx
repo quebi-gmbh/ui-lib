@@ -9,7 +9,7 @@ import {
   type ColorFieldProps,
   ColorInput,
 } from "@/components/color-field"
-import { Description, FieldError, Label } from "@/components/field"
+import { Description, FieldError, fieldStyles, Label } from "@/components/field"
 
 export interface ConformColorFieldProps
   extends Omit<
@@ -62,9 +62,7 @@ export function ConformColorField({
       // The literal is only for the unlabelled case, where nothing else names
       // the control.
       aria-label={props["aria-label"] ?? (label ? undefined : "Color")}
-      className={composeRenderProps(className, (resolved) =>
-        cn("flex w-full flex-col gap-1.5", resolved),
-      )}
+      className={composeRenderProps(className, (resolved) => cn(fieldStyles, resolved))}
     >
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>

@@ -148,14 +148,10 @@ export function ConformCalendarTimeline({
   const events = parseEvents(control.value, defaultEvents)
 
   return (
-    <Field ref={fieldRef} className={cn("flex flex-col gap-2", className)}>
-      {label && (
-        <Label className={cn("text-sm", hasErrors && "text-red-500")}>
-          {label}
-          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
-        </Label>
-      )}
-
+    <Field ref={fieldRef} className={cn(className)}>
+      {/* First, before the label: the stack is spaced with `label + control`
+          selectors, and an `sr-only` element between the two is still an
+          element the selector cannot see past. */}
       <BaseControl
         name={field.name}
         form={field.formId}
@@ -166,8 +162,16 @@ export function ConformCalendarTimeline({
         className="sr-only"
       />
 
+      {label && (
+        <Label className={cn("text-sm", hasErrors && "text-red-500")}>
+          {label}
+          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
+        </Label>
+      )}
+
       {/* biome-ignore lint/a11y/useSemanticElements: <fieldset> is the element for this role, and it is the wrong box here — it brings a UA border, padding and `min-inline-size: min-content` into a surface that already draws its own border and has to be exactly as wide as the timeline scrolling inside it. The role is what carries the description and the error to a control with no form element of its own, so dropping it would leave the aria-describedby below pointing at nothing. */}
       <div
+        data-slot="control"
         role="group"
         aria-label={label}
         aria-invalid={hasErrors || undefined}

@@ -21,6 +21,7 @@ import { ModalContent } from "@/components/modal"
 import { PopoverContent } from "@/components/popover"
 import { RangeCalendar } from "@/components/range-calendar"
 import { cn } from "@/lib/utils"
+import { fieldStyles } from "@/components/field"
 
 /**
  * Date Picker — quebi design system
@@ -69,7 +70,7 @@ export function DatePicker<T extends DateValue>({
     <DatePickerPrimitive
       data-slot="control"
       className={composeRenderProps(className, (resolved) =>
-        cn("group flex w-full flex-col gap-1.5", resolved),
+        cn("group", fieldStyles, resolved),
       )}
       {...props}
     >

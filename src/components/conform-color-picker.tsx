@@ -93,13 +93,9 @@ export function ConformColorPicker({
 
   return (
     <Field ref={fieldRef} className={cn(className)}>
-      {label && (
-        <Label className={cn(hasErrors && "text-red-500")}>
-          {label}
-          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
-        </Label>
-      )}
-
+      {/* First, before the label: the stack is spaced with `label + control`
+          selectors, and an `sr-only` element between the two is still an
+          element the selector cannot see past. */}
       <BaseControl
         name={field.name}
         form={field.formId}
@@ -110,45 +106,57 @@ export function ConformColorPicker({
         className="sr-only"
       />
 
-      <ColorPickerPrimitive value={color} onChange={handleColorChange}>
-        <Popover>
-          <PopoverTrigger
-            intent="outline"
-            size={size}
-            className="w-full justify-start gap-2 font-normal"
-            aria-describedby={describedBy(
-              hasErrors && field.errorId,
-              description && field.descriptionId,
-            )}
-          >
-            <ColorSwatch color={displayColor} className="size-5 shrink-0 rounded-quebi-sm" />
-            <span className={isEmpty ? "text-quebi-fg-subtle" : undefined}>
-              {isEmpty ? (placeholder ?? "Select color") : hexValue}
-            </span>
-          </PopoverTrigger>
-          <PopoverContent className="w-[280px]">
-            <Dialog>
-              <PopoverBody className="space-y-3 p-3">
-                <ColorArea colorSpace="hsb" xChannel="saturation" yChannel="brightness" className="w-full" />
-                <ColorSlider channel="hue" colorSpace="hsb">
-                  <ColorSliderTrack>
-                    <ColorSliderThumb />
-                  </ColorSliderTrack>
-                </ColorSlider>
-                {/* One height across the row. `ColorInput` is the field
-                    scale's `md`, 42px, and Button's square scale steps 38 → 46
-                    with nothing in between — so the dropper and the swatch are
-                    sized to the field rather than the field to them. */}
-                <div className="flex items-center gap-2">
-                  <ColorField aria-label="Hex color" className="flex-1" />
-                  <EyeDropper className="size-10.5" />
-                  <ColorSwatch className="size-10.5 shrink-0" />
-                </div>
-              </PopoverBody>
-            </Dialog>
-          </PopoverContent>
-        </Popover>
-      </ColorPickerPrimitive>
+      {label && (
+        <Label className={cn(hasErrors && "text-red-500")}>
+          {label}
+          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
+        </Label>
+      )}
+
+      {/* `ColorPicker` is a context provider and renders no element of its
+          own, so the trigger button would otherwise be what the field stack
+          and `FieldRow` saw. This wrapper is the control. */}
+      <div data-slot="control">
+        <ColorPickerPrimitive value={color} onChange={handleColorChange}>
+          <Popover>
+            <PopoverTrigger
+              intent="outline"
+              size={size}
+              className="w-full justify-start gap-2 font-normal"
+              aria-describedby={describedBy(
+                hasErrors && field.errorId,
+                description && field.descriptionId,
+              )}
+            >
+              <ColorSwatch color={displayColor} className="size-5 shrink-0 rounded-quebi-sm" />
+              <span className={isEmpty ? "text-quebi-fg-subtle" : undefined}>
+                {isEmpty ? (placeholder ?? "Select color") : hexValue}
+              </span>
+            </PopoverTrigger>
+            <PopoverContent className="w-[280px]">
+              <Dialog>
+                <PopoverBody className="space-y-3 p-3">
+                  <ColorArea colorSpace="hsb" xChannel="saturation" yChannel="brightness" className="w-full" />
+                  <ColorSlider channel="hue" colorSpace="hsb">
+                    <ColorSliderTrack>
+                      <ColorSliderThumb />
+                    </ColorSliderTrack>
+                  </ColorSlider>
+                  {/* One height across the row. `ColorInput` is the field
+                      scale's `md`, 42px, and Button's square scale steps 38 → 46
+                      with nothing in between — so the dropper and the swatch are
+                      sized to the field rather than the field to them. */}
+                  <div className="flex items-center gap-2">
+                    <ColorField aria-label="Hex color" className="flex-1" />
+                    <EyeDropper className="size-10.5" />
+                    <ColorSwatch className="size-10.5 shrink-0" />
+                  </div>
+                </PopoverBody>
+              </Dialog>
+            </PopoverContent>
+          </Popover>
+        </ColorPickerPrimitive>
+      </div>
 
       {/* These ids are ours to set: the trigger is a Button inside a popover,
           not a react-aria field, so nothing generates them and the

@@ -234,7 +234,7 @@ export function AsyncSelect<T extends AsyncSelectOption>({
   const isLoading = list.loadingState === "loading" || list.loadingState === "filtering"
 
   return (
-    <div className={cn("w-full", className)}>
+    <div data-slot="control" className={cn("w-full", className)}>
       {/** biome-ignore lint/a11y/noStaticElementInteractions: the control surface forwards bare-surface clicks to the combobox input; all real semantics live on the input/options */}
       <div
         ref={containerRef}

@@ -3,7 +3,7 @@
 import type { FieldMetadata } from "@conform-to/react"
 import { composeRenderProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
-import { Description, FieldError, Label } from "@/components/field"
+import { Description, FieldError, fieldStyles, Label } from "@/components/field"
 import type { InputSize } from "@/components/input"
 import { SearchField, type SearchFieldProps, SearchInput } from "@/components/search-field"
 
@@ -53,9 +53,7 @@ export function ConformSearchField({
       defaultValue={(field.initialValue as string) ?? ""}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={composeRenderProps(className, (resolved) =>
-        cn("flex w-full flex-col gap-1.5", resolved),
-      )}
+      className={composeRenderProps(className, (resolved) => cn(fieldStyles, resolved))}
     >
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>

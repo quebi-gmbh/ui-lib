@@ -9,6 +9,7 @@ import {
 } from "react-aria-components"
 import { Input, InputGroup } from "@/components/input"
 import { cn } from "@/lib/utils"
+import { fieldStyles } from "@/components/field"
 
 /**
  * SearchField — quebi design system
@@ -31,7 +32,7 @@ export function SearchField({ className, ref, ...props }: SearchFieldProps) {
       {...props}
       aria-label={props["aria-label"] ?? "Search"}
       className={composeRenderProps(className, (resolved) =>
-        cn("group/search-field block w-full", resolved),
+        cn("group/search-field block", fieldStyles, resolved),
       )}
     />
   )

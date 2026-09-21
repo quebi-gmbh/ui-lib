@@ -9,6 +9,7 @@ import {
 } from "react-aria-components"
 import { useFieldSizing } from "@/lib/field-size"
 import { cn } from "@/lib/utils"
+import { fieldStyles } from "@/components/field"
 
 /**
  * TimeField — quebi design system
@@ -34,17 +35,10 @@ export function TimeField<T extends TimeValue>({ className, ...props }: TimeFiel
       {...props}
       data-slot="control"
       className={composeRenderProps(className, (resolved) =>
-        cn(
-          "group w-fit",
-          // label → control → hint stack with 6px between siblings.
-          "[&>[data-slot=label]+[data-slot=control]]:mt-1.5",
-          "[&>[data-slot=label]+[slot='description']]:mt-1",
-          "[&>[slot=description]+[data-slot=control]]:mt-1.5",
-          "[&>[data-slot=control]+[slot=description]]:mt-1.5",
-          "[&>[data-slot=control]+[slot=errorMessage]]:mt-1.5",
-          "in-disabled:opacity-50 disabled:opacity-50",
-          resolved,
-        ),
+        // The stack from the one place that owns it. `w-fit` after it, so a
+        // bare TimeField is still as wide as its segments; the conform variant
+        // puts `w-full` back on top, which is the footprint rule for a field.
+        cn("group", fieldStyles, "w-fit", resolved),
       )}
     />
   )

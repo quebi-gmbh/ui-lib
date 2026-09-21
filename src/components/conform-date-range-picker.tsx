@@ -12,7 +12,7 @@ import {
   type DateRangePickerProps,
   DateRangePickerTrigger,
 } from "@/components/date-range-picker"
-import { Description, FieldError, focusFirstControl, Label } from "@/components/field"
+import { Description, FieldError, fieldStyles, focusFirstControl, Label } from "@/components/field"
 
 /** The wire shape: two ISO `YYYY-MM-DD` strings, submitted as `<name>.start` / `<name>.end`. */
 export interface ConformDateRange {
@@ -114,8 +114,11 @@ export function ConformDateRangePicker({
       onBlur={() => control.blur()}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={composeRenderProps(className, (resolved) => cn("w-full", resolved))}
+      className={composeRenderProps(className, (resolved) => cn(fieldStyles, resolved))}
     >
+      {/* First, before the label: the stack is spaced with `label + control`
+          selectors, and an `sr-only` element between the two is still an
+          element the selector cannot see past. */}
       <BaseControl
         type="fieldset"
         name={field.name}
@@ -132,7 +135,7 @@ export function ConformDateRangePicker({
           {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
         </Label>
       )}
-      <div ref={triggerRef}>
+      <div ref={triggerRef} data-slot="control">
         <DateRangePickerTrigger />
       </div>
       {/* No ids and no aria-describedby here: this is a react-aria field, so it

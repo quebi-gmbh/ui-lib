@@ -54,7 +54,7 @@ export function ConformAsyncSelect<T extends AsyncSelectOption>({
   const isRequired = field.required ?? false
 
   return (
-    <Field className={cn("flex flex-col gap-1.5", className)}>
+    <Field className={cn(className)}>
       {label && (
         <Label htmlFor={field.id} className={cn(hasErrors && "text-red-500")}>
           {label}

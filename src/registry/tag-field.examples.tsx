@@ -17,6 +17,18 @@ export const tagFieldExamples: ComponentExample[] = [
     ),
   },
   {
+    title: "Sizes",
+    description:
+      "xs, sm, and the default md — Input's three steps, so a tag field lines up with the field beside it. The chips keep their own small type; they are chips, not a line of the field.",
+    render: () => (
+      <div className="flex w-80 flex-col gap-3">
+        <TagField size="xs" label="xs" placeholder="Add a tag…" defaultValue={["one"]} />
+        <TagField size="sm" label="sm" placeholder="Add a tag…" defaultValue={["one"]} />
+        <TagField label="md (default)" placeholder="Add a tag…" defaultValue={["one"]} />
+      </div>
+    ),
+  },
+  {
     title: "With default value",
     description: "Pre-filled chips that can be removed via the × button.",
     render: () => (

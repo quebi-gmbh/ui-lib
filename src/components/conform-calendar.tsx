@@ -74,14 +74,17 @@ export function ConformCalendar({
   const isRequired = field.required ?? false
 
   return (
-    <Field ref={fieldRef} className={cn("flex w-fit flex-col gap-1.5", className)}>
-      {label && (
-        <Label className={cn(hasErrors && "text-red-500")}>
-          {label}
-          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
-        </Label>
-      )}
-
+    <Field
+      ref={fieldRef}
+      // `w-fit` rather than the `w-full` every other field root wears: a
+      // calendar is a grid of fixed-size cells with an intrinsic width, and
+      // stretching the root only pulls its header chrome away from the grid
+      // under it.
+      className={cn("w-fit", className)}
+    >
+      {/* First, before the label: the stack is spaced with `label + control`
+          selectors, and an `sr-only` element between the two is still an
+          element the selector cannot see past. */}
       <BaseControl
         name={field.name}
         form={field.formId}
@@ -92,17 +95,29 @@ export function ConformCalendar({
         className="sr-only"
       />
 
-      <Calendar
-        {...props}
-        value={toCalendarDate(control.value)}
-        onChange={(value) => control.change(value ? value.toString() : "")}
-        isInvalid={hasErrors}
-        aria-label={props["aria-label"] ?? label}
-        aria-describedby={describedBy(
-          hasErrors && field.errorId,
-          description && field.descriptionId,
-        )}
-      />
+      {label && (
+        <Label className={cn(hasErrors && "text-red-500")}>
+          {label}
+          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
+        </Label>
+      )}
+
+      {/* The calendar is the control, and says so: `Calendar` marks itself
+          `data-slot="calendar"`, so the field stack and `FieldRow` need this
+          wrapper to find it. */}
+      <div data-slot="control">
+        <Calendar
+          {...props}
+          value={toCalendarDate(control.value)}
+          onChange={(value) => control.change(value ? value.toString() : "")}
+          isInvalid={hasErrors}
+          aria-label={props["aria-label"] ?? label}
+          aria-describedby={describedBy(
+            hasErrors && field.errorId,
+            description && field.descriptionId,
+          )}
+        />
+      </div>
 
       {/* These ids are ours to set: react-aria only owns the ids of children
           rendered inside its field, and these are siblings of the calendar

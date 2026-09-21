@@ -40,7 +40,7 @@ export function ConformTagField({ field, className, ...props }: ConformTagFieldP
   const hasErrors = !field.valid && !!field.errors
 
   return (
-    <Field className={cn("flex flex-col gap-1.5", className)}>
+    <Field className={cn(className)}>
       <TagField
         {...props}
         id={field.id}

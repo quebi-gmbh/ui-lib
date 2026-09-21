@@ -39,6 +39,27 @@ export const multipleSelectExamples: ComponentExample[] = [
     ),
   },
   {
+    title: "Sizes",
+    description:
+      "xs (30px), sm (38px), and the default md (42px) — Input's three steps, so a chip picker and the select beside it are the same height. The text size rides along, so a small field's chips and caret shrink with the box.",
+    render: () => (
+      <div className="flex w-80 flex-col gap-3">
+        {(["xs", "sm", "md"] as const).map((size) => (
+          <MultipleSelect
+            key={size}
+            size={size}
+            aria-label={`Frameworks (${size})`}
+            placeholder={size === "md" ? "md (default)" : size}
+          >
+            <MultipleSelectContent items={frameworks}>
+              {(item) => <MultipleSelectItem id={item.id}>{item.name}</MultipleSelectItem>}
+            </MultipleSelectContent>
+          </MultipleSelect>
+        ))}
+      </div>
+    ),
+  },
+  {
     title: "With label & description",
     description:
       "Pair the control with field primitives. This is a hand-built combobox rather than a react-aria field, so the ids are yours: point the label at the input with `htmlFor` and the input at the hint with `aria-describedby`.",
