@@ -113,6 +113,26 @@ export interface DataTableProps<T extends RowData> {
    */
   columnFilters?: FilterCondition[]
   onColumnFiltersChange?: (filters: FilterCondition[]) => void
+  /**
+   * Whether a column's filter popover draws an Operator select — `is not`,
+   * `does not contain`, `not between` — rather than only honouring one that
+   * arrived from a URL, a preset or a `FilterBuilder` (task #201).
+   *
+   * On here, and off in `ServerTable`, and the asymmetry follows the one
+   * question the two are named for — who owns the query. These rows are all of
+   * them and `matchesFilter` is what narrows them, so every operator the model
+   * can express is one this table can already answer. A server-driven table's
+   * answer comes from a server that may only implement `contains`, and a
+   * control it cannot honour is worse than a missing one.
+   *
+   * The select is drawn per column, and only where offering it is true: a
+   * variant with one operator (`boolean`, whose `Yes / No / Any` already says
+   * what `is not` would) has nothing to pick, and a column carrying its own
+   * `filterFn` *is* its own operator — the predicate is handed one and is free
+   * to ignore it, so the header does not offer to change a question only that
+   * function can answer.
+   */
+  enableFilterOperators?: boolean
   /** Named filter sets, offered beside the chips. */
   filterPresets?: { id: string; label: string }[]
   onApplyPreset?: (id: string) => void
@@ -222,6 +242,7 @@ export function DataTable<T extends RowData>({
   onGlobalFilterChange,
   columnFilters: columnFiltersProp,
   onColumnFiltersChange,
+  enableFilterOperators = true,
   filterPresets,
   onApplyPreset,
   onSavePreset,
@@ -289,6 +310,25 @@ export function DataTable<T extends RowData>({
    */
   const filterVariants = useMemo(
     () => new Map(leafColumns(columns).map((column) => [column.id, column.filterVariant])),
+    [columns],
+  )
+
+  /**
+   * The columns answering their filter with a predicate of their own. Kept here
+   * rather than on `DataTableColumnMeta` because it is not presentation: the
+   * meta is what a header, a chooser, a CSV row and a breakpoint all read, and
+   * this is one question the filter popover asks about the column definition it
+   * came from. It decides whether that popover offers an operator at all —
+   * `filterFn` is handed one and free to ignore it, and a select that changes
+   * nothing is worse than no select.
+   */
+  const customFilterColumns = useMemo(
+    () =>
+      new Set(
+        leafColumns(columns)
+          .filter((column) => column.filterFn)
+          .map((column) => column.id),
+      ),
     [columns],
   )
 
@@ -571,13 +611,17 @@ export function DataTable<T extends RowData>({
             label={meta.label}
             variant={meta.filterVariant}
             value={applied}
-            /* The header has no operator select, so the panel keeps whatever
-               operator the filter arrived with rather than quietly resetting a
-               controlled `is not` to `is` the first time it is re-applied. */
+            /* Where the panel starts, and — with no select drawn — what it
+               reports straight back, so re-applying a value never quietly
+               resets a controlled `is not` to `is`. */
             operator={condition?.operator}
+            /* A column with its own `filterFn` is its own operator: the
+               predicate is handed one and may ignore it, and a select that
+               changes nothing is a worse answer than no select. */
+            editOperator={enableFilterOperators && !customFilterColumns.has(columnId)}
             options={options}
             bounds={minMax ? [Number(minMax[0]), Number(minMax[1])] : undefined}
-            onApply={(value) => setColumnFilter(columnId, value, condition?.operator)}
+            onApply={(value, operator) => setColumnFilter(columnId, value, operator)}
             onClear={() => setColumnFilter(columnId, undefined)}
             onClose={close}
           />

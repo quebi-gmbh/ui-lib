@@ -132,6 +132,25 @@ export interface ServerTableProps<T extends RowData> {
 
   /** Loads a page of distinct values for a column's filter popover. */
   loadFilterValues?: ServerTableLoadFilterValues
+  /**
+   * Whether a column's filter popover draws an Operator select — `is not`,
+   * `does not contain`, `not between` — rather than only honouring one that
+   * arrived from a URL, a preset or a `FilterBuilder` (task #201).
+   *
+   * **Off by default, unlike `DataTable`.** Both tables report the operator the
+   * same way, but only one of them answers it: `DataTable` narrows its own rows
+   * with `matchesFilter`, so every operator the model can express is one it can
+   * already apply. Here the answer comes from whatever `onQueryChange` reaches,
+   * and a backend that only implements `contains` would return `contains` rows
+   * under a header that says `does not contain` — wrong results, silently, with
+   * nothing in the client able to notice. So the control appears once the host
+   * says its query can answer it.
+   *
+   * Then it is drawn per column, and only where there is a choice: `boolean`
+   * offers one operator, and its `Yes / No / Any` already says what `is not`
+   * would.
+   */
+  enableFilterOperators?: boolean
   /** Named filter sets, offered beside the chips. */
   filterPresets?: { id: string; label: string }[]
   onApplyPreset?: (id: string) => void
@@ -257,6 +276,7 @@ function ServerFilterPanel({
   variant,
   value,
   operator,
+  editOperator,
   loadFilterValues,
   onApply,
   onClear,
@@ -267,8 +287,9 @@ function ServerFilterPanel({
   variant: NonNullable<DataTableColumn<never>["filterVariant"]>
   value: unknown
   operator?: FilterOperator
+  editOperator?: boolean
   loadFilterValues?: ServerTableLoadFilterValues
-  onApply: (value: unknown) => void
+  onApply: (value: unknown, operator: FilterOperator) => void
   onClear: () => void
   onClose?: () => void
 }) {
@@ -289,6 +310,7 @@ function ServerFilterPanel({
       variant={variant}
       value={value}
       operator={operator}
+      editOperator={editOperator}
       options={options}
       isLoadingOptions={facets.isLoading}
       onSearchOptions={variant === "enum" && loadFilterValues ? facets.onSearch : undefined}
@@ -315,6 +337,7 @@ export function ServerTable<T extends RowData>({
   pageSizes,
   tiebreakColumn,
   loadFilterValues,
+  enableFilterOperators = false,
   filterPresets,
   onApplyPreset,
   onSavePreset,
@@ -427,12 +450,13 @@ export function ServerTable<T extends RowData>({
 
   /*
    * A column header offers one condition per column, so setting one replaces
-   * whatever that column had. The operator it had is kept rather than reset:
-   * a query arriving from a URL, a saved view or a condition builder may well
-   * say `is not`, and a panel that collects a value has not been asked to
-   * change the question.
+   * whatever that column had. The operator comes back from the panel, which
+   * reports the one it was working under whether or not it could edit it — so
+   * with `enableFilterOperators` off this is still the operator the condition
+   * arrived with, and a query from a URL, a saved view or a condition builder
+   * saying `is not` is not quietly reset to `is` by re-applying its value.
    */
-  const setFilter = (columnId: string, value: unknown) => {
+  const setFilter = (columnId: string, value: unknown, operator?: FilterOperator) => {
     const variant = table.getColumn(columnId)?.columnDef.meta?.filterVariant
     const previous = conditionFor(columnId)
     const next: FilterCondition[] = query.filters.filter(
@@ -442,7 +466,7 @@ export function ServerTable<T extends RowData>({
       next.push({
         id: previous?.id ?? columnId,
         fieldId: columnId,
-        operator: previous?.operator ?? defaultOperator(variant),
+        operator: operator ?? previous?.operator ?? defaultOperator(variant),
         variant,
         value,
       })
@@ -628,8 +652,9 @@ export function ServerTable<T extends RowData>({
               variant={meta.filterVariant}
               value={conditionFor(columnId)?.value}
               operator={conditionFor(columnId)?.operator}
+              editOperator={enableFilterOperators}
               loadFilterValues={loadFilterValues}
-              onApply={(value) => setFilter(columnId, value)}
+              onApply={(value, operator) => setFilter(columnId, value, operator)}
               onClear={() => setFilter(columnId, undefined)}
               onClose={close}
             />

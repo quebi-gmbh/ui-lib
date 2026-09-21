@@ -19,7 +19,7 @@ import { FieldError } from "@/components/field"
 import { FormattedNumber, useFormatNumber } from "@/components/formatted-number"
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/menu"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/popover"
-import { SelectItem } from "@/components/select"
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/select"
 import { Separator } from "@/components/separator"
 import {
   SheetBody,
@@ -34,6 +34,7 @@ import {
   defaultOperator,
   type FilterField,
   type FilterOperator,
+  filterOperators,
   type FilterValues,
   isFilterSet,
   operatorLabel,
@@ -75,6 +76,13 @@ import { cn } from "@/lib/utils"
  * so `TableShell`, `DataTable` and `ServerTable` keep the names they had. A
  * column filter and a list filter were never two things — only the thing being
  * filtered was.
+ *
+ * The panel's own operator select (`editOperator`) is what lets a column header
+ * author `is not` rather than only carry it (task #201). It is a prop and not
+ * the default because three of the four surfaces over this panel already state
+ * the operator somewhere else — a builder row's select, a pill's field-keyed
+ * map, a rail's one-control-per-field — and a second control for the same term
+ * is a control that can disagree with the first.
  */
 
 /* -------------------------------------------------------------------------- */
@@ -195,14 +203,44 @@ export interface FilterPanelProps {
   /** Current applied value, in the shape `matchesFilter` expects for `variant`. */
   value: unknown
   /**
-   * The question the value answers. The panel neither picks it nor changes it —
-   * it collects a value, and whatever mounted it owns the operator: a column
-   * header has only ever had one, a condition row draws its own select. All the
-   * panel does with it is say it, so `Name contains` does not sit above a box
-   * whose result the row beside it reads as `does not contain`.
+   * The question the value answers — where the panel starts, and what it
+   * reports back when nothing has changed it.
+   *
+   * Left alone (`editOperator` unset) the panel does not pick it and does not
+   * change it: it collects a value and says the question above the box, so
+   * `Name contains` never sits over a control whose result the row beside it
+   * reads as `does not contain`. That is the right shape wherever something
+   * else already owns the operator — a `FilterBuilder` row draws its own
+   * select, a `FilterBar` pill is a field-keyed map with nowhere to put one.
    */
   operator?: FilterOperator
-  onApply: (value: unknown) => void
+  /**
+   * Draw an Operator select above the value control, so this panel can author
+   * the question as well as answer it.
+   *
+   * Off by default: a host that already states the operator elsewhere would
+   * otherwise show it twice, in two controls that can disagree. Drawn only
+   * where there is a choice to make — `filterOperators(variant)` is one entry
+   * long for `boolean`, whose `Yes / No / Any` already says everything `is not`
+   * would, so the select is omitted rather than rendered with nothing to pick.
+   *
+   * The pending operator is held like the pending value: in `submit` mode it
+   * rides out with Apply, as the second argument to `onApply`, so a change of
+   * question and a change of value are still **one** commit and dismissing the
+   * popover still discards both. In `live` mode it commits on change, like
+   * every other control there.
+   */
+  editOperator?: boolean
+  /**
+   * The filter, committed: the value, and the operator it should be read under.
+   *
+   * The operator is passed whether or not this panel could edit one — it is
+   * the one the panel was working under, which for a host that passed neither
+   * `operator` nor `editOperator` is the variant's default, i.e. exactly what
+   * such a host has always applied. A caller with its own operator is free to
+   * ignore the second argument.
+   */
+  onApply: (value: unknown, operator: FilterOperator) => void
   onClear: () => void
   /**
    * Dismiss whatever is hosting the panel, once Apply or Clear has been acted
@@ -259,6 +297,7 @@ export function FilterPanel({
   variant,
   value,
   operator,
+  editOperator,
   onApply,
   onClear,
   onClose,
@@ -271,6 +310,17 @@ export function FilterPanel({
   className,
 }: FilterPanelProps) {
   const isLive = apply === "live"
+  /*
+   * The pending operator, held exactly as long as the pending value is: it is
+   * state rather than a prop echo, and nothing syncs it back down. A host that
+   * changes `operator` from outside while the panel is open (a preset applied
+   * behind it) loses to the draft, which is what a half-typed value does too —
+   * the panel is one transaction, and Apply or dismissal is the end of it.
+   */
+  const operatorChoices = filterOperators(variant)
+  const [pendingOperator, setPendingOperator] = useState<FilterOperator>()
+  const showOperator = Boolean(editOperator) && operatorChoices.length > 1
+  const currentOperator = pendingOperator ?? operator ?? defaultOperator(variant)
   const range: [unknown, unknown] = Array.isArray(value)
     ? (value as [unknown, unknown])
     : [null, null]
@@ -305,7 +355,10 @@ export function FilterPanel({
     onSubmit: (event, { submission }) => {
       event.preventDefault()
       if (submission?.status !== "success") return
-      onApply(filterValueFrom(variant, submission.value as unknown as Record<string, unknown>))
+      onApply(
+        filterValueFrom(variant, submission.value as unknown as Record<string, unknown>),
+        currentOperator,
+      )
       // Only a submission that got as far as applying dismisses the host: a
       // validation error keeps the panel up, with the message on the field.
       onClose?.()
@@ -323,7 +376,7 @@ export function FilterPanel({
    */
   const draft = useRef(defaultValue)
   const [liveError, setLiveError] = useState<string>()
-  const commit = (patch: Partial<PanelValues>) => {
+  const commit = (patch: Partial<PanelValues>, nextOperator?: FilterOperator) => {
     const next = { ...draft.current, ...patch }
     draft.current = next
     const result = v.safeParse(panelSchemas[variant], next)
@@ -332,7 +385,12 @@ export function FilterPanel({
       return
     }
     setLiveError(undefined)
-    onApply(filterValueFrom(variant, result.output as Record<string, unknown>))
+    // The operator is passed explicitly rather than read back off state: this
+    // runs in the same tick as the `setPendingOperator` that caused it.
+    onApply(
+      filterValueFrom(variant, result.output as Record<string, unknown>),
+      nextOperator ?? currentOperator,
+    )
   }
   const live = <K extends keyof PanelValues>(key: K) =>
     isLive ? (next: PanelValues[K]) => commit({ [key]: next } as Partial<PanelValues>) : undefined
@@ -346,10 +404,34 @@ export function FilterPanel({
 
   return (
     <FilterForm id={form.id} onSubmit={form.onSubmit} className={cn("flex flex-col gap-3 p-3", className)}>
+      {/* Above the value, because it is the question the value answers and a
+          reader meets them in that order — and because every variant's value
+          control is a different height, so a select underneath would sit at a
+          different place in each panel. */}
+      {showOperator && (
+        <Select
+          aria-label={`${label} operator`}
+          selectedKey={currentOperator}
+          onSelectionChange={(key) => {
+            const next = String(key) as FilterOperator
+            setPendingOperator(next)
+            if (isLive) commit({}, next)
+          }}
+        >
+          <SelectTrigger />
+          <SelectContent items={operatorChoices}>
+            {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
+          </SelectContent>
+        </Select>
+      )}
+
       {variant === "text" && (
         <ConformField
           field={fields.text}
-          label={`${label} ${operatorLabel(operator ?? defaultOperator("text"))}`}
+          /* The operator is said once. With a select above it saying `does not
+             contain`, a label reading `Customer contains` is the same claim
+             twice and one of them is stale. */
+          label={showOperator ? label : `${label} ${operatorLabel(currentOperator)}`}
           placeholder="Type to match…"
           onChange={live("text")}
         />
