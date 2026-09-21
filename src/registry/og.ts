@@ -10,6 +10,7 @@
  * and tests/og-scenes.test.ts has to read both halves to pair them.
  */
 import type { OgScene } from "./types"
+import { activityPulseOgScene } from "./activity-pulse.og"
 import { alertDialogOgScene } from "./alert-dialog.og"
 import { areaChartOgScene } from "./area-chart.og"
 import { asyncMultipleSelectOgScene } from "./async-multiple-select.og"
@@ -89,6 +90,7 @@ import { disclosureGroupOgScene } from "./disclosure-group.og"
 import { drawerOgScene } from "./drawer.og"
 import { dropZoneOgScene } from "./drop-zone.og"
 import { dropdownOgScene } from "./dropdown.og"
+import { elapsedTimeOgScene } from "./elapsed-time.og"
 import { energyClassBadgeOgScene } from "./energy-class-badge.og"
 import { fieldOgScene } from "./field.og"
 import { filterBarOgScene } from "./filter-bar.og"
@@ -139,9 +141,12 @@ import { serverTableOgScene } from "./server-table.og"
 import { sheetOgScene } from "./sheet.og"
 import { showMoreOgScene } from "./show-more.og"
 import { sidebarOgScene } from "./sidebar.og"
+import { signalBarsOgScene } from "./signal-bars.og"
 import { skeletonOgScene } from "./skeleton.og"
 import { sliderOgScene } from "./slider.og"
 import { snippetOgScene } from "./snippet.og"
+import { sparklineOgScene } from "./sparkline.og"
+import { statusDotOgScene } from "./status-dot.og"
 import { stepperOgScene } from "./stepper.og"
 import { sunburstChartOgScene } from "./sunburst-chart.og"
 import { switchOgScene } from "./switch.og"
@@ -163,11 +168,13 @@ import { tooltipOgScene } from "./tooltip.og"
 import { trackerOgScene } from "./tracker.og"
 import { treeOgScene } from "./tree.og"
 import { treemapOgScene } from "./treemap.og"
+import { typingIndicatorOgScene } from "./typing-indicator.og"
 import { weekPickerOgScene } from "./week-picker.og"
 import { weekViewOgScene } from "./week-view.og"
 import { yearPickerOgScene } from "./year-picker.og"
 
 export const ogScenes: Record<string, OgScene> = {
+  "activity-pulse": activityPulseOgScene,
   "alert-dialog": alertDialogOgScene,
   "area-chart": areaChartOgScene,
   "async-multiple-select": asyncMultipleSelectOgScene,
@@ -247,6 +254,7 @@ export const ogScenes: Record<string, OgScene> = {
   "drawer": drawerOgScene,
   "drop-zone": dropZoneOgScene,
   "dropdown": dropdownOgScene,
+  "elapsed-time": elapsedTimeOgScene,
   "energy-class-badge": energyClassBadgeOgScene,
   "field": fieldOgScene,
   "file-trigger": fileTriggerOgScene,
@@ -297,9 +305,12 @@ export const ogScenes: Record<string, OgScene> = {
   "sheet": sheetOgScene,
   "show-more": showMoreOgScene,
   "sidebar": sidebarOgScene,
+  "signal-bars": signalBarsOgScene,
   "skeleton": skeletonOgScene,
   "slider": sliderOgScene,
   "snippet": snippetOgScene,
+  "sparkline": sparklineOgScene,
+  "status-dot": statusDotOgScene,
   "stepper": stepperOgScene,
   "sunburst-chart": sunburstChartOgScene,
   "switch": switchOgScene,
@@ -321,6 +332,7 @@ export const ogScenes: Record<string, OgScene> = {
   "tracker": trackerOgScene,
   "tree": treeOgScene,
   "treemap": treemapOgScene,
+  "typing-indicator": typingIndicatorOgScene,
   "week-picker": weekPickerOgScene,
   "week-view": weekViewOgScene,
   "year-picker": yearPickerOgScene,

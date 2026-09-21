@@ -1,5 +1,6 @@
 import type { ComponentEntry } from "./types"
 import { metaRegistry } from "./meta"
+import { activityPulseExamples } from "./activity-pulse.examples"
 import { alertDialogExamples } from "./alert-dialog.examples"
 import { areaChartExamples } from "./area-chart.examples"
 import { asyncMultipleSelectExamples } from "./async-multiple-select.examples"
@@ -80,6 +81,7 @@ import { disclosureGroupExamples } from "./disclosure-group.examples"
 import { drawerExamples } from "./drawer.examples"
 import { dropZoneExamples } from "./drop-zone.examples"
 import { dropdownExamples } from "./dropdown.examples"
+import { elapsedTimeExamples } from "./elapsed-time.examples"
 import { energyClassBadgeExamples } from "./energy-class-badge.examples"
 import { fieldExamples } from "./field.examples"
 import { filterBarExamples } from "./filter-bar.examples"
@@ -130,9 +132,12 @@ import { serverTableExamples } from "./server-table.examples"
 import { sheetExamples } from "./sheet.examples"
 import { showMoreExamples } from "./show-more.examples"
 import { sidebarExamples } from "./sidebar.examples"
+import { signalBarsExamples } from "./signal-bars.examples"
 import { skeletonExamples } from "./skeleton.examples"
 import { sliderExamples } from "./slider.examples"
 import { snippetExamples } from "./snippet.examples"
+import { sparklineExamples } from "./sparkline.examples"
+import { statusDotExamples } from "./status-dot.examples"
 import { stepperExamples } from "./stepper.examples"
 import { sunburstChartExamples } from "./sunburst-chart.examples"
 import { switchExamples } from "./switch.examples"
@@ -154,11 +159,13 @@ import { tooltipExamples } from "./tooltip.examples"
 import { trackerExamples } from "./tracker.examples"
 import { treemapExamples } from "./treemap.examples"
 import { treeExamples } from "./tree.examples"
+import { typingIndicatorExamples } from "./typing-indicator.examples"
 import { weekPickerExamples } from "./week-picker.examples"
 import { weekViewExamples } from "./week-view.examples"
 import { yearPickerExamples } from "./year-picker.examples"
 
 const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
+  "activity-pulse": activityPulseExamples,
   "alert-dialog": alertDialogExamples,
   "area-chart": areaChartExamples,
   "async-multiple-select": asyncMultipleSelectExamples,
@@ -239,6 +246,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "drawer": drawerExamples,
   "drop-zone": dropZoneExamples,
   "dropdown": dropdownExamples,
+  "elapsed-time": elapsedTimeExamples,
   "energy-class-badge": energyClassBadgeExamples,
   "field": fieldExamples,
   "file-trigger": fileTriggerExamples,
@@ -289,9 +297,12 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "sheet": sheetExamples,
   "show-more": showMoreExamples,
   "sidebar": sidebarExamples,
+  "signal-bars": signalBarsExamples,
   "skeleton": skeletonExamples,
   "slider": sliderExamples,
   "snippet": snippetExamples,
+  "sparkline": sparklineExamples,
+  "status-dot": statusDotExamples,
   "stepper": stepperExamples,
   "sunburst-chart": sunburstChartExamples,
   "switch": switchExamples,
@@ -313,6 +324,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "tracker": trackerExamples,
   "treemap": treemapExamples,
   "tree": treeExamples,
+  "typing-indicator": typingIndicatorExamples,
   "week-picker": weekPickerExamples,
   "week-view": weekViewExamples,
   "year-picker": yearPickerExamples,
