@@ -733,17 +733,38 @@ export function TableFilterPanel({
       )}
 
       {variant === "number" && (
-        <div className="flex items-end gap-2">
-          <ConformNumberField
-            field={fields.min}
-            label="From"
-            description={bounds ? `lowest ${bounds[0]}` : undefined}
-          />
-          <ConformNumberField
-            field={fields.max}
-            label="To"
-            description={bounds ? `highest ${bounds[1]}` : undefined}
-          />
+        // Two bounds side by side while there is room for them, stacked when
+        // there is not — and both halves of that are about the same ~74px.
+        //
+        // The stepper pair is a fixed width that a `w-full min-w-0` input
+        // gives up its own width to rather than overflow, so in a ~210px-wide
+        // host (this panel inside a `sm:max-w-80` sheet) the two inputs
+        // measured 26px each and neither the value nor the placeholder was
+        // legible (task #189). A filter bound is typed, not nudged, and ↑ / ↓
+        // still step — so the pair is hidden here rather than shrunk, which is
+        // exactly the width the two inputs were missing.
+        //
+        // The container query is the floor under that: below 16rem even a
+        // stepper-less pair is too narrow to read, so the row becomes a column
+        // instead of slivering again. It is a *container* query and not a
+        // breakpoint because this panel's width is its host's — a 288px column
+        // popover, a sheet, a filter rail — and the viewport does not predict
+        // which. The 288px popover stays a row, which is what it should be.
+        <div className="@container">
+          <div className="flex flex-col gap-2 @3xs:flex-row @3xs:items-end">
+            <ConformNumberField
+              field={fields.min}
+              label="From"
+              hideStepper
+              description={bounds ? `lowest ${bounds[0]}` : undefined}
+            />
+            <ConformNumberField
+              field={fields.max}
+              label="To"
+              hideStepper
+              description={bounds ? `highest ${bounds[1]}` : undefined}
+            />
+          </div>
         </div>
       )}
 

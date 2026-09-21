@@ -125,8 +125,14 @@ describe("table chrome", () => {
     )
     // The steppers were ~74px of a 96px field, so the input — `w-full min-w-0`
     // in a flex row — collapsed to nothing and the value never reached a pixel.
-    expect(screen.queryByRole("button", { name: "Increase" })).toBeNull()
-    expect(screen.queryByRole("button", { name: "Decrease" })).toBeNull()
+    //
+    // By label and not by role + name: a stepper's accessible *name* computes
+    // to nothing once the field is inside this much markup, so the role query
+    // finds no button called "Increase" whether or not one is drawn, and the
+    // assertion holds vacuously. `aria-label` is what the button carries and
+    // is what is actually being asserted here.
+    expect(screen.queryAllByLabelText("Increase")).toHaveLength(0)
+    expect(screen.queryAllByLabelText("Decrease")).toHaveLength(0)
 
     const jump = screen.getByRole("textbox", { name: "Go to page" })
     expect(jump).toHaveValue("1")
@@ -135,6 +141,48 @@ describe("table chrome", () => {
     await user.type(jump, "3")
     await user.click(screen.getByRole("button", { name: "Go" }))
     expect(screen.getByText(/Showing/).textContent).toContain("21")
+  })
+
+  test("a number filter's two bounds show their numbers, and stack when the host is narrow", async () => {
+    render(
+      <DataTable<Order>
+        aria-label="Orders"
+        columns={[
+          ...columns.slice(0, 2),
+          {
+            id: "amount",
+            header: "Amount",
+            accessorKey: "amount",
+            align: "end",
+            filterVariant: "number",
+          },
+        ]}
+        data={ORDERS}
+        getRowId={(order) => String(order.id)}
+        defaultPageSize={5}
+      />,
+    )
+    const user = userEvent.setup()
+    await user.click(screen.getByRole("button", { name: /Filter Amount/ }))
+    const from = await screen.findByRole("textbox", { name: "From" })
+    const to = screen.getByRole("textbox", { name: "To" })
+
+    // Same ~74px as the page jump, twice over: in a panel ~210px wide (this
+    // one inside a `sm:max-w-80` sheet) the two steppers left 26px of input
+    // each and neither the value nor the placeholder was legible. A filter
+    // bound is typed rather than nudged, and ↑ / ↓ still step.
+    expect(screen.queryAllByLabelText("Increase")).toHaveLength(0)
+    expect(screen.queryAllByLabelText("Decrease")).toHaveLength(0)
+
+    // The floor under that, and the reason it is a container query: the
+    // panel's width is its host's, not the viewport's. happy-dom has no
+    // layout, so the classes are the only place the rule exists.
+    let row: HTMLElement | null = from.parentElement
+    while (row && !row.contains(to)) row = row.parentElement
+    expect(row).not.toBeNull()
+    expect(row?.className).toContain("flex-col")
+    expect(row?.className).toContain("@3xs:flex-row")
+    expect(row?.parentElement?.className).toContain("@container")
   })
 
   test("the pager numbers its pages, and a number is somewhere to press", async () => {
