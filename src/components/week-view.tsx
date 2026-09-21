@@ -22,11 +22,11 @@ import { cn } from "@/lib/utils"
  * WeekView — quebi design system
  *
  * Seven days on one time axis, with overlapping meetings packed into side-by-side
- * columns per day, an all-day band that folds into "+N more", and the now-marker
- * on today's column. `visibleDays={5}` is the work week; the week still starts
- * where the locale says it does, so the five days are Monday to Friday under
- * `de-DE` and Sunday to Thursday under `en-US` unless `firstDayOfWeek` says
- * otherwise.
+ * columns per day, an all-day band that folds into "+N more" for calendars that
+ * have all-day events, and the now-marker on today's column. `visibleDays={5}`
+ * is the work week; the week still starts where the locale says it does, so the
+ * five days are Monday to Friday under `de-DE` and Sunday to Thursday under
+ * `en-US` unless `firstDayOfWeek` says otherwise.
  *
  * Display, selection, and — given `isEventEditable` and `onEventChange` —
  * dragging an event to another time or another day, by pointer or by arrow key.

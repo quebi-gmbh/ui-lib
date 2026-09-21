@@ -34,8 +34,9 @@ import { Popover, PopoverContent } from "@/components/popover"
  * CalendarShell — quebi design system
  *
  * The parts every Outlook-style view is drawn from: a time axis, the hour
- * gridlines, the all-day band with its "+N more" overflow, the now-marker, and
- * the event blocks laid out by `@/lib/calendar`'s packing pass. `DayView`,
+ * gridlines, the all-day band with its "+N more" overflow — drawn when there is
+ * something to put in it, see `showAllDayRow` — the now-marker, and the event
+ * blocks laid out by `@/lib/calendar`'s packing pass. `DayView`,
  * `WeekView` and `MonthView` are assemblies over this; `CalendarTimeline` reuses
  * the palette and the blocks and draws its own axis, because its time runs
  * horizontally.
@@ -650,8 +651,23 @@ export interface CalendarShellProps<E extends CalendarEvent = CalendarEvent> {
   height?: number
   /** Pin the now-marker, or pass `null` to omit it. Undefined reads the clock after mount. */
   now?: ZonedDateTime | null
-  /** Draw the all-day band above the grid. Default true. */
-  showAllDayRow?: boolean
+  /**
+   * Draw the all-day band above the grid. Default `"auto"`.
+   *
+   * `"auto"` draws it when `events` holds anything the band would ever take —
+   * an `allDay` event, or one 24 hours or longer, by `isAllDayEvent` — and
+   * omits it otherwise. The question is asked of the whole set rather than of
+   * the days on show, so paging through a calendar that has all-day events
+   * never makes the row appear and disappear under the reader: it is reserved
+   * from the first render, empty weeks included. A calendar that has none of
+   * them has nothing to reserve it for, and the empty 28px strip above the grid
+   * is chrome for a feature that consumer does not have.
+   *
+   * `true` keeps the row whatever the events say — the setting for a view that
+   * loads one week at a time, where "no all-day event" is a fact about the page
+   * in hand rather than about the calendar. `false` never draws it.
+   */
+  showAllDayRow?: boolean | "auto"
   /** Lanes the all-day band may grow to before it folds into "+N more". Default 2. */
   maxAllDayLanes?: number
   /** Accessible name and gutter label for the all-day band. */
@@ -725,7 +741,7 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
   axisWidth = 60,
   height = 520,
   now,
-  showAllDayRow = true,
+  showAllDayRow = "auto",
   maxAllDayLanes = 2,
   allDayLabel = "all day",
   moreLabel = (count) => `+${count} more`,
@@ -774,6 +790,12 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
     () => limitLanes(bands, days.length, maxAllDayLanes),
     [bands, days.length, maxAllDayLanes],
   )
+
+  // Asked of `events`, not of `bands`: `bands` is what the visible days hold,
+  // and a row that came and went as the week changed would move the grid under
+  // the reader on every step. See `showAllDayRow`.
+  const hasAllDayEvents = useMemo(() => events.some(isAllDayEvent), [events])
+  const allDayRow = showAllDayRow === "auto" ? hasAllDayEvents : showAllDayRow
 
   // One direction of the pair. `minutesFromOffset` is the other, and a drag
   // reads its drop back through it.
@@ -858,8 +880,8 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
         </div>
       ) : null}
 
-      {showAllDayRow ? (
-        <div className="flex border-quebi-line/10 border-b">
+      {allDayRow ? (
+        <div data-slot="calendar-all-day-row" className="flex border-quebi-line/10 border-b">
           <div
             className="shrink-0 px-2 py-1 text-right text-quebi-fg-subtle text-xs"
             style={{ width: axisWidth }}
