@@ -34,6 +34,7 @@ import { composedChartMeta } from "./composed-chart.meta"
 import { conformAsyncMultipleSelectMeta } from "./conform-async-multiple-select.meta"
 import { conformAsyncSelectMeta } from "./conform-async-select.meta"
 import { conformCalendarMeta } from "./conform-calendar.meta"
+import { conformCalendarTimelineMeta } from "./conform-calendar-timeline.meta"
 import { conformCheckboxMeta } from "./conform-checkbox.meta"
 import { conformCheckboxGroupMeta } from "./conform-checkbox-group.meta"
 import { conformChoiceBoxMeta } from "./conform-choice-box.meta"
@@ -188,6 +189,7 @@ export const metaRegistry: ComponentMeta[] = [
   conformAsyncMultipleSelectMeta,
   conformAsyncSelectMeta,
   conformCalendarMeta,
+  conformCalendarTimelineMeta,
   conformCheckboxMeta,
   conformCheckboxGroupMeta,
   conformChoiceBoxMeta,

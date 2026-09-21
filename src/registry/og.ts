@@ -45,6 +45,7 @@ import { composedChartOgScene } from "./composed-chart.og"
 import { conformAsyncMultipleSelectOgScene } from "./conform-async-multiple-select.og"
 import { conformAsyncSelectOgScene } from "./conform-async-select.og"
 import { conformCalendarOgScene } from "./conform-calendar.og"
+import { conformCalendarTimelineOgScene } from "./conform-calendar-timeline.og"
 import { conformCheckboxOgScene } from "./conform-checkbox.og"
 import { conformCheckboxGroupOgScene } from "./conform-checkbox-group.og"
 import { conformChoiceBoxOgScene } from "./conform-choice-box.og"
@@ -198,6 +199,7 @@ export const ogScenes: Record<string, OgScene> = {
   "conform-async-multiple-select": conformAsyncMultipleSelectOgScene,
   "conform-async-select": conformAsyncSelectOgScene,
   "conform-calendar": conformCalendarOgScene,
+  "conform-calendar-timeline": conformCalendarTimelineOgScene,
   "conform-checkbox": conformCheckboxOgScene,
   "conform-checkbox-group": conformCheckboxGroupOgScene,
   "conform-choice-box": conformChoiceBoxOgScene,

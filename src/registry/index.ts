@@ -35,6 +35,7 @@ import { composedChartExamples } from "./composed-chart.examples"
 import { conformAsyncMultipleSelectExamples } from "./conform-async-multiple-select.examples"
 import { conformAsyncSelectExamples } from "./conform-async-select.examples"
 import { conformCalendarExamples } from "./conform-calendar.examples"
+import { conformCalendarTimelineExamples } from "./conform-calendar-timeline.examples"
 import { conformCheckboxExamples } from "./conform-checkbox.examples"
 import { conformCheckboxGroupExamples } from "./conform-checkbox-group.examples"
 import { conformChoiceBoxExamples } from "./conform-choice-box.examples"
@@ -189,6 +190,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "conform-async-multiple-select": conformAsyncMultipleSelectExamples,
   "conform-async-select": conformAsyncSelectExamples,
   "conform-calendar": conformCalendarExamples,
+  "conform-calendar-timeline": conformCalendarTimelineExamples,
   "conform-checkbox": conformCheckboxExamples,
   "conform-checkbox-group": conformCheckboxGroupExamples,
   "conform-choice-box": conformChoiceBoxExamples,
