@@ -352,3 +352,75 @@ describe("the colour accent is a straight line, not a crescent", () => {
     expect(className).not.toContain("rounded-bl-quebi-sm")
   })
 })
+
+/**
+ * The scrolling grid draws the library's scrollbar, not the platform's.
+ *
+ * The shell's time grid was the one scroll surface in the library that never
+ * took `quebi-scrollbar`, so a week view painted whatever the OS paints —
+ * stepper arrows at each end under Linux Chromium, a grey slab elsewhere —
+ * inside a card whose every other scroller shows the 6px quebi pill.
+ *
+ * Two halves are pinned, because the bar only lands right when both hold: the
+ * viewport asks for the pill, and the shell above it keeps the
+ * `overflow-hidden` + radius that clips the pill's ends to the card's corner.
+ * That clip is why the viewport itself needs no `quebi-scrollbar-corners` —
+ * drop it from the shell and the bar squares off against the bottom edge again.
+ */
+describe("the calendar grid scrolls behind the quebi bar", () => {
+  const viewport = (container: HTMLElement) =>
+    container.querySelector<HTMLElement>('[data-slot="calendar-viewport"]')
+
+  test("the week view's scrolling grid carries the utility", () => {
+    const { container } = render(
+      <WeekView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[EVENT]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+      />,
+    )
+    const className = viewport(container)?.className ?? ""
+    expect(className).toContain("quebi-scrollbar")
+    expect(className).toContain("overflow-y-auto")
+    // The bar is the flush default: neither variant belongs on a grid whose
+    // content must not scroll under it.
+    expect(className).not.toContain("quebi-scrollbar-floating")
+    expect(className).not.toContain("quebi-scrollbar-none")
+  })
+
+  test("the day view is the same shell, so it gets it too", () => {
+    const { container } = render(
+      <DayView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[EVENT]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+      />,
+    )
+    expect(viewport(container)?.className ?? "").toContain("quebi-scrollbar")
+  })
+
+  test("the shell above it still clips the bar to its own corner", () => {
+    const { container } = render(
+      <WeekView
+        date={MONDAY}
+        calendars={CALENDARS}
+        events={[EVENT]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+      />,
+    )
+    const shell = container.querySelector<HTMLElement>('[data-slot="calendar-shell"]')
+    expect(shell).not.toBeNull()
+    expect(shell?.className).toContain("overflow-hidden")
+    expect(shell?.className).toContain("rounded-quebi-md")
+    // The clip has to be an ancestor of the bar for it to reach it at all.
+    expect(shell?.contains(viewport(container))).toBe(true)
+  })
+})

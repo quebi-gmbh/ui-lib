@@ -884,7 +884,19 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
         </div>
       ) : null}
 
-      <div className="relative overflow-y-auto" style={{ maxHeight: height }}>
+      {/* The one scrolling surface in the shell, and it took the platform's bar
+          until now — stepper arrows on Linux, a grey slab everywhere, next to
+          the quebi pill every other scroll surface in the library draws.
+          `quebi-scrollbar` is that pill; see the utility in `quebi-theme.css`.
+          No `quebi-scrollbar-corners` here: this viewport is a square box, and
+          the rounded corner the bar has to curve away from belongs to
+          `calendar-shell` above, whose `overflow-hidden rounded-quebi-md`
+          already clips the bar with it. */}
+      <div
+        data-slot="calendar-viewport"
+        className="quebi-scrollbar relative overflow-y-auto"
+        style={{ maxHeight: height }}
+      >
         <div className="flex" style={{ height: gridHeight }}>
           <div className="relative shrink-0" style={{ width: axisWidth }}>
             {firstDay
