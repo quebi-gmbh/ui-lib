@@ -29,9 +29,15 @@ import { cn } from "@/lib/utils"
  * compositions are published in `src/registry/skeleton.examples.tsx`, where a
  * consumer copying from `/api/components/skeleton.json` finds them.
  *
- * Nothing here is random. The widths cycle through a fixed list by index: the
- * site is prerendered, so a `Math.random()` width would bake one set of numbers
- * into the HTML and roll different ones at hydration.
+ * Nothing here is random. The widths cycle through a fixed list by index,
+ * because a `Math.random()` width would draw a different skeleton every time
+ * the same section suspends — and in a prerendered page it would bake one set
+ * of numbers into the HTML and roll different ones at hydration. Since task
+ * #200 the second half is hypothetical: `src/lib/document-shape.ts` makes the
+ * build wait for every boundary, so none of these reaches a built file and a
+ * fallback here is only ever seen on a client navigation. Determinism is still
+ * the rule — a skeleton that changes shape between two visits to the same page
+ * reads as movement in the content, not as waiting.
  */
 
 /** Deterministic variety: pick from `values` by index, wrapping. */
