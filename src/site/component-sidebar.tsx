@@ -11,14 +11,21 @@ import { SearchField, SearchInput } from "@/components/search-field"
 import { cn } from "@/lib/utils"
 import { metaRegistry } from "@/registry/meta"
 import { filterComponents, groupByCategory } from "@/registry/grouping"
+import { NAV_PENDING } from "@/site/navigation-status"
 import { ScrollSurface } from "@/site/scroll-surface"
 
 const LINK = "block rounded-quebi-sm px-3 py-1.5 text-sm transition-colors duration-150"
 const RESTING = "text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg"
 const CURRENT = "bg-quebi-brand/10 font-medium text-quebi-brand-text"
 
-const linkClasses = ({ isActive }: { isActive: boolean }) =>
-  cn(LINK, isActive ? CURRENT : RESTING)
+/**
+ * Three states, in the order they win: the page you are on, the page you are
+ * waiting for, the pages you are not. `isPending` is react-router's — it is set
+ * on exactly the link whose URL the in-flight navigation is headed for — so the
+ * nav says which link is loading without anything here tracking it.
+ */
+const linkClasses = ({ isActive, isPending }: { isActive: boolean; isPending: boolean }) =>
+  cn(LINK, isActive ? CURRENT : isPending ? NAV_PENDING : RESTING)
 
 /**
  * Nav for the component catalog: a search box, a home link, and one collapsible
@@ -83,10 +90,10 @@ export function ComponentSidebar({ onNavigate }: { onNavigate?: () => void }) {
         to="/components"
         end
         onClick={onNavigate}
-        className={({ isActive }) =>
+        className={({ isActive, isPending }) =>
           cn(
             "mt-4 flex items-center gap-2 rounded-quebi-sm px-3 py-1.5 text-sm transition-colors duration-150",
-            isActive ? CURRENT : RESTING,
+            isActive ? CURRENT : isPending ? NAV_PENDING : RESTING,
           )
         }
       >
