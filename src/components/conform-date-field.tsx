@@ -6,7 +6,7 @@ import { composeRenderProps } from "react-aria-components"
 import type { DateFieldProps, DateValue } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { DateField, DateInput } from "@/components/date-field"
-import { Description, FieldError, Label } from "@/components/field"
+import { Description, FieldError, fieldStyles, Label } from "@/components/field"
 
 export interface ConformDateFieldProps
   extends Omit<
@@ -66,7 +66,7 @@ export function ConformDateField({
       defaultValue={toDefaultValue(field.initialValue)}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={composeRenderProps(className, (resolved) => cn("w-full", resolved))}
+      className={composeRenderProps(className, (resolved) => cn(fieldStyles, resolved))}
     >
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>

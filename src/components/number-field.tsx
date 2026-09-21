@@ -18,6 +18,7 @@ import {
 } from "react-aria-components"
 import { useFieldSizing } from "@/lib/field-size"
 import { cn } from "@/lib/utils"
+import { fieldStyles } from "@/components/field"
 
 /**
  * NumberField — quebi design system
@@ -48,17 +49,10 @@ function NumberField({
       isWheelDisabled={isWheelDisabled}
       data-slot="control"
       className={composeRenderProps(className, (resolved) =>
-        cn(
-          "group/number-field w-full",
-          // label → control → hint stack with 6px between siblings.
-          "[&>[data-slot=label]+[data-slot=control]]:mt-1.5",
-          "[&>[data-slot=label]+[slot='description']]:mt-1",
-          "[&>[slot=description]+[data-slot=control]]:mt-1.5",
-          "[&>[data-slot=control]+[slot=description]]:mt-1.5",
-          "[&>[data-slot=control]+[slot=errorMessage]]:mt-1.5",
-          "in-disabled:opacity-50 disabled:opacity-50",
-          resolved,
-        ),
+        // The label → control → hint stack, from the one place that owns it:
+        // this file used to carry a verbatim copy of `Field`'s five selectors,
+        // which is how the two drifted apart in the first place.
+        cn("group/number-field", fieldStyles, resolved),
       )}
     />
   )

@@ -4,7 +4,7 @@ import type { FieldMetadata } from "@conform-to/react"
 import { composeRenderProps } from "react-aria-components"
 import type { SliderProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
-import { describedBy, Description, FieldError, Label } from "@/components/field"
+import { describedBy, Description, FieldError, fieldStackStyles, Label } from "@/components/field"
 import { Slider, SliderFill, SliderOutput, SliderThumb, SliderTrack } from "@/components/slider"
 
 export interface ConformSliderProps
@@ -79,10 +79,26 @@ export function ConformSlider({
     <Slider
       {...props}
       defaultValue={toDefaultValue(field.initialValue, isRange)}
-      className={composeRenderProps(className, (resolved) => cn("w-full", resolved))}
+      className={composeRenderProps(className, (resolved) =>
+        cn(
+          // The stack's margins space this field, so `Slider`'s own 8px gap
+          // steps aside rather than adding to them. Only the stack, not
+          // `fieldStyles`: the width is `Slider`'s to decide, because a
+          // vertical one is `w-fit` and `h-48`.
+          "orientation-horizontal:gap-y-0 orientation-vertical:gap-y-0",
+          fieldStackStyles,
+          resolved,
+        ),
+      )}
     >
+      {/* `data-slot="label"` on the row rather than on the `Label` inside it:
+          the label and the value read as one line, and it is the line the
+          field stack spaces and `FieldRow` puts on its label row. */}
       {(label || showOutput) && (
-        <div className={cn("flex items-center", label ? "justify-between" : "justify-end")}>
+        <div
+          data-slot="label"
+          className={cn("flex items-center", label ? "justify-between" : "justify-end")}
+        >
           {label && <Label className={cn(hasErrors && "text-red-500")}>{label}</Label>}
           {showOutput && <SliderOutput />}
         </div>

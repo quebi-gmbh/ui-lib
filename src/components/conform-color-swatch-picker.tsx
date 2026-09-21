@@ -118,7 +118,20 @@ export function ConformColorSwatchPicker({
   }
 
   return (
-    <Field ref={fieldRef} className={cn("space-y-1.5", className)}>
+    <Field ref={fieldRef} className={cn(className)}>
+      {/* First, before the label: the stack is spaced with `label + control`
+          selectors, and an `sr-only` element between the two is still an
+          element the selector cannot see past. */}
+      <BaseControl
+        name={field.name}
+        form={field.formId}
+        ref={selection.register}
+        defaultValue={selection.defaultValue}
+        hidden={false}
+        tabIndex={-1}
+        className="sr-only"
+      />
+
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>
           {label}
@@ -129,16 +142,6 @@ export function ConformColorSwatchPicker({
           so nothing generates them and the aria-describedby below is their only
           reference. */}
       {description && <Description id={field.descriptionId}>{description}</Description>}
-
-      <BaseControl
-        name={field.name}
-        form={field.formId}
-        ref={selection.register}
-        defaultValue={selection.defaultValue}
-        hidden={false}
-        tabIndex={-1}
-        className="sr-only"
-      />
 
       {/* `data-invalid` rather than `aria-invalid`: react-aria's ListBox filters
           its incoming DOM props down to `id`, the labelable set and `data-*`, so

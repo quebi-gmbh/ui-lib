@@ -108,14 +108,10 @@ export function ConformChoiceBox<T extends object>({
       : []
 
   return (
-    <Field ref={fieldRef} className={cn("flex flex-col gap-1.5", className)}>
-      {label && (
-        <Label className={cn(hasErrors && "text-red-500")}>
-          {label}
-          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
-        </Label>
-      )}
-
+    <Field ref={fieldRef} className={cn(className)}>
+      {/* First, before the label: the stack is spaced with `label + control`
+          selectors, and an `sr-only` element between the two is still an
+          element the selector cannot see past. */}
       <BaseControl
         type="select"
         multiple={isMultiple}
@@ -128,28 +124,39 @@ export function ConformChoiceBox<T extends object>({
         className="sr-only"
       />
 
-      <ChoiceBox<T>
-        {...props}
-        selectionMode={selectionMode}
-        selectedKeys={new Set(selected)}
-        onSelectionChange={(selection) => {
-          if (selection === "all") {
-            // Only reachable in multiple-selection mode; react-aria never
-            // reports the sentinel for a single selection.
-            if (keys) control.change(keys)
-            return
-          }
-          const next = Array.from(selection).map(String)
-          control.change(isMultiple ? next : (next[0] ?? ""))
-        }}
-        aria-label={props["aria-label"] ?? label}
-        aria-describedby={describedBy(
-          hasErrors && field.errorId,
-          description && field.descriptionId,
-        )}
-      >
-        {children}
-      </ChoiceBox>
+      {label && (
+        <Label className={cn(hasErrors && "text-red-500")}>
+          {label}
+          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
+        </Label>
+      )}
+
+      {/* The grid list is the control; it marks itself `data-slot="choice-box"`,
+          so this wrapper is what the field stack and `FieldRow` place. */}
+      <div data-slot="control">
+        <ChoiceBox<T>
+          {...props}
+          selectionMode={selectionMode}
+          selectedKeys={new Set(selected)}
+          onSelectionChange={(selection) => {
+            if (selection === "all") {
+              // Only reachable in multiple-selection mode; react-aria never
+              // reports the sentinel for a single selection.
+              if (keys) control.change(keys)
+              return
+            }
+            const next = Array.from(selection).map(String)
+            control.change(isMultiple ? next : (next[0] ?? ""))
+          }}
+          aria-label={props["aria-label"] ?? label}
+          aria-describedby={describedBy(
+            hasErrors && field.errorId,
+            description && field.descriptionId,
+          )}
+        >
+          {children}
+        </ChoiceBox>
+      </div>
 
       {/* These ids are ours to set: the control above is not a react-aria
           field, so nothing generates them and its aria-describedby is their

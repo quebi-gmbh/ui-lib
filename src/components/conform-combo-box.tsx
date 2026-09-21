@@ -5,7 +5,7 @@ import type { PropsWithChildren } from "react"
 import { composeRenderProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { ComboBox, ComboBoxInput, type ComboBoxProps } from "@/components/combo-box"
-import { Description, FieldError, Label } from "@/components/field"
+import { Description, FieldError, fieldStyles, Label } from "@/components/field"
 
 export interface ConformComboBoxProps<T extends object>
   extends Omit<
@@ -63,9 +63,7 @@ export function ConformComboBox<T extends object>({
       defaultInputValue={props.allowsCustomValue ? initialValue : undefined}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={composeRenderProps(className, (resolved) =>
-        cn("flex w-full flex-col gap-1.5", resolved),
-      )}
+      className={composeRenderProps(className, (resolved) => cn(fieldStyles, resolved))}
     >
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>

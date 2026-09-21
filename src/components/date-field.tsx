@@ -9,6 +9,7 @@ import {
 } from "react-aria-components"
 import { useFieldSizing } from "@/lib/field-size"
 import { cn } from "@/lib/utils"
+import { fieldStyles } from "@/components/field"
 
 /**
  * DateField — quebi design system
@@ -32,7 +33,7 @@ export function DateField<T extends DateValue>({ className, ...props }: DateFiel
       {...props}
       data-slot="control"
       className={composeRenderProps(className, (resolved) =>
-        cn("group flex w-fit flex-col gap-1", resolved),
+        cn("group", fieldStyles, "w-fit", resolved),
       )}
     />
   )

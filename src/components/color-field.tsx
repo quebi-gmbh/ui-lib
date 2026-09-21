@@ -12,6 +12,7 @@ import {
 } from "react-aria-components"
 import { ColorSwatch } from "@/components/color-swatch"
 import { cn } from "@/lib/utils"
+import { fieldStyles } from "@/components/field"
 
 /**
  * ColorField — quebi design system
@@ -69,17 +70,8 @@ export function ColorField({
       }
       data-slot="control"
       className={composeRenderProps(className, (resolved) =>
-        cn(
-          "w-full",
-          // label → control → hint stack with 6px between siblings.
-          "[&>[data-slot=label]+[data-slot=control]]:mt-1.5",
-          "[&>[data-slot=label]+[slot='description']]:mt-1",
-          "[&>[slot=description]+[data-slot=control]]:mt-1.5",
-          "[&>[data-slot=control]+[slot=description]]:mt-1.5",
-          "[&>[data-slot=control]+[slot=errorMessage]]:mt-1.5",
-          "in-disabled:opacity-50 disabled:opacity-50",
-          resolved,
-        ),
+        // The stack from the one place that owns it.
+        cn(fieldStyles, resolved),
       )}
     >
       {children ?? <ColorFieldGroup />}

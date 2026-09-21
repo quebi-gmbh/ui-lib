@@ -15,6 +15,7 @@ import {
 } from "react-aria-components"
 import { useFieldSizing } from "@/lib/field-size"
 import { cn } from "@/lib/utils"
+import { fieldStyles } from "@/components/field"
 import {
   DropdownDescription,
   DropdownItem,
@@ -45,7 +46,7 @@ const Select = <T extends object, M extends "single" | "multiple" = "single">({
   return (
     <SelectPrimitive
       data-slot="control"
-      className={composeRenderProps(className, (resolved) => cn("group/select w-full", resolved))}
+      className={composeRenderProps(className, (resolved) => cn("group/select", fieldStyles, resolved))}
       {...props}
     />
   )

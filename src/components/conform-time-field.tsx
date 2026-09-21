@@ -7,7 +7,7 @@ import { useRef } from "react"
 import { composeRenderProps } from "react-aria-components"
 import type { TimeFieldProps, TimeValue } from "react-aria-components"
 import { cn } from "@/lib/utils"
-import { Description, FieldError, focusFirstControl, Label } from "@/components/field"
+import { Description, FieldError, fieldStyles, focusFirstControl, Label } from "@/components/field"
 import { TimeField, TimeInput } from "@/components/time-field"
 
 export interface ConformTimeFieldProps
@@ -91,8 +91,11 @@ export function ConformTimeField({
       onBlur={() => control.blur()}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={composeRenderProps(className, (resolved) => cn("w-full", resolved))}
+      className={composeRenderProps(className, (resolved) => cn(fieldStyles, resolved))}
     >
+      {/* First, before the label: the stack is spaced with `label + control`
+          selectors, and an `sr-only` element between the two is still an
+          element the selector cannot see past. */}
       <BaseControl
         name={field.name}
         form={field.formId}
@@ -108,7 +111,7 @@ export function ConformTimeField({
           {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
         </Label>
       )}
-      <div ref={inputRef}>
+      <div ref={inputRef} data-slot="control">
         <TimeInput />
       </div>
       {/* No ids and no aria-describedby here: this is a react-aria field, so it

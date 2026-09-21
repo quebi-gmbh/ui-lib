@@ -15,6 +15,7 @@ import {
 import { DateInput } from "@/components/date-field"
 import { DatePickerOverlay } from "@/components/date-picker"
 import { cn } from "@/lib/utils"
+import { fieldStyles } from "@/components/field"
 
 /**
  * Date Range Picker — quebi design system
@@ -51,7 +52,7 @@ export function DateRangePicker<T extends DateValue>({
     <DateRangePickerPrimitive
       data-slot="control"
       className={composeRenderProps(className, (resolved) =>
-        cn("group flex w-full flex-col gap-1.5", resolved),
+        cn("group", fieldStyles, resolved),
       )}
       {...props}
     >

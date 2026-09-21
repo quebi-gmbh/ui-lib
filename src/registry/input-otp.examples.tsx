@@ -26,6 +26,25 @@ export const inputOtpExamples: ComponentExample[] = [
     ),
   },
   {
+    title: "Sizes",
+    description:
+      "xs (30px), sm (38px), and the default md (42px) — a slot is as tall as a field of the same step, and square. The size reaches the slots through the field-size context, so it is written once on InputOTP and a code field in a table cell is small without anyone saying so.",
+    render: () => (
+      <div className="flex flex-col gap-3">
+        {(["xs", "sm", "md"] as const).map((size) => (
+          <InputOTP key={size} size={size} maxLength={4} aria-label={`Code (${size})`}>
+            <InputOTPGroup>
+              <InputOTPSlot index={0} />
+              <InputOTPSlot index={1} />
+              <InputOTPSlot index={2} />
+              <InputOTPSlot index={3} />
+            </InputOTPGroup>
+          </InputOTP>
+        ))}
+      </div>
+    ),
+  },
+  {
     title: "With separator",
     description: "Two groups of three split by a separator.",
     render: () => (

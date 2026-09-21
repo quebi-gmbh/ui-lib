@@ -40,28 +40,33 @@ export function ConformInputOTP({
   const isRequired = field.required ?? false
 
   return (
-    <Field className={cn("flex flex-col gap-1.5", className)}>
+    <Field className={cn(className)}>
       {label && (
         <Label htmlFor={field.id} className={cn(hasErrors && "text-red-500")}>
           {label}
           {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
         </Label>
       )}
-      <InputOTP
-        {...props}
-        id={field.id}
-        name={field.name}
-        form={field.formId}
-        defaultValue={(field.initialValue as string) ?? ""}
-        required={isRequired}
-        aria-invalid={hasErrors || undefined}
-        aria-describedby={describedBy(
-          hasErrors && field.errorId,
-          description && field.descriptionId,
-        )}
-      >
-        {children}
-      </InputOTP>
+      {/* `InputOTP` renders the `input-otp` package's own container, which
+          carries no `data-slot`, so this wrapper is what the field stack and
+          `FieldRow` place. */}
+      <div data-slot="control">
+        <InputOTP
+          {...props}
+          id={field.id}
+          name={field.name}
+          form={field.formId}
+          defaultValue={(field.initialValue as string) ?? ""}
+          required={isRequired}
+          aria-invalid={hasErrors || undefined}
+          aria-describedby={describedBy(
+            hasErrors && field.errorId,
+            description && field.descriptionId,
+          )}
+        >
+          {children}
+        </InputOTP>
+      </div>
       {/* These ids are ours to set: the control above is not a react-aria
           field, so nothing generates them and its aria-describedby is their
           only reference. */}

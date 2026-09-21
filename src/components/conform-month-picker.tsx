@@ -84,14 +84,16 @@ export function ConformMonthPicker({
   const isRequired = field.required ?? false
 
   return (
-    <Field ref={fieldRef} className={cn("flex w-fit flex-col gap-1.5", className)}>
-      {label && (
-        <Label className={cn(hasErrors && "text-red-500")}>
-          {label}
-          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
-        </Label>
-      )}
-
+    <Field
+      ref={fieldRef}
+      // `w-fit` rather than the `w-full` every other field root wears: this is
+      // a grid of fixed-size cells with an intrinsic width, and stretching the
+      // root only pulls its header chrome away from the grid under it.
+      className={cn("w-fit", className)}
+    >
+      {/* First, before the label: the stack is spaced with `label + control`
+          selectors, and an `sr-only` element between the two is still an
+          element the selector cannot see past. */}
       <BaseControl
         name={field.name}
         form={field.formId}
@@ -102,16 +104,27 @@ export function ConformMonthPicker({
         className="sr-only"
       />
 
-      <MonthPicker
-        {...props}
-        value={toCalendarDate(control.value)}
-        onChange={(value) => control.change(value.toString())}
-        aria-label={props["aria-label"] ?? label}
-        aria-describedby={describedBy(
-          hasErrors && field.errorId,
-          description && field.descriptionId,
-        )}
-      />
+      {label && (
+        <Label className={cn(hasErrors && "text-red-500")}>
+          {label}
+          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
+        </Label>
+      )}
+
+      {/* The grid is the control; it carries no `data-slot` of its own, so
+          this wrapper is what the field stack and `FieldRow` place. */}
+      <div data-slot="control">
+        <MonthPicker
+          {...props}
+          value={toCalendarDate(control.value)}
+          onChange={(value) => control.change(value.toString())}
+          aria-label={props["aria-label"] ?? label}
+          aria-describedby={describedBy(
+            hasErrors && field.errorId,
+            description && field.descriptionId,
+          )}
+        />
+      </div>
 
       {/* These ids are ours to set: react-aria only owns the ids of children
           rendered inside its field, and these are siblings of the grid above,

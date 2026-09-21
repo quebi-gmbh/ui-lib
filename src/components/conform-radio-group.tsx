@@ -5,7 +5,7 @@ import { type PropsWithChildren, useState } from "react"
 import { composeRenderProps } from "react-aria-components"
 import type { RadioGroupProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
-import { Description, FieldError, Label } from "@/components/field"
+import { Description, FieldError, fieldStyles, Label } from "@/components/field"
 import { RadioGroup } from "@/components/radio"
 
 export interface ConformRadioGroupProps
@@ -81,7 +81,12 @@ export function ConformRadioGroup({
       }}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={composeRenderProps(className, (resolved) => cn("flex flex-col gap-3", resolved))}
+      className={composeRenderProps(className, (resolved) =>
+        // `block` rather than the group's own flex column: the boxes are one
+        // control in one element below, so what is left for the root to space
+        // is the field stack — label, control, hint — like every other field.
+        cn("block", fieldStyles, resolved),
+      )}
     >
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>
@@ -89,8 +94,14 @@ export function ConformRadioGroup({
           {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
         </Label>
       )}
-      {children}
-      {value === "" && <input type="hidden" name={field.name} form={field.formId} value="" />}
+      {/* The radios are one control, so they are wrapped in one element: the
+          field stack and `FieldRow` place a field's control, not each of its
+          parts, and the 12px between the radios is this group's own business
+          rather than the gap between a label and a control. */}
+      <div data-slot="control" className="flex flex-col gap-3">
+        {children}
+        {value === "" && <input type="hidden" name={field.name} form={field.formId} value="" />}
+      </div>
       {/* No ids and no aria-describedby here: this is a react-aria field, so it
           generates the description and error ids and already points the control
           at them. Setting id={field.errorId} would not break that — on mount

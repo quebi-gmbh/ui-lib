@@ -12,8 +12,9 @@ import {
   useState,
 } from "react"
 import { type Key, useFilter } from "react-aria-components"
-import { PopoverContent } from "@/components/popover"
+import { useFieldSizing } from "@/lib/field-size"
 import { cn } from "@/lib/utils"
+import { PopoverContent } from "@/components/popover"
 
 /**
  * Multiple Select — quebi design system
@@ -48,6 +49,30 @@ export interface MultiSelectOption {
 
 /** The DOM/selection key of an option. Ids may be numbers; keys are strings. */
 export const multiSelectKey = (option: MultiSelectOption) => String(option.id)
+
+/**
+ * The field size scale, as this control expresses it.
+ *
+ * A chips-and-input box has no single line to pad, so the height is the box's
+ * own padding plus the input row inside it: `xs` is 4 + 20 + 4 + 2px of border
+ * = 30px, `sm` 38px and `md` 42px, which are `Input`'s three steps and
+ * `Button`'s `xs` and `sm` to the pixel. The text size rides along and the
+ * input inherits it, so a small field's chips and caret shrink with the box.
+ *
+ * `md` was 38px before task #186 — the default box was a size too short to
+ * stand beside an `Input`, which is the whole complaint the scale answers.
+ *
+ * Written out here rather than imported, as in `input.tsx` and `select.tsx`:
+ * three strings are not worth making `Input` a registry dependency of this
+ * file.
+ */
+const multiSelectControlSizeStyles = {
+  xs: "p-1 text-xs",
+  sm: "p-1.5 text-sm",
+  md: "p-2 text-sm",
+} as const
+
+type MultiSelectControlSize = keyof typeof multiSelectControlSizeStyles
 
 export interface MultiSelectControlProps<T extends MultiSelectOption> {
   /** The options to offer right now — already filtered or paged by the caller. */
@@ -90,6 +115,12 @@ export interface MultiSelectControlProps<T extends MultiSelectOption> {
   "aria-label"?: string
   /** ids of the elements describing this control — a hint, an error message. */
   "aria-describedby"?: string
+  /**
+   * Control height. Matches `Input`'s scale and `Button`'s `xs` / `sm`. Left
+   * out, it is whatever the surrounding surface asked for — a table cell being
+   * the one that does. See `@/lib/field-size`.
+   */
+  size?: MultiSelectControlSize
 }
 
 /**
@@ -123,7 +154,9 @@ export function MultiSelectControl<T extends MultiSelectOption>({
   id,
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
+  size: sizeProp,
 }: MultiSelectControlProps<T>) {
+  const { size } = useFieldSizing({ size: sizeProp })
   const reactId = useId()
   const listboxId = `${reactId}-listbox`
   const optionId = (key: string) => `${reactId}-opt-${key}`
@@ -235,7 +268,7 @@ export function MultiSelectControl<T extends MultiSelectOption>({
   }
 
   return (
-    <div className={cn("w-full", className)}>
+    <div data-slot="control" className={cn("w-full", className)}>
       {/** biome-ignore lint/a11y/noStaticElementInteractions: the control surface forwards bare-surface and chip-body clicks to the combobox input; all real semantics live on the input/options */}
       <div
         ref={containerRef}
@@ -253,7 +286,8 @@ export function MultiSelectControl<T extends MultiSelectOption>({
         }}
         data-invalid={isInvalid || undefined}
         className={cn(
-          "flex w-full flex-wrap items-center gap-1.5 rounded-quebi-sm border border-quebi-line/10 bg-quebi-surface/[0.02] p-1.5",
+          "flex w-full flex-wrap items-center gap-1.5 rounded-quebi-sm border border-quebi-line/10 bg-quebi-surface/[0.02]",
+          multiSelectControlSizeStyles[size],
           "transition-[border-color,box-shadow] duration-150 focus-within:border-quebi-brand-mark",
           "focus-within:ring-2 focus-within:ring-quebi-brand-mark focus-within:ring-offset-2 focus-within:ring-offset-quebi-bg",
           isInvalid && "border-red-500",
@@ -318,7 +352,9 @@ export function MultiSelectControl<T extends MultiSelectOption>({
           onClick={openMenu}
           onKeyDown={handleKeyDown}
           className={cn(
-            "min-w-24 flex-1 bg-transparent px-1.5 py-0.5 text-sm text-quebi-fg outline-none",
+            // No text size of its own: it inherits the box's, so the caret and
+            // the placeholder shrink with the field.
+            "min-w-24 flex-1 bg-transparent px-1.5 py-0.5 text-quebi-fg outline-none",
             "placeholder:text-quebi-fg-subtle placeholder:italic",
           )}
         />
@@ -439,6 +475,8 @@ interface MultipleSelectProps {
   "aria-label"?: string
   /** ids of the elements describing this control — a hint, an error message. */
   "aria-describedby"?: string
+  /** Control height. Matches `Input`'s scale — see `@/lib/field-size`. */
+  size?: MultiSelectControlSize
 }
 
 interface MultipleSelectContentProps<T extends MultiSelectOption> {
@@ -496,6 +534,7 @@ function MultipleSelect<T extends MultiSelectOption>({
   children,
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
+  size,
 }: MultipleSelectProps) {
   const { before, after, list } = useMemo(() => {
     const arr = Children.toArray(children)
@@ -568,9 +607,10 @@ function MultipleSelect<T extends MultiSelectOption>({
   }
 
   return (
-    <div className={cn("w-full", className)}>
+    <div data-slot="control" className={cn("w-full", className)}>
       {before}
       <MultiSelectControl<T>
+        size={size}
         options={options}
         selected={selected}
         onToggle={toggle}

@@ -103,6 +103,10 @@ export function SliderThumb({ className, ...props }: SliderThumbProps) {
 export function SliderTrack({ className, children, ...props }: SliderTrackProps) {
   return (
     <SliderTrackPrimitive
+      // The element the field stack treats as this field's control: a slider's
+      // label points at the track, not at the `Slider` root that holds the
+      // label too. See `fieldStackStyles` in `field.tsx`.
+      data-slot="control"
       className={composeRenderProps(className, (resolved) =>
         cn(
           "group/track relative cursor-default rounded-full bg-cyan-500/10",

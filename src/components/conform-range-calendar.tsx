@@ -103,14 +103,15 @@ export function ConformRangeCalendar({
   const isRequired = field.required ?? false
 
   return (
-    <Field className={cn("flex w-fit flex-col gap-1.5", className)}>
-      {label && (
-        <Label className={cn(hasErrors && "text-red-500")}>
-          {label}
-          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
-        </Label>
-      )}
-
+    <Field
+      // `w-fit` rather than the `w-full` every other field root wears: this is
+      // a grid of fixed-size cells with an intrinsic width, and stretching the
+      // root only pulls its header chrome away from the grid under it.
+      className={cn("w-fit", className)}
+    >
+      {/* First, before the label: the stack is spaced with `label + control`
+          selectors, and an `sr-only` element between the two is still an
+          element the selector cannot see past. */}
       <BaseControl
         type="fieldset"
         name={field.name}
@@ -122,7 +123,14 @@ export function ConformRangeCalendar({
         className="sr-only"
       />
 
-      <div ref={calendarRef}>
+      {label && (
+        <Label className={cn(hasErrors && "text-red-500")}>
+          {label}
+          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
+        </Label>
+      )}
+
+      <div ref={calendarRef} data-slot="control">
         <RangeCalendar
           {...props}
           value={toRangeValue(control.payload)}

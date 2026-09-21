@@ -24,6 +24,18 @@ export const textareaExamples: ComponentExample[] = [
     ),
   },
   {
+    title: "Sizes",
+    description:
+      "xs, sm, and the default md — Input's three steps, so a textarea and the input beside it are set in the same type with the same inset. The min-height comes down with the size; the field still grows with its content.",
+    render: () => (
+      <Col>
+        <Textarea size="xs" aria-label="Extra small" placeholder="xs" />
+        <Textarea size="sm" aria-label="Small" placeholder="sm" />
+        <Textarea aria-label="Medium" placeholder="md (default)" />
+      </Col>
+    ),
+  },
+  {
     title: "Controlled",
     description: "Tracks its value and shows a live character count.",
     render: () => {

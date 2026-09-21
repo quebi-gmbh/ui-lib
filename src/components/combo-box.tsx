@@ -13,6 +13,7 @@ import {
   ListBox,
 } from "react-aria-components"
 import { cn } from "@/lib/utils"
+import { fieldStyles } from "@/components/field"
 import {
   DropdownDescription,
   DropdownItem,
@@ -50,7 +51,7 @@ const ComboBox = <T extends object>({
       data-slot="control"
       menuTrigger={menuTrigger}
       className={composeRenderProps(className, (resolved) =>
-        cn("group flex w-full flex-col gap-y-1.5", resolved),
+        cn("group", fieldStyles, resolved),
       )}
       {...props}
     />

@@ -3,7 +3,7 @@
 import type { FieldMetadata } from "@conform-to/react"
 import { composeRenderProps, TextField, type TextFieldProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
-import { Description, FieldError, Label } from "@/components/field"
+import { Description, FieldError, fieldStyles, Label } from "@/components/field"
 import { Textarea } from "@/components/textarea"
 
 export interface ConformTextareaProps
@@ -50,7 +50,7 @@ export function ConformTextarea({
       defaultValue={(field.initialValue as string) ?? ""}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={composeRenderProps(className, (resolved) => cn("flex flex-col gap-1.5", resolved))}
+      className={composeRenderProps(className, (resolved) => cn(fieldStyles, resolved))}
     >
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>

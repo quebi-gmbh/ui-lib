@@ -3,6 +3,7 @@
 import { OTPInput, OTPInputContext } from "input-otp"
 import { Minus } from "lucide-react"
 import { use, useCallback, useRef } from "react"
+import { FieldSizeContext, useFieldSizing } from "@/lib/field-size"
 import { cn } from "@/lib/utils"
 
 /**
@@ -32,19 +33,63 @@ function slotIndexAt(input: HTMLInputElement, clientX: number): number | null {
 }
 
 /**
+ * The field size scale, as a square slot expresses it: a slot is as tall as a
+ * field of the same step (`xs` 30px, `sm` 38px, `md` 42px and the default) and
+ * exactly as wide, because a digit box is square.
+ *
+ * `md` was 40px before task #186, a step of its own that matched nothing.
+ *
+ * Written out rather than imported from `input.tsx`, as in `select.tsx` and
+ * `number-field.tsx`: three strings are not worth making `Input` a registry
+ * dependency of this file.
+ */
+const inputOtpSlotSizeStyles = {
+  xs: "size-7.5 text-xs",
+  sm: "size-9.5 text-sm",
+  md: "size-10.5 text-sm",
+} as const
+
+type InputOtpSize = keyof typeof inputOtpSlotSizeStyles
+
+/**
+ * `OTPInput`'s props are a union — either `children` or a `render` callback,
+ * never both — so the omit has to distribute over it. A plain
+ * `Omit<Props, "size">` collapses the two branches into one object that has
+ * both keys optional, and the component then rejects every call.
+ */
+type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never
+
+type InputOTPProps = DistributiveOmit<React.ComponentPropsWithoutRef<typeof OTPInput>, "size"> & {
+  /**
+   * Slot height and width. Shadows the `<input size>` attribute, which sizes a
+   * field in characters and means nothing to a control whose single input is
+   * stretched invisibly across every slot.
+   */
+  size?: InputOtpSize
+}
+
+/**
  * InputOTP — quebi design system
  *
  * One-time-password / verification-code input built on the `input-otp`
  * package. Slots use the quebi input style (translucent field, cyan-tinted
  * border); the active slot lifts its border to brand teal with the quebi
  * teal ring. Invalid uses red; disabled dims the whole control.
+ *
+ * `size` reaches the slots through `FieldSizeContext` rather than through a
+ * prop, because the slots are written by the caller — `<InputOTP><InputOTPSlot
+ * index={0} />…</InputOTP>` — and nothing this component renders is between
+ * them. That is the same channel a table cell uses, so a code field in a cell
+ * is `sm` with nobody saying so.
  */
 export function InputOTP({
   className,
   containerClassName,
   onPointerDown,
+  size: sizeProp,
   ...props
-}: React.ComponentPropsWithoutRef<typeof OTPInput>) {
+}: InputOTPProps) {
+  const sizing = useFieldSizing({ size: sizeProp })
   const inputRef = useRef<HTMLInputElement>(null)
 
   /**
@@ -85,17 +130,19 @@ export function InputOTP({
   )
 
   return (
-    <OTPInput
-      data-slot="input-otp"
-      containerClassName={cn(
-        "flex items-center gap-2 has-disabled:opacity-50",
-        containerClassName,
-      )}
-      className={cn("disabled:cursor-not-allowed", className)}
-      {...props}
-      ref={inputRef}
-      onPointerDown={handlePointerDown}
-    />
+    <FieldSizeContext value={sizing}>
+      <OTPInput
+        data-slot="input-otp"
+        containerClassName={cn(
+          "flex items-center gap-2 has-disabled:opacity-50",
+          containerClassName,
+        )}
+        className={cn("disabled:cursor-not-allowed", className)}
+        {...props}
+        ref={inputRef}
+        onPointerDown={handlePointerDown}
+      />
+    </FieldSizeContext>
   )
 }
 
@@ -112,12 +159,16 @@ export function InputOTPGroup({ className, ...props }: React.ComponentProps<"div
 export function InputOTPSlot({
   index,
   className,
+  size: sizeProp,
   ...props
 }: React.ComponentProps<"div"> & {
   index: number
+  /** Slot height and width. Matches `Input`'s scale — see `@/lib/field-size`. */
+  size?: InputOtpSize
 }) {
   const inputOTPContext = use(OTPInputContext)
   const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {}
+  const { size } = useFieldSizing({ size: sizeProp })
 
   return (
     <div
@@ -127,7 +178,8 @@ export function InputOTPSlot({
       data-index={index}
       data-active={isActive}
       className={cn(
-        "relative flex size-10 items-center justify-center text-sm text-quebi-fg",
+        "relative flex items-center justify-center text-quebi-fg",
+        inputOtpSlotSizeStyles[size],
         "border border-quebi-line/20 border-l-0 bg-quebi-surface/[0.02] outline-none",
         "transition-[border-color,box-shadow] duration-200",
         "first:rounded-s-quebi-sm first:border-l last:rounded-e-quebi-sm",

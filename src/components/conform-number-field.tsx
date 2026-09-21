@@ -107,7 +107,7 @@ export function ConformNumberField({
           react-aria re-points the control at whatever id the element actually
           carries — it would just duplicate wiring that is already correct.
           Outside a react-aria field the ids are yours: see ConformSwitch. */}
-      {description && <Description className="mt-1">{description}</Description>}
+      {description && <Description>{description}</Description>}
       {hasErrors && <FieldError>{field.errors?.join(", ")}</FieldError>}
     </NumberField>
   )

@@ -6,7 +6,7 @@ import { composeRenderProps } from "react-aria-components"
 import type { DateValue } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { DatePicker, type DatePickerProps, DatePickerTrigger } from "@/components/date-picker"
-import { Description, FieldError, Label } from "@/components/field"
+import { Description, FieldError, fieldStyles, Label } from "@/components/field"
 
 export interface ConformDatePickerProps
   extends Omit<
@@ -60,7 +60,7 @@ export function ConformDatePicker({
       defaultValue={toDefaultValue(field.initialValue)}
       isRequired={isRequired}
       isInvalid={hasErrors}
-      className={composeRenderProps(className, (resolved) => cn("w-full", resolved))}
+      className={composeRenderProps(className, (resolved) => cn(fieldStyles, resolved))}
     >
       {label && (
         <Label className={cn(hasErrors && "text-red-500")}>

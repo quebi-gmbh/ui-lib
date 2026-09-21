@@ -53,7 +53,7 @@ export function ConformSwitch({
   const isRequired = field.required ?? false
 
   return (
-    <Field className={cn("flex flex-col gap-2", className)}>
+    <Field className={cn(className)}>
       <Switch
         {...props}
         name={field.name}
