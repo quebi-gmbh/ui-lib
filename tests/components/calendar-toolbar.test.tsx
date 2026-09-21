@@ -1,10 +1,11 @@
 /**
- * The Calendar Toolbar's two controls that are not a chevron.
+ * The Calendar Toolbar's layout, and the two controls the per-handler gating
+ * does not simply switch on and off.
  *
  * The chevrons and the today button are gated on their handlers — leave one
  * out and its control is not drawn — and `calendar-views.test.tsx` covers what
- * the four views do with them. This file is about the two places where that
- * pattern does not apply:
+ * the four views do with them. This file is about the three places that need
+ * more than that:
  *
  * 1. **The view switcher cannot be gated on its handler** (task #169). It
  *    doubles as the read-only "which view am I in" indicator, so dropping it
@@ -13,7 +14,13 @@
  *    nothing, and the next render re-asserts the same selection — a control
  *    that looks pressable and is not. `isDisabled` is the middle answer: the
  *    indicator survives and the press never invites itself.
- * 2. **`labelVariant="picker"` makes the label a date picker** (task #166).
+ * 2. **The three date controls are one segmented group.** Back, `Today` and
+ *    forward used to be three loose buttons drawn before the heading, so a
+ *    reader met "Today 13.–19. Juli 2026" and `Today` read as a word in the
+ *    date. They are joined now, in that order, after the heading — and the
+ *    gating still holds inside the group: any subset is a group, none of them
+ *    is no group rather than an empty box.
+ * 3. **`labelVariant="picker"` makes the label a date picker** (task #166).
  *    The toolbar owns no state, so the popover reports the day it was given
  *    and closes; what the view does with it is the view's business. The grid it
  *    opens is the unit the heading is spelled in — a day, a week or a month —
@@ -26,7 +33,7 @@
  */
 import { CalendarDate } from "@internationalized/date"
 import { describe, expect, test } from "bun:test"
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { CalendarToolbar } from "../../src/components/calendar-toolbar"
 
@@ -86,6 +93,84 @@ const WEDNESDAY = new CalendarDate(2026, 9, 23)
  * `data-slot` is the stable handle, as it is for `Calendar`'s own header.
  */
 const trigger = () => document.querySelector('[data-slot="calendar-toolbar-label"]') as HTMLElement
+
+const navigation = () => screen.queryByRole("group", { name: "Calendar navigation" })
+
+describe("the date controls", () => {
+  test("are one group, after the heading, reading back / today / forward", () => {
+    render(
+      <CalendarToolbar
+        label="13.–19. Juli 2026"
+        onPrevious={() => {}}
+        onNext={() => {}}
+        onToday={() => {}}
+      />,
+    )
+
+    const group = navigation()
+    expect(group).not.toBeNull()
+    expect(
+      within(group as HTMLElement)
+        .getAllByRole("button")
+        .map((button) => button.getAttribute("aria-label") ?? button.textContent),
+    ).toEqual(["Previous", "Today", "Next"])
+
+    // The heading is what the view is *about*, so it comes first. Before this
+    // it came last, and the toolbar read "Today 13.–19. Juli 2026".
+    const label = trigger()
+    expect(label.compareDocumentPosition(group as HTMLElement)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    )
+  })
+
+  test("are still gated one by one inside the group", () => {
+    render(<CalendarToolbar label="13.–19. Juli 2026" onPrevious={() => {}} onNext={() => {}} />)
+
+    expect(screen.queryByRole("button", { name: "Today" })).toBeNull()
+    expect(within(navigation() as HTMLElement).getAllByRole("button")).toHaveLength(2)
+  })
+
+  test("leave no empty box behind when none of them is wired", () => {
+    render(<CalendarToolbar label="13.–19. Juli 2026" />)
+
+    expect(navigation()).toBeNull()
+  })
+
+  test("are all pressable, and report nothing else", async () => {
+    const user = userEvent.setup()
+    const pressed: string[] = []
+    render(
+      <CalendarToolbar
+        label="13.–19. Juli 2026"
+        onPrevious={() => pressed.push("previous")}
+        onNext={() => pressed.push("next")}
+        onToday={() => pressed.push("today")}
+      />,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Previous" }))
+    await user.click(screen.getByRole("button", { name: "Today" }))
+    await user.click(screen.getByRole("button", { name: "Next" }))
+
+    expect(pressed).toEqual(["previous", "today", "next"])
+  })
+
+  test("are disabled together with the rest of the toolbar", () => {
+    render(
+      <CalendarToolbar
+        label="13.–19. Juli 2026"
+        isDisabled
+        onPrevious={() => {}}
+        onNext={() => {}}
+        onToday={() => {}}
+      />,
+    )
+
+    for (const name of ["Previous", "Today", "Next"]) {
+      expect(screen.getByRole("button", { name })).toBeDisabled()
+    }
+  })
+})
 
 describe("the picker variant", () => {
   test("reports the day that was picked, and closes behind it", async () => {

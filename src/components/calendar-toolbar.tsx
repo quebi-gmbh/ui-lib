@@ -6,6 +6,7 @@ import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { useState } from "react"
 import { useLocale } from "react-aria-components"
 import { Button } from "@/components/button"
+import { ButtonGroup } from "@/components/button-group"
 import { Calendar } from "@/components/calendar"
 import { dayToDate, DEFAULT_CALENDAR_TIME_ZONE } from "@/components/calendar-shell"
 import { MonthPicker } from "@/components/month-picker"
@@ -24,8 +25,27 @@ import { cn } from "@/lib/utils"
  * of the state and reports every press, so the same toolbar drives a view that
  * keeps its own date and one whose date lives in a URL.
  *
- * Every control is gated on its handler: no `onToday`, no today button. The
- * view switcher is the one that cannot be — it doubles as the read-only "which
+ * The heading comes first and the three date controls after it, joined into one
+ * `ButtonGroup` as `‹ Today ›`. They used to be four loose items in the order
+ * Today, back, forward, heading — two bordered buttons with two borderless
+ * circles between them, and the one thing that says what you are looking at
+ * arriving last. Read left to right that spelled "Today 13.–19. Juli 2026", as
+ * though `Today` were a word in the heading rather than a button. One segmented
+ * control fixes both halves: the chevrons get a box, so all three read as the
+ * same kind of thing, and `Today` is the middle of a symmetric unit — back on
+ * one side, forward on the other, home in between — instead of a stray label in
+ * front of the date. The heading takes `text-base` in both variants for the same
+ * reason: the picker trigger used to be a rung smaller than the static span, so
+ * the one line naming the view was the smallest text in the toolbar.
+ *
+ * Every control is gated on its handler: no `onToday`, no today button, and no
+ * group at all when none of the three is wired — an empty bordered box is worse
+ * than no box. The group survives any subset, because `ButtonGroup` squares the
+ * inner corners off `:first-child` / `:last-child` rather than off a fixed count,
+ * so `‹ ›` with no today button and a lone `Today` with no chevrons both come out
+ * as one properly rounded control.
+ *
+ * The view switcher is the one that cannot be — it doubles as the read-only "which
  * view am I in" indicator, and dropping it would take that away — so it is
  * drawn `isDisabled` instead when no `onViewChange` is wired. The group is
  * fully controlled from `view`, so without a handler a press fires, changes
@@ -141,6 +161,8 @@ export interface CalendarToolbarProps {
   previousLabel?: string
   nextLabel?: string
   todayLabel?: string
+  /** Accessible name for the group the three of them are joined into. */
+  navigationLabel?: string
   /** Extra chrome, placed after the view switcher — a filter, a legend, a menu. */
   children?: React.ReactNode
   className?: string
@@ -168,6 +190,7 @@ export function CalendarToolbar({
   previousLabel = "Previous",
   nextLabel = "Next",
   todayLabel = "Today",
+  navigationLabel = "Calendar navigation",
   children,
   className,
 }: CalendarToolbarProps) {
@@ -176,36 +199,7 @@ export function CalendarToolbar({
       data-slot="calendar-toolbar"
       className={cn("flex flex-wrap items-center justify-between gap-3", className)}
     >
-      <div className="flex items-center gap-2">
-        {onToday ? (
-          <Button intent="outline" size="sm" isDisabled={isDisabled} onPress={onToday}>
-            {todayLabel}
-          </Button>
-        ) : null}
-        {onPrevious ? (
-          <Button
-            intent="ghost"
-            size="sm"
-            isCircle
-            aria-label={previousLabel}
-            isDisabled={isDisabled}
-            onPress={onPrevious}
-          >
-            <ChevronLeft data-slot="icon" className="size-4" aria-hidden="true" />
-          </Button>
-        ) : null}
-        {onNext ? (
-          <Button
-            intent="ghost"
-            size="sm"
-            isCircle
-            aria-label={nextLabel}
-            isDisabled={isDisabled}
-            onPress={onNext}
-          >
-            <ChevronRight data-slot="icon" className="size-4" aria-hidden="true" />
-          </Button>
-        ) : null}
+      <div className="flex flex-wrap items-center gap-3">
         {labelVariant === "picker" && date && onDateChange ? (
           <CalendarToolbarPicker
             label={label}
@@ -222,11 +216,47 @@ export function CalendarToolbar({
         ) : (
           <span
             data-slot="calendar-toolbar-label"
-            className="font-semibold text-quebi-fg tracking-tight"
+            className="font-semibold text-base text-quebi-fg tracking-tight"
           >
             {label}
           </span>
         )}
+        {onPrevious || onToday || onNext ? (
+          // No `data-slot` of its own: `ButtonGroup` sets its own before the
+          // spread, so one here would replace it and quietly unhook the
+          // `has-[>[data-slot=button-group]]` rule a nested group relies on.
+          // `role="group"` plus the name below is the handle, and it is the one
+          // a test or a screen reader already reaches for.
+          <ButtonGroup aria-label={navigationLabel}>
+            {onPrevious ? (
+              <Button
+                intent="outline"
+                size="sq-sm"
+                aria-label={previousLabel}
+                isDisabled={isDisabled}
+                onPress={onPrevious}
+              >
+                <ChevronLeft data-slot="icon" className="size-4" aria-hidden="true" />
+              </Button>
+            ) : null}
+            {onToday ? (
+              <Button intent="outline" size="sm" isDisabled={isDisabled} onPress={onToday}>
+                {todayLabel}
+              </Button>
+            ) : null}
+            {onNext ? (
+              <Button
+                intent="outline"
+                size="sq-sm"
+                aria-label={nextLabel}
+                isDisabled={isDisabled}
+                onPress={onNext}
+              >
+                <ChevronRight data-slot="icon" className="size-4" aria-hidden="true" />
+              </Button>
+            ) : null}
+          </ButtonGroup>
+        ) : null}
       </div>
 
       <div className="flex items-center gap-2">
@@ -319,7 +349,7 @@ function CalendarToolbarPicker({
         intent="outline"
         size="sm"
         isDisabled={isDisabled}
-        className="font-semibold tracking-tight"
+        className="font-semibold text-base tracking-tight"
       >
         {label}
         <ChevronDown data-slot="icon" className="text-quebi-fg-muted" />
