@@ -286,8 +286,10 @@ describe("DaySchedule's zoom and minimap", () => {
     )
     const { viewport, strip } = partsOf(container)
     expect(strip).not.toBeNull()
-    expect(viewport?.className).toContain("[scrollbar-width:none]")
-    expect(viewport?.className).not.toContain("quebi-scrollbar")
+    // `quebi-scrollbar-none` is the library's way of saying "no bar" — it holds
+    // both browsers' spellings of it, so the minimap does not carry its own.
+    expect(viewport?.className).toContain("quebi-scrollbar-none")
+    expect(viewport?.className).not.toContain("[scrollbar-width:none]")
   })
 
   test("a line takes the tone its bar was actually drawn in", () => {

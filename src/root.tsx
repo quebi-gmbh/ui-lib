@@ -8,8 +8,10 @@ import "./main.css"
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     // The page scroller is the platform's, painted by `quebi-scrollbar` — the
-    // same 12px track and 6px pill `.os-theme-quebi` draws on the inner
-    // surfaces, so the two still read as one system.
+    // same 6px edge-hugging pill `.os-theme-quebi` draws on the inner surfaces,
+    // so the two still read as one system. Not `quebi-scrollbar-corners`: the
+    // page has no rounded corner to follow, and a `clip-path` on `<html>` would
+    // make it the containing block for every fixed descendant on the site.
     //
     // It used to be an OverlayScrollbars instance on `document.body`, and that
     // is what put every overlay that flips *above* its trigger off the bottom
