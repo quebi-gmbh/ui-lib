@@ -115,7 +115,7 @@ const CATEGORY_LABELS: Record<string, string> = {
  * column counts are `@`-variants, so they are asked of the results column
  * `FilterRailLayout` makes a container. A `sm:grid-cols-4` here would be four
  * columns of the *viewport* — which is the same width whether the rail is
- * taking 224px of it or not.
+ * taking 256px of it or not.
  */
 function Results({ rows }: { rows: Part[] }) {
   return (
