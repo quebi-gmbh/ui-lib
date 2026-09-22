@@ -360,11 +360,31 @@ function NumberFacet({
         onChange(from === min && to === max ? undefined : [from, to])
       }}
     >
-      <SliderTrack>
-        <SliderFill />
-        <SliderThumb index={0} aria-label={`${field.label} from`} />
-        <SliderThumb index={1} aria-label={`${field.label} to`} />
-      </SliderTrack>
+      {/* The track is inset by exactly what a thumb sticks out past its end.
+          A `Slider` fills its container by design and a thumb is centred on its
+          value, so at the bounds half the thumb — plus its focus ring — hangs
+          outside the track's box. Every other facet here is edge-to-edge, and
+          in the sidebar shape the rail is its own scroll container
+          (`overflow-y-auto`, which forces `overflow-x` to match), so that
+          overhang was not overflow, it was a cut: both dots rendered as flat
+          half-circles against the rail's edges and a focused one lost a side of
+          its ring. 14px is `size-5`'s radius (10) plus `ring-offset-2` and
+          `ring-2` (4) — the rail giving the control the room it needs rather
+          than the control shrinking for every other consumer.
+
+          The inset is a wrapper's padding and not a margin on the track,
+          because the track's own width is `group-orientation-horizontal:w-full`
+          and a variant-prefixed class outruns a bare one at specificity — the
+          same trap `slider.tsx` documents for the slider's length. Padding a
+          parent leaves the track to fill what is left of it. The readouts below
+          stay flush with the section, where every other facet's text is. */}
+      <div className="px-3.5">
+        <SliderTrack>
+          <SliderFill />
+          <SliderThumb index={0} aria-label={`${field.label} from`} />
+          <SliderThumb index={1} aria-label={`${field.label} to`} />
+        </SliderTrack>
+      </div>
       {/* The bounds are written out rather than left to react-aria's own thumb
           labels: a prerendered page has to format a number through the locale
           the page was rendered in, and `FormattedNumber` is the only thing here
