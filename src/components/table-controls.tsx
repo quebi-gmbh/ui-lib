@@ -42,6 +42,7 @@ import {
   PaginationLast,
   PaginationList,
   PaginationNext,
+  PaginationPlaceholder,
   PaginationPrevious,
   PaginationStack,
 } from "@/components/pagination"
@@ -674,11 +675,14 @@ export function TablePager({
               isDisabled={!range.hasPrevious}
               onPress={() => onPageChange(page - 1)}
             />
-            {pages.map((item, index) =>
-              item === "gap" ? (
-                // biome-ignore lint/suspicious/noArrayIndexKey: a gap has no identity beyond its position in the window.
-                <PaginationGap key={`gap-${index}`} />
-              ) : (
+            {pages.map((item, index) => {
+              // A gap and a held slot are both positions rather than pages, so
+              // the index is the only identity either of them has.
+              // biome-ignore lint/suspicious/noArrayIndexKey: see above.
+              if (item === "gap") return <PaginationGap key={`gap-${index}`} />
+              // biome-ignore lint/suspicious/noArrayIndexKey: see above.
+              if (item === "placeholder") return <PaginationPlaceholder key={`hold-${index}`} />
+              return (
                 <PaginationItem
                   key={item}
                   isCurrent={item === page}
@@ -686,8 +690,8 @@ export function TablePager({
                 >
                   {item + 1}
                 </PaginationItem>
-              ),
-            )}
+              )
+            })}
             <PaginationNext
               isDisabled={!range.hasNext}
               onPress={() => onPageChange(page + 1)}

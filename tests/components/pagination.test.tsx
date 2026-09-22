@@ -10,6 +10,10 @@
  * `PaginationJump` is here for the thing that is a bug in the pager next door:
  * a jump field seeded once shows the page it mounted on. This one follows the
  * page it is told about.
+ *
+ * `PaginationPlaceholder` is here for the other one: a window is short at the
+ * ends of the range, and a centred row that drew only the pages it had moved
+ * sideways under the press that moved it.
  */
 import { describe, expect, test } from "bun:test"
 import { render, screen } from "@testing-library/react"
@@ -18,12 +22,15 @@ import { useState } from "react"
 import { Button } from "../../src/components/button"
 import {
   Pagination,
+  PaginationGap,
   PaginationItem,
   PaginationJump,
   PaginationList,
   PaginationNext,
+  PaginationPlaceholder,
   PaginationPrevious,
 } from "../../src/components/pagination"
+import { pageItems } from "../../src/lib/data-table"
 
 describe("a pager whose pages are not addresses", () => {
   test("a press-only page reports itself and offers no href", async () => {
@@ -181,5 +188,69 @@ describe("the seam between the jump field and Go", () => {
     // So the seam is squared on both.
     expect(field.className).toContain("[&_input]:rounded-e-none")
     expect(field.className).toContain("[&>[data-slot=control]]:rounded-e-none")
+  })
+})
+
+describe("the row a press does not move", () => {
+  const Row = ({ page }: { page: number }) => (
+    <Pagination>
+      <PaginationList>
+        <PaginationPrevious onPress={() => {}} />
+        {pageItems(page, 24).map((item, index) => {
+          // biome-ignore lint/suspicious/noArrayIndexKey: a position is all a gap or a held slot is.
+          if (item === "gap") return <PaginationGap key={`gap-${index}`} />
+          // biome-ignore lint/suspicious/noArrayIndexKey: see above.
+          if (item === "placeholder") return <PaginationPlaceholder key={`hold-${index}`} />
+          return (
+            <PaginationItem key={item} isCurrent={item === page} onPress={() => {}}>
+              {item + 1}
+            </PaginationItem>
+          )
+        })}
+        <PaginationNext onPress={() => {}} />
+      </PaginationList>
+    </Pagination>
+  )
+
+  test("every page of a truncated range draws the same number of slots", () => {
+    const { container, rerender } = render(<Row page={0} />)
+    const slots = () => container.querySelectorAll("li").length
+    // Two arrows and the seven-slot window, on the first page …
+    expect(slots()).toBe(9)
+    // … in the middle of the range, where the window genuinely has seven pages
+    // and two gaps to put in it …
+    rerender(<Row page={12} />)
+    expect(slots()).toBe(9)
+    // … and on the last, where the band is clipped the other way.
+    rerender(<Row page={23} />)
+    expect(slots()).toBe(9)
+  })
+
+  test("a held slot is scenery: it names nothing and answers to nothing", () => {
+    render(<Row page={0} />)
+    // Page 1 of 24 offers pages 1, 2 and 24 — the other three slots are held
+    // open, and a reader who cannot see the row is told about none of them.
+    expect(screen.getAllByRole("button").map((target) => target.textContent)).toEqual([
+      "",
+      "1",
+      "2",
+      "24",
+      "",
+    ])
+    const held = Array.from(document.querySelectorAll("[data-slot=pagination-placeholder]"))
+    expect(held).toHaveLength(3)
+    for (const slot of held) expect(slot).toHaveAttribute("aria-hidden", "true")
+  })
+
+  test("a held slot is the size the pager asked for, like every other part", () => {
+    render(
+      <Pagination size="xs">
+        <PaginationList>
+          <PaginationPlaceholder />
+        </PaginationList>
+      </Pagination>,
+    )
+    const slot = document.querySelector("[data-slot=pagination-placeholder]")
+    expect(slot?.className).toContain("h-7.5")
   })
 })

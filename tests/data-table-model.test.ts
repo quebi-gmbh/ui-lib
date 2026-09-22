@@ -231,8 +231,27 @@ describe("the page window", () => {
   })
 
   test("the window slides to the ends without leaving a gap beside the boundary", () => {
-    expect(pageItems(0, 24)).toEqual([0, 1, "gap", 23])
-    expect(pageItems(23, 24)).toEqual([0, "gap", 22, 23])
+    // The band is clipped at either end — page 1 has no page 0 to its left — so
+    // fewer pages survive, and the slots the missing ones would have taken are
+    // held open rather than closed up.
+    const held = ["placeholder", "placeholder", "placeholder"] as const
+    expect(pageItems(0, 24)).toEqual([0, 1, ...held, "gap", 23])
+    expect(pageItems(23, 24)).toEqual([0, "gap", ...held, 22, 23])
+  })
+
+  test("a truncated window is the same length on every page", () => {
+    // The row is centred, so items appearing at one end move everything else
+    // sideways — including the arrow that was just pressed. A held slot stands
+    // where the clipped band would have been: between the gap and the edge.
+    for (let page = 0; page < 24; page++) {
+      const items = pageItems(page, 24)
+      expect(items).toHaveLength(7)
+      const first = items.indexOf("placeholder")
+      if (first === -1) continue
+      const last = items.lastIndexOf("placeholder")
+      expect(items.slice(first, last + 1).every((item) => item === "placeholder")).toBe(true)
+      expect(items[first - 1] === "gap" || items[last + 1] === "gap").toBe(true)
+    }
   })
 
   test("siblings and boundaries widen it", () => {

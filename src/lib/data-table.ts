@@ -1268,11 +1268,12 @@ export function pageRange(
 }
 
 /**
- * A page to offer, or the run of pages that was skipped to get to the next one.
+ * A page to offer, the run of pages that was skipped to get to the next one, or
+ * a slot held open so that the row is the same width on every page.
  * Page indices here are zero-based like `page` everywhere else in this module;
  * the pager adds the 1 when it draws the label.
  */
-export type DataTablePageItem = number | "gap"
+export type DataTablePageItem = number | "gap" | "placeholder"
 
 export interface PageItemsOptions {
   /** Pages offered either side of the current one. */
@@ -1289,6 +1290,16 @@ export interface PageItemsOptions {
  * skipped between them collapses to a `"gap"` — except a run of exactly one,
  * which is drawn instead: an ellipsis and a single page number cost the same
  * width, and the number is reachable.
+ *
+ * A truncated window is always the same length, and that is the point of
+ * `"placeholder"`. The band around the current page is clipped at either end of
+ * the range — page 1 of 15 has no page 0 to its left and its siblings are the
+ * boundary it is already standing on — so a window that drew only the pages it
+ * had would be four items wide at the ends and seven in the middle. The row is
+ * centred, so those three missing items are ~120px that appear from under the
+ * reader's cursor on the press that moves them: the next arrow they were
+ * aiming at is somewhere else by the time they aim again. The slots are held
+ * open instead, and the pager draws a dot in them.
  *
  * An unknown `pageCount` yields no items at all rather than a guess. That is
  * the cursor-mode and no-total case, where the honest pager is previous/next
@@ -1326,6 +1337,19 @@ export function pageItems(
     items.push(index)
     previous = index
   }
+
+  const held = widest - items.length
+  if (held === 0) return items
+  // A window is only ever short at one end — the band can be clipped by the
+  // start or by the end of the range, never by both, because a range longer
+  // than `widest` keeps those two neighbourhoods apart. Which end it is decides
+  // which side of the one gap the held slots go: the pages that are missing are
+  // the ones the gap is standing in for, so the slots belong between the gap
+  // and the edge the band ran into. That keeps the "… 15" pair on the right of
+  // the row wherever the reader is, and "1 …" on the left.
+  const nearStart = current <= boundaries + siblings
+  const gap = items.indexOf("gap")
+  items.splice(nearStart ? gap : gap + 1, 0, ...Array<DataTablePageItem>(held).fill("placeholder"))
   return items
 }
 
