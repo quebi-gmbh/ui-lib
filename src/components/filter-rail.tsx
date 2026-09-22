@@ -64,12 +64,13 @@ import { cn } from "@/lib/utils"
  *
  * A fixed-width rail and a viewport-breakpointed results grid disagree about
  * how wide the results are, and the disagreement is worst in the middle: at a
- * 700px viewport a 224px rail leaves a 293px results column, which a
- * `sm:grid-cols-4` grid still splits four ways — 67px cards, titles wrapping to
- * two lines, prices wrapping. The 639px *stacked* layout was far more readable
- * than the 700px side-by-side one, which is the tell: the viewport is the same
- * 700px whether the rail is taking 224px of it or not, so every `sm:` / `md:`
- * column count in there is wrong by exactly one rail.
+ * 700px viewport the rail (224px wide when this was measured) left a 293px
+ * results column, which a `sm:grid-cols-4` grid still splits four ways — 67px
+ * cards, titles wrapping to two lines, prices wrapping. The 639px *stacked*
+ * layout was far more readable than the 700px side-by-side one, which is the
+ * tell: the viewport is the same 700px whether the rail is taking a sidebar out
+ * of it or not, so every `sm:` / `md:` column count in there is wrong by
+ * exactly one rail.
  *
  * So the three questions this pattern asks are all asked of an element:
  *
@@ -77,13 +78,23 @@ import { cn } from "@/lib/utils"
  *   width the two have to share. 48rem, so the whole 641–900px band that broke
  *   is stacked unless the layout really is that wide. A page with its own
  *   sidebar already gets the right answer here and a viewport query does not.
- * - *How many columns of facets?* — of the rail: one at its 224px sidebar
+ * - *How many columns of facets?* — of the rail: one at its 256px sidebar
  *   width, two when it is stacked across the page. The same component, and no
  *   breakpoint that has to know which of the two it is in.
  * - *How many columns of cards?* — of the results column, by the caller. See
  *   `FilterRailLayout`.
+ *
+ * That sidebar width is 16rem rather than the 14rem it started at. Nothing in
+ * the arithmetic above asks for either number — it is a judgement about how
+ * much of a facet label a column should show before `truncate` takes the end
+ * of it, and 16rem shows more of a catalogue's longer values while still
+ * leaving better than 30rem of results at the layout's own 48rem threshold.
+ * The one control that wanted its room at the *edges* rather than in the middle
+ * — the price slider, whose thumbs are drawn half outside their track — takes
+ * that out of its own track instead, so none of the 32px goes on chrome (see
+ * `NumberFacet`).
  */
-const RAIL_WIDTH = "@3xl/rail-layout:w-56 @3xl/rail-layout:shrink-0"
+const RAIL_WIDTH = "@3xl/rail-layout:w-64 @3xl/rail-layout:shrink-0"
 
 /**
  * Where the rail pins itself — and the one number in this file the library
@@ -153,10 +164,10 @@ export interface FilterRailLayoutProps {
  *
  * They did live on one div, and the result was the whole pattern's failure mode
  * in one shape. The rail is a *descendant*, so its own `@3xl/rail-layout:`
- * variants resolved and it took the full sidebar treatment — 224px wide,
+ * variants resolved and it took the full sidebar treatment — sidebar width,
  * `sticky`, `max-height`, its own scrollbar. The layout stayed a column. That
- * is a 224px sticky box stacked *above* a full-width grid with one containing
- * block between them, so scrolling detached it from its flow position and rode
+ * is a sidebar-width sticky box stacked *above* a full-width grid with one
+ * containing block between them, so scrolling detached it from its flow position and rode
  * it down over the cards, painting on top of them because it is positioned.
  * The side-by-side shape everything above argues for had never once rendered.
  */
@@ -348,6 +359,31 @@ function NumberFacet({
   ]
   return (
     <Slider
+      // Padded by a thumb's worth, and that padding is the one thing standing
+      // between this facet and a scrollbar the rail never asked for. A thumb is
+      // *centred* on the end of its track, so at either bound half of it — 10px
+      // of a `size-5` thumb — is drawn outside the track by design. In the
+      // sidebar shape the rail is an `overflow-y-auto` box, and setting overflow
+      // on one axis turns the other from `visible` into `auto`: the low thumb
+      // was clipped at the left edge, where overflow is not even scrollable and
+      // so there was no way to bring it back, and the high thumb put 10px of
+      // scrollable width to the right, which is a horizontal scrollbar under
+      // eight facets that fit the column perfectly well. Both thumbs rendered as
+      // half-circles pinned to the rail's edges.
+      //
+      // Padding on the slider rather than margin on the track, because the track
+      // is `w-full`: a margin on it resolves its width against the box it was
+      // supposed to sit inside and hangs the same 32px out of the other end.
+      // Padding moves the track's containing block instead, which is the thing
+      // `w-full` is asking about.
+      //
+      // 16px, not 10: the thumb grows to 110% while dragging (11px of overhang)
+      // and draws a 2px focus ring 2px clear of itself (4px more), so 15px is
+      // the widest any part of it is ever drawn outside the track and
+      // `--spacing(4)` is the next stop on the scale. The readout underneath
+      // takes the padding back off, so the bounds stay flush with the column
+      // like every other facet's text.
+      className="px-4"
       aria-labelledby={labelledBy}
       minValue={min}
       maxValue={max}
@@ -389,7 +425,7 @@ function NumberFacet({
           labels: a prerendered page has to format a number through the locale
           the page was rendered in, and `FormattedNumber` is the only thing here
           that reads it from the `I18nProvider`. */}
-      <SliderOutput className="flex justify-between text-quebi-fg-muted text-xs">
+      <SliderOutput className="-mx-4 flex justify-between text-quebi-fg-muted text-xs">
         <FormattedNumber value={current[0]} />
         <FormattedNumber value={current[1]} />
       </SliderOutput>
@@ -520,7 +556,7 @@ export interface FilterRailProps {
    * container, so a rail mounted outside one — in a sheet, in a layout of your
    * own — finds no container, every query is false, and it draws the
    * full-width stack. That is the right default for a sheet and the wrong one
-   * for a hand-rolled sidebar; `className` is where you say so (`w-56`,
+   * for a hand-rolled sidebar; `className` is where you say so (`w-64`,
    * `sticky top-6`).
    */
   className?: string
@@ -529,7 +565,7 @@ export interface FilterRailProps {
 /**
  * FilterRail — every facet and every count, always on screen.
  *
- * Two shapes, and the layout around it picks which (see `RAIL_WIDTH`): a 224px
+ * Two shapes, and the layout around it picks which (see `RAIL_WIDTH`): a 256px
  * column beside the content, sticky and independently scrolled so a long
  * result list scrolls *under* it rather than scrolling it away; or, where there
  * is not room for that, a full-width stack above the content whose groups fall
@@ -566,6 +602,17 @@ export function FilterRail({
         // answer to "what else could I pick" is three screens back up.
         RAIL_STICKY,
         "@3xl/rail-layout:overflow-y-auto",
+        // The gutter the scroll box costs. Two ghost buttons in here are pulled
+        // out past the column's end edge on purpose — a group's Clear by
+        // `-me-2`, so that its *label* lines up with the counts above it rather
+        // than its padding — and in a box that scrolls, ink outside the content
+        // edge is not a nicety, it is 8px of scrollable width and a horizontal
+        // scrollbar sitting under facets that fit. `--spacing(3)` is that 8px
+        // plus the 4px its focus ring reaches beyond it. Nothing is added on the
+        // start side: overflow there is unreachable rather than scrollable, so
+        // it costs no scrollbar, and paying for it would inset every heading and
+        // label in the rail away from the column the page aligns them to.
+        "@3xl/rail-layout:pe-3",
         className,
       )}
     >

@@ -241,6 +241,41 @@ describe("the date pair", () => {
   })
 })
 
+describe("the scroll box", () => {
+  /**
+   * The rail's sidebar shape is an `overflow-y-auto` box, and CSS turns the
+   * *other* axis from `visible` into `auto` along with it. So anything the rail
+   * draws past its content edge is not a flourish, it is scrollable width: a
+   * horizontal scrollbar under facets that fit the column perfectly well, and —
+   * on the start side, where overflow is not even reachable — ink that is
+   * simply cut off. Both halves of that bill are paid in class strings, which
+   * is the only place a layout fact like this can be pinned without a browser,
+   * and both are silent when they regress.
+   */
+  test("every bit of ink outside the content edge is paid for", () => {
+    render(<Harness initial={{ category: ["display"] }} />)
+
+    // A group's Clear is pulled out by `-me-2` so its label lines up with the
+    // counts rather than its padding; the rail's end padding is that 8px plus
+    // the 4px of focus ring beyond it.
+    const rail = screen.getByRole("complementary", { name: "Filters" })
+    expect(rail.className).toContain("@3xl/rail-layout:overflow-y-auto")
+    expect(rail.className).toContain("@3xl/rail-layout:pe-3")
+    expect(screen.getAllByRole("button", { name: "Clear" })[0]?.className).toContain("-me-2")
+
+    // A slider thumb is centred on the end of its track, so half of it is drawn
+    // outside by design. The padding is on the slider, never on the track: the
+    // track is `w-full`, so a margin there would resolve its width against the
+    // box it was meant to sit inside and hang the same pixels off the far end.
+    const slider = screen.getByRole("group", { name: "Price" })
+    expect(slider.className).toContain("px-4")
+    // ...and the bounds underneath take it back off, so they stay flush with
+    // the column like every other facet's text.
+    const output = within(slider).getByText("89").closest("[data-slot=label]")
+    expect(output?.className).toContain("-mx-4")
+  })
+})
+
 describe("the summary", () => {
   test("names every active filter beside the results, and takes one off", async () => {
     const user = userEvent.setup()
