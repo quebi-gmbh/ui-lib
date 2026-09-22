@@ -1,5 +1,8 @@
 import { useState } from "react"
 import { Button } from "@/components/button"
+import { Card } from "@/components/card"
+import { Checkbox } from "@/components/checkbox"
+import { FormattedNumber } from "@/components/formatted-number"
 import { Note } from "@/components/note"
 import {
   TableBulkBar,
@@ -14,14 +17,15 @@ import {
 } from "@/components/table-controls"
 import type { DataTableDensity, DataTableSelection, FilterCondition } from "@/lib/data-table"
 import {
+  applySelection,
   defaultOperator,
   emptySelection,
   facetedOptions,
   isFilterSet,
+  isRowSelected,
   matchesFilter,
-  selectionCount,
 } from "@/lib/data-table"
-import { ORDERS, STATUSES } from "./table-fixtures.examples"
+import { Money, ORDERS, STATUSES } from "./table-fixtures.examples"
 import type { ComponentExample } from "./types"
 
 /**
@@ -32,6 +36,12 @@ import type { ComponentExample } from "./types"
  * held in a `useState` beside it instead. That is the whole argument for the
  * split: a control that takes a value and a callback can be shown alone, and a
  * control that reaches into a table cannot.
+ *
+ * "Alone" has one limit, and the selection example is where it bites: what is
+ * selected is a statement *about rows*, so a bulk bar and a pager over an empty
+ * space read as chrome for a table somebody forgot to render. That example
+ * therefore draws its page as a column of checkboxes — not a component, and
+ * deliberately not a table, just the rows the controls are talking about.
  */
 
 /* -------------------------------------------------------------------------- */
@@ -258,11 +268,22 @@ const Filters = () => {
 
 const PagerAndSelection = () => {
   const [page, setPage] = useState(0)
-  const [pageSize, setPageSize] = useState(20)
+  const [pageSize, setPageSize] = useState(10)
   const [selection, setSelection] = useState<DataTableSelection>(emptySelection)
   const total = ORDERS.length
   const rowsOnPage = Math.max(0, Math.min(pageSize, total - page * pageSize))
-  const { count, isAll } = selectionCount(selection, total)
+  const rows = ORDERS.slice(page * pageSize, page * pageSize + rowsOnPage)
+  const pageKeys = rows.map((order) => String(order.id))
+  const selectedOnPage = pageKeys.filter((key) => isRowSelected(selection, key))
+
+  /*
+   * A table would hand this set back out of react-aria and fold it in with
+   * `applySelection`; the stand-in rows below do the same call with the same
+   * arguments, so a selection made on page one survives a trip to page four
+   * exactly as it does in DataTable.
+   */
+  const selectOnPage = (keys: string[]) =>
+    setSelection((current) => applySelection(current, keys, pageKeys, false))
 
   return (
     <div className="flex w-full flex-col gap-3">
@@ -277,33 +298,59 @@ const PagerAndSelection = () => {
           Export selected
         </Button>
       </TableBulkBar>
-      <div className="flex flex-wrap items-center gap-2">
-        <Button
-          intent="outline"
-          size="sm"
-          onPress={() =>
-            setSelection({
-              mode: "include",
-              keys: ORDERS.slice(page * pageSize, page * pageSize + rowsOnPage).map((order) =>
-                String(order.id),
-              ),
-            })
-          }
-        >
-          Select this page
-        </Button>
-        <Button intent="ghost" size="sm" onPress={() => setSelection(emptySelection)}>
-          Clear
-        </Button>
-        <span className="text-quebi-fg-muted text-sm">
-          {isAll ? "every matching row" : `${count ?? 0} selected`}
-        </span>
-      </div>
+      {/*
+       * The rows are the point. TableControls is the chrome without the table,
+       * and a selection control above nothing is a lever with no machine on the
+       * end of it — "0 selected" of what? So this example draws the page it is
+       * paging through, as plainly as it can: one checkbox per row, which is
+       * the column DataTable puts in front of each row anyway.
+       */}
+      <Card className="gap-3 p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <Checkbox
+            isSelected={rowsOnPage > 0 && selectedOnPage.length === rowsOnPage}
+            isIndeterminate={selectedOnPage.length > 0 && selectedOnPage.length < rowsOnPage}
+            onChange={(isSelected) => selectOnPage(isSelected ? pageKeys : [])}
+          >
+            Select this page
+          </Checkbox>
+          <span className="ms-auto text-quebi-fg-muted text-sm">
+            <FormattedNumber value={selectedOnPage.length} /> of{" "}
+            <FormattedNumber value={rowsOnPage} /> on this page
+          </span>
+        </div>
+        <div className="grid gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+          {rows.map((order) => {
+            const key = String(order.id)
+            return (
+              <Checkbox
+                key={key}
+                isSelected={isRowSelected(selection, key)}
+                onChange={(isSelected) =>
+                  selectOnPage(
+                    isSelected
+                      ? [...selectedOnPage, key]
+                      : selectedOnPage.filter((selected) => selected !== key),
+                  )
+                }
+              >
+                <span className="flex min-w-0 flex-1 items-baseline justify-between gap-3 text-sm">
+                  <span className="truncate">{order.reference}</span>
+                  <Money value={order.amount} />
+                </span>
+              </Checkbox>
+            )
+          })}
+        </div>
+      </Card>
       <TablePager
         page={page}
         pageSize={pageSize}
         rowsOnPage={rowsOnPage}
         total={total}
+        // Smaller than the pager's own [10, 20, 50, 100], because here the rows
+        // are actually drawn and a hundred checkboxes is a wall, not an example.
+        pageSizes={[5, 10, 20]}
         onPageChange={setPage}
         onPageSizeChange={(next) => {
           setPageSize(next)
@@ -311,11 +358,16 @@ const PagerAndSelection = () => {
         }}
       />
       <Note intent="info">
-        Select the whole page and the bar offers "select all {total} matching",
-        which is a different claim from "these {rowsOnPage}" — and the only one
-        that can be made about rows the browser has never seen. Type 900 into the
-        page jump and it says how many pages there are instead of showing you an
-        empty table.
+        The checkboxes are not a component — they stand in for the rows a table
+        would draw, because a selection bar over nothing is a count of an
+        invisible thing. Select the whole page and the bar offers "select all{" "}
+        {total} matching", which is a different claim from "these {rowsOnPage}"
+        — and the only one that can be made about rows the browser has never
+        seen. Take it, then uncheck one row: the model flips to{" "}
+        <code>all-matching</code> with an exclusion list rather than expanding
+        into {total} keys. Page forward and back and what you picked is still
+        picked. Type 900 into the page jump and it says how many pages there are
+        instead of showing you an empty table.
       </Note>
     </div>
   )
@@ -337,7 +389,7 @@ export const tableControlsExamples: ComponentExample[] = [
   {
     title: "Pager, selection and bulk actions",
     description:
-      "TablePager over 300 imaginary rows — which is Pagination's centred column: the range summary, the numbered page row with first/previous/next/last, and the rows-per-page select beside a labelled page jump underneath. Beside it, TableBulkBar reading one selection model — select the whole page and it offers \"select all 300 matching\", which is the only claim that can be made about rows the browser has never seen.",
+      "TablePager over 300 imaginary rows — which is Pagination's centred column: the range summary, the numbered page row with first/previous/next/last, and the rows-per-page select beside a labelled page jump underneath. Above it, TableBulkBar reading one selection model, and between them the rows themselves: this is the one example on the page that draws what it is paging through, because a selection control with nothing under it counts an invisible thing. The checkboxes are a stand-in for a table's rows, folded into the model by the same applySelection call a DataTable makes — select the whole page and the bar offers \"select all 300 matching\", which is the only claim that can be made about rows the browser has never seen.",
     render: () => <PagerAndSelection />,
   },
 ]
