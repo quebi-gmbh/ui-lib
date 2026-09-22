@@ -18,7 +18,14 @@ const buttonGroupStyles = tv({
     "flex w-fit items-stretch",
     // keep the active child above its neighbours so its border/ring isn't clipped
     "*:hover:relative *:hover:z-10",
-    "*:focus-visible:relative *:focus-visible:z-10",
+    // `focus-within` rather than `focus-visible`, because a child of this group
+    // is not always the focusable thing in it. A `NumberField` dropped in here
+    // is a whole field — label, control wrapper, message — and the input that
+    // takes focus is two levels down, so `*:focus-visible` never matched and the
+    // ring drawn around that control was painted *under* the next segment, which
+    // is precisely what this line exists to prevent. `:focus-within` matches the
+    // child whether it is focused itself or merely holds the focus.
+    "*:focus-within:relative *:focus-within:z-10",
     // nested groups get breathing room
     "has-[>[data-slot=button-group]]:gap-2",
     // text inputs flex to fill

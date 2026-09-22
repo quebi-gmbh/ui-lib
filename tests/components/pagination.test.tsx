@@ -151,3 +151,35 @@ describe("the jump field", () => {
     expect(screen.queryByText("Enter a page between 1 and 15")).toBeNull()
   })
 })
+
+/**
+ * `Go` shares the field's edge, so the field's end corners are square — and a
+ * focus indicator that keeps its curve there is an indicator that disagrees
+ * with the control it marks.
+ *
+ * `NumberInput` draws the ring on the wrapper around its input rather than on
+ * the input, so that a prefix, a suffix and the steppers all light up as one
+ * control. `PaginationJump` squared the input for the seam and left that
+ * wrapper alone, so the focused field was a square-cornered border inside a
+ * rounded ring that stood 4px proud of `Go`'s edge, above and below it.
+ */
+describe("the seam between the jump field and Go", () => {
+  test("the ring is on the wrapper, and the wrapper is squared with the input", () => {
+    render(<PaginationJump page={1} pageCount={15} onJump={() => {}} />)
+
+    const input = screen.getByRole("textbox", { name: "Go to page" })
+    const wrapper = input.closest("[data-slot=control]")
+    if (!wrapper) throw new Error("the input has no control wrapper around it")
+    const field = wrapper.parentElement
+    if (!field) throw new Error("the control wrapper has no field around it")
+
+    // The premise: the indicator belongs to the wrapper, not to the input, so
+    // squaring the input alone cannot reach it.
+    expect(wrapper.className).toContain("focus-within:ring-2")
+    expect(input.className).not.toContain("ring-2")
+
+    // So the seam is squared on both.
+    expect(field.className).toContain("[&_input]:rounded-e-none")
+    expect(field.className).toContain("[&>[data-slot=control]]:rounded-e-none")
+  })
+})
