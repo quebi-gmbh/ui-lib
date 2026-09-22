@@ -2,6 +2,7 @@ import { useState } from "react"
 import { Check, Copy } from "lucide-react"
 import { Button } from "@/components/button"
 import { Card } from "@/components/card"
+import { SteadyWidth } from "@/lib/steady-width"
 import { cn } from "@/lib/utils"
 import { ScrollSurface } from "@/site/scroll-surface"
 
@@ -45,7 +46,11 @@ export function CodeBlock({ html, code, className }: CodeBlockProps) {
         className="absolute top-3 right-3 z-10 bg-quebi-bg/80 backdrop-blur"
       >
         {copied ? <Check data-slot="icon" /> : <Copy data-slot="icon" />}
-        {copied ? "Copied" : "Copy"}
+        {/* Reserved for the longer of the two words: the button sits over the
+            code at a fixed right edge, so a label that grows on the press pulls
+            its left edge out from under the pointer — and pulls it back two
+            seconds later on its own. */}
+        <SteadyWidth candidates={["Copy", "Copied"]}>{copied ? "Copied" : "Copy"}</SteadyWidth>
       </Button>
       <ScrollSurface className="code-block max-h-150 p-5 text-sm leading-relaxed [&_pre]:bg-transparent! [&_pre]:outline-none">
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: `html` is Shiki output produced at build time by scripts/generate-api.ts from source in this repo — there is no path by which user input reaches it. */}

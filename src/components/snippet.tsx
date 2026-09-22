@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Check, Copy } from "lucide-react"
+import { SteadyWidth } from "@/lib/steady-width"
 import { cn } from "@/lib/utils"
 import { Button } from "react-aria-components"
 
@@ -59,7 +60,11 @@ export function Snippet({
           className="inline-flex shrink-0 items-center gap-1.5 rounded-quebi-sm border border-quebi-line/20 bg-quebi-bg/80 px-2.5 py-1.5 text-xs font-medium text-quebi-fg-muted backdrop-blur transition-colors duration-200 hover:border-quebi-brand-mark hover:text-quebi-brand-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg"
         >
           {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-          {copied ? "Copied" : "Copy"}
+          {/* Both words are known, so the button is the width of the longer of
+              them from the first frame. A control that grows on the press is a
+              control that moves out from under the pointer that pressed it —
+              and this one shrinks back two seconds later, unprompted. */}
+          <SteadyWidth candidates={["Copy", "Copied"]}>{copied ? "Copied" : "Copy"}</SteadyWidth>
         </Button>
       )}
     </div>
