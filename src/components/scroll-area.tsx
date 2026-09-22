@@ -15,8 +15,12 @@ type ScrollAreaOrientation = "vertical" | "horizontal" | "both"
  *   expected to drag: 12px of track is twice the grab width.
  * - `none` — no bar, still scrollable. Only where something else already shows
  *   the scroll position.
+ * - `arrows` — the floating geometry plus a stepper button at each end. The one
+ *   variant that asks something of the surface: give it square corners. It
+ *   drops the corner clip the others take, because a stepper sits exactly where
+ *   that clip cuts (see **The corner** below).
  */
-type ScrollAreaScrollbar = "flush" | "floating" | "none"
+type ScrollAreaScrollbar = "flush" | "floating" | "none" | "arrows"
 
 export interface ScrollAreaProps extends React.ComponentPropsWithRef<"div"> {
   scrollFade?: boolean
@@ -26,11 +30,18 @@ export interface ScrollAreaProps extends React.ComponentPropsWithRef<"div"> {
 }
 
 const SCROLLBAR_VARIANTS: Record<ScrollAreaScrollbar, string> = {
-  // The base utility is already flush; the other two are variable overrides on
-  // top of it, so all three are one class and no cascade race.
-  flush: "",
-  floating: "quebi-scrollbar-floating",
-  none: "quebi-scrollbar-none",
+  // The base utility is already flush; the rest are variable overrides on top
+  // of it, so each variant is one class and no cascade race. The corner clip
+  // rides along here rather than being unconditional, because it is the one
+  // thing `arrows` cannot have: the clip trims the bar to the surface's arc and
+  // a stepper is what sits at the end being trimmed. Square corners are what
+  // `arrows` wants anyway, and a square surface has no arc to follow — so
+  // dropping it costs that variant nothing and is not a caveat the consumer has
+  // to remember.
+  flush: "quebi-scrollbar-corners",
+  floating: "quebi-scrollbar-corners quebi-scrollbar-floating",
+  none: "quebi-scrollbar-corners quebi-scrollbar-none",
+  arrows: "quebi-scrollbar-arrows",
 }
 
 /**
@@ -38,7 +49,8 @@ const SCROLLBAR_VARIANTS: Record<ScrollAreaScrollbar, string> = {
  *
  * A scrollable viewport with the quebi native scrollbar: a 6px tinted pill
  * hugging the edge, no stepper arrows and no padding around it (`scrollbar`
- * picks a different bar — see `ScrollAreaScrollbar`). Optionally fades content
+ * picks a different bar, arrows included — see `ScrollAreaScrollbar`).
+ * Optionally fades content
  * at the scrolled edges (`scrollFade`) and reserves the bar's gutter so content
  * doesn't shift when it appears (`scrollbarGutter`). Self-contained: no Radix,
  * no portals — just a native overflow container with overflow-state data
@@ -56,6 +68,14 @@ const SCROLLBAR_VARIANTS: Record<ScrollAreaScrollbar, string> = {
  * an `outline` ring on the ScrollArea itself is cut by it; and past roughly
  * `rounded-[calc(infinity*1px)]` the arc is longer than the bar's travel, so a
  * capsule-shaped scroll surface wants `scrollbar="floating"` instead.
+ *
+ * `scrollbar="arrows"` is the one variant without that clip. A stepper button
+ * sits at the very end of the bar, which is the part the arc cuts away, so an
+ * arrowed bar on a rounded surface loses a bite out of its arrow — and without
+ * the clip it runs straight out through the corner, which is the failure the
+ * clip exists to fix. Both disappear on a square-cornered surface, which is
+ * what steppers have always squared off against, so that is the surface to give
+ * it: `rounded-none`, or a panel whose corners are someone else's.
  *
  * `className` lands on the scroll container itself, which is the only place it
  * can land: the browser paints the scrollbar at the inner edge of the scroll
@@ -154,8 +174,9 @@ export function ScrollArea({
         "size-full min-h-0 overscroll-auto rounded-[inherit] outline-none transition-shadow",
         "data-has-overflow-y:overscroll-y-contain data-has-overflow-x:overscroll-x-contain",
         // Slim, cyan-tinted scrollbar — the shared quebi native scrollbar,
-        // clipped to this surface's own rounded corner.
-        "quebi-scrollbar quebi-scrollbar-corners",
+        // clipped to this surface's own rounded corner unless the variant is
+        // the one that cannot be.
+        "quebi-scrollbar",
         SCROLLBAR_VARIANTS[scrollbar],
         orientation === "vertical"
           ? "overflow-x-hidden overflow-y-auto"

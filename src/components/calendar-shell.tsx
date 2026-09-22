@@ -22,6 +22,8 @@ import {
   isAllDayEvent,
   limitLanes,
   MINUTES_PER_DAY,
+  packAgainst,
+  type PackedAgainst,
   packBands,
   packColumns,
   segmentByDay,
@@ -383,8 +385,14 @@ export interface CalendarMovePreview<E extends CalendarEvent = CalendarEvent> {
   end: ZonedDateTime
 }
 
-/** How far a pointer has to travel before the gesture is a drag and not a click. */
-const DRAG_THRESHOLD = 3
+/**
+ * How far a pointer has to travel before the gesture is a drag and not a click.
+ *
+ * Exported because `MonthView` starts the same gesture over a grid with no
+ * time axis: two views disagreeing about what counts as a drag would be two
+ * different answers to "did I just click this?" in one calendar.
+ */
+export const DRAG_THRESHOLD = 3
 
 interface MoveOrigin<E extends CalendarEvent> {
   event: E
@@ -436,12 +444,15 @@ const escapeId = (id: string) =>
  * Three decisions are in here rather than in the caller, because all three are
  * about what the grid can honestly draw:
  *
- * - **Nothing repacks mid-drag.** The feedback is a ghost at the snapped
- *   target, so the real blocks never leave their column while the pointer is
- *   down — `packColumns` is a pass over the whole day, and re-running it per
- *   frame would reflow the dragged event's neighbours under a reader who is
- *   looking at something else. The drop reports, the consumer re-renders, and
- *   the packer runs once, on the new events.
+ * - **Nothing repacks mid-drag — but the ghost is packed.** The real blocks
+ *   never leave their column while the pointer is down: `packColumns` is a
+ *   pass over the whole day, and re-running it per frame would reflow the
+ *   dragged event's neighbours under a reader who is looking at something
+ *   else. The ghost, though, is packed against the day it is over, by
+ *   `packAgainst` — it takes the column and width the drop will give it rather
+ *   than the whole column, which is what a ghost the width of a day claimed
+ *   every event on it was about to be displaced. The drop still reports once,
+ *   the consumer re-renders, and the packer runs over the new events.
  * - **A cut segment is not movable.** `continuesBefore` / `continuesAfter` mean
  *   the block is a slice of an event whose real start is off the axis, so a
  *   drop position for *it* says nothing about where the event goes. The 22:00
@@ -997,10 +1008,12 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
             {move.preview ? (
               <MovePreviewBlock
                 preview={move.preview}
+                placement={previewPlacement(segments, move.preview)}
                 color={resolveEventColor(move.preview.event, calendars)}
                 dayCount={Math.max(1, days.length)}
                 top={toTop(move.preview.startMinutes)}
                 bottom={toTop(move.preview.endMinutes)}
+                gridHeight={gridHeight}
                 locale={locale}
                 timeZone={timeZone}
               />
@@ -1119,8 +1132,14 @@ const NO_OP = () => {}
  * above one that is also a button: stopping propagation there would cancel the
  * press, and preventing the default would cancel the click the press is
  * triggered from. Everything else about the event is passed through.
+ *
+ * Exported for `MonthView`, whose chips are the same react-aria `Button` under
+ * the same gesture. The proxy is the subtle half of starting a move from the
+ * capture phase, and a second copy of it is a second thing to get wrong.
  */
-function withoutCancelling<T extends Element>(event: React.PointerEvent<T>): React.PointerEvent<T> {
+export function withoutCancelling<T extends Element>(
+  event: React.PointerEvent<T>,
+): React.PointerEvent<T> {
   return new Proxy(event, {
     get(target, key) {
       if (key === "stopPropagation" || key === "preventDefault") return NO_OP
@@ -1131,7 +1150,7 @@ function withoutCancelling<T extends Element>(event: React.PointerEvent<T>): Rea
 }
 
 /** The keys `useMove` turns into a move, and so the keys that start one. */
-const MOVE_KEYS = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Up", "Down", "Left", "Right"])
+export const MOVE_KEYS = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Up", "Down", "Left", "Right"])
 
 function TimedBlock<E extends CalendarEvent>({
   segment,
@@ -1159,6 +1178,14 @@ function TimedBlock<E extends CalendarEvent>({
   // border round each one would be ink that is not data — see the palette note
   // above — and two adjacent borders read as one thick divider.
   const geometry = { top: y, height, left: `${left}%`, width: `calc(${width}% - 2px)` }
+  // A selected block has to paint above its neighbours rather than merely
+  // above the ones that happen to precede it. The 2px inset is horizontal
+  // only — vertically two blocks share an edge exactly, an event ending at
+  // noon and the one starting there — and the selection outline sits
+  // *outside* the border box, so the later of the two painted its own
+  // background over the earlier one's outline. One step, not ten: the
+  // now-marker and the drag ghost are z-10 and stay above a selected block.
+  const raised = isSelected ? "z-[1]" : undefined
 
   // `useMove` rather than a raw `onPointerDown`, for two reasons that are the
   // same reason: it is the hook that already knows the difference between a
@@ -1190,7 +1217,9 @@ function TimedBlock<E extends CalendarEvent>({
         "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
         // Movable blocks are positioned by the wrapper that carries the
         // gesture, and fill it; everything else positions itself.
-        isMovable ? "h-full w-full cursor-grab active:cursor-grabbing" : "absolute",
+        // The raise goes on whichever element carries the geometry: a static
+        // button inside the gesture wrapper has no z-index of its own.
+        isMovable ? "h-full w-full cursor-grab active:cursor-grabbing" : cn("absolute", raised),
         palette.block,
         palette.edge,
         // A segment continuing past midnight loses the radius on that edge, so
@@ -1225,7 +1254,7 @@ function TimedBlock<E extends CalendarEvent>({
   return (
     <div
       data-slot="calendar-event-move"
-      className="absolute touch-none"
+      className={cn("absolute touch-none", raised)}
       style={geometry}
       {...moveProps}
       onPointerDownCapture={(event) => {
@@ -1251,12 +1280,38 @@ function TimedBlock<E extends CalendarEvent>({
   )
 }
 
+/**
+ * Which column of its target day the ghost gets, and how wide.
+ *
+ * The dragged event is dropped from the day's segments before the packing, not
+ * left in: on a drag that stays on its own day its old block is the one thing
+ * the ghost is guaranteed *not* to collide with, and packing against it would
+ * narrow the ghost to half a column for a move of half an hour.
+ */
+function previewPlacement<E extends CalendarEvent>(
+  segments: readonly DaySegment<E>[],
+  preview: CalendarMovePreview<E>,
+): PackedAgainst {
+  const neighbours = segments
+    .filter(
+      (segment) =>
+        segment.dayIndex === preview.dayIndex && segment.event.id !== preview.event.id,
+    )
+    .map((segment) => ({ start: segment.start, end: segment.end }))
+
+  return packAgainst(neighbours, { start: preview.startMinutes, end: preview.endMinutes })
+}
+
 interface MovePreviewBlockProps<E extends CalendarEvent> {
   preview: CalendarMovePreview<E>
+  /** The column of its day the drop would put it in. See `previewPlacement`. */
+  placement: PackedAgainst
   color: CalendarColorName
   dayCount: number
   top: number
   bottom: number
+  /** The axis's full height, so a short ghost stays on it — as `TimedBlock` does. */
+  gridHeight: number
   locale: string
   timeZone: string
 }
@@ -1267,35 +1322,63 @@ interface MovePreviewBlockProps<E extends CalendarEvent> {
  * It is drawn in the grid container rather than in a day column, because the
  * column is the one place a drag that left it cannot be drawn: the per-day
  * wrappers are grid cells with no coordinate space their neighbours are
- * expressible in. One box, `left: (dayIndex / days.length) * 100%`, is that
- * space — and with the ghost carrying every frame of the feedback, the real
- * blocks never have to leave their wrapper, which is what kept the layout all
- * four views share out of this change.
+ * expressible in. One box across the whole grid is that space — and with the
+ * ghost carrying every frame of the feedback, the real blocks never have to
+ * leave their wrapper, which is what kept the layout all four views share out
+ * of this change.
+ *
+ * Its geometry is `TimedBlock`'s, one nesting deeper: the day is a `1/dayCount`
+ * slice of the grid, and the ghost's column is a `span/columns` slice of that
+ * day. A ghost the full width of its day was the drag's one dishonest frame —
+ * it covered every block it was about to be packed beside, so the reader could
+ * not see the collision they were dropping into, and it promised a width the
+ * drop then took away.
+ *
+ * One frame is still approximate, and deliberately: where the drop would *add*
+ * a column to a cluster, the ghost takes its post-drop rectangle while the
+ * blocks already there are still drawn at their pre-drop width, so it is laid
+ * over the one that is about to narrow. Making that exact means repacking the
+ * day per frame, which is the reflow `useEventMove` refuses — and the ghost
+ * being where the block lands is the half of the picture the reader is
+ * actually aiming with.
  */
 function MovePreviewBlock<E extends CalendarEvent>({
   preview,
+  placement,
   color,
   dayCount,
   top,
   bottom,
+  gridHeight,
   locale,
   timeZone,
 }: MovePreviewBlockProps<E>) {
   const palette = CALENDAR_COLORS[color]
   const height = Math.max(MIN_BLOCK_HEIGHT, bottom - top)
+  // The same push as `TimedBlock`'s: the minimum grows a short block downwards,
+  // and a fifteen-minute drop against the end of the axis would hang past the
+  // last gridline the grid drew.
+  const y = Math.max(0, Math.min(top, gridHeight - height))
+  const dayWidth = 100 / dayCount
+  const left = (preview.dayIndex + placement.column / placement.columns) * dayWidth
+  const width = (placement.span / placement.columns) * dayWidth
 
   return (
     <div
       data-slot="calendar-move-preview"
+      data-column={placement.column}
+      data-columns={placement.columns}
       // The ghost is a picture of the drag in progress; the drop itself is
       // announced through the shell's live region, where it is one line rather
       // than one per frame.
       aria-hidden="true"
       style={{
-        top,
+        top: y,
         height,
-        left: `${(preview.dayIndex / dayCount) * 100}%`,
-        width: `calc(${100 / dayCount}% - 2px)`,
+        left: `${left}%`,
+        // The 2px inset is `TimedBlock`'s, for the same reason: it is the
+        // negative space that separates the ghost from the block beside it.
+        width: `calc(${width}% - 2px)`,
       }}
       className={cn(
         "pointer-events-none absolute z-10 overflow-hidden px-1.5 py-0.5",
@@ -1582,6 +1665,19 @@ export interface CalendarEventRowProps<E extends CalendarEvent = CalendarEvent> 
   style?: React.CSSProperties
   /** `data-slot`; the month grid's chips answer to `calendar-chip`. */
   slot?: string
+  /** `aria-describedby` — the move hint, on a row that can be dragged. */
+  describedBy?: string
+  /**
+   * Draw the row as the ghost at a drag's target rather than as the event.
+   *
+   * Same chip, dashed in the brand mark, and inert: not a button, not in the
+   * tab order, and hidden from the accessibility tree, because the drop is
+   * announced in words by the view's live region and one ghost per frame is
+   * not. It is here rather than in `MonthView` for the reason the rest of this
+   * component is: a ghost that drew the dot, the time and the title itself
+   * would be a second answer to "what does an event look like".
+   */
+  isPreview?: boolean
 }
 
 /**
@@ -1609,30 +1705,36 @@ export function CalendarEventRow<E extends CalendarEvent>({
   className,
   style,
   slot = "calendar-chip",
+  describedBy,
+  isPreview,
 }: CalendarEventRowProps<E>) {
   const palette = CALENDAR_COLORS[resolveEventColor(event, calendars)]
   const filled = isAllDayEvent(event)
 
-  return (
-    <Button
-      data-slot={slot}
-      data-event-id={event.id}
-      onPress={() => onActivate(event)}
-      style={style}
-      className={cn(
-        "flex h-5 cursor-pointer items-center gap-1.5 overflow-hidden px-1.5 text-left text-xs",
-        "transition-colors duration-150",
-        "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
-        filled ? cn(palette.band, "border-l-2", palette.edge) : "hover:bg-quebi-surface/[0.06]",
-        // Selection is an outline, not the inset ring focus uses: it sits
-        // outside the border box, so it neither overpaints `edge` nor vanishes
-        // when the same row takes focus. `outline-solid` is load-bearing — it
-        // is what displaces the `outline-none` above, which would otherwise
-        // leave the outline styled away (task #168).
-        isSelected && cn("outline-2 outline-solid outline-offset-0", palette.selected),
-        className,
-      )}
-    >
+  const classes = cn(
+    "flex h-5 cursor-pointer items-center gap-1.5 overflow-hidden px-1.5 text-left text-xs",
+    "transition-colors duration-150",
+    "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
+    filled ? cn(palette.band, "border-l-2", palette.edge) : "hover:bg-quebi-surface/[0.06]",
+    // Selection is an outline, not the inset ring focus uses: it sits
+    // outside the border box, so it neither overpaints `edge` nor vanishes
+    // when the same row takes focus. `outline-solid` is load-bearing — it
+    // is what displaces the `outline-none` above, which would otherwise
+    // leave the outline styled away (task #168).
+    isSelected && cn("outline-2 outline-solid outline-offset-0", palette.selected),
+    className,
+    // Last, and after `className`, because the ghost's dashed edge is the one
+    // thing about it the caller does not get to place: it is what says this is
+    // a picture of a drop and not an event.
+    isPreview &&
+      cn(
+        "pointer-events-none z-10 outline-2 outline-quebi-brand-mark outline-dashed",
+        !filled && "bg-quebi-bg",
+      ),
+  )
+
+  const content = (
+    <>
       {filled ? null : (
         <span className={cn("size-1.5 shrink-0 rounded-full", palette.dot)} aria-hidden="true" />
       )}
@@ -1642,6 +1744,27 @@ export function CalendarEventRow<E extends CalendarEvent>({
         </span>
       )}
       <span className="truncate font-semibold text-quebi-fg">{event.title}</span>
+    </>
+  )
+
+  if (isPreview) {
+    return (
+      <div data-slot={slot} data-event-id={event.id} aria-hidden="true" style={style} className={classes}>
+        {content}
+      </div>
+    )
+  }
+
+  return (
+    <Button
+      data-slot={slot}
+      data-event-id={event.id}
+      aria-describedby={describedBy}
+      onPress={() => onActivate(event)}
+      style={style}
+      className={classes}
+    >
+      {content}
     </Button>
   )
 }

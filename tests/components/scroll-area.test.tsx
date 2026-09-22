@@ -152,6 +152,49 @@ describe("the quebi-scrollbar utility declares one scrollbar model per browser",
     expect(outside).not.toContain("&::-webkit-scrollbar")
   })
 
+  test("a stepper can only ever be the single pair, and only on a variant's say-so", async () => {
+    // Two things the blanket `display: none` above is doing at once. It is the
+    // default — no steppers unless something asks — and it is what stops
+    // Chromium's *doubled* pair: the platform offers a decrement and an
+    // increment button at **each** end, four per bar, and only the two named
+    // here are ever given a display to take.
+    const webkitOnly = supportsBody(await utilityBody(), "selector(::-webkit-scrollbar)")
+    expect(webkitOnly).toMatch(
+      /&::-webkit-scrollbar-button:start:decrement,\s*\n\s*&::-webkit-scrollbar-button:end:increment \{[^}]*display: var\(--q-scroll-button\)/,
+    )
+    // The switch is a variable, so turning steppers on is an override and not a
+    // second copy of these rules racing them at equal specificity.
+    const theme = blockBody(await css.text(), "@theme {")
+    expect(theme).toMatch(/--q-scroll-button: none;/)
+
+    // The glyph is gradients, not a data URI: Chromium ignores `clip-path` and
+    // `mask-image` on this pseudo-element, and a data-URI arrow would carry its
+    // own ink colour past `--q-scroll-thumb` and past the theme flip.
+    expect(webkitOnly).not.toContain("data:image")
+
+    // The ink's resting value sits on the *bare* button selector. Declared
+    // instead beside the sizing — which names two pseudo-classes — it would
+    // out-specify `:hover`'s one and the arrow would never light up, which is
+    // exactly how it shipped for the length of one screenshot.
+    expect(webkitOnly).toMatch(
+      /&::-webkit-scrollbar-button \{[^}]*--q-scroll-ink: var\(--q-scroll-thumb\);/,
+    )
+    for (const state of ["hover", "active"] as const) {
+      expect(webkitOnly).toMatch(
+        new RegExp(
+          `&::-webkit-scrollbar-button:${state} \\{\\s*--q-scroll-ink: var\\(--q-scroll-thumb-${state}\\)`,
+        ),
+      )
+    }
+
+    for (const direction of ["vertical:start:decrement", "vertical:end:increment"]) {
+      const rule = webkitOnly.slice(
+        webkitOnly.indexOf(`&::-webkit-scrollbar-button:${direction} {`),
+      )
+      expect(rule.slice(0, rule.indexOf("}"))).toContain("var(--q-scroll-ink)")
+    }
+  })
+
   test("the thumb's colour is a theme token, and both scrollbar systems read it", async () => {
     // The thumb was cyan-500 at 25% in both themes, which is 1.26:1 on the
     // light Card — a control you have to find and drag, at less contrast than
@@ -239,6 +282,10 @@ describe("the quebi-scrollbar utility declares one scrollbar model per browser",
     for (const [name, declarations] of [
       ["quebi-scrollbar-floating", ["--q-scroll-size: 12px", "--q-scroll-pad: 3px"]],
       ["quebi-scrollbar-none", ["--q-scroll-size: 0px", "--q-scroll-width: none"]],
+      [
+        "quebi-scrollbar-arrows",
+        ["--q-scroll-size: 12px", "--q-scroll-pad: 3px", "--q-scroll-button: block"],
+      ],
     ] as const) {
       const body = blockBody(source, `@utility ${name} {`)
       for (const declaration of declarations) expect(body).toContain(declaration)
@@ -256,7 +303,10 @@ describe("the quebi-scrollbar utility declares one scrollbar model per browser",
     // outside its border box — ListBox's `shadow-quebi-glow`, an `outline` ring
     // — and on `<html>` it would make the page the containing block for every
     // fixed descendant on the site (which is how tasks #180/#181 started).
-    expect(await utilityBody()).not.toContain("clip-path")
+    // Declarations only: a comment there may *name* the property, and one does
+    // — the steppers' glyph is gradients precisely because Chromium ignores
+    // `clip-path` on `::-webkit-scrollbar-button`.
+    expect((await utilityBody()).replace(/\/\*[\s\S]*?\*\//g, "")).not.toContain("clip-path")
 
     const corners = blockBody(source, "@utility quebi-scrollbar-corners {")
     expect(corners).toContain("clip-path: border-box")
@@ -290,12 +340,14 @@ describe("the bar the viewport wears", () => {
     // flush is the default, and the default is the base utility on its own.
     expect(className).not.toContain("quebi-scrollbar-floating")
     expect(className).not.toContain("quebi-scrollbar-none")
+    expect(className).not.toContain("quebi-scrollbar-arrows")
   })
 
   test("a variant adds exactly its own utility", () => {
     for (const [variant, expected] of [
       ["floating", "quebi-scrollbar-floating"],
       ["none", "quebi-scrollbar-none"],
+      ["arrows", "quebi-scrollbar-arrows"],
     ] as const) {
       const { unmount } = render(
         <ScrollArea scrollbar={variant}>
@@ -305,6 +357,28 @@ describe("the bar the viewport wears", () => {
       const className = viewport().className
       expect(className).toContain("quebi-scrollbar")
       expect(className).toContain(expected)
+      unmount()
+    }
+  })
+
+  test("arrows is the one variant without the corner clip, and the only one", () => {
+    // A stepper sits at the end of the bar, which is the part the arc cuts
+    // away, so `quebi-scrollbar-corners` would take a bite out of the arrow —
+    // and leaving the clip off is free on the square-cornered surface the
+    // variant asks for anyway. Pinned in both directions: the day the clip
+    // becomes unconditional again, an arrowed bar goes quietly wrong.
+    for (const [variant, clipped] of [
+      ["flush", true],
+      ["floating", true],
+      ["none", true],
+      ["arrows", false],
+    ] as const) {
+      const { unmount } = render(
+        <ScrollArea scrollbar={variant}>
+          <p>content</p>
+        </ScrollArea>,
+      )
+      expect(viewport().className.includes("quebi-scrollbar-corners")).toBe(clipped)
       unmount()
     }
   })

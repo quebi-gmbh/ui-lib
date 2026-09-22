@@ -112,6 +112,51 @@ const UprightShortSpans = () => {
   )
 }
 
+const HorizontalSchedule = () => {
+  const [spans, setSpans] = useState<DaySpan[]>(WORKDAY)
+
+  return (
+    <div className="w-full">
+      <div className="mb-5 flex items-baseline justify-between">
+        <div className="font-bold text-quebi-fg tracking-tight">wed 20 aug</div>
+        <span className="text-[10.5px] text-quebi-fg-subtle">the day runs across</span>
+      </div>
+      <DaySchedule spans={spans} onSpansChange={setSpans} orientation="horizontal" />
+    </div>
+  )
+}
+
+const HorizontalTypedTimes = () => {
+  const [spans, setSpans] = useState<DaySpan[]>(WORKDAY.slice(0, 3))
+
+  return (
+    <div className="w-full">
+      <DaySchedule
+        spans={spans}
+        onSpansChange={setSpans}
+        orientation="horizontal"
+        timeLabels="editable"
+      />
+    </div>
+  )
+}
+
+const HorizontalZoomed = () => {
+  const [spans, setSpans] = useState<DaySpan[]>(WORKDAY)
+
+  return (
+    <div className="w-full">
+      <DaySchedule
+        spans={spans}
+        onSpansChange={setSpans}
+        orientation="horizontal"
+        zoom={3}
+        startMinute={600}
+      />
+    </div>
+  )
+}
+
 const LiveTotals = () => {
   const [spans, setSpans] = useState<DaySpan[]>(WORKDAY.slice(0, 3))
   const total = spans.reduce((sum, s) => sum + (s.end - s.start), 0)
@@ -132,6 +177,24 @@ export const dayScheduleExamples: ComponentExample[] = [
     description:
       "Drag a bar to move a span, or either end node to resize it. Snaps to 15 minutes with a 30-minute minimum.",
     render: () => <EditableSchedule />,
+  },
+  {
+    title: "Horizontal",
+    description:
+      'orientation="horizontal" turns the day a quarter turn: the hours run left to right across whatever width the schedule is given, and the lanes stack downward, one row per span. It is the same drag and the same arrow keys — and because a span now owns a row, its name sits beside it in a column of its own rather than having to be pushed clear of every other name.',
+    render: () => <HorizontalSchedule />,
+  },
+  {
+    title: "Horizontal with typed times",
+    description:
+      "The edge times need no rotating across the page — they already read left to right, before the bar and after it, running away from each other exactly as the rotated pair does down a lane. So timeLabelOrientation has nothing to decide here and is ignored; timeLabels still chooses between none, text and a field.",
+    render: () => <HorizontalTypedTimes />,
+  },
+  {
+    title: "Horizontal at zoom 3",
+    description:
+      "zoom is a multiple of the viewport whichever way the day runs, so here the track is three windows wide and the box scrolls sideways through it. startMinute opens it at 10:00 rather than at the one hour of the day nothing is ever booked in.",
+    render: () => <HorizontalZoomed />,
   },
   {
     title: "Custom step and height",

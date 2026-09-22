@@ -77,9 +77,12 @@ export function ConformCalendar({
     <Field
       ref={fieldRef}
       // `w-fit` rather than the `w-full` every other field root wears: a
-      // calendar is a grid of fixed-size cells with an intrinsic width, and
-      // stretching the root only pulls its header chrome away from the grid
-      // under it.
+      // calendar is a grid of fixed-size cells with an intrinsic width, and a
+      // field root stretched across a column leaves it stranded at one end.
+      // Note that this does not keep the calendar's own chrome over its grid —
+      // `w-fit` is max-content, and the description line below is wider than
+      // seven day cells, so the root sizes to the hint. `Calendar` is `w-fit`
+      // itself for that; see the note on its root.
       className={cn("w-fit", className)}
     >
       {/* First, before the label: the stack is spaced with `label + control`

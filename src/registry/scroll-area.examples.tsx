@@ -61,18 +61,19 @@ export const scrollAreaExamples: ComponentExample[] = [
   {
     title: "Scrollbar variants",
     description:
-      'flush is the default: a 6px pill against the edge, with no padding around it. floating puts that pill inside a 12px track, 3px clear of every edge — for content that scrolls under the bar, and for a bar a pointer user is expected to drag rather than wheel, where 12px of track is twice the grab width. none removes the bar for a surface whose scroll position something else already shows.',
+      'flush is the default: a 6px pill against the edge, with no padding around it. floating puts that pill inside a 12px track, 3px clear of every edge — for content that scrolls under the bar, and for a bar a pointer user is expected to drag rather than wheel, where 12px of track is twice the grab width. none removes the bar for a surface whose scroll position something else already shows. arrows is floating with a stepper at each end, and it is the one variant that asks something of the surface: give it square corners. A stepper sits exactly where the corner clip cuts, so arrows drops that clip — which costs a square surface nothing and is why the card below it is rounded-none. Chromium and Safari draw the steppers; Firefox has none to give at any width and shows the pill alone.',
     render: () => (
       <div className="flex w-full flex-wrap gap-4">
         {(
           [
-            ["flush", "the default — hugs the edge"],
-            ["floating", "3px clear of every edge"],
-            ["none", "no bar, still scrollable"],
+            ["flush", "rounded-quebi-md", "the default — hugs the edge"],
+            ["floating", "rounded-quebi-md", "3px clear of every edge"],
+            ["none", "rounded-quebi-md", "no bar, still scrollable"],
+            ["arrows", "rounded-none", "steppers — wants square corners"],
           ] as const
-        ).map(([variant, caption]) => (
+        ).map(([variant, radius, caption]) => (
           <div key={variant} className="flex w-52 flex-col gap-2">
-            <div className="h-48 rounded-quebi-md border border-quebi-line/10">
+            <div className={`h-48 border border-quebi-line/10 ${radius}`}>
               <ScrollArea orientation="vertical" scrollbar={variant} className="p-3">
                 <div className="flex flex-col gap-3">{rows(16, "a bounded viewport.")}</div>
               </ScrollArea>
@@ -121,7 +122,10 @@ export const scrollAreaExamples: ComponentExample[] = [
       <div className="h-56 w-full max-w-md rounded-quebi-md border border-quebi-line/10">
         <ScrollArea className="p-4">
           <div className="flex w-max flex-col gap-3">
-            {rows(16, "a row wide enough that this viewport scrolls both ways at once.")}
+            {rows(
+              16,
+              "a row that runs well past the right edge of this viewport, so the horizontal bar has a decent run of track to travel along.",
+            )}
           </div>
         </ScrollArea>
       </div>

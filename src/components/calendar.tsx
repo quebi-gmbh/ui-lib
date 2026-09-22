@@ -70,7 +70,23 @@ const Calendar = <T extends DateValue>({ className, variant, ...props }: Calenda
   const now = today(getLocalTimeZone())
 
   return (
-    <CalendarPrimitive data-slot="calendar" {...props}>
+    /*
+      `w-fit`, so the calendar is exactly as wide as the grid inside it.
+
+      It is a block element, so without this it takes whatever width its
+      container offers — but the grid it draws is a table of fixed-size cells
+      that shrinks to fit, and the header is `w-full justify-between`. In any
+      container wider than the grid those two disagree: the day grid sits flush
+      left at its intrinsic width while the month/year control and the
+      prev/next pair are pushed out to the container's edges, leaving the
+      chevrons hanging in space to the right of the last column. That is what a
+      `w-fit` field root was supposed to prevent, and it cannot: `w-fit` is
+      max-content, and a field's description line is usually wider than seven
+      day cells, so the root sizes to the hint and the calendar stretches to
+      match. Sizing the calendar itself is the fix that holds wherever it is
+      put. `MonthPicker` is `w-fit` for the same reason.
+    */
+    <CalendarPrimitive data-slot="calendar" className="w-fit" {...props}>
       <CalendarBodyModeProvider>
         <CalendarHeader variant={variant} />
         <CalendarBody>

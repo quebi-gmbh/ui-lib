@@ -10,10 +10,14 @@ import { TimeField, TimeInput } from "@/components/time-field"
 /**
  * DaySchedule — quebi design system
  *
- * A vertical 24-hour day axis with named time spans laid out in parallel lanes.
- * Each span can be dragged to move and resized from either end, snapping to a
+ * A 24-hour day axis with named time spans laid out in parallel lanes. Each
+ * span can be dragged to move and resized from either end, snapping to a
  * configurable step with a minimum duration. Fully keyboard operable: the bar
  * and both handles expose `role="slider"` with arrow-key adjustment.
+ *
+ * The day runs down the page by default. `orientation="horizontal"` turns the
+ * whole thing a quarter turn — the day runs left to right across whatever width
+ * it is given, and the lanes stack downward, one row per span.
  *
  * Spans are minutes from midnight (0–1440), so the component stays free of any
  * date library. Supply `spans` + `onSpansChange` for controlled use, or
@@ -34,6 +38,20 @@ import { TimeField, TimeInput } from "@/components/time-field"
  * always be dragged onto the same midpoint, so that column de-overlaps itself
  * (`layoutNames`) and any name it had to move keeps a leader line back to its
  * own bar.
+ *
+ * Turned horizontal it is the same geometry with the two axes swapped: the same
+ * percentages along the track, the same drag, the same keys. What the swap
+ * changes is that two of the problems above stop existing rather than needing a
+ * horizontal answer. A name cannot collide with another name, because each span
+ * owns a row and the names are a column of their own beside the axis; a span's
+ * two times cannot collide with each other, because they run away from each
+ * other along the row exactly as the rotated pair does down a lane. So
+ * `layoutNames`, `layoutEdgeTimes` and the leader lines are vertical-only, and
+ * `timeLabelOrientation` — which is the question of how to fit a time beside a
+ * *vertical* lane — has nothing to decide across the page.
+ *
+ * What does not turn is the minimap: it is a 36px strip of the day down one
+ * side, and there is no horizontal one to give. See `minimap`.
  */
 
 const DAY_MINUTES = 1440
@@ -98,10 +116,43 @@ const UPRIGHT_EDGE_GAP = 20
  */
 const LABEL_GAP = 18
 
+/**
+ * A horizontal schedule's hour axis, and the gap it keeps from the track.
+ *
+ * `HORIZONTAL_AXIS_HEIGHT` is the 9.5px axis label's line box — 11.4px in
+ * Chromium — rounded up to 14 so the digits have a pixel either side of the
+ * rule they sit on. Down the page the axis is a 40px column instead, because
+ * there it has to hold a whole `09:00` rather than one line of one.
+ *
+ * `AXIS_GAP` is the same 10px the vertical axis keeps from its track — the
+ * `gap-2.5` on the row they share, which across the page becomes the gap on the
+ * column they share.
+ *
+ * Both are numbers rather than utilities because something outside the layout
+ * has to reproduce them: the name column is drawn *beside* the viewport, so
+ * that a zoomed day scrolls under it instead of taking it along, and therefore
+ * cannot inherit where the track starts. `nameColumnLead` is that distance, and
+ * it is computed from these two so the column cannot drift from the axis.
+ */
+const HORIZONTAL_AXIS_HEIGHT = 14
+const AXIS_GAP = 10
+
 type SpanEdge = "start" | "end"
 
 /** Which way an edge time faces: rotated into its lane, or upright beside it. */
 export type DayScheduleTimeLabelOrientation = "rotated" | "upright"
+
+/** Which way the day runs: down the page, or across it. */
+export type DayScheduleOrientation = "vertical" | "horizontal"
+
+/**
+ * Where an edge time goes, which is `timeLabelOrientation` plus the case that
+ * prop has no opinion about. `rotated` and `upright` are two answers to "how
+ * does a time fit beside a vertical lane"; a horizontal lane never asked the
+ * question, so the third placement is the axis rather than a label style, and
+ * it is a separate key so that reading `timeLabelOrientation` cannot return it.
+ */
+type EdgePlacement = DayScheduleTimeLabelOrientation | "horizontal"
 
 /**
  * Where an edge time sits relative to its lane.
@@ -119,8 +170,16 @@ export type DayScheduleTimeLabelOrientation = "rotated" | "upright"
  * can fix because the first lane is not spaced from anything. What keeps the
  * pair off each other is `layoutEdgeTimes`. The `-50%` now means half the
  * element height in the ordinary sense: the box is centred on its own minute.
+ *
+ * `horizontal` is `rotated` without the rotation — which is the whole point of
+ * it. Rotated, the start time runs back up the lane from the start and the end
+ * time on down from the end; across the page that same placement puts the start
+ * time before the bar and the end time after it, reading left to right on its
+ * own. The pair can no more meet than the rotated pair can, so nothing sweeps
+ * them, and the `-50%` centres each box on its lane. The 16px is the rotated
+ * one's, and clears the same 11px node.
  */
-const EDGE_TRANSFORM: Record<DayScheduleTimeLabelOrientation, Record<SpanEdge, string>> = {
+const EDGE_TRANSFORM: Record<EdgePlacement, Record<SpanEdge, string>> = {
   rotated: {
     start: "rotate(-90deg) translate(16px, -50%)",
     end: "rotate(-90deg) translate(calc(-100% - 16px), -50%)",
@@ -129,6 +188,39 @@ const EDGE_TRANSFORM: Record<DayScheduleTimeLabelOrientation, Record<SpanEdge, s
     start: "translate(10px, -50%)",
     end: "translate(10px, -50%)",
   },
+  horizontal: {
+    start: "translate(calc(-100% - 16px), -50%)",
+    end: "translate(16px, -50%)",
+  },
+}
+
+/**
+ * How a tick's label and its gridline are shifted against the minute they mark.
+ *
+ * A label is centred on its minute and a rule is drawn at it, which is right
+ * for every tick with track above it and below it, and wrong for the two that
+ * have track on one side only: half of `00:00` sits above the track, half of
+ * `24:00` below it, and the rule at `100%` lands on the row *after* the last
+ * one. While the track was the outermost box that overhang was merely untidy.
+ * Inside the viewport `zoom` put around it, it is seven pixels of scrollable
+ * overflow at the bottom — so the browser paints a scrollbar on a schedule at
+ * zoom 1, the one zoom documented never to scroll, and the clip cuts the two
+ * labels a reader looks for first in half.
+ *
+ * So the ends tuck in: the first label hangs below its rule, the last sits
+ * above its own, and the last rule moves up onto the track's final pixel. Every
+ * tick with track on both sides is untouched, which on an ordinary
+ * `tickInterval` is all the rest of them.
+ *
+ * Across the page it is the same three cases about the same two ends, on the
+ * other axis: `00:00` hangs to the right of its rule and `24:00` to the left of
+ * its own, so neither half leaves the track and neither is what the viewport
+ * finds to scroll.
+ */
+function tickShift(minute: number, isHorizontal: boolean) {
+  if (minute === 0) return isHorizontal ? "translate-x-0" : "translate-y-0"
+  if (minute === DAY_MINUTES) return isHorizontal ? "-translate-x-full" : "-translate-y-full"
+  return isHorizontal ? "-translate-x-1/2" : "-translate-y-1/2"
 }
 
 export type DayScheduleTone = "brand" | "cyan"
@@ -292,11 +384,16 @@ interface EdgeTimeFieldProps {
   /** The field's accessible name — "pairing start time". */
   label: string
   minutes: number
-  /** The lane's `left`, shared with the bar and the handle. */
-  lane: string
-  /** Where down the track the box is centred — a percentage, or laid-out px. */
+  /**
+   * Where the box is placed, in the two coordinates the track understands.
+   * Which one is the lane and which one is the minute depends on the axis: down
+   * the page `left` is the lane and `top` is the time (a percentage, or
+   * laid-out px); across it they trade jobs. The field does not need to know
+   * which, so it is handed both rather than an orientation to branch on.
+   */
+  left: string
   top: string
-  /** The orientation's placement for this edge. See `EDGE_TRANSFORM`. */
+  /** The placement for this edge on this axis. See `EDGE_TRANSFORM`. */
   transform: string
   isDisabled: boolean
   isReadOnly: boolean
@@ -318,7 +415,7 @@ interface EdgeTimeFieldProps {
 function EdgeTimeField({
   label,
   minutes,
-  lane,
+  left,
   top,
   transform,
   isDisabled,
@@ -357,7 +454,7 @@ function EdgeTimeField({
       hourCycle={24}
       shouldForceLeadingZeros
       className="absolute origin-top-left"
-      style={{ left: lane, top, transform }}
+      style={{ left, top, transform }}
     >
       {/* The box is the control's own metrics, so it carries no chrome
           and no padding of its own — the lane is the box. The type is the
@@ -387,15 +484,39 @@ export interface DayScheduleProps extends Omit<React.ComponentProps<"div">, "onC
   /** Gap between axis labels and gridlines, in minutes. */
   tickInterval?: number
   /**
+   * Which way the day runs. `"vertical"` (the default) puts the 24-hour axis
+   * down the left and the lanes across; `"horizontal"` puts the axis along the
+   * top and stacks the lanes down the page, one row per span.
+   *
+   * Everything else about the component is unchanged by it — the same spans,
+   * the same `step` and `minDuration`, the same drag, the same arrow keys. Four
+   * props are read differently or not at all, and each says so: `height`,
+   * `laneOffset`, `timeLabelOrientation` and `minimap`.
+   *
+   * Choose it by what the reader is comparing. Down the page, a lane is a thin
+   * column and the eye runs along the hour; across it, a span is a row with its
+   * name beside it, which is the shape that survives a wide window and a lot of
+   * spans. The horizontal one takes its width from its container rather than
+   * from a prop, so it fills whatever it is put in.
+   */
+  orientation?: DayScheduleOrientation
+  /**
    * Height in pixels of the part you can see. At the default `zoom` of 1 that
    * is also the track's height, because the whole day fits in it.
+   *
+   * It sizes the *day*, so it only applies while the day runs down the page.
+   * Horizontal, the day is as wide as the box the schedule was given and the
+   * height is what the lanes need — `laneOffset` of air at each end plus a
+   * `laneGap` between each pair — so this prop is not read at all.
    */
   height?: number
   /**
    * How many viewports tall the day is drawn. `1` is the whole day at once —
    * every schedule that existed before this. Above it the track becomes
    * `height × zoom` and the viewport scrolls, which is what buys a 15-minute
-   * meeting enough pixels to aim a pointer at.
+   * meeting enough pixels to aim a pointer at. Horizontal it is the same
+   * multiple of the same thing — the track becomes that many viewports *wide*,
+   * and the viewport scrolls sideways.
    *
    * Everything the component positions is a percentage of the track, so zoom
    * costs the layout nothing: the names de-overlap against the taller track and
@@ -419,6 +540,12 @@ export interface DayScheduleProps extends Omit<React.ComponentProps<"div">, "onC
    * one side of a schedule, one of which is also a map, is a choice nobody
    * wants to make. Useful precisely when `zoom` is above 1 — at 1 the rectangle
    * covers the strip, because the window really is the day.
+   *
+   * Vertical only, and not because nobody got to it: the map is the day drawn
+   * down a 36px strip with one line per span, and laid on its side it would be
+   * a 36px-tall band of horizontal hairlines that no longer reads as the
+   * schedule beside it. A horizontal schedule therefore keeps its scrollbar,
+   * and this prop is ignored rather than half-honoured.
    */
   minimap?: boolean
   /**
@@ -432,13 +559,22 @@ export interface DayScheduleProps extends Omit<React.ComponentProps<"div">, "onC
    */
   startMinute?: number
   /**
-   * Horizontal distance between lanes, in pixels. Defaults to 18, to 24 in
+   * Distance between lanes across the axis, in pixels. Defaults to 18, to 24 in
    * `timeLabels="editable"` — where the rotated control wants to be separately
    * clickable — and to 64 in `timeLabelOrientation="upright"`, where a time is
    * as wide as a time rather than as wide as a line box.
+   *
+   * The first two numbers carry over to a horizontal schedule unchanged, and
+   * that is not a coincidence: 18 is what clears one line box, and a time
+   * beside a horizontal lane costs its height, which is the same line box a
+   * rotated one costs in width.
    */
   laneGap?: number
-  /** Offset of the first lane from the track's left edge, in pixels. */
+  /**
+   * Offset of the first lane from the track's leading edge, in pixels — its
+   * left edge down the page, its top edge across it, where it is also the air
+   * left under the last lane.
+   */
   laneOffset?: number
   /**
    * The start/end times beside each span. `"static"` draws them as
@@ -461,7 +597,12 @@ export interface DayScheduleProps extends Omit<React.ComponentProps<"div">, "onC
    * and an upright one spends its whole width — and moves a span's two times
    * apart when its length cannot keep them apart on its own.
    *
-   * Ignored when `timeLabels` is `"none"`: there is nothing to face.
+   * Ignored when `timeLabels` is `"none"`: there is nothing to face. Ignored in
+   * `orientation="horizontal"` too, and for the same kind of reason: the choice
+   * exists because a time beside a *vertical* lane either spends its width or
+   * turns to spend its line box, and beside a horizontal lane it reads along
+   * the axis whatever you say. Leaving `upright` to apply would widen the lanes
+   * to 64px to make room for a width that costs nothing there.
    */
   timeLabelOrientation?: DayScheduleTimeLabelOrientation
   /** @deprecated Use `timeLabels`: `false` is `"none"`, `true` is `"static"`. */
@@ -479,6 +620,7 @@ export function DaySchedule({
   step = 15,
   minDuration = 30,
   tickInterval = 120,
+  orientation = "vertical",
   height = 560,
   zoom = 1,
   minimap = false,
@@ -495,15 +637,25 @@ export function DaySchedule({
   ...props
 }: DayScheduleProps) {
   const labelMode: DayScheduleTimeLabels = timeLabels ?? (showTimeLabels ? "static" : "none")
+  const isHorizontal = orientation === "horizontal"
   // `"none"` draws nothing in the lane, so neither the orientation nor the
-  // editable widening has anything to make room for.
-  const isUpright = timeLabelOrientation === "upright" && labelMode !== "none"
+  // editable widening has anything to make room for — and across the page the
+  // orientation itself has nothing to say, so the 64px lane it asks for would
+  // be room made for a width that costs nothing.
+  const isUpright =
+    !isHorizontal && timeLabelOrientation === "upright" && labelMode !== "none"
   const defaultLaneGap = isUpright
     ? UPRIGHT_LANE_GAP
     : labelMode === "editable"
       ? EDITABLE_LANE_GAP
       : LANE_GAP
   const laneGap = laneGapProp ?? defaultLaneGap
+
+  // The tone a span is actually drawn in. The default alternates by position,
+  // and three places need the same answer — the bar, the name and the minimap's
+  // line — so it is one function rather than three copies of one expression.
+  const toneOf = (span: DaySpan, index: number) =>
+    span.tone ?? (index % 2 === 0 ? ("brand" as const) : ("cyan" as const))
 
   const [uncontrolled, setUncontrolled] = useState<DaySpan[]>(defaultSpans)
   const isControlled = controlledSpans !== undefined
@@ -515,6 +667,9 @@ export function DaySchedule({
   // gap at the bottom rather than a smaller day.
   const scale = Math.max(1, zoom)
   const trackHeight = Math.round(height * scale)
+  // Whether the track is taller than the box around it — which is the same
+  // question as whether that box has anything at all to scroll.
+  const isZoomed = scale > 1
 
   // Before paint rather than after it: this is where the viewport *starts*, and
   // a scroll applied in a passive effect is a visible jump away from midnight.
@@ -523,12 +678,23 @@ export function DaySchedule({
   useLayoutEffect(() => {
     const viewport = viewportRef.current
     if (!viewport || startMinute === undefined) return
+    // `minimapScrollTop` is named for its caller, but the arithmetic in it —
+    // put this fraction of the content in the middle of this window, without
+    // running off either end — knows nothing about which axis it is on.
+    if (isHorizontal) {
+      viewport.scrollLeft = minimapScrollTop(
+        startMinute / DAY_MINUTES,
+        viewport.scrollWidth,
+        viewport.clientWidth,
+      )
+      return
+    }
     viewport.scrollTop = minimapScrollTop(
       startMinute / DAY_MINUTES,
       viewport.scrollHeight,
       viewport.clientHeight,
     )
-  }, [startMinute])
+  }, [startMinute, isHorizontal])
 
   const interactive = !isDisabled && !isReadOnly
 
@@ -566,15 +732,19 @@ export function DaySchedule({
     [minDuration, commit],
   )
 
-  const minuteFromClientY = useCallback(
-    (clientY: number) => {
+  // Read off the track's own box, so a zoomed schedule reads the minute the
+  // pointer is over rather than the one at that spot in the window.
+  const minuteFromPointer = useCallback(
+    (clientX: number, clientY: number) => {
       const track = trackRef.current
       if (!track) return 0
       const rect = track.getBoundingClientRect()
-      const ratio = clamp((clientY - rect.top) / rect.height, 0, 1)
+      const ratio = isHorizontal
+        ? clamp((clientX - rect.left) / rect.width, 0, 1)
+        : clamp((clientY - rect.top) / rect.height, 0, 1)
       return Math.round((ratio * DAY_MINUTES) / step) * step
     },
-    [step],
+    [step, isHorizontal],
   )
 
   const startDrag = (
@@ -587,11 +757,11 @@ export function DaySchedule({
 
     const target = event.currentTarget
     const origin = spans[index]
-    const grabbedAt = minuteFromClientY(event.clientY)
+    const grabbedAt = minuteFromPointer(event.clientX, event.clientY)
     target.setPointerCapture(event.pointerId)
 
     const handleMove = (moveEvent: PointerEvent) => {
-      const minute = minuteFromClientY(moveEvent.clientY)
+      const minute = minuteFromPointer(moveEvent.clientX, moveEvent.clientY)
       // Body drags translate by the delta from the grab point so the span does
       // not jump to centre itself under the cursor.
       const value = part === "body" ? origin.start + (minute - grabbedAt) : minute
@@ -652,20 +822,70 @@ export function DaySchedule({
     Math.max(0, spans.length - 1) * laneGap +
     (isUpright ? UPRIGHT_NAME_CLEARANCE : NAME_CLEARANCE)
   // …and clear of each other, which the column on its own does not give you.
-  const nameTops = layoutNames(spans, trackHeight)
+  // `null` is the horizontal case: there, a name has a row to itself and the
+  // only thing it could collide with is drawn on someone else's.
+  const nameTops = isHorizontal ? null : layoutNames(spans, trackHeight)
+  // What the lanes need across the axis, which for a horizontal schedule is the
+  // track's whole height: `laneOffset` of air above the first and below the
+  // last, and a gap between each pair. It is not `height` — that prop is the
+  // day, and the day is the other axis now.
+  const trackCross = laneOffset * 2 + Math.max(0, spans.length - 1) * laneGap
+  // How far the name column starts below its own box's top, so that the centre
+  // of its first row lands on the first lane: past the hour axis and the gap
+  // under it to reach the track, then `laneOffset` down it, less the half-row
+  // each name is centred in.
+  const nameColumnLead = Math.max(
+    0,
+    HORIZONTAL_AXIS_HEIGHT + AXIS_GAP + laneOffset - laneGap / 2,
+  )
 
   return (
     <div
       className={cn(
-        "flex w-full gap-2 font-sans select-none",
+        "flex w-full font-sans select-none",
+        // Down the page this gap separates the schedule from its minimap;
+        // across it, the names from the axis they are read against.
+        isHorizontal ? "gap-2.5" : "gap-2",
         isDisabled && "pointer-events-none opacity-50",
         className,
       )}
       {...props}
     >
-      {/* The viewport. At zoom 1 the track exactly fills it and it never
-          scrolls, which is why this wrapper changes nothing for a schedule that
-          does not ask for a zoom. */}
+      {isHorizontal && spans.length > 0 && (
+        /* The names. Down the page they share one column with every other name
+           and have to be swept apart; across it each span owns a row, so a row
+           is the only place its name can be and nothing else can be there.
+
+           Rows rather than absolute positions, so the column is exactly as wide
+           as the longest name and no caller has to say how wide that is: the
+           lead-in above, then one `laneGap`-tall box per span, each of which
+           centres its name on `laneOffset + index * laneGap` — the lane its bar
+           is drawn on. */
+        <div className="flex flex-none flex-col">
+          <div style={{ height: nameColumnLead }} />
+          {spans.map((span, index) => (
+            <div
+              key={span.id}
+              className={cn(
+                "flex items-center justify-end whitespace-nowrap text-xs",
+                TONES[toneOf(span, index)].text,
+              )}
+              style={{ height: laneGap }}
+            >
+              {span.label}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* The viewport. At zoom 1 the track exactly fills it, so it does not
+          become a scroll container at all: an `overflow` of anything but
+          `visible` clips, and a box whose content is its own height to the
+          pixel is one stray half-line-box away from a scrollbar it has nothing
+          to scroll. That is what this wrapper changing nothing for a schedule
+          which does not ask for a zoom has to mean — the `tickShift` above
+          keeps the hour axis inside the track, and this keeps anything else
+          that overhangs (a handle sitting on midnight) drawn rather than cut. */}
       <div
         ref={viewportRef}
         // Named so something outside can find the thing that scrolls — a test
@@ -673,26 +893,50 @@ export function DaySchedule({
         // screenshot. The minimap does not need it; it is handed the ref.
         data-day-schedule-viewport=""
         className={cn(
-          "min-w-0 flex-1 overflow-y-auto overscroll-y-contain",
-          // The map replaces the bar rather than sitting next to it — which is
-          // exactly what `quebi-scrollbar-none` is for, so the two browsers'
-          // ways of saying "no bar" are declared in one place and not here.
-          cn("quebi-scrollbar", minimap && "quebi-scrollbar-none"),
+          "min-w-0 flex-1",
+          isZoomed
+            ? cn(
+                isHorizontal
+                  ? "overflow-x-auto overscroll-x-contain"
+                  : "overflow-y-auto overscroll-y-contain",
+                // The map replaces the bar rather than sitting next to it — which
+                // is exactly what `quebi-scrollbar-none` is for, so the two
+                // browsers' ways of saying "no bar" are declared in one place and
+                // not here. There is no horizontal map, so there the bar stays.
+                "quebi-scrollbar",
+                minimap && !isHorizontal && "quebi-scrollbar-none",
+              )
+            : "overflow-visible",
         )}
-        style={{ height }}
+        style={isHorizontal ? undefined : { height }}
       >
-        <div className="flex w-full gap-2.5">
+        <div
+          className={cn("flex", isHorizontal ? "flex-col" : "w-full gap-2.5")}
+          // Horizontal, `zoom` is the width: the track becomes that many
+          // viewports wide and the box above scrolls sideways through it. The
+          // gap is the number the name column had to lead in by, so the two
+          // cannot drift.
+          style={isHorizontal ? { width: `${scale * 100}%`, gap: AXIS_GAP } : undefined}
+        >
           {/* Hour axis */}
           <div
-            className="relative w-10 flex-none border-r border-quebi-line/10"
-            style={{ height: trackHeight }}
+            className={cn(
+              "relative flex-none border-quebi-line/10",
+              isHorizontal ? "border-b" : "w-10 border-r",
+            )}
+            style={{ height: isHorizontal ? HORIZONTAL_AXIS_HEIGHT : trackHeight }}
             aria-hidden="true"
           >
             {tickMinutes.map((minute) => (
               <div
                 key={minute}
-                className="absolute left-0 -translate-y-1/2 text-[9.5px] text-quebi-fg-subtle tabular-nums"
-                style={{ top: toPercent(minute) }}
+                className={cn(
+                  "absolute text-[9.5px] text-quebi-fg-subtle tabular-nums",
+                  // Sitting on the rule it labels, whichever edge that is.
+                  isHorizontal ? "bottom-0" : "left-0",
+                  tickShift(minute, isHorizontal),
+                )}
+                style={isHorizontal ? { left: toPercent(minute) } : { top: toPercent(minute) }}
               >
                 {minute === DAY_MINUTES ? "24:00" : formatTime(minute)}
               </div>
@@ -700,34 +944,53 @@ export function DaySchedule({
           </div>
 
           {/* Span track */}
-          <div ref={trackRef} className="relative flex-1" style={{ height: trackHeight }}>
+          <div
+            ref={trackRef}
+            className={cn("relative", !isHorizontal && "flex-1")}
+            style={{ height: isHorizontal ? trackCross : trackHeight }}
+          >
             {tickMinutes.map((minute) => (
               <div
                 key={minute}
                 aria-hidden="true"
-                className="absolute inset-x-0 h-px bg-quebi-line/[0.06]"
-                style={{ top: toPercent(minute) }}
+                className={cn(
+                  "absolute bg-quebi-line/[0.06]",
+                  isHorizontal ? "inset-y-0 w-px" : "inset-x-0 h-px",
+                  // Only the last rule moves: a 1px line has no half to centre.
+                  minute === DAY_MINUTES &&
+                    (isHorizontal ? "-translate-x-full" : "-translate-y-full"),
+                )}
+                style={isHorizontal ? { left: toPercent(minute) } : { top: toPercent(minute) }}
               />
             ))}
 
             {spans.map((span, index) => {
-              const tone = TONES[span.tone ?? (index % 2 === 0 ? "brand" : "cyan")]
+              const tone = TONES[toneOf(span, index)]
               const laneX = laneOffset + index * laneGap
               const lane = `${laneX}px`
               const valueText = `${span.label}, ${formatTime(span.start)} to ${formatTime(span.end)}`
               // Rotated, a span's two times run away from each other along the
               // lane and cannot collide; upright they are one column, kept apart
               // by the sweep rather than by the span happening to be long enough.
+              // Horizontal is the rotated case unrotated — see `EDGE_TRANSFORM`.
               const edgeTops = isUpright ? layoutEdgeTimes(span, trackHeight) : null
               const edgeTop = (edge: SpanEdge) =>
                 edgeTops ? `${edgeTops[edge]}px` : toPercent(span[edge])
-              const edgeTransform = EDGE_TRANSFORM[isUpright ? "upright" : "rotated"]
+              const edgeTransform =
+                EDGE_TRANSFORM[isHorizontal ? "horizontal" : isUpright ? "upright" : "rotated"]
+              // Where the edge time's box goes, in the track's own two
+              // coordinates: the lane is `left` down the page and `top` across
+              // it, and the minute is whichever one is left over.
+              const edgePosition = (edge: SpanEdge) =>
+                isHorizontal
+                  ? { left: toPercent(span[edge]), top: lane }
+                  : { left: lane, top: edgeTop(edge) }
               // Where the name would sit if nothing were in its way, and where it
               // actually sits. A name that had to move gets a leader line back to
               // its own span, because the tone alone repeats every other lane.
               const midpointY = round((((span.start + span.end) / 2) * trackHeight) / DAY_MINUTES)
-              const nameTop = nameTops[index]
-              const isNameMoved = Math.abs(nameTop - midpointY) >= 1
+              const nameTop = nameTops ? nameTops[index] : 0
+              const isNameMoved = nameTops !== null && Math.abs(nameTop - midpointY) >= 1
 
               return (
                 // biome-ignore lint/a11y/useSemanticElements: <fieldset> is the element for this role, but this wrapper only exists to name the three sliders below it and has no box of its own — a fieldset brings a UA border, padding and `min-inline-size: min-content` into a track whose children are absolutely positioned against it.
@@ -746,17 +1009,28 @@ export function DaySchedule({
                     onPointerDown={(e) => startDrag(e, index, "body")}
                     onKeyDown={(e) => handleKeyDown(e, index, "body")}
                     className={cn(
-                      "absolute w-[5px] -translate-x-1/2 rounded-[3px] outline-hidden",
+                      "absolute rounded-[3px] outline-hidden",
+                      // The bar is 5px thick across its lane and as long as the
+                      // span is, whichever way round those two are.
+                      isHorizontal ? "h-[5px] -translate-y-1/2" : "w-[5px] -translate-x-1/2",
                       "touch-none transition-shadow duration-150",
                       tone.bar,
                       interactive ? "cursor-grab active:cursor-grabbing" : "cursor-default",
                       "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
                     )}
-                    style={{
-                      left: lane,
-                      top: toPercent(span.start),
-                      height: toPercent(span.end - span.start),
-                    }}
+                    style={
+                      isHorizontal
+                        ? {
+                            top: lane,
+                            left: toPercent(span.start),
+                            width: toPercent(span.end - span.start),
+                          }
+                        : {
+                            left: lane,
+                            top: toPercent(span.start),
+                            height: toPercent(span.end - span.start),
+                          }
+                    }
                   />
 
                   {/* Start / end handles */}
@@ -779,10 +1053,20 @@ export function DaySchedule({
                         "border-2 bg-quebi-bg outline-hidden touch-none",
                         "transition-transform duration-150",
                         tone.node,
-                        interactive ? "cursor-ns-resize hover:scale-110" : "cursor-default",
+                        interactive
+                          ? cn(
+                              "hover:scale-110",
+                              // The cursor names the axis the handle moves on.
+                              isHorizontal ? "cursor-ew-resize" : "cursor-ns-resize",
+                            )
+                          : "cursor-default",
                         "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
                       )}
-                      style={{ left: lane, top: toPercent(span[part]) }}
+                      style={
+                        isHorizontal
+                          ? { top: lane, left: toPercent(span[part]) }
+                          : { left: lane, top: toPercent(span[part]) }
+                      }
                     />
                   ))}
 
@@ -812,16 +1096,20 @@ export function DaySchedule({
                     </svg>
                   )}
 
-                  {/* Name */}
-                  <div
-                    className={cn(
-                      "absolute -translate-y-1/2 whitespace-nowrap text-xs",
-                      tone.text,
-                    )}
-                    style={{ left: `${labelOffset}px`, top: `${nameTop}px` }}
-                  >
-                    {span.label}
-                  </div>
+                  {/* Name — the column beside the lanes. Horizontal it is drawn
+                      outside the track instead, one row per span, so that it
+                      stays put while a zoomed day scrolls under it. */}
+                  {!isHorizontal && (
+                    <div
+                      className={cn(
+                        "absolute -translate-y-1/2 whitespace-nowrap text-xs",
+                        tone.text,
+                      )}
+                      style={{ left: `${labelOffset}px`, top: `${nameTop}px` }}
+                    >
+                      {span.label}
+                    </div>
+                  )}
 
                   {/* Edge times — text, or a field to type one into */}
                   {labelMode === "static" &&
@@ -830,11 +1118,7 @@ export function DaySchedule({
                         key={edge}
                         aria-hidden="true"
                         className="absolute origin-top-left whitespace-nowrap text-[10.5px] text-quebi-fg-muted tabular-nums"
-                        style={{
-                          left: lane,
-                          top: edgeTop(edge),
-                          transform: edgeTransform[edge],
-                        }}
+                        style={{ ...edgePosition(edge), transform: edgeTransform[edge] }}
                       >
                         {formatTime(span[edge])}
                       </div>
@@ -846,8 +1130,7 @@ export function DaySchedule({
                         key={edge}
                         label={`${span.label} ${edge} time`}
                         minutes={span[edge]}
-                        lane={lane}
-                        top={edgeTop(edge)}
+                        {...edgePosition(edge)}
                         transform={edgeTransform[edge]}
                         isDisabled={isDisabled}
                         isReadOnly={isReadOnly}
@@ -865,7 +1148,7 @@ export function DaySchedule({
         </div>
       </div>
 
-      {minimap && (
+      {minimap && !isHorizontal && (
         <DayScheduleMinimap
           // The tone the schedule actually drew, not the one the span declared:
           // the default alternates by array position, and a line whose colour
@@ -874,7 +1157,7 @@ export function DaySchedule({
             id: span.id,
             start: span.start,
             end: span.end,
-            tone: span.tone ?? (index % 2 === 0 ? ("brand" as const) : ("cyan" as const)),
+            tone: toneOf(span, index),
           }))}
           viewportRef={viewportRef}
           scale={scale}

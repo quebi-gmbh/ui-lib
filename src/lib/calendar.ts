@@ -429,6 +429,57 @@ function expansion(
   return span
 }
 
+/** Where one more interval would land among the ones already packed. */
+export interface PackedAgainst {
+  /** Zero-based column within the day. */
+  column: number
+  /** Columns the cluster it joins needs — the denominator for a width. */
+  columns: number
+  /** Columns it may widen into, itself included. See `PackedSegment["span"]`. */
+  span: number
+}
+
+/**
+ * Pack `interval` against `neighbours` and report only where *it* landed.
+ *
+ * `packColumns` answers "where does every block on this day go"; this answers
+ * "where would one more go", which is the question a drag in flight asks. The
+ * ghost the grid draws at the snapped target is a block that is not in the
+ * events array yet, so it has no segment and no column — without this it can
+ * only be drawn at the full width of the day, which is a picture of a drop that
+ * will not happen whenever anything else is on that day at that hour.
+ *
+ * `neighbours` is the target day minus the dragged event itself: the drop moves
+ * the event, it does not copy it, so the event's own block is not something the
+ * ghost has to make room for even when the drag never leaves its day.
+ *
+ * The answer is the placement the drop will produce — the packing here is the
+ * same sweep over the same intervals — so the ghost's rectangle is the
+ * rectangle the block will occupy, not an approximation of it.
+ */
+export function packAgainst(
+  neighbours: readonly PackInterval[],
+  interval: PackInterval,
+  options: PackColumnsOptions = {},
+): PackedAgainst {
+  const minMinutes = options.minMinutes ?? 15
+  const atLeast = (candidate: PackInterval): PackInterval => ({
+    start: candidate.start,
+    end: Math.max(candidate.end, candidate.start + minMinutes),
+  })
+
+  const intervals = [...neighbours.map(atLeast), atLeast(interval)]
+  const slot = intervals.length - 1
+  const placements = packIntervals(intervals)
+  const placement = placements[slot] as PackPlacement
+
+  return {
+    column: placement.lane,
+    columns: placement.lanes,
+    span: expansion(slot, intervals, placements),
+  }
+}
+
 /** An all-day or multi-day event as a horizontal band across day columns. */
 export interface EventBand<E extends CalendarEvent = CalendarEvent> {
   event: E
