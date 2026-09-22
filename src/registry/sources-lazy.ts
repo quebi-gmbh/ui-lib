@@ -10,6 +10,8 @@
  * Vite-only, like ./examples-lazy.ts, and apart from the generated modules for
  * the same reason: `bun test` does not resolve `import.meta.glob`.
  */
+import { importChunk } from "@/lib/stale-deploy"
+
 const modules = import.meta.glob<SourceModule>("./sources/*.generated.ts")
 
 interface SourceModule {
@@ -21,6 +23,6 @@ interface SourceModule {
 export async function loadSource(slug: string): Promise<SourceModule | undefined> {
   const load = modules[`./sources/${slug}.generated.ts`]
   if (!load) return undefined
-  const { source, highlighted } = await load()
+  const { source, highlighted } = await importChunk(load)
   return { source, highlighted }
 }

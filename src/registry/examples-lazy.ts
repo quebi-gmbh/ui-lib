@@ -1,3 +1,4 @@
+import { importChunk } from "@/lib/stale-deploy"
 import type { ComponentExample } from "./types"
 
 /**
@@ -48,7 +49,7 @@ function pickExamples(mod: ExamplesModule): ComponentExample[] {
 export async function loadExamples(slug: string): Promise<ComponentExample[]> {
   const load = modules[`./${slug}.examples.tsx`]
   if (!load) return []
-  return pickExamples(await load())
+  return pickExamples(await importChunk(load))
 }
 
 /** Slugs that have an examples file, for tests and for the glob's own coverage. */
