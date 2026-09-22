@@ -1,0 +1,516 @@
+/*
+ * Focus indicators — the catalogue rendered by `/components/focus`.
+ *
+ * ## Why this is CSS and not Tailwind
+ *
+ * The subject of this file is CSS. `outline-style: auto`, `outline-offset: -4px`,
+ * a corner-bracket mask, a notch cut into a border by a label with a backdrop —
+ * these are not classes a design system hands out, they are the techniques a
+ * design system *chooses between*. Writing them as thirty arbitrary-value
+ * utilities would say the opposite, and every one of them would be a
+ * `no-hardcoded-design-values` violation arguing to be excepted. Colour, radius
+ * and elevation still come from `--q-*` / `--radius-quebi-*`: what is literal
+ * here is geometry, which is the axis under discussion.
+ *
+ * ## Why the rules are unlayered
+ *
+ * Tailwind v4 emits its utilities into `@layer utilities`. An unlayered rule
+ * beats every layered one regardless of specificity, so these blocks reliably
+ * override `Input`'s own `focus:ring-2 focus:ring-offset-2` without a single
+ * `!important` and without depending on tailwind-merge guessing which classes
+ * conflict. `.shiki` and `.os-theme-quebi` in `quebi-theme.css` are unlayered
+ * for the same reason.
+ *
+ * ## The three things a variant may read
+ *
+ * - `--quebi-focus-accent` — the ink. Brand mark at rest, `--q-danger` when the
+ *   demo's state toggle says invalid. A variant never names a colour itself, so
+ *   the invalid form of all thirty-three is one declaration rather than thirty-three.
+ * - `--quebi-focus-backdrop` — what is *behind* the field, set by the surface
+ *   class. An offset ring is a band of this colour; get it wrong and the ring
+ *   reads as a second border. That is the whole reason the surface toggle exists.
+ * - `.quebi-focus-lit` — the class the page puts on the field when it considers
+ *   it focused. React decides that from react-aria's `isFocused` /
+ *   `isFocusVisible` render props, which is how the trigger toggle can switch
+ *   between `:focus` and `:focus-visible` without every block below being
+ *   written twice.
+ *
+ * Pseudo-element variants hang off `[data-slot="control"]`, the `position:
+ * relative` span `Input` already wraps itself in — an `<input>` is a replaced
+ * element and cannot have `::before` or `::after` of its own.
+ */
+
+/* ---------------- the demo scaffold ---------------- */
+
+.quebi-focus-demo {
+  position: relative;
+  /* Room for the label, which is absolutely positioned so that the two
+     label-driven variants can move it without the other thirty-one changing
+     height. Every tile is the same height as a result. */
+  padding-top: 1.25rem;
+  --quebi-focus-accent: var(--q-brand-mark);
+  --quebi-focus-backdrop: var(--q-bg);
+}
+
+.quebi-focus-demo[data-state="invalid"] {
+  --quebi-focus-accent: var(--q-danger);
+}
+
+.quebi-focus-demo-label {
+  position: absolute;
+  top: 0;
+  inset-inline-start: 0;
+  transition:
+    top 160ms ease-out,
+    inset-inline-start 160ms ease-out,
+    color 160ms ease-out,
+    font-size 160ms ease-out;
+}
+
+.quebi-focus-demo [data-slot="label"] + [data-slot="control"] {
+  margin-top: 0;
+}
+
+/* Shown only by the variant that is about revealing it. */
+.quebi-focus-demo-hint {
+  display: none;
+}
+
+/*
+ * The neutral field: `Input` with its own focus treatment taken off, so that
+ * what a tile shows is the variant and nothing else. Resting border and tint
+ * are repeated from `input.tsx` rather than inherited, because the reset has to
+ * name a value to put back.
+ */
+.quebi-focus-field {
+  transition:
+    box-shadow 160ms ease-out,
+    border-color 160ms ease-out,
+    background-color 160ms ease-out,
+    outline-color 160ms ease-out,
+    transform 160ms ease-out;
+}
+
+.quebi-focus-field:focus,
+.quebi-focus-field:focus-visible {
+  outline: none;
+  box-shadow: none;
+  transform: none;
+  border-color: color-mix(in oklab, var(--q-line) 20%, transparent);
+  background-color: color-mix(in oklab, var(--q-surface) 2%, transparent);
+}
+
+/* ---------------- the surfaces ---------------- */
+/*
+ * Each sets its own background *and* reports it as `--quebi-focus-backdrop`, so
+ * an offset ring offsets into the colour actually behind it. Declaring them
+ * together is the point: they cannot drift apart.
+ */
+
+.quebi-focus-surface-page {
+  background-color: var(--q-bg);
+  --quebi-focus-backdrop: var(--q-bg);
+}
+
+.quebi-focus-surface-card {
+  background-color: color-mix(in oklab, var(--q-surface) 2%, var(--q-bg));
+  --quebi-focus-backdrop: color-mix(in oklab, var(--q-surface) 2%, var(--q-bg));
+}
+
+.quebi-focus-surface-row {
+  background-color: color-mix(in oklab, var(--q-surface) 6%, var(--q-bg));
+  --quebi-focus-backdrop: color-mix(in oklab, var(--q-surface) 6%, var(--q-bg));
+}
+
+/* ================================================================== */
+/*  0. Baseline                                                        */
+/* ================================================================== */
+
+/* The anti-pattern, rendered so it can be compared rather than described. */
+.quebi-focus-demo[data-focus-variant="none"] .quebi-focus-field.quebi-focus-lit {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ================================================================== */
+/*  A. Perimeter — outline                                             */
+/* ================================================================== */
+
+/* No colour is named: `auto` hands the drawing to the browser, which is why
+   this tile looks different in Chrome, Safari and Firefox. */
+.quebi-focus-demo[data-focus-variant="ua-default"] .quebi-focus-field.quebi-focus-lit {
+  outline-style: auto;
+  outline-offset: 0;
+}
+
+.quebi-focus-demo[data-focus-variant="outline-flush"] .quebi-focus-field.quebi-focus-lit {
+  outline: 2px solid var(--quebi-focus-accent);
+  outline-offset: 0;
+}
+
+.quebi-focus-demo[data-focus-variant="outline-offset"] .quebi-focus-field.quebi-focus-lit {
+  outline: 2px solid var(--quebi-focus-accent);
+  outline-offset: 2px;
+}
+
+.quebi-focus-demo[data-focus-variant="outline-inset"] .quebi-focus-field.quebi-focus-lit {
+  outline: 2px solid var(--quebi-focus-accent);
+  outline-offset: -4px;
+}
+
+.quebi-focus-demo[data-focus-variant="outline-dashed"] .quebi-focus-field.quebi-focus-lit {
+  outline: 2px dashed var(--quebi-focus-accent);
+  outline-offset: 2px;
+}
+
+/* Accent inside, page-foreground outside: the pair clears 3:1 against any
+   backdrop, because one of the two always contrasts with it. */
+.quebi-focus-demo[data-focus-variant="halo-two-tone"] .quebi-focus-field.quebi-focus-lit {
+  box-shadow: 0 0 0 3px var(--quebi-focus-accent);
+  outline: 2px solid var(--q-fg);
+  outline-offset: 3px;
+}
+
+/* ================================================================== */
+/*  B. Perimeter — box-shadow ring                                     */
+/* ================================================================== */
+
+.quebi-focus-demo[data-focus-variant="ring-flush"] .quebi-focus-field.quebi-focus-lit {
+  border-color: var(--quebi-focus-accent);
+  box-shadow: 0 0 0 2px var(--quebi-focus-accent);
+}
+
+/* quebi's own treatment: the 2px band of backdrop is what stops the border and
+   the ring reading as one 3px bloom. See tests/focus-treatment.test.ts. */
+.quebi-focus-demo[data-focus-variant="ring-offset"] .quebi-focus-field.quebi-focus-lit {
+  border-color: var(--quebi-focus-accent);
+  box-shadow:
+    0 0 0 2px var(--quebi-focus-backdrop),
+    0 0 0 4px var(--quebi-focus-accent);
+}
+
+.quebi-focus-demo[data-focus-variant="ring-inset"] .quebi-focus-field.quebi-focus-lit {
+  box-shadow: inset 0 0 0 2px var(--quebi-focus-accent);
+}
+
+.quebi-focus-demo[data-focus-variant="ring-glow"] .quebi-focus-field.quebi-focus-lit {
+  border-color: var(--quebi-focus-accent);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--quebi-focus-accent) 25%, transparent);
+}
+
+/* Thick and translucent. The same ink spread over three times the area, and
+   the reason 1.4.11 is measured on contrast rather than on prominence. */
+.quebi-focus-demo[data-focus-variant="ring-thick-soft"] .quebi-focus-field.quebi-focus-lit {
+  box-shadow: 0 0 0 6px color-mix(in oklab, var(--quebi-focus-accent) 22%, transparent);
+}
+
+@keyframes quebi-focus-ring-in {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.quebi-focus-demo[data-focus-variant="ring-animated"] [data-slot="control"]:has(> .quebi-focus-lit)::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 2px solid var(--quebi-focus-accent);
+  border-radius: calc(var(--radius-quebi-sm) + 4px);
+  pointer-events: none;
+  animation: quebi-focus-ring-in 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quebi-focus-demo[data-focus-variant="ring-animated"] [data-slot="control"]:has(> .quebi-focus-lit)::after {
+    animation: none;
+  }
+}
+
+/* A gradient cannot be a border-color, so it is a padding-box/content-box mask
+   over a gradient-filled pseudo — the standard trick, and the reason this one
+   costs an extra element everywhere it is used. */
+.quebi-focus-demo[data-focus-variant="ring-gradient"] [data-slot="control"]:has(> .quebi-focus-lit)::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: calc(var(--radius-quebi-sm) + 3px);
+  padding: 2px;
+  pointer-events: none;
+  background: conic-gradient(
+    from 180deg,
+    var(--quebi-focus-accent),
+    color-mix(in oklab, var(--quebi-focus-accent) 15%, transparent),
+    var(--quebi-focus-accent)
+  );
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+}
+
+.quebi-focus-demo[data-focus-variant="corner-brackets"] [data-slot="control"]:has(> .quebi-focus-lit)::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 2px solid var(--quebi-focus-accent);
+  border-radius: calc(var(--radius-quebi-sm) + 4px);
+  pointer-events: none;
+  mask:
+    linear-gradient(#000 0 0) 0 0 / 14px 14px no-repeat,
+    linear-gradient(#000 0 0) 100% 0 / 14px 14px no-repeat,
+    linear-gradient(#000 0 0) 0 100% / 14px 14px no-repeat,
+    linear-gradient(#000 0 0) 100% 100% / 14px 14px no-repeat;
+}
+
+/* ================================================================== */
+/*  C. Border                                                          */
+/* ================================================================== */
+
+.quebi-focus-demo[data-focus-variant="border-color"] .quebi-focus-field.quebi-focus-lit {
+  border-color: var(--quebi-focus-accent);
+}
+
+/* A real 1px -> 2px border reflows the field, so the second pixel is an inset
+   ring instead. Same drawing, no layout cost — and the substitution is the
+   lesson rather than a cheat. */
+.quebi-focus-demo[data-focus-variant="border-thicken"] .quebi-focus-field.quebi-focus-lit {
+  border-color: var(--quebi-focus-accent);
+  box-shadow: inset 0 0 0 1px var(--quebi-focus-accent);
+}
+
+.quebi-focus-demo[data-focus-variant="underline"] .quebi-focus-field.quebi-focus-lit {
+  box-shadow: inset 0 -2px 0 0 var(--quebi-focus-accent);
+}
+
+.quebi-focus-demo[data-focus-variant="underline-grow"] [data-slot="control"]:has(> .quebi-focus-field)::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background-color: var(--quebi-focus-accent);
+  transform: scaleX(0);
+  transition: transform 200ms ease-out;
+  pointer-events: none;
+}
+
+.quebi-focus-demo[data-focus-variant="underline-grow"] [data-slot="control"]:has(> .quebi-focus-lit)::after {
+  transform: scaleX(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quebi-focus-demo[data-focus-variant="underline-grow"] [data-slot="control"]:has(> .quebi-focus-field)::after {
+    transition: none;
+  }
+}
+
+/* Logical inset rather than a `box-shadow`, so the bar stays on the reading
+   edge in RTL. */
+.quebi-focus-demo[data-focus-variant="edge-bar"] [data-slot="control"]:has(> .quebi-focus-lit)::after {
+  content: "";
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  border-start-start-radius: var(--radius-quebi-sm);
+  border-end-start-radius: var(--radius-quebi-sm);
+  background-color: var(--quebi-focus-accent);
+  pointer-events: none;
+}
+
+/*
+ * The two label-driven variants move the label to coordinates that follow from
+ * the field's own box, so the numbers are derived rather than eyeballed:
+ * `Input` at its default `md` size is `text-sm px-3 py-2.5` over a 1px border —
+ * 20px of line box, 10px of padding each side, 42px tall, with its text
+ * starting 13px in. The wrapper reserves 1.25rem above it for the label, whose
+ * own line box is ~16px. So the field's vertical centre is at 41px (2.05rem),
+ * its top border at 20.5px (~0.78rem once the label's half-height is taken
+ * off), and its text edge at 0.8125rem.
+ */
+
+/* Material's *filled* idiom: the label rests inside the field and lifts clear
+   of it. It doubles as the placeholder, which is why the field has none. */
+.quebi-focus-demo[data-focus-variant="float-label"] .quebi-focus-demo-label {
+  top: 2.05rem;
+  inset-inline-start: 0.8125rem;
+  font-weight: 400;
+  color: var(--q-fg-subtle);
+}
+
+.quebi-focus-demo[data-focus-variant="float-label"]:has(.quebi-focus-lit) .quebi-focus-demo-label {
+  top: 0;
+  inset-inline-start: 0;
+  font-weight: 600;
+  color: var(--quebi-focus-accent);
+}
+
+.quebi-focus-demo[data-focus-variant="float-label"] .quebi-focus-field.quebi-focus-lit {
+  border-color: var(--quebi-focus-accent);
+}
+
+/* Material's *outlined* idiom: the same lift, but the label lands on the border
+   carrying a chip of the backdrop, which is what cuts the notch. It is the only
+   variant here that is wrong the instant `--quebi-focus-backdrop` is wrong. */
+.quebi-focus-demo[data-focus-variant="notched-outline"] .quebi-focus-demo-label {
+  top: 2.05rem;
+  inset-inline-start: 0.8125rem;
+  font-weight: 400;
+  color: var(--q-fg-subtle);
+}
+
+.quebi-focus-demo[data-focus-variant="notched-outline"]:has(.quebi-focus-lit) .quebi-focus-demo-label {
+  top: 0.78rem;
+  inset-inline-start: 0.5625rem;
+  padding-inline: 0.25rem;
+  font-weight: 600;
+  color: var(--quebi-focus-accent);
+  background-color: var(--quebi-focus-backdrop);
+}
+
+.quebi-focus-demo[data-focus-variant="notched-outline"] .quebi-focus-field.quebi-focus-lit {
+  border-color: var(--quebi-focus-accent);
+  box-shadow: inset 0 0 0 1px var(--quebi-focus-accent);
+}
+
+/* ================================================================== */
+/*  D. Fill and depth                                                  */
+/* ================================================================== */
+
+.quebi-focus-demo[data-focus-variant="bg-tint"] .quebi-focus-field.quebi-focus-lit {
+  border-color: var(--quebi-focus-accent);
+  background-color: color-mix(in oklab, var(--quebi-focus-accent) 14%, transparent);
+}
+
+.quebi-focus-demo[data-focus-variant="inverted"] .quebi-focus-field.quebi-focus-lit {
+  border-color: var(--quebi-focus-accent);
+  background-color: var(--quebi-focus-accent);
+  color: var(--q-on-brand);
+  caret-color: var(--q-on-brand);
+}
+
+.quebi-focus-demo[data-focus-variant="inverted"] .quebi-focus-field.quebi-focus-lit::placeholder {
+  color: color-mix(in oklab, var(--q-on-brand) 65%, transparent);
+}
+
+.quebi-focus-demo[data-focus-variant="elevation"] .quebi-focus-field.quebi-focus-lit {
+  border-color: var(--quebi-focus-accent);
+  box-shadow: var(--q-glow-strong);
+}
+
+.quebi-focus-demo[data-focus-variant="scale"] .quebi-focus-field.quebi-focus-lit {
+  border-color: var(--quebi-focus-accent);
+  transform: scale(1.03);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quebi-focus-demo[data-focus-variant="scale"] .quebi-focus-field.quebi-focus-lit {
+    transform: none;
+  }
+}
+
+/* Deliberately nothing but the caret, to show how little that is. */
+.quebi-focus-demo[data-focus-variant="caret"] .quebi-focus-field.quebi-focus-lit {
+  caret-color: var(--quebi-focus-accent);
+}
+
+/* ================================================================== */
+/*  E. Satellite — the indicator is not on the control                 */
+/* ================================================================== */
+
+.quebi-focus-demo[data-focus-variant="label-accent"]:has(.quebi-focus-lit) .quebi-focus-demo-label {
+  color: var(--quebi-focus-accent);
+}
+
+.quebi-focus-demo[data-focus-variant="adornment"] .quebi-focus-field {
+  padding-inline-end: 2rem;
+}
+
+.quebi-focus-demo[data-focus-variant="adornment"] [data-slot="control"]:has(> .quebi-focus-field)::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: 0.75rem;
+  top: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-top: -0.25rem;
+  border-radius: 9999px;
+  background-color: var(--q-fg-subtle);
+  transition: background-color 160ms ease-out;
+  pointer-events: none;
+}
+
+.quebi-focus-demo[data-focus-variant="adornment"] [data-slot="control"]:has(> .quebi-focus-lit)::after {
+  background-color: var(--quebi-focus-accent);
+}
+
+/* The hint is in the DOM for every tile and displayed only here, so the other
+   thirty-two keep their height. */
+.quebi-focus-demo[data-focus-variant="hint-reveal"] .quebi-focus-demo-hint {
+  display: block;
+  margin-top: 0.375rem;
+  opacity: 0;
+  transition: opacity 160ms ease-out;
+}
+
+.quebi-focus-demo[data-focus-variant="hint-reveal"]:has(.quebi-focus-lit) .quebi-focus-demo-hint {
+  opacity: 1;
+}
+
+/* The ring wraps the label, the control and the hint as one block. It needs
+   room of its own, so this is the one variant that changes the tile's padding. */
+.quebi-focus-demo[data-focus-variant="field-ring"] {
+  padding: 1.5rem 0.5rem 0.5rem;
+  margin-inline: -0.5rem;
+  border-radius: var(--radius-quebi-sm);
+}
+
+.quebi-focus-demo[data-focus-variant="field-ring"] .quebi-focus-demo-label {
+  top: 0.25rem;
+  inset-inline-start: 0.5rem;
+}
+
+.quebi-focus-demo[data-focus-variant="field-ring"]:has(.quebi-focus-lit) {
+  box-shadow:
+    0 0 0 2px var(--quebi-focus-backdrop),
+    0 0 0 4px var(--quebi-focus-accent);
+}
+
+/* ================================================================== */
+/*  F. System-driven                                                   */
+/* ================================================================== */
+
+/*
+ * `Highlight` and `HighlightText` are real CSS system colours, not a
+ * forced-colors-only spelling, so this tile draws the operating system's own
+ * selection colour on an ordinary display too. In forced-colors mode it is the
+ * only family on this page that is guaranteed to survive: every `box-shadow`
+ * above is dropped there, and `border-color` is overridden by the user's
+ * palette. An `outline` is the one perimeter that is kept.
+ */
+.quebi-focus-demo[data-focus-variant="system-highlight"] .quebi-focus-field.quebi-focus-lit {
+  outline: 3px solid Highlight;
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  .quebi-focus-demo[data-focus-variant="system-highlight"] .quebi-focus-field.quebi-focus-lit {
+    outline-color: Highlight;
+  }
+}
+
+/*
+ * Present, inert, and worth seeing be inert: `accent-color` tints the glyph a
+ * browser draws for a native checkbox, radio or range. A text input has no such
+ * glyph, so this tile is identical to the suppressed one at the top.
+ */
+.quebi-focus-demo[data-focus-variant="accent-color"] .quebi-focus-field {
+  accent-color: var(--quebi-focus-accent);
+}

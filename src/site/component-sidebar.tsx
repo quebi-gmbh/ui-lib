@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react"
 import { NavLink, useMatch } from "react-router"
-import { LayoutGrid } from "lucide-react"
+import { Focus, LayoutGrid } from "lucide-react"
 import {
   Disclosure,
   DisclosureGroup,
@@ -99,6 +99,23 @@ export function ComponentSidebar({ onNavigate }: { onNavigate?: () => void }) {
       >
         <LayoutGrid className="h-4 w-4" />
         All components
+      </NavLink>
+
+      {/* The written pages in this section. Not registry slugs, so they cannot
+          arrive through the grouped nav below — which is built from
+          metaRegistry and has no entry to put them in. */}
+      <NavLink
+        to="/components/focus"
+        onClick={onNavigate}
+        className={({ isActive, isPending }) =>
+          cn(
+            "mt-1 flex items-center gap-2 rounded-quebi-sm px-3 py-1.5 text-sm transition-colors duration-150",
+            isActive ? CURRENT : isPending ? NAV_PENDING : RESTING,
+          )
+        }
+      >
+        <Focus className="h-4 w-4" />
+        Focus indicators
       </NavLink>
 
       {/* Grouped nav */}

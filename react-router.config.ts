@@ -13,6 +13,10 @@ export default {
     return [
       "/",
       "/components",
+      // Not a registry slug: /components/focus is a written page inside the
+      // catalog section, so it is listed here rather than falling out of
+      // metaRegistry with the components around it.
+      "/components/focus",
       ...metaRegistry.map((c) => `/components/${c.slug}`),
       "/rules",
       "/rules/enforcement",

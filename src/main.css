@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "overlayscrollbars/overlayscrollbars.css";
 @import "./quebi-theme.css";
+/* The focus-indicator catalogue rendered by /components/focus. Kept out of the
+   theme because none of it is a token — it is thirty-three techniques being
+   compared, and the file argues its own case in its header. */
+@import "./focus-variants.css";
 
 /*
  * react-aria-components Tailwind variants.
