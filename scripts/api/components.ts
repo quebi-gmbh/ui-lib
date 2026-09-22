@@ -238,7 +238,14 @@ export async function emitComponents(highlight: Highlight): Promise<{
   // Emit a registry item for each shared lib module a component depends on,
   // so components stay self-contained (no dangling @/lib import).
   for (const lib of [...usedLibs].sort()) {
-    const libSrcPath = join(SRC_DIR, `${lib}.ts`)
+    // A shared helper is usually a `.ts`, but it is allowed to render: the
+    // width a control reserves for its own label is a `<span>` stack, and it is
+    // shared by three components rather than owned by one. Resolving both
+    // extensions is what keeps that a lib instead of a copy in each file, and
+    // the emitted `path` carries whichever it is — a consumer's `lib/foo.ts`
+    // holding JSX would not compile.
+    const libExtension = existsSync(join(SRC_DIR, `${lib}.tsx`)) ? "tsx" : "ts"
+    const libSrcPath = join(SRC_DIR, `${lib}.${libExtension}`)
     if (!existsSync(libSrcPath)) {
       throw new Error(`Component depends on @/${lib} but ${libSrcPath} is missing`)
     }
@@ -256,10 +263,10 @@ export async function emitComponents(highlight: Highlight): Promise<{
       registryDependencies: [],
       files: [
         {
-          path: `${lib}.ts`,
+          path: `${lib}.${libExtension}`,
           content: libSource,
           type: "registry:lib",
-          target: `${lib}.ts`,
+          target: `${lib}.${libExtension}`,
         },
       ],
     }

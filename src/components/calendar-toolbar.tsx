@@ -18,6 +18,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/toggle-group"
 import { isoWeekNumber, WeekPicker } from "@/components/week-picker"
 import { YearPicker } from "@/components/year-picker"
 import { getDateTimeFormat, getNumberFormat } from "@/lib/intl"
+import { SteadyWidth, useSteadyWidth } from "@/lib/steady-width"
 import { cn } from "@/lib/utils"
 
 /**
@@ -501,6 +502,15 @@ export function CalendarToolbar({
   const previousDisabled = isPreviousDisabled ?? (date ? isOutOfBounds(date.subtract(step)) : false)
   const nextDisabled = isNextDisabled ?? (date ? isOutOfBounds(date.add(step)) : false)
 
+  // The three things that decide how wide the heading can ever get: the unit it
+  // spells (a year is four characters, a day is a sentence), the language it
+  // spells it in, and the view, which is what the caller switches the format on
+  // when it keeps the granularity. The width reserved for the heading is held
+  // for as long as all three hold — see `useSteadyWidth`.
+  const labelShape = `${pickerGranularity}|${locale ?? ""}|${view ?? ""}`
+  const { ref: staticLabelRef, style: staticLabelStyle } =
+    useSteadyWidth<HTMLSpanElement>(labelShape)
+
   // Computed as the element rather than as a boolean, because the two things
   // that decide it are also the two the picker needs, and TypeScript only
   // narrows them here.
@@ -530,6 +540,7 @@ export function CalendarToolbar({
         todayLabel={todayLabel}
         todayVariant={todayVariant}
         navigationLabel={navigationLabel}
+        labelShape={labelShape}
       />
     ) : null
 
@@ -611,12 +622,25 @@ export function CalendarToolbar({
         ) : (
           <>
             <span
+              ref={staticLabelRef}
+              style={staticLabelStyle}
               data-slot="calendar-toolbar-label"
-              className="font-semibold text-base text-quebi-fg tracking-tight"
+              className="truncate font-semibold text-base text-quebi-fg tracking-tight"
             >
               {label}
             </span>
-            {isPending ? <Loader className="text-quebi-fg-muted" /> : null}
+            {/* The spinner's box is drawn whether or not it is spinning. A
+                spinner that appears between the label and the bar is 16px plus
+                a 12px gap of shift, applied at the exact moment a press is in
+                flight — which is to say, to the group the reader has their
+                pointer in. Holding the slot open costs 16px of air and moves
+                nothing. */}
+            <span
+              data-slot="calendar-toolbar-pending"
+              className="inline-flex size-4 shrink-0 items-center justify-center"
+            >
+              {isPending ? <Loader className="text-quebi-fg-muted" /> : null}
+            </span>
             {hasBarControls ? (
               <ButtonGroup aria-label={navigationLabel}>{barControls}</ButtonGroup>
             ) : null}
@@ -659,7 +683,14 @@ export function CalendarToolbar({
                     viewVariant === "responsive" && "sm:hidden",
                   )}
                 >
-                  {activeView?.label ?? view}
+                  {/* Every view name is known here, so the trigger is the width
+                      of the longest of them from the first frame — `Timeline`
+                      is half as wide again as `Day`, and a trigger that resized
+                      on selection would move under the pointer that just
+                      selected. No measurement, and right in the prerender. */}
+                  <SteadyWidth candidates={viewOptions.map((option) => option.label)}>
+                    {activeView?.label ?? view}
+                  </SteadyWidth>
                   <ChevronDown data-slot="icon" className="text-quebi-fg-muted" aria-hidden="true" />
                 </MenuTrigger>
                 <MenuContent
@@ -861,6 +892,13 @@ interface CalendarToolbarPickerProps {
   todayLabel: string
   todayVariant: CalendarToolbarTodayVariant
   navigationLabel: string
+  /**
+   * What the heading's width is reserved *for* — the format of the label, not
+   * the label. The reservation drops when this changes, so a toolbar that
+   * switches from a spelled-out day to a bare year does not keep 260px open for
+   * four digits.
+   */
+  labelShape: string
 }
 
 /**
@@ -923,10 +961,12 @@ function CalendarToolbarPicker({
   todayLabel,
   todayVariant,
   navigationLabel,
+  labelShape,
 }: CalendarToolbarPickerProps) {
   const { locale: ambientLocale } = useLocale()
   const [isOpen, setIsOpen] = useState(false)
   const gridLabel = pickerLabel ?? DEFAULT_GRID_LABELS[granularity]
+  const { ref: labelRef, style: labelStyle } = useSteadyWidth<HTMLSpanElement>(labelShape)
 
   // Computed here as well as inside the grid, and from the same two inputs, so
   // that the week handed down as the value and the week read back out of the
@@ -950,7 +990,22 @@ function CalendarToolbarPicker({
         // (task #208).
         className="min-w-0 py-1.5 font-semibold text-base tracking-tight"
       >
-        <span className="truncate">{label}</span>
+        {/* The one segment in the bar whose width is a sentence, and the
+            sentence changes on every press. Left to size itself, it took 40px
+            away from `Today` and the forward chevron the moment the date went
+            from `Donnerstag, 24. September 2026` to `Freitag, 2. Oktober 2026`
+            — so the button under the reader's pointer moved out from under it
+            between the first press and the second. The heading now keeps the
+            widest width it has held for this label shape.
+
+            A high-water mark rather than a reserved maximum because the label
+            is the caller's string: `calendarRangeLabel` is the library's, but
+            the toolbar is handed the result, and there is no format to ask how
+            wide September can get. It is a `width`, not a `min-width`, so a
+            390px viewport still wins and the label still truncates (#208). */}
+        <span ref={labelRef} style={labelStyle} className="truncate">
+          {label}
+        </span>
         {isPending ? (
           <Loader className="text-quebi-fg-muted" />
         ) : (

@@ -10,6 +10,10 @@
  * `PaginationJump` is here for the thing that is a bug in the pager next door:
  * a jump field seeded once shows the page it mounted on. This one follows the
  * page it is told about.
+ *
+ * The window is here for the other one: it is short at the ends of the range,
+ * and a centred row that drew only the pages it had moved sideways under the
+ * press that moved it.
  */
 import { describe, expect, test } from "bun:test"
 import { render, screen } from "@testing-library/react"
@@ -18,12 +22,14 @@ import { useState } from "react"
 import { Button } from "../../src/components/button"
 import {
   Pagination,
+  PaginationGap,
   PaginationItem,
   PaginationJump,
   PaginationList,
   PaginationNext,
   PaginationPrevious,
 } from "../../src/components/pagination"
+import { pageItems } from "../../src/lib/data-table"
 
 describe("a pager whose pages are not addresses", () => {
   test("a press-only page reports itself and offers no href", async () => {
@@ -149,5 +155,103 @@ describe("the jump field", () => {
     await user.click(screen.getByRole("button", { name: "Go" }))
     expect(jumped).toEqual([7])
     expect(screen.queryByText("Enter a page between 1 and 15")).toBeNull()
+  })
+})
+
+/**
+ * `Go` shares the field's edge, so the field's end corners are square — and a
+ * focus indicator that keeps its curve there is an indicator that disagrees
+ * with the control it marks.
+ *
+ * `NumberInput` draws the ring on the wrapper around its input rather than on
+ * the input, so that a prefix, a suffix and the steppers all light up as one
+ * control. `PaginationJump` squared the input for the seam and left that
+ * wrapper alone, so the focused field was a square-cornered border inside a
+ * rounded ring that stood 4px proud of `Go`'s edge, above and below it.
+ */
+describe("the seam between the jump field and Go", () => {
+  test("the ring is on the wrapper, and the wrapper is squared with the input", () => {
+    render(<PaginationJump page={1} pageCount={15} onJump={() => {}} />)
+
+    const input = screen.getByRole("textbox", { name: "Go to page" })
+    const wrapper = input.closest("[data-slot=control]")
+    if (!wrapper) throw new Error("the input has no control wrapper around it")
+    const field = wrapper.parentElement
+    if (!field) throw new Error("the control wrapper has no field around it")
+
+    // The premise: the indicator belongs to the wrapper, not to the input, so
+    // squaring the input alone cannot reach it.
+    expect(wrapper.className).toContain("focus-within:ring-2")
+    expect(input.className).not.toContain("ring-2")
+
+    // So the seam is squared on both.
+    expect(field.className).toContain("[&_input]:rounded-e-none")
+    expect(field.className).toContain("[&>[data-slot=control]]:rounded-e-none")
+  })
+})
+
+describe("the row a press does not move", () => {
+  const Row = ({ page }: { page: number }) => (
+    <Pagination>
+      <PaginationList>
+        <PaginationPrevious onPress={() => {}} />
+        {pageItems(page, 24).map((item, index) => {
+          // biome-ignore lint/suspicious/noArrayIndexKey: a position is all a gap is.
+          if (item === "gap") return <PaginationGap key={`gap-${index}`} />
+          return (
+            <PaginationItem key={item} isCurrent={item === page} onPress={() => {}}>
+              {item + 1}
+            </PaginationItem>
+          )
+        })}
+        <PaginationNext onPress={() => {}} />
+      </PaginationList>
+    </Pagination>
+  )
+
+  test("every page of a truncated range draws the same number of slots", () => {
+    const { container, rerender } = render(<Row page={0} />)
+    const slots = () => container.querySelectorAll("li").length
+    // Two arrows and the seven-slot window, on the first page …
+    expect(slots()).toBe(9)
+    // … in the middle of the range, where the band has room either side and the
+    // row is three pages between two gaps …
+    rerender(<Row page={12} />)
+    expect(slots()).toBe(9)
+    // … and on the last, where the band is clipped the other way.
+    rerender(<Row page={23} />)
+    expect(slots()).toBe(9)
+  })
+
+  test("the slots the ends would have lost hold pages instead", () => {
+    render(<Row page={0} />)
+    // Page 1 of 24 has no page 0 to its left, so the band grows the other way:
+    // the three slots the row would otherwise drop are pages 3, 4 and 5, and
+    // every one of them is a target a reader can press or hear.
+    expect(screen.getAllByRole("button").map((target) => target.textContent)).toEqual([
+      "",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "24",
+      "",
+    ])
+    expect(screen.getByRole("button", { name: "1" })).toHaveAttribute("aria-current", "page")
+  })
+
+  test("the last page grows its band the other way", () => {
+    render(<Row page={23} />)
+    expect(screen.getAllByRole("button").map((target) => target.textContent)).toEqual([
+      "",
+      "1",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24",
+      "",
+    ])
   })
 })

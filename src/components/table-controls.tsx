@@ -674,11 +674,12 @@ export function TablePager({
               isDisabled={!range.hasPrevious}
               onPress={() => onPageChange(page - 1)}
             />
-            {pages.map((item, index) =>
-              item === "gap" ? (
-                // biome-ignore lint/suspicious/noArrayIndexKey: a gap has no identity beyond its position in the window.
-                <PaginationGap key={`gap-${index}`} />
-              ) : (
+            {pages.map((item, index) => {
+              // A gap is a position rather than a page, so the index is the
+              // only identity it has.
+              // biome-ignore lint/suspicious/noArrayIndexKey: see above.
+              if (item === "gap") return <PaginationGap key={`gap-${index}`} />
+              return (
                 <PaginationItem
                   key={item}
                   isCurrent={item === page}
@@ -686,8 +687,8 @@ export function TablePager({
                 >
                   {item + 1}
                 </PaginationItem>
-              ),
-            )}
+              )
+            })}
             <PaginationNext
               isDisabled={!range.hasNext}
               onPress={() => onPageChange(page + 1)}

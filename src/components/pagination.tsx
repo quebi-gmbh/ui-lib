@@ -493,9 +493,18 @@ const PaginationJump = ({
             "[&>[data-slot=label]]:whitespace-nowrap",
             "[&>[slot=errorMessage]]:basis-full",
             "[&>[data-slot=control]]:w-16",
-            // The group squares its children's inner corners; the corner that
-            // meets `Go` belongs to the input inside this one.
+            // The group squares its children's inner corners, but this child is
+            // a whole field rather than a control: the corner that meets `Go`
+            // belongs to the input two levels down — and so does the focus
+            // indicator, which `NumberInput` draws as a ring on the wrapper
+            // around that input so every segment of a number field highlights
+            // together. Squaring only the input left the two disagreeing about
+            // where the field stops: a square border inside a ring that still
+            // curved away from the seam and stood 4px proud of it, top and
+            // bottom. Both corners go, so the indicator ends where the field
+            // does.
             "[&_input]:rounded-e-none",
+            "[&>[data-slot=control]]:rounded-e-none",
           )}
         >
           <Label>{label}</Label>
