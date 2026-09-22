@@ -38,7 +38,10 @@ import { cn } from "@/lib/utils"
  * Three parts, because a rail is a page layout as much as a control:
  *
  * - `FilterRail` — the facets. Sticky and independently scrolled beside the
- *   content at `lg`, a full-width stack above it below that.
+ *   content once there is room for a sidebar, a full-width stack above it when
+ *   there is not. Room is a question about the layout's own box, never about
+ *   the window — `lg` would be the wrong word for it and used to be the one
+ *   written here.
  * - `FilterRailSummary` — the active filters as chips, next to the results.
  *   At the widths where the rail sits above the fold it is the only thing on
  *   screen saying *why* the list is short.
@@ -139,18 +142,31 @@ export interface FilterRailLayoutProps {
  * `@sm:` / `@2xl:` variants and never learns a container name. The two the
  * library queries itself are named (`rail-layout`, `rail`) so that they cannot
  * be the nearest one by accident.
+ *
+ * **Why the row is a second element.** A query container is chosen from an
+ * element's *ancestors*, never from the element itself — it has to be, because
+ * `container-type: inline-size` promises that the element's inline size does
+ * not depend on its contents, and a box that sized itself from a query about
+ * its own size would be circular. So `@container/rail-layout` and
+ * `@3xl/rail-layout:flex-row` cannot live on one div: the declaration wins and
+ * the query is simply never true.
+ *
+ * They did live on one div, and the result was the whole pattern's failure mode
+ * in one shape. The rail is a *descendant*, so its own `@3xl/rail-layout:`
+ * variants resolved and it took the full sidebar treatment — 224px wide,
+ * `sticky`, `max-height`, its own scrollbar. The layout stayed a column. That
+ * is a 224px sticky box stacked *above* a full-width grid with one containing
+ * block between them, so scrolling detached it from its flow position and rode
+ * it down over the cards, painting on top of them because it is positioned.
+ * The side-by-side shape everything above argues for had never once rendered.
  */
 export function FilterRailLayout({ rail, children, className }: FilterRailLayoutProps) {
   return (
-    <div
-      className={cn(
-        "@container/rail-layout flex w-full flex-col gap-6",
-        "@3xl/rail-layout:flex-row @3xl/rail-layout:items-start",
-        className,
-      )}
-    >
-      {rail}
-      <div className="@container flex min-w-0 flex-1 flex-col gap-4">{children}</div>
+    <div className={cn("@container/rail-layout w-full", className)}>
+      <div className="flex flex-col gap-6 @3xl/rail-layout:flex-row @3xl/rail-layout:items-start">
+        {rail}
+        <div className="@container flex min-w-0 flex-1 flex-col gap-4">{children}</div>
+      </div>
     </div>
   )
 }
