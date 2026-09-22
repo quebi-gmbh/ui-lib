@@ -359,31 +359,6 @@ function NumberFacet({
   ]
   return (
     <Slider
-      // Padded by a thumb's worth, and that padding is the one thing standing
-      // between this facet and a scrollbar the rail never asked for. A thumb is
-      // *centred* on the end of its track, so at either bound half of it — 10px
-      // of a `size-5` thumb — is drawn outside the track by design. In the
-      // sidebar shape the rail is an `overflow-y-auto` box, and setting overflow
-      // on one axis turns the other from `visible` into `auto`: the low thumb
-      // was clipped at the left edge, where overflow is not even scrollable and
-      // so there was no way to bring it back, and the high thumb put 10px of
-      // scrollable width to the right, which is a horizontal scrollbar under
-      // eight facets that fit the column perfectly well. Both thumbs rendered as
-      // half-circles pinned to the rail's edges.
-      //
-      // Padding on the slider rather than margin on the track, because the track
-      // is `w-full`: a margin on it resolves its width against the box it was
-      // supposed to sit inside and hangs the same 32px out of the other end.
-      // Padding moves the track's containing block instead, which is the thing
-      // `w-full` is asking about.
-      //
-      // 16px, not 10: the thumb grows to 110% while dragging (11px of overhang)
-      // and draws a 2px focus ring 2px clear of itself (4px more), so 15px is
-      // the widest any part of it is ever drawn outside the track and
-      // `--spacing(4)` is the next stop on the scale. The readout underneath
-      // takes the padding back off, so the bounds stay flush with the column
-      // like every other facet's text.
-      className="px-4"
       aria-labelledby={labelledBy}
       minValue={min}
       maxValue={max}
@@ -425,7 +400,7 @@ function NumberFacet({
           labels: a prerendered page has to format a number through the locale
           the page was rendered in, and `FormattedNumber` is the only thing here
           that reads it from the `I18nProvider`. */}
-      <SliderOutput className="-mx-4 flex justify-between text-quebi-fg-muted text-xs">
+      <SliderOutput className="flex justify-between text-quebi-fg-muted text-xs">
         <FormattedNumber value={current[0]} />
         <FormattedNumber value={current[1]} />
       </SliderOutput>

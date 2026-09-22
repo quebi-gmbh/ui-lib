@@ -263,16 +263,20 @@ describe("the scroll box", () => {
     expect(rail.className).toContain("@3xl/rail-layout:pe-3")
     expect(screen.getAllByRole("button", { name: "Clear" })[0]?.className).toContain("-me-2")
 
-    // A slider thumb is centred on the end of its track, so half of it is drawn
-    // outside by design. The padding is on the slider, never on the track: the
-    // track is `w-full`, so a margin there would resolve its width against the
-    // box it was meant to sit inside and hang the same pixels off the far end.
+    // A slider thumb is centred on the end of its track, so half of it, and the
+    // ring around it, is drawn outside by design. The track is inset by a
+    // wrapper's padding and never by a margin of its own: its width is
+    // `group-orientation-horizontal:w-full`, which outruns a bare class at
+    // specificity and would resolve against the box the track was meant to sit
+    // inside, hanging the same pixels off the far end.
     const slider = screen.getByRole("group", { name: "Price" })
-    expect(slider.className).toContain("px-4")
-    // ...and the bounds underneath take it back off, so they stay flush with
+    const track = slider.querySelector('[class*="group/track"]')
+    expect(track).not.toBeNull()
+    expect(track?.parentElement?.className).toMatch(/\bpx-3\.5\b/)
+    // The bounds underneath are outside that wrapper, so they stay flush with
     // the column like every other facet's text.
     const output = within(slider).getByText("89").closest("[data-slot=label]")
-    expect(output?.className).toContain("-mx-4")
+    expect(output?.className).not.toContain("-mx")
   })
 })
 
