@@ -82,6 +82,36 @@ import { cn } from "@/lib/utils"
  */
 const RAIL_WIDTH = "@3xl/rail-layout:w-56 @3xl/rail-layout:shrink-0"
 
+/**
+ * Where the rail pins itself — and the one number in this file the library
+ * cannot work out for itself.
+ *
+ * A sticky offset is measured from the top of the *viewport*, and the viewport
+ * is the one box the rail's container queries cannot ask about. So `top-6`
+ * means "24px below the top of the window", which is right for a page whose
+ * content starts there and wrong by exactly the height of any sticky chrome
+ * above it. This site has a `sticky top-0` header 64px tall, so the stuck
+ * rail's own heading and its Clear all button sat *inside* the header band,
+ * behind a translucent blur, and the `100svh - 48px` cap measured its scroll
+ * box from a top edge 64px higher than the one it could actually use — the
+ * last facet ended up below the bottom of the window with no way to reach it.
+ *
+ * So the offset is a custom property the page sets once, defaulting to the
+ * bare-viewport value. A consumer with no sticky chrome writes nothing and
+ * gets what it had; a consumer with a header declares its height in one place
+ * (`--quebi-rail-top`, on any ancestor — it inherits) and both the pin and the
+ * scroll box follow it, because the two are derived from the same number
+ * rather than typed out twice and left to drift.
+ *
+ * The bottom gap stays `--spacing(6)`: it is a margin against the window's
+ * edge, not against anything the page owns, so there is nothing to declare.
+ */
+const RAIL_STICKY = [
+  "@3xl/rail-layout:sticky",
+  "@3xl/rail-layout:top-[var(--quebi-rail-top,--spacing(6))]",
+  "@3xl/rail-layout:max-h-[calc(100svh-var(--quebi-rail-top,--spacing(6))---spacing(6))]",
+].join(" ")
+
 export interface FilterRailLayoutProps {
   /** The rail itself — a `FilterRail`, or a sheet trigger standing in for one. */
   rail: ReactNode
@@ -498,12 +528,12 @@ export function FilterRail({
         // column to itself. With eight facets it makes no difference; with a
         // real catalogue's worth a static rail scrolls off the top and the
         // answer to "what else could I pick" is three screens back up.
-        "@3xl/rail-layout:sticky @3xl/rail-layout:top-6",
-        "@3xl/rail-layout:max-h-[calc(100svh---spacing(12))] @3xl/rail-layout:overflow-y-auto",
+        RAIL_STICKY,
+        "@3xl/rail-layout:overflow-y-auto",
         className,
       )}
     >
-      <div className="flex items-center justify-between gap-2 pb-4">
+      <div className="flex min-h-8 items-center justify-between gap-2 pb-4">
         <h2 className="font-medium text-quebi-fg text-sm">{ariaLabel}</h2>
         {/* A button, not a low-contrast word beside the title. Clearing every
             facet at once is the most destructive thing the rail does and it was
