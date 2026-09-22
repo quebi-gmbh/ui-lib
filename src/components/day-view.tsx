@@ -12,6 +12,7 @@ import {
   type CalendarToolbarLabelVariant,
   CalendarToolbar,
   type CalendarViewName,
+  type CalendarViewOption,
   useCalendarLocale,
   useCalendarNavigation,
 } from "@/components/calendar-toolbar"
@@ -47,7 +48,7 @@ export interface DayViewProps<E extends CalendarEvent = CalendarEvent>
   showToolbar?: boolean
   /** Highlight a view switch and report presses on it — for a page hosting all four. */
   view?: CalendarViewName
-  views?: readonly CalendarViewName[]
+  views?: readonly CalendarViewOption[]
   onViewChange?: (view: CalendarViewName) => void
   /** Replace the heading the toolbar shows. */
   label?: React.ReactNode

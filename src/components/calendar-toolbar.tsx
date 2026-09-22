@@ -2,18 +2,22 @@
 
 import type { CalendarDate, DateDuration, DateValue } from "@internationalized/date"
 import { startOfWeek, today } from "@internationalized/date"
-import { CalendarCheck, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { CalendarCheck, ChevronDown, ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 import { useState } from "react"
 import { useLocale } from "react-aria-components"
-import { Button } from "@/components/button"
+import { Button, buttonStyles } from "@/components/button"
 import { ButtonGroup } from "@/components/button-group"
 import { Calendar } from "@/components/calendar"
 import { dayToDate, DEFAULT_CALENDAR_TIME_ZONE } from "@/components/calendar-shell"
+import { Loader } from "@/components/loader"
+import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/menu"
 import { MonthPicker } from "@/components/month-picker"
 import { Popover, PopoverContent } from "@/components/popover"
+import { Separator } from "@/components/separator"
 import { ToggleGroup, ToggleGroupItem } from "@/components/toggle-group"
-import { WeekPicker } from "@/components/week-picker"
-import { getDateTimeFormat } from "@/lib/intl"
+import { isoWeekNumber, WeekPicker } from "@/components/week-picker"
+import { YearPicker } from "@/components/year-picker"
+import { getDateTimeFormat, getNumberFormat } from "@/lib/intl"
 import { cn } from "@/lib/utils"
 
 /**
@@ -75,6 +79,62 @@ import { cn } from "@/lib/utils"
  * What is shared is the vocabulary — a chevron pair around a label — not the
  * code. `labelVariant="picker"` therefore mounts a grid of its own inside a
  * popover rather than borrowing one of those three (task #166).
+ *
+ * ## The four slots, and why they are four rather than one `children`
+ *
+ * `children` used to be the whole vocabulary, and it landed in one place: after
+ * the view switcher, inside the right-hand cluster. Every reference calendar
+ * puts things somewhere else. The sidebar toggle and the back-to-list control
+ * sit *before* the date in Google, Outlook and Teams; "New event" is the most
+ * prominent control on the bar and is conventionally its own end of it; and
+ * `⋯` — print, export, settings, show weekends — is the standard trailing home
+ * for everything that has not earned a permanent place. All three were
+ * reachable through `children` and all three came out wedged against the
+ * switcher with the same 8px gap, which reads as part of it (task #213).
+ *
+ * So: `startContent` before the date, `children` after the switcher,
+ * `action` after that behind a rule of its own, and `menu` — items, not a
+ * trigger — last, in a `⋯` the toolbar draws. The toolbar owns the *placement*,
+ * which is the part five consumers would otherwise each answer differently; it
+ * owns none of the controls, which is the part they each genuinely differ on.
+ * A search field, a time-zone select and a density menu are an `Input`, a
+ * `Select` and a `Menu` a page already has, and they go in a slot (task #214).
+ *
+ * ## The bar has to survive a phone
+ *
+ * A spelled-out `Dienstag, 22. September 2026` is 257px, four segments of view
+ * switcher are another 300, and a 390px viewport has neither. The toolbar was
+ * wider than its own card there, with the chevrons clipped off both edges
+ * (task #208). Two things fix it and neither shortens the date on a wide
+ * screen: the heading segment truncates rather than pushing the group past its
+ * container, so the two chevrons stay reachable whatever the label says; and
+ * `viewVariant` collapses the switcher to a `Week ⌄` menu below `sm`, which is
+ * what Google does and for the same reason. The collapse is CSS — both shapes
+ * are rendered and one is hidden — because a media query read during render is
+ * a hydration bug on a prerendered page, which is the same argument that keeps
+ * every number and date in this library inside an explicit formatter.
+ *
+ * `calendarRangeLabel(days, { length: "short" })` is the third lever, and the
+ * caller's: `22.09.2026` where the bar is the whole page's width budget.
+ *
+ * ## It is a `<div>`, not a `role="toolbar"`
+ *
+ * The library ships `toolbar.tsx`, built on react-aria's `Toolbar` for roving
+ * focus, and this component does not use it — so a full bar is seven tab stops
+ * rather than one with arrow-key navigation inside it. That is a decision, not
+ * an oversight (task #215).
+ *
+ * A `role="toolbar"` takes over arrow keys for the whole row, and two of the
+ * things in this row already own theirs: the view switcher is a radiogroup,
+ * where left/right moves *and changes the selection*, and the date controls are
+ * a `ButtonGroup` whose heading opens a grid that owns every arrow key it can
+ * reach. Roving focus above them would either shadow the radiogroup's own
+ * handling or leave a reader with two different meanings for the same key
+ * depending on where they are in the bar. Google Calendar's toolbar is plain tab
+ * stops for the same reason. The name is about where the thing sits on the page,
+ * not about the ARIA role — `TableControls` is not a `role="toolbar"` either.
+ * The groups still carry names (`navigationLabel`, `viewLabel`), which is what a
+ * screen reader actually navigates by here.
  */
 
 /**
@@ -105,8 +165,24 @@ export type CalendarToolbarLabelVariant = "static" | "picker"
  * - `day` — a `Calendar`. `DayView` and `CalendarTimeline`.
  * - `week` — a `WeekPicker`. `WeekView`.
  * - `month` — a `MonthPicker`. `MonthView`.
+ * - `year` — a `YearPicker`. A heading reading `2026`, which is what an agenda
+ *   or a year view spells itself in (task #212).
+ *
+ * There is no `range`. `RangeCalendar` exists and an agenda over an arbitrary
+ * span would want it, but the toolbar holds one `date` and reports one back;
+ * a range picker here would hand out a value the toolbar has nowhere to keep
+ * and no other prop refers to. That is a second shape of this component rather
+ * than a fourth branch of this one.
  */
-export type CalendarToolbarPickerGranularity = "day" | "week" | "month"
+export type CalendarToolbarPickerGranularity = "day" | "week" | "month" | "year"
+
+/** How far one press of a chevron moves, per unit the heading is spelled in. */
+const STEP_BY_GRANULARITY: Record<CalendarToolbarPickerGranularity, DateDuration> = {
+  day: { days: 1 },
+  week: { weeks: 1 },
+  month: { months: 1 },
+  year: { years: 1 },
+}
 
 /**
  * Where one of the date controls is drawn.
@@ -137,15 +213,82 @@ export type CalendarToolbarControlPlacement = "bar" | "popover"
  */
 export type CalendarToolbarTodayVariant = "text" | "icon"
 
-/** The views a toolbar can switch between. A subset is fine; the order is yours. */
-export type CalendarViewName = "day" | "week" | "month" | "timeline"
+/**
+ * The views a toolbar can switch between. A subset is fine; the order is yours.
+ *
+ * Six names have a default word and a surface in this library behind them —
+ * `agenda` is what `DaySchedule` draws and `year` what `YearPicker` does. The
+ * union stays *open* on purpose (task #212): a calendar's fifth view is
+ * whatever its product calls it, and "4 days", "Work week" and "Q3" are not
+ * members anybody can anticipate. Autocomplete still offers the six; anything
+ * else typechecks and needs a word, which is what the object form of `views`
+ * is for. The cost is that a typo is a view rather than an error, so pass
+ * `views` as a `const` array and let the switcher tell you.
+ */
+export type CalendarViewName =
+  | "day"
+  | "week"
+  | "month"
+  | "timeline"
+  | "agenda"
+  | "year"
+  // `Record<never, never>` rather than `{}`: same "any string, but keep the
+  // literals in autocomplete" trick, spelled in a way `noBannedTypes` accepts.
+  | (string & Record<never, never>)
 
-const DEFAULT_VIEW_LABELS: Record<CalendarViewName, string> = {
+/** One switch: a name the library has a word for, or any key with its word. */
+export type CalendarViewOption = CalendarViewName | { id: string; label: string }
+
+/**
+ * The word for each view the library names, when the caller does not.
+ *
+ * A lookup rather than an exhaustive `Record<CalendarViewName, string>`, which
+ * an open union cannot be. An unknown key with no `viewLabels` entry and no
+ * object form falls back to the key itself — visible, unstyled and obviously
+ * yours to fix, rather than an empty segment.
+ */
+const DEFAULT_VIEW_LABELS: Record<string, string> = {
   day: "Day",
   week: "Week",
   month: "Month",
   timeline: "Timeline",
+  agenda: "Agenda",
+  year: "Year",
 }
+
+/**
+ * How the view switcher is drawn.
+ *
+ * - `segmented` — the `ToggleGroup`. Every view visible, one press to any of
+ *   them, and the widest of the three.
+ * - `menu` — a `Week ⌄` button. One control wide whatever the view count.
+ * - `responsive` — the menu below `sm` and the group above it. The default,
+ *   because four segments and a spelled-out date do not fit a phone and the
+ *   toolbar is the one row on a calendar page that cannot be scrolled away
+ *   from (task #208). Both are rendered and CSS hides one: a media query read
+ *   during render would disagree with the prerendered HTML.
+ */
+export type CalendarToolbarViewVariant = "segmented" | "menu" | "responsive"
+
+/**
+ * Where the two chevrons sit relative to the heading they step.
+ *
+ * - `bracketing` — back, heading, today, forward: the ends of the bar point the
+ *   two ways the date moves and what they move sits between them. The default,
+ *   and the argument for it is in `DateControls` below.
+ * - `paired` — back and forward adjacent, then the heading: `[‹][›][22.
+ *   September 2026 ⌄][Today]`. Bracketing puts 320px between the two chevrons
+ *   with a spelled-out heading in between, and stepping back and forth through
+ *   weeks is the single most repeated interaction on a calendar — Google,
+ *   Outlook, Fantastical and Cron all keep the pair adjacent for that reason.
+ *   Which argument wins depends on how often your reader steps, so it is a prop
+ *   rather than a decision in the component (task #215).
+ *
+ * Both only mean something when there is a heading inside the group. Without
+ * one the three controls are `‹ Today ›` either way — symmetric already,
+ * because there is nothing between them to bracket.
+ */
+export type CalendarToolbarNavigationLayout = "bracketing" | "paired"
 
 export interface CalendarToolbarProps {
   /** What you are looking at — usually `calendarRangeLabel(...)`. */
@@ -186,18 +329,60 @@ export interface CalendarToolbarProps {
    */
   locale?: string
   firstDayOfWeek?: "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat"
-  /** Dates before this cannot be picked. */
+  /**
+   * Dates before / after these cannot be picked — *and cannot be stepped to*.
+   *
+   * Both reach the grid the heading opens and the two chevrons beside it. They
+   * used to reach only the grid, so a `maxValue` the month picker refused to
+   * select was one the `›` next to it walked straight past, one press at a time
+   * (task #211). A chevron is disabled when the step would land outside the
+   * bounds, and the step is `pickerGranularity`'s unit — the unit the heading
+   * is spelled in. A view that steps by something else (a four-day view, a
+   * fortnight) says so with `isPreviousDisabled` / `isNextDisabled`, because
+   * the toolbar owns no state and cannot know.
+   */
   minValue?: DateValue
-  /** Dates after this cannot be picked. */
+  /** Dates after this cannot be picked, or stepped to. */
   maxValue?: DateValue
   /** Disable every control the toolbar draws. */
   isDisabled?: boolean
+  /** Override the bound-derived disabled state of the back chevron. */
+  isPreviousDisabled?: boolean
+  /** Override the bound-derived disabled state of the forward chevron. */
+  isNextDisabled?: boolean
+  /**
+   * Grey the today button out, the way every reference calendar does when the
+   * view already contains today.
+   *
+   * A prop with no derived default, which is the one thing here that looks like
+   * an omission and is not. Deriving it means `today(timeZone)` during render,
+   * and this site prerenders: the build machine's day would be baked into the
+   * HTML and the browser's day rolled at hydration, which is the same class of
+   * bug as a bare `toLocaleString()`. The caller already holds today — it is
+   * what `onToday` navigates to — so the honest owner of the answer is the
+   * caller (task #211).
+   */
+  isTodayDisabled?: boolean
+  /**
+   * A press on a chevron is a fetch, and the toolbar says so.
+   *
+   * Every control that changes the date is disabled and the heading carries a
+   * spinner, so a second press cannot queue a second query behind the first —
+   * `ServerTable`'s bargain, in the surface that has the same one (task #214).
+   * The view switcher stays live: switching view is the page's business and is
+   * usually not the query in flight.
+   */
+  isPending?: boolean
   /** The active view. Omit to hide the switcher. */
   view?: CalendarViewName
-  /** Which switches to offer. Defaults to all four. */
-  views?: readonly CalendarViewName[]
+  /** Which switches to offer. Defaults to the four the library draws grids for. */
+  views?: readonly CalendarViewOption[]
   /** Override one or more switch labels — the place to translate them. */
-  viewLabels?: Partial<Record<CalendarViewName, string>>
+  viewLabels?: Record<string, string>
+  /** Accessible name for the switcher itself — the place to translate it. */
+  viewLabel?: string
+  /** Segmented, a menu, or a menu on a phone and segmented above it. */
+  viewVariant?: CalendarToolbarViewVariant
   /** Omit to draw the switcher as a disabled indicator rather than a dead control. */
   onViewChange?: (view: CalendarViewName) => void
   onPrevious?: () => void
@@ -205,6 +390,8 @@ export interface CalendarToolbarProps {
   onToday?: () => void
   /** Where the two chevrons are drawn. Default `bar`. */
   navigationPlacement?: CalendarToolbarControlPlacement
+  /** Bracketing the heading, or adjacent to each other. Default `bracketing`. */
+  navigationLayout?: CalendarToolbarNavigationLayout
   /** Where the today button is drawn. Default `bar`; independent of the chevrons. */
   todayPlacement?: CalendarToolbarControlPlacement
   /** The word or a square icon. Default `text`. */
@@ -225,8 +412,33 @@ export interface CalendarToolbarProps {
   todayLabel?: string
   /** Accessible name for the group the three of them are joined into. */
   navigationLabel?: string
-  /** Extra chrome, placed after the view switcher — a filter, a legend, a menu. */
+  /**
+   * Chrome placed *before* the date — the sidebar toggle, back to the list.
+   *
+   * Where a reader looks for those, and the far side of the bar from where
+   * `children` lands (task #213).
+   */
+  startContent?: React.ReactNode
+  /** Extra chrome, placed after the view switcher — a filter, a legend, a search. */
   children?: React.ReactNode
+  /**
+   * The primary action — "New event" — at the trailing end, behind a rule.
+   *
+   * Its own slot rather than a `children` convention because the rule is the
+   * point: a `Button` in `children` sits 8px from the view switcher and reads
+   * as the last segment of it.
+   */
+  action?: React.ReactNode
+  /**
+   * `MenuItem`s for the trailing `⋯` — print, export, settings, show weekends.
+   *
+   * The items, not a trigger: the trigger is the thing every consumer would
+   * otherwise place differently, and it is the only part of an overflow menu
+   * that is the same everywhere.
+   */
+  menu?: React.ReactNode
+  /** Accessible name for the `⋯` — the place to translate it. */
+  menuLabel?: string
   className?: string
 }
 
@@ -242,27 +454,52 @@ export function CalendarToolbar({
   minValue,
   maxValue,
   isDisabled,
+  isPreviousDisabled,
+  isNextDisabled,
+  isTodayDisabled,
+  isPending,
   view,
   views = ["day", "week", "month", "timeline"],
   viewLabels,
+  viewLabel = "Calendar view",
+  viewVariant = "responsive",
   onViewChange,
   onPrevious,
   onNext,
   onToday,
   navigationPlacement = "bar",
+  navigationLayout = "bracketing",
   todayPlacement = "bar",
   todayVariant = "text",
   previousLabel,
   nextLabel,
   todayLabel = "Today",
   navigationLabel = "Calendar navigation",
+  menuLabel = "More options",
+  startContent,
   children,
+  action,
+  menu,
   className,
 }: CalendarToolbarProps) {
   const barPreviousLabel = previousLabel ?? "Previous"
   const barNextLabel = nextLabel ?? "Next"
   const popoverPreviousLabel = previousLabel ?? `Previous ${pickerGranularity}`
   const popoverNextLabel = nextLabel ?? `Next ${pickerGranularity}`
+
+  // A press that fetches is a press that must not be repeated, so `isPending`
+  // reaches every control that moves the date — including the heading, which
+  // would otherwise ask for a second date while the first is in flight.
+  const dateDisabled = isDisabled || isPending
+
+  // The bounds the grid enforces, enforced on the chevrons as well. `date` is
+  // what the toolbar has; the step is the unit the heading is spelled in.
+  const step = STEP_BY_GRANULARITY[pickerGranularity]
+  const isOutOfBounds = (candidate: CalendarDate) =>
+    (minValue !== undefined && candidate.compare(minValue) < 0) ||
+    (maxValue !== undefined && candidate.compare(maxValue) > 0)
+  const previousDisabled = isPreviousDisabled ?? (date ? isOutOfBounds(date.subtract(step)) : false)
+  const nextDisabled = isNextDisabled ?? (date ? isOutOfBounds(date.add(step)) : false)
 
   // Computed as the element rather than as a boolean, because the two things
   // that decide it are also the two the picker needs, and TypeScript only
@@ -279,10 +516,15 @@ export function CalendarToolbar({
         firstDayOfWeek={firstDayOfWeek}
         minValue={minValue}
         maxValue={maxValue}
-        isDisabled={isDisabled}
+        isDisabled={dateDisabled}
+        isPending={isPending}
         onPrevious={navigationPlacement === "popover" ? onPrevious : undefined}
         onNext={navigationPlacement === "popover" ? onNext : undefined}
         onToday={todayPlacement === "popover" ? onToday : undefined}
+        isPreviousDisabled={previousDisabled}
+        isNextDisabled={nextDisabled}
+        isTodayDisabled={isTodayDisabled}
+        navigationLayout={navigationLayout}
         previousLabel={popoverPreviousLabel}
         nextLabel={popoverNextLabel}
         todayLabel={todayLabel}
@@ -307,6 +549,7 @@ export function CalendarToolbar({
   const barControls = (
     <DateControls
       heading={picker}
+      layout={navigationLayout}
       onPrevious={barPrevious}
       onNext={barNext}
       onToday={barToday}
@@ -314,16 +557,38 @@ export function CalendarToolbar({
       nextLabel={barNextLabel}
       todayLabel={todayLabel}
       todayVariant={todayVariant}
-      isDisabled={isDisabled}
+      isDisabled={dateDisabled}
+      isPreviousDisabled={previousDisabled}
+      isNextDisabled={nextDisabled}
+      isTodayDisabled={isTodayDisabled}
     />
   )
+
+  // Resolved once, because both shapes of the switcher draw from it: a bare
+  // name takes the caller's word, then the library's, then the key itself.
+  const viewOptions = views.map((option) =>
+    typeof option === "string"
+      ? { id: option, label: viewLabels?.[option] ?? DEFAULT_VIEW_LABELS[option] ?? option }
+      : { id: option.id, label: viewLabels?.[option.id] ?? option.label },
+  )
+  const activeView = viewOptions.find((option) => option.id === view)
+  const switcherDisabled = isDisabled || !onViewChange
+  const changeView = (key: unknown) => {
+    if (typeof key === "string") onViewChange?.(key)
+  }
 
   return (
     <div
       data-slot="calendar-toolbar"
+      aria-busy={isPending || undefined}
       className={cn("flex flex-wrap items-center justify-between gap-3", className)}
     >
-      <div className="flex flex-wrap items-center gap-3">
+      {/* `min-w-0` on the cluster and `max-w-full` on the group below are what
+          let the heading's `truncate` take effect: a flex child's minimum size
+          is its content unless it is told otherwise, so without them the group
+          grows past the container instead of the label shortening. */}
+      <div className="flex min-w-0 flex-wrap items-center gap-3">
+        {startContent}
         {picker ? (
           // No `data-slot` of its own on either group: `ButtonGroup` sets its
           // own before the spread, so one here would replace it and quietly
@@ -337,7 +602,9 @@ export function CalendarToolbar({
           // bar: a lone button in a group named for navigation it does not
           // contain says something untrue.
           hasBarControls ? (
-            <ButtonGroup aria-label={navigationLabel}>{barControls}</ButtonGroup>
+            <ButtonGroup className="max-w-full" aria-label={navigationLabel}>
+              {barControls}
+            </ButtonGroup>
           ) : (
             picker
           )
@@ -349,6 +616,7 @@ export function CalendarToolbar({
             >
               {label}
             </span>
+            {isPending ? <Loader className="text-quebi-fg-muted" /> : null}
             {hasBarControls ? (
               <ButtonGroup aria-label={navigationLabel}>{barControls}</ButtonGroup>
             ) : null}
@@ -357,26 +625,84 @@ export function CalendarToolbar({
       </div>
 
       <div className="flex items-center gap-2">
-        {view && views.length > 1 ? (
-          <ToggleGroup
-            size="xs"
-            aria-label="Calendar view"
-            disallowEmptySelection
-            isDisabled={isDisabled || !onViewChange}
-            selectedKeys={[view]}
-            onSelectionChange={(keys) => {
-              const next = [...keys][0]
-              if (typeof next === "string") onViewChange?.(next as CalendarViewName)
-            }}
-          >
-            {views.map((name) => (
-              <ToggleGroupItem key={name} id={name}>
-                {viewLabels?.[name] ?? DEFAULT_VIEW_LABELS[name]}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+        {view && viewOptions.length > 1 ? (
+          <>
+            {viewVariant === "menu" ? null : (
+              <ToggleGroup
+                // 38px overall, which is what the date controls beside it are.
+                // `size="xs"` drew a 36px group next to them (task #209).
+                size="sm"
+                height="control"
+                aria-label={viewLabel}
+                disallowEmptySelection
+                isDisabled={switcherDisabled}
+                selectedKeys={[view]}
+                onSelectionChange={(keys) => changeView([...keys][0])}
+                className={viewVariant === "responsive" ? "hidden sm:inline-flex" : undefined}
+              >
+                {viewOptions.map((option) => (
+                  <ToggleGroupItem key={option.id} id={option.id}>
+                    {option.label}
+                  </ToggleGroupItem>
+                ))}
+              </ToggleGroup>
+            )}
+            {viewVariant === "segmented" ? null : (
+              <Menu>
+                <MenuTrigger
+                  // The button says the view; the group name says what kind of
+                  // thing it is. `TableDensityToggle` names itself the same way.
+                  aria-label={`${viewLabel}: ${activeView?.label ?? view}`}
+                  isDisabled={switcherDisabled}
+                  className={cn(
+                    buttonStyles({ intent: "outline", size: "sm" }),
+                    viewVariant === "responsive" && "sm:hidden",
+                  )}
+                >
+                  {activeView?.label ?? view}
+                  <ChevronDown data-slot="icon" className="text-quebi-fg-muted" aria-hidden="true" />
+                </MenuTrigger>
+                <MenuContent
+                  placement="bottom end"
+                  selectionMode="single"
+                  disallowEmptySelection
+                  selectedKeys={[view]}
+                  onSelectionChange={(keys) => {
+                    if (keys === "all") return
+                    changeView([...keys][0])
+                  }}
+                >
+                  {viewOptions.map((option) => (
+                    <MenuItem key={option.id} id={option.id}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </MenuContent>
+              </Menu>
+            )}
+          </>
         ) : null}
         {children}
+        {action ? (
+          <>
+            {/* The rule is the slot: without it the action reads as one more
+                segment of the switcher rather than as the thing the bar is for. */}
+            <Separator orientation="vertical" className="mx-1 h-5 self-center" />
+            {action}
+          </>
+        ) : null}
+        {menu ? (
+          <Menu>
+            <MenuTrigger
+              aria-label={menuLabel}
+              isDisabled={isDisabled}
+              className={buttonStyles({ intent: "outline", size: "sq-sm" })}
+            >
+              <MoreHorizontal data-slot="icon" aria-hidden="true" />
+            </MenuTrigger>
+            <MenuContent placement="bottom end">{menu}</MenuContent>
+          </Menu>
+        ) : null}
       </div>
     </div>
   )
@@ -385,6 +711,7 @@ export function CalendarToolbar({
 interface DateControlsProps {
   /** The picker heading, drawn between back and today. Nothing in the popover. */
   heading?: React.ReactNode
+  layout: CalendarToolbarNavigationLayout
   onPrevious: (() => void) | undefined
   onNext: (() => void) | undefined
   onToday: (() => void) | undefined
@@ -393,6 +720,9 @@ interface DateControlsProps {
   todayLabel: string
   todayVariant: CalendarToolbarTodayVariant
   isDisabled: boolean | undefined
+  isPreviousDisabled: boolean | undefined
+  isNextDisabled: boolean | undefined
+  isTodayDisabled: boolean | undefined
 }
 
 /**
@@ -418,9 +748,14 @@ interface DateControlsProps {
  * back / today / forward again, `Today` in the middle of a symmetric unit,
  * which is what stops it reading as a word in the date the way it did when the
  * three of them came first.
+ *
+ * `layout="paired"` is the other answer, and the argument against bracketing:
+ * it is 320px of mouse traverse between two buttons a reader presses in
+ * alternation. See `CalendarToolbarNavigationLayout` above.
  */
 function DateControls({
   heading,
+  layout,
   onPrevious,
   onNext,
   onToday,
@@ -429,51 +764,74 @@ function DateControls({
   todayLabel,
   todayVariant,
   isDisabled,
+  isPreviousDisabled,
+  isNextDisabled,
+  isTodayDisabled,
 }: DateControlsProps) {
-  return (
+  const previous = onPrevious ? (
+    <Button
+      intent="outline"
+      size="sq-sm"
+      aria-label={previousLabel}
+      isDisabled={isDisabled || isPreviousDisabled}
+      onPress={onPrevious}
+    >
+      <ChevronLeft data-slot="icon" className="size-4" aria-hidden="true" />
+    </Button>
+  ) : null
+
+  const next = onNext ? (
+    <Button
+      intent="outline"
+      size="sq-sm"
+      aria-label={nextLabel}
+      isDisabled={isDisabled || isNextDisabled}
+      onPress={onNext}
+    >
+      <ChevronRight data-slot="icon" className="size-4" aria-hidden="true" />
+    </Button>
+  ) : null
+
+  const jumpToToday = onToday ? (
+    todayVariant === "icon" ? (
+      // The word is still the accessible name: the icon is a width
+      // decision, not a decision to say less.
+      <Button
+        intent="outline"
+        size="sq-sm"
+        aria-label={todayLabel}
+        isDisabled={isDisabled || isTodayDisabled}
+        onPress={onToday}
+      >
+        <CalendarCheck data-slot="icon" className="size-4" aria-hidden="true" />
+      </Button>
+    ) : (
+      <Button
+        intent="outline"
+        size="sm"
+        isDisabled={isDisabled || isTodayDisabled}
+        onPress={onToday}
+      >
+        {todayLabel}
+      </Button>
+    )
+  ) : null
+
+  // `paired` only says something with a heading between them to pull apart.
+  // Without one the two chevrons are already adjacent around `Today`.
+  return layout === "paired" && heading ? (
     <>
-      {onPrevious ? (
-        <Button
-          intent="outline"
-          size="sq-sm"
-          aria-label={previousLabel}
-          isDisabled={isDisabled}
-          onPress={onPrevious}
-        >
-          <ChevronLeft data-slot="icon" className="size-4" aria-hidden="true" />
-        </Button>
-      ) : null}
+      {previous}
+      {next}
       {heading}
-      {onToday ? (
-        todayVariant === "icon" ? (
-          // The word is still the accessible name: the icon is a width
-          // decision, not a decision to say less.
-          <Button
-            intent="outline"
-            size="sq-sm"
-            aria-label={todayLabel}
-            isDisabled={isDisabled}
-            onPress={onToday}
-          >
-            <CalendarCheck data-slot="icon" className="size-4" aria-hidden="true" />
-          </Button>
-        ) : (
-          <Button intent="outline" size="sm" isDisabled={isDisabled} onPress={onToday}>
-            {todayLabel}
-          </Button>
-        )
-      ) : null}
-      {onNext ? (
-        <Button
-          intent="outline"
-          size="sq-sm"
-          aria-label={nextLabel}
-          isDisabled={isDisabled}
-          onPress={onNext}
-        >
-          <ChevronRight data-slot="icon" className="size-4" aria-hidden="true" />
-        </Button>
-      ) : null}
+      {jumpToToday}
+    </>
+  ) : (
+    <>
+      {previous}
+      {heading}
+      {jumpToToday}
+      {next}
     </>
   )
 }
@@ -489,10 +847,15 @@ interface CalendarToolbarPickerProps {
   minValue: DateValue | undefined
   maxValue: DateValue | undefined
   isDisabled: boolean | undefined
+  isPending: boolean | undefined
   /** The date controls placed in here rather than in the bar. Any subset. */
   onPrevious: (() => void) | undefined
   onNext: (() => void) | undefined
   onToday: (() => void) | undefined
+  isPreviousDisabled: boolean | undefined
+  isNextDisabled: boolean | undefined
+  isTodayDisabled: boolean | undefined
+  navigationLayout: CalendarToolbarNavigationLayout
   previousLabel: string
   nextLabel: string
   todayLabel: string
@@ -547,9 +910,14 @@ function CalendarToolbarPicker({
   minValue,
   maxValue,
   isDisabled,
+  isPending,
   onPrevious,
   onNext,
   onToday,
+  isPreviousDisabled,
+  isNextDisabled,
+  isTodayDisabled,
+  navigationLayout,
   previousLabel,
   nextLabel,
   todayLabel,
@@ -575,13 +943,38 @@ function CalendarToolbarPicker({
         // `sq-sm` is 9.5 and `sm`'s own `py-2` around `text-base` is 10.5, so
         // the heading used to stand a rung taller than the chevrons beside it.
         // Unnoticeable across a gap; inside one box it is a step in the edge.
-        className="py-1.5 font-semibold text-base tracking-tight"
+        //
+        // `min-w-0` is what lets the label below shorten instead of the group
+        // growing past its container — the heading is the only segment in the
+        // bar whose width is a sentence, so it is the one that has to give
+        // (task #208).
+        className="min-w-0 py-1.5 font-semibold text-base tracking-tight"
       >
-        {label}
-        <ChevronDown data-slot="icon" className="text-quebi-fg-muted" />
+        <span className="truncate">{label}</span>
+        {isPending ? (
+          <Loader className="text-quebi-fg-muted" />
+        ) : (
+          <ChevronDown data-slot="icon" className="text-quebi-fg-muted" />
+        )}
       </Button>
       <PopoverContent placement="bottom start" className="w-auto max-w-none p-3">
-        {granularity === "month" ? (
+        {granularity === "year" ? (
+          <YearPicker
+            autoFocus
+            aria-label={gridLabel}
+            value={date}
+            minValue={minValue}
+            maxValue={maxValue}
+            isDisabled={isDisabled}
+            onChange={(next) => {
+              setIsOpen(false)
+              // `YearPicker` reports January 1; the anchor keeps its month and
+              // day for the same reason a month choice keeps the day — a
+              // consumer who switches back to Day should land where they were.
+              onDateChange(date.set({ era: next.era, year: next.year }))
+            }}
+          />
+        ) : granularity === "month" ? (
           <MonthPicker
             autoFocus
             aria-label={gridLabel}
@@ -633,6 +1026,7 @@ function CalendarToolbarPicker({
           <div className="mt-3 flex justify-center border-quebi-line/10 border-t pt-3">
             <ButtonGroup aria-label={navigationLabel}>
               <DateControls
+                layout={navigationLayout}
                 onPrevious={onPrevious}
                 onNext={onNext}
                 // A step and a jump are different things. The chevrons leave the
@@ -654,6 +1048,9 @@ function CalendarToolbarPicker({
                 todayLabel={todayLabel}
                 todayVariant={todayVariant}
                 isDisabled={isDisabled}
+                isPreviousDisabled={isPreviousDisabled}
+                isNextDisabled={isNextDisabled}
+                isTodayDisabled={isTodayDisabled}
               />
             </ButtonGroup>
           </div>
@@ -668,11 +1065,38 @@ const DEFAULT_GRID_LABELS: Record<CalendarToolbarPickerGranularity, string> = {
   day: "Choose date",
   week: "Choose week",
   month: "Choose month",
+  year: "Choose year",
 }
+
+/** How much of the date the heading spells out. */
+export type RangeLabelLength = "long" | "short"
 
 export interface RangeLabelOptions {
   locale?: string
   timeZone?: string
+  /**
+   * `long` spells the weekday and the month out — `Dienstag, 22. September
+   * 2026`, 257px of it. `short` is the numeric form the same locale writes
+   * dates in, `22.09.2026`, which is a third of the width.
+   *
+   * A heading is the widest thing in the toolbar and the toolbar has to fit a
+   * phone, so this is the caller's lever for that — the component's two are
+   * truncation and the collapsing view switcher (task #208). Default `long`.
+   */
+  length?: RangeLabelLength
+  /**
+   * Put the ISO week number in front of the range: `KW 39 · 21.–27. September`.
+   *
+   * Conventional in European calendars and standard in Outlook, and the number
+   * was already computed one file over — `WeekPicker` draws it in its gutter,
+   * and this reads it from there rather than keeping a second answer to which
+   * week a Thursday is in (task #214).
+   *
+   * The word is yours, because `Intl` has no name for it: `"KW"`, `"Week"`,
+   * `"sem."`. `true` gives the bare number. The number itself still goes
+   * through `getNumberFormat`, like every other number in this library.
+   */
+  weekNumber?: boolean | string
 }
 
 /**
@@ -687,7 +1111,12 @@ export interface RangeLabelOptions {
  */
 export function calendarRangeLabel(
   days: readonly CalendarDate[],
-  { locale, timeZone = DEFAULT_CALENDAR_TIME_ZONE }: RangeLabelOptions = {},
+  {
+    locale,
+    timeZone = DEFAULT_CALENDAR_TIME_ZONE,
+    length = "long",
+    weekNumber,
+  }: RangeLabelOptions = {},
 ): string {
   const first = days[0]
   const last = days.length > 0 ? days[days.length - 1] : undefined
@@ -696,35 +1125,68 @@ export function calendarRangeLabel(
   const start = dayToDate(first, timeZone)
   const end = dayToDate(last, timeZone)
 
-  if (first.compare(last) === 0) {
-    return getDateTimeFormat(locale, {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      timeZone,
-    }).format(start)
-  }
+  const range =
+    first.compare(last) === 0
+      ? getDateTimeFormat(locale, {
+          ...(length === "short"
+            ? { day: "2-digit", month: "2-digit" }
+            : { weekday: "long", day: "numeric", month: "long" }),
+          year: "numeric",
+          timeZone,
+        }).format(start)
+      : // `formatRange` is the part of Intl written for exactly this: it elides
+        // the shared month or year itself, in whatever way the locale does it.
+        getDateTimeFormat(locale, {
+          ...(length === "short"
+            ? { day: "2-digit", month: "2-digit" }
+            : { day: "numeric", month: first.month === last.month ? "long" : "short" }),
+          year: "numeric",
+          timeZone,
+        }).formatRange(start, end)
 
-  // `formatRange` is the part of Intl written for exactly this: it elides the
-  // shared month or year itself, in whatever way the locale does it.
-  return getDateTimeFormat(locale, {
-    day: "numeric",
-    month: first.month === last.month ? "long" : "short",
-    year: "numeric",
-    timeZone,
-  }).formatRange(start, end)
+  if (!weekNumber) return range
+  return `${weekNumberLabel(days, locale, weekNumber)} · ${range}`
 }
 
-/** `September 2026` — the month view's heading. */
+/**
+ * `KW 39` for the week these days sit in.
+ *
+ * The number is taken from the day three in from the run's start rather than
+ * from its first: in a Sunday-first locale a row's Sunday belongs to the
+ * *previous* ISO week, and three days in lands on a day the row's own week owns
+ * whatever the locale's first day is. Same expression as `WeekPicker`'s gutter,
+ * and the same reason.
+ */
+function weekNumberLabel(
+  days: readonly CalendarDate[],
+  locale: string,
+  weekNumber: boolean | string,
+): string {
+  const dominant = days[Math.min(3, days.length - 1)] ?? days[0]
+  const formatted = getNumberFormat(locale, {}).format(isoWeekNumber(dominant as CalendarDate))
+  return typeof weekNumber === "string" ? `${weekNumber} ${formatted}` : formatted
+}
+
+/** `September 2026` — the month view's heading. `short` gives `Sep 2026`. */
 export function calendarMonthLabel(
   month: CalendarDate,
+  { locale, timeZone = DEFAULT_CALENDAR_TIME_ZONE, length = "long" }: RangeLabelOptions = {},
+): string {
+  if (!locale) return ""
+  return getDateTimeFormat(locale, {
+    month: length === "short" ? "short" : "long",
+    year: "numeric",
+    timeZone,
+  }).format(dayToDate(month, timeZone))
+}
+
+/** `2026` — a year view's heading, through the same formatter as every other. */
+export function calendarYearLabel(
+  year: CalendarDate,
   { locale, timeZone = DEFAULT_CALENDAR_TIME_ZONE }: RangeLabelOptions = {},
 ): string {
   if (!locale) return ""
-  return getDateTimeFormat(locale, { month: "long", year: "numeric", timeZone }).format(
-    dayToDate(month, timeZone),
-  )
+  return getDateTimeFormat(locale, { year: "numeric", timeZone }).format(dayToDate(year, timeZone))
 }
 
 /** The locale a view formats in: the prop, else the nearest `I18nProvider`. */

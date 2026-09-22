@@ -30,6 +30,7 @@ import {
 } from "@/lib/calendar"
 import { getDateTimeFormat } from "@/lib/intl"
 import { cn } from "@/lib/utils"
+import { Checkbox, CheckboxGroup } from "@/components/checkbox"
 import { Popover, PopoverContent } from "@/components/popover"
 
 /**
@@ -1592,6 +1593,15 @@ export interface CalendarLegendProps {
   calendars: readonly CalendarSource[]
   /** Default "plain". "overlay" adds the surface an overlapping legend needs. */
   variant?: CalendarLegendVariant
+  /**
+   * The calendars currently shown. Pass it with `onChange` to make the legend
+   * a filter; leave both out and it stays the read-only key it has always been.
+   */
+  value?: readonly string[]
+  /** Called with the ids still shown. Its presence is what makes the row a filter. */
+  onChange?: (ids: string[]) => void
+  /** Accessible name for the filter group — the place to translate it. */
+  "aria-label"?: string
   className?: string
 }
 
@@ -1628,8 +1638,59 @@ const LEGEND_VARIANTS: Record<CalendarLegendVariant, string> = {
  * text stops being readable — that is `variant="overlay"`, which is the same
  * row on an elevated surface. Reach for it whenever the legend overlaps
  * something, and leave it alone when the legend has a line of its own.
+ *
+ * ## A list of calendars implies you can switch one off
+ *
+ * Google and Outlook both make theirs a set of checkboxes, and a row reading
+ * "My calendar · Team" invites the press whether or not it takes one — so
+ * `value` + `onChange` turn the same row into that filter, with the dot kept in
+ * front of the name because the dot is what the grid is drawn in (task #214).
+ * The read-only key is still the default: a legend beside a calendar nobody can
+ * filter should not look like one control with two answers.
  */
-export function CalendarLegend({ calendars, variant = "plain", className }: CalendarLegendProps) {
+export function CalendarLegend({
+  calendars,
+  variant = "plain",
+  value,
+  onChange,
+  "aria-label": ariaLabel = "Calendars",
+  className,
+}: CalendarLegendProps) {
+  const dot = (calendar: CalendarSource) => (
+    <span
+      className={cn("size-2 shrink-0 rounded-full", CALENDAR_COLORS[calendar.color].dot)}
+      aria-hidden="true"
+    />
+  )
+
+  if (onChange) {
+    return (
+      <CheckboxGroup
+        data-slot="calendar-legend"
+        data-variant={variant}
+        aria-label={ariaLabel}
+        value={value ? [...value] : undefined}
+        onChange={onChange}
+        className={cn(
+          "flex-row flex-wrap items-center gap-x-4 gap-y-1",
+          LEGEND_VARIANTS[variant],
+          className,
+        )}
+      >
+        {calendars.map((calendar) => (
+          <Checkbox
+            key={calendar.id}
+            value={calendar.id}
+            className="gap-2 text-quebi-fg-muted text-xs"
+          >
+            {dot(calendar)}
+            {calendar.name}
+          </Checkbox>
+        ))}
+      </CheckboxGroup>
+    )
+  }
+
   return (
     <div
       data-slot="calendar-legend"
@@ -1642,10 +1703,7 @@ export function CalendarLegend({ calendars, variant = "plain", className }: Cale
     >
       {calendars.map((calendar) => (
         <span key={calendar.id} className="flex items-center gap-1.5 text-quebi-fg-muted text-xs">
-          <span
-            className={cn("size-2 shrink-0 rounded-full", CALENDAR_COLORS[calendar.color].dot)}
-            aria-hidden="true"
-          />
+          {dot(calendar)}
           {calendar.name}
         </span>
       ))}

@@ -24,6 +24,7 @@ import {
   type CalendarToolbarLabelVariant,
   CalendarToolbar,
   type CalendarViewName,
+  type CalendarViewOption,
   useCalendarLocale,
   useCalendarNavigation,
 } from "@/components/calendar-toolbar"
@@ -103,7 +104,7 @@ export interface MonthViewProps<E extends CalendarEvent = CalendarEvent> {
   now?: CalendarDate | null
   showToolbar?: boolean
   view?: CalendarViewName
-  views?: readonly CalendarViewName[]
+  views?: readonly CalendarViewOption[]
   onViewChange?: (view: CalendarViewName) => void
   label?: React.ReactNode
   /**

@@ -19,17 +19,58 @@ import { cn } from "@/lib/utils"
  * teal; in single-selection mode items float with a small gutter, in multiple
  * mode they butt together into a segmented bar. Self-contained — the item
  * styles live here rather than reaching for a sibling Toggle.
+ *
+ * ## A group is not as tall as a button of the same name
+ *
+ * The shell wraps its items in `p-0.5` and a border, so it always stands 6px
+ * taller than the item inside it — `size="xs"` is a 30px item in a 36px box,
+ * which is the size of nothing else in the library. Beside a `Button
+ * size="sm"` (38px) that is 1px of misalignment top and bottom, and swapping
+ * up to `size="sm"` overshoots by the same 6px in the other direction (task
+ * #209).
+ *
+ * `height="control"` is the way out: the *shell* takes the height a `Button`
+ * of that size has, and the items give the 6px back out of their own padding.
+ * So `<ToggleGroup size="sm" height="control">` is 38px overall with `text-sm`
+ * items, which is what a toolbar row wants — see the note in `toolbar.tsx`.
+ * It applies to a horizontal group only: a fixed height on a column would
+ * squash it, and the items there are already one width.
  */
 
 type ToggleGroupSize = "xs" | "sm" | "md" | "lg" | "sq-xs" | "sq-sm" | "sq-md" | "sq-lg"
 
+/**
+ * What decides the group's height.
+ *
+ * - `natural` — the items do, and the shell is 6px taller. The default, and
+ *   what a group standing on its own wants.
+ * - `control` — the shell does, matching the `Button` of the same size, and
+ *   the items lose the difference from their padding. What a group sharing a
+ *   row with buttons or inputs wants.
+ */
+export type ToggleGroupHeight = "natural" | "control"
+
+/** The height a `Button` of each size is — see the note in `button.tsx`. */
+const CONTROL_HEIGHTS: Record<ToggleGroupSize, string> = {
+  xs: "h-7.5",
+  sm: "h-9.5",
+  md: "h-11.5",
+  lg: "h-13.5",
+  "sq-xs": "h-7.5",
+  "sq-sm": "h-9.5",
+  "sq-md": "h-11.5",
+  "sq-lg": "h-13.5",
+}
+
 interface ToggleGroupContextValue
   extends Pick<ToggleButtonGroupProps, "selectionMode" | "orientation"> {
   size?: ToggleGroupSize
+  height?: ToggleGroupHeight
 }
 
 const ToggleGroupContext = createContext<ToggleGroupContextValue>({
   size: "md",
+  height: "natural",
   selectionMode: "single",
   orientation: "horizontal",
 })
@@ -38,19 +79,26 @@ const useToggleGroupContext = () => use(ToggleGroupContext)
 
 export interface ToggleGroupProps extends ToggleButtonGroupProps {
   size?: ToggleGroupSize
+  /** Whether the shell or the items decide the height. Default `natural`. */
+  height?: ToggleGroupHeight
   isCircle?: boolean
 }
 
 export function ToggleGroup({
   size = "md",
+  height = "natural",
   orientation = "horizontal",
   selectionMode = "single",
   isCircle,
   className,
   ...props
 }: ToggleGroupProps) {
+  const isFixedHeight = height === "control" && orientation === "horizontal"
+
   return (
-    <ToggleGroupContext.Provider value={{ size, selectionMode, orientation }}>
+    <ToggleGroupContext.Provider
+      value={{ size, height: isFixedHeight ? "control" : "natural", selectionMode, orientation }}
+    >
       <ToggleButtonGroup
         data-slot="control"
         selectionMode={selectionMode}
@@ -62,6 +110,7 @@ export function ToggleGroup({
             orientation === "horizontal" ? "flex-row" : "flex-col",
             selectionMode === "single" ? "gap-0.5" : "gap-0",
             isCircle ? "rounded-full" : "rounded-quebi-md",
+            isFixedHeight && CONTROL_HEIGHTS[size],
             resolved,
           ),
         )}
@@ -136,7 +185,16 @@ export interface ToggleGroupItemProps
     Pick<VariantProps<typeof toggleGroupItemStyles>, "size"> {}
 
 export function ToggleGroupItem({ className, size: sizeProp, ...props }: ToggleGroupItemProps) {
-  const { size, selectionMode, orientation } = useToggleGroupContext()
+  const { size, height, selectionMode, orientation } = useToggleGroupContext()
+  const resolvedSize = sizeProp ?? size
+
+  // The shell is stretching this item to a height it chose, so the item's own
+  // is in the way: a text size keeps its padding but stops adding to it, and a
+  // square one drops the fixed `size-*` and takes its width from the height it
+  // was stretched to, which is what keeps it square at any shell height.
+  const fitsShell =
+    height === "control" &&
+    (resolvedSize?.startsWith("sq-") ? "h-auto w-auto p-0 aspect-square" : "h-auto py-0")
 
   return (
     <ToggleButton
@@ -144,10 +202,11 @@ export function ToggleGroupItem({ className, size: sizeProp, ...props }: ToggleG
       className={composeRenderProps(className, (className) =>
         cn(
           toggleGroupItemStyles({
-            size: sizeProp ?? size,
+            size: resolvedSize,
             orientation,
             selectionMode,
           }),
+          fitsShell,
           className,
         ),
       )}

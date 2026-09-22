@@ -447,8 +447,12 @@ const dominantDay = (weekStart: CalendarDate) => weekStart.add({ days: 3 })
  * defined independently of locale, and `Intl` has no API for them. Nothing here
  * reads the ambient locale or time zone, so it renders the same on the server
  * and in the browser.
+ *
+ * Exported because `calendarRangeLabel` puts the same number in a week
+ * heading, and two copies of this would be two answers to which week a
+ * Thursday is in (task #214).
  */
-function isoWeekNumber(date: CalendarDate): number {
+export function isoWeekNumber(date: CalendarDate): number {
   const thursday = new Date(Date.UTC(date.year, date.month - 1, date.day))
   // Monday = 1 … Sunday = 7, then step to the Thursday of the same ISO week.
   const isoDay = thursday.getUTCDay() || 7
