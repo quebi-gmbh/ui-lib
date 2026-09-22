@@ -40,11 +40,24 @@ const categoryNames = () =>
 const isExpanded = (category: string) =>
   categoryTrigger(category).getAttribute("aria-expanded") === "true"
 
-/** Component links only — the "All components" home link is not one of them. */
+/**
+ * The written pages that live in the catalog section without being in the
+ * registry. They are `/components/<something>` links like every component's,
+ * and they are not what any assertion about the grouped nav is about.
+ */
+const WRITTEN_PAGES = new Set(["/components/focus"])
+
+/**
+ * Component links only — neither the "All components" home link nor a written
+ * page above the groups is one of them.
+ */
 const componentLinks = () =>
   screen
     .getAllByRole("link")
-    .filter((a) => (a.getAttribute("href") ?? "").startsWith("/components/"))
+    .filter((a) => {
+      const href = a.getAttribute("href") ?? ""
+      return href.startsWith("/components/") && !WRITTEN_PAGES.has(href)
+    })
     .map((a) => a.textContent)
 
 let user: ReturnType<typeof userEvent.setup>
@@ -61,6 +74,16 @@ describe("on the catalog index", () => {
     expect(isExpanded("Layout")).toBe(false)
     expect(isExpanded("Conform")).toBe(false)
     expect(componentLinks()).toEqual([])
+  })
+
+  test("the written pages sit above the groups, outside them", () => {
+    renderAt("/components")
+
+    const focus = screen.getByRole("link", { name: "Focus indicators" })
+    expect(focus).toHaveAttribute("href", "/components/focus")
+    // It cannot arrive through a category: the grouped nav is built from
+    // metaRegistry, and a written page has no entry there to be grouped by.
+    expect(focus.closest("[data-slot=disclosure]")).toBeNull()
   })
 
   test("the categories are in canonical order, not alphabetical", () => {
