@@ -9,7 +9,6 @@ import {
   PaginationLast,
   PaginationList,
   PaginationNext,
-  PaginationPlaceholder,
   PaginationPrevious,
   PaginationStack,
 } from "@/components/pagination"
@@ -25,11 +24,13 @@ const TOTAL = 248
  * page has no URL per page to offer. Swap `onPress` for `href` and the same
  * markup is the link-based pager.
  *
- * Three kinds of item come out of `pageItems`, and drawing only two of them is
- * the bug this shape exists to avoid: a window is short at either end of the
- * range, so a row that skipped the held slots would be four items wide on page
- * 1 and seven in the middle, and — being centred — would shift under the
- * reader on the press that moved it.
+ * `pageItems` keeps the window the same length wherever the reader is, which is
+ * the bug this shape exists to avoid: the band around the current page is
+ * clipped at either end of the range, so a window that kept it at one sibling
+ * either side would be four items wide on page 1 and seven in the middle, and —
+ * being centred — would shift under the reader on the press that moved it. At
+ * the ends the band grows away from the edge instead, so those slots are pages
+ * 3, 4 and 5 rather than nothing.
  */
 function CanonicalPager({ withJump }: { withJump?: boolean }) {
   const [page, setPage] = useState(1)
@@ -51,12 +52,10 @@ function CanonicalPager({ withJump }: { withJump?: boolean }) {
           <PaginationFirst onPress={range.hasPrevious ? () => setPage(0) : undefined} />
           <PaginationPrevious onPress={range.hasPrevious ? () => setPage(page - 1) : undefined} />
           {pageItems(page, range.pageCount).map((item, index) => {
-            // A gap and a held slot have no identity of their own — a position
-            // in the window is all either of them is.
+            // A gap has no identity of its own — a position in the window is
+            // all it is.
             // biome-ignore lint/suspicious/noArrayIndexKey: see above.
             if (item === "gap") return <PaginationGap key={`gap-${index}`} />
-            // biome-ignore lint/suspicious/noArrayIndexKey: see above.
-            if (item === "placeholder") return <PaginationPlaceholder key={`hold-${index}`} />
             return (
               <PaginationItem
                 key={item}
@@ -88,7 +87,7 @@ export const paginationExamples: ComponentExample[] = [
   {
     title: "With result info",
     description:
-      "The canonical pager: the range summary above the page numbers, centred. PaginationStack is the column; pageItems() from @/lib/data-table picks the window, where the gaps fall, and which slots are held open by a PaginationPlaceholder so the row is the same width on every page. Every target is a callback here, so the page is a query parameter rather than an address.",
+      "The canonical pager: the range summary above the page numbers, centred. PaginationStack is the column; pageItems() from @/lib/data-table picks the window and where the gaps fall, and keeps it the same width on every page — at the ends of the range the band grows away from the edge, so the slots the row would otherwise lose hold page numbers you can press. Every target is a callback here, so the page is a query parameter rather than an address.",
     render: () => <CanonicalPager />,
   },
   {

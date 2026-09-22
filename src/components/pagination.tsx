@@ -383,59 +383,6 @@ const PaginationGap = ({
   )
 }
 
-// A dot, not an ellipsis and not a chevron: the slot it sits in is not a
-// control and has nothing in it yet, so it gets the quietest mark that still
-// says the row goes on. `size-1.5` is 6px — a glyph at the gap's size would
-// read as a second kind of ellipsis.
-const HoldIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 8 8"
-    fill="currentColor"
-    className="size-1.5"
-    data-slot="icon"
-    aria-hidden="true"
-  >
-    <circle cx={4} cy={4} r={4} />
-  </svg>
-)
-
-/**
- * A slot held open where a page number or a gap will be once the reader moves.
- *
- * The window `pageItems` computes is at its widest in the middle of the range
- * and short at either end — "1 2 … 15" is four items where "1 … 5 6 7 … 15" is
- * seven — and a pager is centred, so a row that drew only what it had would
- * grow from the middle outwards on the press that moved it and put the arrow
- * the reader was aiming at somewhere else. This fills the difference: the box a
- * page target occupies, with a dot in it instead of a number. It is
- * `aria-hidden` like the gap, because a slot that is not yet anything has
- * nothing to say to a screen reader — it is a fact about the layout, not about
- * the pages.
- */
-const PaginationPlaceholder = ({
-  className,
-  size,
-  ...props
-}: React.ComponentProps<"li"> & { size?: PaginationSize }) => {
-  const resolved = usePaginationSize(size)
-  return (
-    <li
-      data-slot="pagination-placeholder"
-      aria-hidden
-      className={cn(
-        "inline-flex items-center justify-center select-none",
-        "text-quebi-fg-subtle/50",
-        pageTargetSizes[resolved],
-        className,
-      )}
-      {...props}
-    >
-      <HoldIcon />
-    </li>
-  )
-}
-
 const PaginationInfo = ({ className, ...props }: React.ComponentProps<"p">) => (
   <p
     className={cn(
@@ -588,7 +535,6 @@ export {
   PaginationLast,
   PaginationList,
   PaginationNext,
-  PaginationPlaceholder,
   PaginationPrevious,
   PaginationStack,
 }

@@ -1268,12 +1268,11 @@ export function pageRange(
 }
 
 /**
- * A page to offer, the run of pages that was skipped to get to the next one, or
- * a slot held open so that the row is the same width on every page.
+ * A page to offer, or the run of pages that was skipped to get to the next one.
  * Page indices here are zero-based like `page` everywhere else in this module;
  * the pager adds the 1 when it draws the label.
  */
-export type DataTablePageItem = number | "gap" | "placeholder"
+export type DataTablePageItem = number | "gap"
 
 export interface PageItemsOptions {
   /** Pages offered either side of the current one. */
@@ -1286,20 +1285,21 @@ export interface PageItemsOptions {
  * The page numbers a pager should draw, and where the gaps fall.
  *
  * `pageRange` says how many pages there are; this says which of them fit. The
- * window is the two ends plus a band around the current page, and anything
- * skipped between them collapses to a `"gap"` — except a run of exactly one,
- * which is drawn instead: an ellipsis and a single page number cost the same
- * width, and the number is reachable.
+ * window is the two ends plus a run of pages around the current one, and
+ * anything skipped between them collapses to a `"gap"` — except a run of
+ * exactly one, which is drawn instead: an ellipsis and a single page number
+ * cost the same width, and the number is reachable.
  *
- * A truncated window is always the same length, and that is the point of
- * `"placeholder"`. The band around the current page is clipped at either end of
- * the range — page 1 of 15 has no page 0 to its left and its siblings are the
- * boundary it is already standing on — so a window that drew only the pages it
- * had would be four items wide at the ends and seven in the middle. The row is
- * centred, so those three missing items are ~120px that appear from under the
- * reader's cursor on the press that moves them: the next arrow they were
- * aiming at is somewhere else by the time they aim again. The slots are held
- * open instead, and the pager draws a dot in them.
+ * A truncated window is always the same length. The run around the current
+ * page is clipped at either end of the range — page 1 of 15 has no page 0 to
+ * its left, and its siblings are the boundary it is already standing on — so a
+ * window that kept the run at `siblings` either side would be four items wide
+ * at the ends and seven in the middle. The row is centred, so those three
+ * missing items are ~120px that appear from under the reader's cursor on the
+ * press that moves them: the next arrow they were aiming at is somewhere else
+ * by the time they aim again. So the run grows away from the edge that clipped
+ * it, into the pages that edge was hiding: page 1 of 24 offers 1–5 rather than
+ * 1–2, and the width those pages hold is width the reader can press.
  *
  * An unknown `pageCount` yields no items at all rather than a guess. That is
  * the cursor-mode and no-total case, where the honest pager is previous/next
@@ -1319,37 +1319,29 @@ export function pageItems(
   if (pageCount <= widest) return Array.from({ length: pageCount }, (_, index) => index)
 
   const current = Math.min(Math.max(page, 0), pageCount - 1)
-  const shown = new Set<number>([current])
-  for (let i = 0; i < boundaries; i++) {
-    if (i < pageCount) shown.add(i)
-    if (pageCount - 1 - i >= 0) shown.add(pageCount - 1 - i)
-  }
-  for (let i = current - siblings; i <= current + siblings; i++) {
-    if (i >= 0 && i < pageCount) shown.add(i)
-  }
+  // The run of consecutive pages the window centres on. A range longer than
+  // `widest` keeps the two boundary neighbourhoods apart, so the run is clipped
+  // by at most one edge; when it is, it reaches that edge and takes the slots
+  // the other side of the row would have spent on a gap and a boundary. Either
+  // way the run plus one gap per side plus the boundaries is `widest` items.
+  const clippedAtStart = current - siblings <= boundaries
+  const clippedAtEnd = current + siblings >= pageCount - 1 - boundaries
+  const reach = widest - boundaries - 2
+  const runStart = clippedAtStart ? 0 : clippedAtEnd ? pageCount - 1 - reach : current - siblings
+  const runEnd = clippedAtStart ? reach : clippedAtEnd ? pageCount - 1 : current + siblings
 
   const items: DataTablePageItem[] = []
-  let previous: number | undefined
-  for (const index of [...shown].sort((a, b) => a - b)) {
-    if (previous !== undefined && index - previous > 1) {
-      items.push(index - previous === 2 ? previous + 1 : "gap")
-    }
-    items.push(index)
-    previous = index
+  const skip = (from: number, to: number) => {
+    // A run of exactly one is the page itself; anything longer is the gap.
+    if (to > from) items.push(to - from === 1 ? from : "gap")
   }
-
-  const held = widest - items.length
-  if (held === 0) return items
-  // A window is only ever short at one end — the band can be clipped by the
-  // start or by the end of the range, never by both, because a range longer
-  // than `widest` keeps those two neighbourhoods apart. Which end it is decides
-  // which side of the one gap the held slots go: the pages that are missing are
-  // the ones the gap is standing in for, so the slots belong between the gap
-  // and the edge the band ran into. That keeps the "… 15" pair on the right of
-  // the row wherever the reader is, and "1 …" on the left.
-  const nearStart = current <= boundaries + siblings
-  const gap = items.indexOf("gap")
-  items.splice(nearStart ? gap : gap + 1, 0, ...Array<DataTablePageItem>(held).fill("placeholder"))
+  for (let index = 0; index < boundaries && index < runStart; index++) items.push(index)
+  skip(boundaries, runStart)
+  for (let index = runStart; index <= runEnd; index++) items.push(index)
+  skip(runEnd + 1, pageCount - boundaries)
+  for (let index = Math.max(pageCount - boundaries, runEnd + 1); index < pageCount; index++) {
+    items.push(index)
+  }
   return items
 }
 

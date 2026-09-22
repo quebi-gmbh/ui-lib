@@ -230,27 +230,27 @@ describe("the page window", () => {
     expect(pageItems(0, 5, { siblings: 1, boundaries: 1 })).toEqual([0, 1, 2, 3, 4])
   })
 
-  test("the window slides to the ends without leaving a gap beside the boundary", () => {
+  test("the window slides to the ends and the band grows away from them", () => {
     // The band is clipped at either end — page 1 has no page 0 to its left — so
-    // fewer pages survive, and the slots the missing ones would have taken are
-    // held open rather than closed up.
-    const held = ["placeholder", "placeholder", "placeholder"] as const
-    expect(pageItems(0, 24)).toEqual([0, 1, ...held, "gap", 23])
-    expect(pageItems(23, 24)).toEqual([0, "gap", ...held, 22, 23])
+    // it takes the slots the clipped side would have spent on a gap and a
+    // boundary, and they hold pages rather than nothing.
+    expect(pageItems(0, 24)).toEqual([0, 1, 2, 3, 4, "gap", 23])
+    expect(pageItems(23, 24)).toEqual([0, "gap", 19, 20, 21, 22, 23])
   })
 
   test("a truncated window is the same length on every page", () => {
     // The row is centred, so items appearing at one end move everything else
-    // sideways — including the arrow that was just pressed. A held slot stands
-    // where the clipped band would have been: between the gap and the edge.
+    // sideways — including the arrow that was just pressed.
     for (let page = 0; page < 24; page++) {
       const items = pageItems(page, 24)
       expect(items).toHaveLength(7)
-      const first = items.indexOf("placeholder")
-      if (first === -1) continue
-      const last = items.lastIndexOf("placeholder")
-      expect(items.slice(first, last + 1).every((item) => item === "placeholder")).toBe(true)
-      expect(items[first - 1] === "gap" || items[last + 1] === "gap").toBe(true)
+      // Every slot is a page you can press or a gap standing over more than
+      // one, the pages read upwards, and the one you are on is among them.
+      expect(items).toContain(page)
+      const numbers = items.filter((item): item is number => typeof item === "number")
+      expect([...numbers].sort((a, b) => a - b)).toEqual(numbers)
+      expect(items[0]).toBe(0)
+      expect(items.at(-1)).toBe(23)
     }
   })
 
