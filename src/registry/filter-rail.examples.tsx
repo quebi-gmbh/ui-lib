@@ -188,7 +188,7 @@ export const filterRailExamples: ComponentExample[] = [
   {
     title: "Narrow — the same component, two queries",
     description:
-      "The same surface in a 32rem box. Nothing here is keyed to the viewport: the layout asks itself whether there is room for a sidebar beside a grid and stacks because there is not, the rail asks its own width and lays its facets out in one column or two, and the card grid asks the results column. At a 700px viewport a fixed rail beside a sm:grid-cols-4 grid gives 67px cards — this is the same page, sized by the boxes that actually exist.",
+      "The same surface in a 32rem box. Nothing here is keyed to the viewport: the layout's own width decides whether there is room for a sidebar beside a grid and stacks because there is not, the rail asks its own width and lays its facets out in one column or two, and the card grid asks the results column. At a 700px viewport a fixed rail beside a sm:grid-cols-4 grid gives 67px cards — this is the same page, sized by the boxes that actually exist.",
     render: () => (
       <div className="flex w-full flex-col gap-4">
         <Note intent="info">

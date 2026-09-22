@@ -36,17 +36,26 @@ const parts = [
  * scene is a photograph: a number that formats per locale would publish a
  * different image depending on where the screenshot ran.
  *
- * The results sit under the rail rather than beside it because that is what the
- * component does at any width: `FilterRailLayout` names its own container and
- * then asks that container for `flex-row`, which a container query never
- * answers for the element declaring it. Filed as its own task — a scene is a
- * photograph of the component, not a place to work around it.
+ * The results sit **beside** the rail, which they could not do when this scene
+ * was written: `FilterRailLayout` named its own container and then asked that
+ * container for `flex-row`, and a container query is never answered by the
+ * element declaring it, so the layout was a column at every width (task #206).
+ * The scene was composed around that and said so here. With the container moved
+ * onto a wrapper the side-by-side shape renders, and it is the one worth
+ * photographing — a rail is *for* standing next to what it filters, and a
+ * stacked scene is a picture of the fallback.
+ *
+ * Hence `w-192`. The stage is 1200×630 at `scale: 1.5`, so a scene has 800px of
+ * width to spend and the layout's own threshold is 48rem — 768px, which fits
+ * with room for the 8px stage margin and little else. The scale cannot come
+ * down to buy more: the facet headings are `text-xs`, and 12px × 1.5 is exactly
+ * the 18px type floor this scene is measured against.
  */
 export const filterRailOgScene: OgScene = {
   scale: 1.5,
   render: () => (
     <FilterRailLayout
-      className="w-176"
+      className="w-192"
       rail={
         <FilterRail
           aria-label="Filters"
