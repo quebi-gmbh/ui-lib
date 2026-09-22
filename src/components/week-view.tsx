@@ -12,6 +12,7 @@ import {
   type CalendarToolbarLabelVariant,
   CalendarToolbar,
   type CalendarViewName,
+  type CalendarViewOption,
   useCalendarLocale,
   useCalendarNavigation,
 } from "@/components/calendar-toolbar"
@@ -51,7 +52,7 @@ export interface WeekViewProps<E extends CalendarEvent = CalendarEvent>
   firstDayOfWeek?: "sun" | "mon" | "tue" | "wed" | "thu" | "fri" | "sat"
   showToolbar?: boolean
   view?: CalendarViewName
-  views?: readonly CalendarViewName[]
+  views?: readonly CalendarViewOption[]
   onViewChange?: (view: CalendarViewName) => void
   label?: React.ReactNode
   /** The toolbar's date label as a picker, or as plain text. Default "picker". */

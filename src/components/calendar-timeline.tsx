@@ -26,6 +26,7 @@ import {
   type CalendarToolbarLabelVariant,
   CalendarToolbar,
   type CalendarViewName,
+  type CalendarViewOption,
   useCalendarLocale,
   useCalendarNavigation,
 } from "@/components/calendar-toolbar"
@@ -156,7 +157,7 @@ export interface CalendarTimelineProps<E extends CalendarEvent = CalendarEvent> 
   onEventChange?: (event: E, next: CalendarEventChange) => void
   showToolbar?: boolean
   view?: CalendarViewName
-  views?: readonly CalendarViewName[]
+  views?: readonly CalendarViewOption[]
   onViewChange?: (view: CalendarViewName) => void
   label?: React.ReactNode
   /** The toolbar's date label as a picker that jumps to any day, or as plain

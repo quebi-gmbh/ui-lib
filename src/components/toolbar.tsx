@@ -34,7 +34,10 @@ import { cn } from "@/lib/utils"
  * Anything else can go in directly: `children` is unrestricted and react-aria's
  * roving focus picks the control up. Ask it for the same 38px the two items
  * default to — `<SelectTrigger size="sm">`, `<Input size="sm">` — and the row
- * stays one height.
+ * stays one height. A `ToggleGroup` is the one control that cannot be asked in
+ * those terms, because its shell is 6px taller than the item inside it at every
+ * size: `<ToggleGroup size="sm" height="control">` is how it joins the row at
+ * 38px, and `height` is there for this (task #209).
  */
 
 interface ToolbarProps extends ToolbarPrimitiveProps {
