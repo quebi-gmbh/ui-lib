@@ -45,6 +45,15 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react"
 // still matches the server's: the reservation starts unset.
 const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
 
+/** The content's own width: `scrollWidth` with the reservation lifted for the read. */
+function contentWidth(node: HTMLElement): number {
+  const applied = node.style.width
+  if (applied) node.style.width = ""
+  const content = node.scrollWidth
+  if (applied) node.style.width = applied
+  return content
+}
+
 export interface SteadyWidthHandle<T extends HTMLElement> {
   ref: React.RefObject<T | null>
   style: React.CSSProperties | undefined
@@ -104,12 +113,38 @@ export function useSteadyWidth<T extends HTMLElement>(shape: string): SteadyWidt
     // same content and `Math.max` returns the number it already had. Both the
     // lift and the restore happen inside the layout effect, so the browser
     // never paints the element at its unreserved width.
-    const applied = node.style.width
-    if (applied) node.style.width = ""
-    const content = node.scrollWidth
-    if (applied) node.style.width = applied
+    const content = contentWidth(node)
     if (content > 0) setReserved((previous) => Math.max(previous, content + 1))
   })
+
+  // A font swap changes every width measured before it without rendering
+  // anything, so the effect above never hears about it. With `font-display:
+  // swap` the first measurement on a cold load is usually taken in the fallback
+  // face: where that is wider than Outfit the heading keeps a gap it does not
+  // need (the toolbar's share image held 90px open for 75px of text), and where
+  // it is narrower the reservation is short and the heading is elided until the
+  // next press. So a finished font load *replaces* the reservation rather than
+  // raising it — everything measured before it was measured in the wrong face.
+  // It happens once, on load, before anyone has pressed anything.
+  useEffect(() => {
+    const fonts = typeof document === "undefined" ? undefined : document.fonts
+    if (!fonts) return
+    let live = true
+    const remeasure = () => {
+      const node = ref.current
+      if (!live || !node) return
+      const content = contentWidth(node)
+      if (content > 0) setReserved(content + 1)
+    }
+    // `ready` as well as the event: a load that finished between the layout
+    // effect's measurement and this subscription fires no event to hear.
+    void fonts.ready.then(remeasure)
+    fonts.addEventListener("loadingdone", remeasure)
+    return () => {
+      live = false
+      fonts.removeEventListener("loadingdone", remeasure)
+    }
+  }, [])
 
   return { ref, style: reserved > 0 ? { width: reserved } : undefined }
 }
