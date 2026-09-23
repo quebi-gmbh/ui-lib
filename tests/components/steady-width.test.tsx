@@ -21,7 +21,7 @@
 import { CalendarDate } from "@internationalized/date"
 import { afterEach, describe, expect, test } from "bun:test"
 import { useState } from "react"
-import { render, screen } from "@testing-library/react"
+import { act, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { Button } from "../../src/components/button"
 import { CalendarToolbar } from "../../src/components/calendar-toolbar"
@@ -193,6 +193,37 @@ describe("useSteadyWidth keeps the widest width it has held", () => {
     rerender(<Probe shape="month|de-DE|" text="September 2026" />)
     rerender(<Probe shape="month|de-DE|" text="September 2026" />)
     expect(probe().style.width).toBe("116px")
+  })
+
+  test("a font swap replaces what was measured in the fallback face", async () => {
+    stubScrollWidth()
+    // happy-dom has no `document.fonts`; this stands in for one whose load is
+    // still in flight, so `ready` settles only when the test says so.
+    const fonts = new EventTarget() as EventTarget & { ready: Promise<unknown> }
+    let settle = () => {}
+    fonts.ready = new Promise<void>((resolve) => {
+      settle = resolve
+    })
+    Object.defineProperty(document, "fonts", { configurable: true, value: fonts })
+    try {
+      // The share image's case: the fallback face is 90px wide where Outfit
+      // is 75.
+      widths.set("März 2024", 90)
+      render(<Probe shape="month|de-DE|" text="März 2024" />)
+      expect(probe().style.width).toBe("91px")
+
+      widths.set("März 2024", 75)
+      await act(async () => {
+        settle()
+        fonts.dispatchEvent(new Event("loadingdone"))
+      })
+
+      // Replaced, not raised: the high-water mark taken in the wrong face is
+      // exactly the number that has to go.
+      expect(probe().style.width).toBe("76px")
+    } finally {
+      Reflect.deleteProperty(document, "fonts")
+    }
   })
 
   test("an unmeasurable box reserves nothing at all", () => {
