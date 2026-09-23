@@ -118,6 +118,7 @@ import { menuOgScene } from "./menu.og"
 import { meterOgScene } from "./meter.og"
 import { modalOgScene } from "./modal.og"
 import { monthPickerOgScene } from "./month-picker.og"
+import { miniMonthOgScene } from "./mini-month.og"
 import { monthViewOgScene } from "./month-view.og"
 import { multipleSelectOgScene } from "./multiple-select.og"
 import { navbarOgScene } from "./navbar.og"
@@ -282,6 +283,7 @@ export const ogScenes: Record<string, OgScene> = {
   "meter": meterOgScene,
   "modal": modalOgScene,
   "month-picker": monthPickerOgScene,
+  "mini-month": miniMonthOgScene,
   "month-view": monthViewOgScene,
   "multiple-select": multipleSelectOgScene,
   "navbar": navbarOgScene,
