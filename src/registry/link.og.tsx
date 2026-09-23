@@ -7,7 +7,7 @@ export const linkOgScene: OgScene = {
   render: () => (
     <p className="max-w-sm text-sm text-quebi-fg-muted">
       Every rule names its replacement and links to its page — start with{" "}
-      <Link href="/rules">the fourteen rules</Link>.
+      <Link href="/rules">the fifteen rules</Link>.
     </p>
   ),
 }

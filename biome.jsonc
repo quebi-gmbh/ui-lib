@@ -254,6 +254,18 @@
       "includes": [
         "app/**/*.{tsx,jsx}",
         "src/**/*.{tsx,jsx}",
+        // local scope, no-nested-card — One file, one rule, and the same argument as the conform-binding entry above: the Card page's "What to use instead" section draws the card-shaped version of each alternative beside the alternative itself, and the first of them is "A card inside a card → sections" — whose insteadOf is a Card with two Cards in it, written that way because it is the thing the rule exists to stop and the page has to show it.
+        "!src/registry/card.examples.tsx"
+      ],
+      "plugins": [
+        // A card inside a card is a section
+        "./ui-lib-rules/no-nested-card.grit"
+      ]
+    },
+    {
+      "includes": [
+        "app/**/*.{tsx,jsx}",
+        "src/**/*.{tsx,jsx}",
         // bind-fields-through-conform — The conform-* variants are where the metadata is read off the field and put onto a control.
         // render-field-text-through-the-field — The conform-* variants and the field primitives are where this markup is supposed to live — they are the layer that renders the label, the description, and the error, and wires the ids between them.
         "!components/ui/**",

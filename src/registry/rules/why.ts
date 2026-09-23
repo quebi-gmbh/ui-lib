@@ -23,13 +23,14 @@ export const failureModes: FailureMode[] = [
   {
     id: "reimplements-components",
     title: "It rebuilds what already exists",
-    body: "Asked for a card, a button, a badge, an agent writes one. Producing four Tailwind classes is faster and more certain than discovering that the library ships the component — and the result renders correctly, so nothing in review objects. The same reflex reaches past the library for the values inside those components: toLocaleString() is one call, and it looks right on the machine that wrote it. Repeated across a codebase, that is how a design system stops being a system: not through one bad decision, but through fifty reasonable ones in fifty files.",
+    body: "Asked for a card, a button, a badge, an agent writes one. Producing four Tailwind classes is faster and more certain than discovering that the library ships the component — and the result renders correctly, so nothing in review objects. The same reflex reaches past the library for the values inside those components: toLocaleString() is one call, and it looks right on the machine that wrote it. Repeated across a codebase, that is how a design system stops being a system: not through one bad decision, but through fifty reasonable ones in fifty files. And once it has found the component, it uses it for every box — a card per section inside a card — which is the library's own surface, pressed into service as a layout.",
     ruleIds: [
       "no-raw-interactive-elements",
       "no-appearance-classes-on-layout-elements",
       "no-hardcoded-design-values",
       "import-components-not-primitives",
       "format-values-through-the-library",
+      "no-nested-card",
     ],
   },
   {
