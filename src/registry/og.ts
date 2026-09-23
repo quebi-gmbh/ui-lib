@@ -132,6 +132,7 @@ import { pieChartOgScene } from "./pie-chart.og"
 import { popoverOgScene } from "./popover.og"
 import { progressBarOgScene } from "./progress-bar.og"
 import { progressCircleOgScene } from "./progress-circle.og"
+import { quickActionsOgScene } from "./quick-actions.og"
 import { radarChartOgScene } from "./radar-chart.og"
 import { radialBarChartOgScene } from "./radial-bar-chart.og"
 import { radioOgScene } from "./radio.og"
@@ -301,6 +302,7 @@ export const ogScenes: Record<string, OgScene> = {
   "popover": popoverOgScene,
   "progress-bar": progressBarOgScene,
   "progress-circle": progressCircleOgScene,
+  "quick-actions": quickActionsOgScene,
   "radar-chart": radarChartOgScene,
   "radial-bar-chart": radialBarChartOgScene,
   "radio": radioOgScene,

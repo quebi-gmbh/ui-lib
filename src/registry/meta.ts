@@ -122,6 +122,7 @@ import { pieChartMeta } from "./pie-chart.meta"
 import { popoverMeta } from "./popover.meta"
 import { progressBarMeta } from "./progress-bar.meta"
 import { progressCircleMeta } from "./progress-circle.meta"
+import { quickActionsMeta } from "./quick-actions.meta"
 import { radarChartMeta } from "./radar-chart.meta"
 import { radialBarChartMeta } from "./radial-bar-chart.meta"
 import { radioMeta } from "./radio.meta"
@@ -292,6 +293,7 @@ export const metaRegistry: ComponentMeta[] = [
   popoverMeta,
   progressBarMeta,
   progressCircleMeta,
+  quickActionsMeta,
   radarChartMeta,
   radialBarChartMeta,
   radioMeta,
