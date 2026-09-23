@@ -140,6 +140,7 @@ import { skeletonExamples } from "./skeleton.examples"
 import { sliderExamples } from "./slider.examples"
 import { snippetExamples } from "./snippet.examples"
 import { sparklineExamples } from "./sparkline.examples"
+import { statExamples } from "./stat.examples"
 import { statusDotExamples } from "./status-dot.examples"
 import { stepperExamples } from "./stepper.examples"
 import { sunburstChartExamples } from "./sunburst-chart.examples"
@@ -308,6 +309,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "slider": sliderExamples,
   "snippet": snippetExamples,
   "sparkline": sparklineExamples,
+  "stat": statExamples,
   "status-dot": statusDotExamples,
   "stepper": stepperExamples,
   "sunburst-chart": sunburstChartExamples,

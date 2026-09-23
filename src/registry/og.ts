@@ -149,6 +149,7 @@ import { skeletonOgScene } from "./skeleton.og"
 import { sliderOgScene } from "./slider.og"
 import { snippetOgScene } from "./snippet.og"
 import { sparklineOgScene } from "./sparkline.og"
+import { statOgScene } from "./stat.og"
 import { statusDotOgScene } from "./status-dot.og"
 import { stepperOgScene } from "./stepper.og"
 import { sunburstChartOgScene } from "./sunburst-chart.og"
@@ -316,6 +317,7 @@ export const ogScenes: Record<string, OgScene> = {
   "slider": sliderOgScene,
   "snippet": snippetOgScene,
   "sparkline": sparklineOgScene,
+  "stat": statOgScene,
   "status-dot": statusDotOgScene,
   "stepper": stepperOgScene,
   "sunburst-chart": sunburstChartOgScene,

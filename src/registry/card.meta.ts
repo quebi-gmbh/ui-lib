@@ -20,7 +20,7 @@ export const cardMeta: ComponentMeta = {
       "More than about six cards of the same shape is a list. Scanning a grid of identical boxes is slower than reading down a column.",
       "Don't put a card around a page section just to separate it. Whitespace and a `Heading` do that, and a `Panel` when the section needs a tint behind it.",
       "Don't wrap a key/value block in a card. That is a `DescriptionList`.",
-      "Don't use a row of cards for KPIs. A bare stat — number, label, delta `Badge` or `Sparkline` — with vertical `Separator`s between them.",
+      "Don't use a row of cards for KPIs. A `StatGroup` of `Stat`s — number, label, `StatDelta` and `Sparkline` — with the lines between them drawn by the group.",
       "Don't build a callout or a selectable option out of a card. Those are `Note` and `ChoiceBox`.",
     ],
     instead: [
@@ -65,8 +65,9 @@ export const cardMeta: ComponentMeta = {
         job: "A metric or KPI",
         use: [
           {
-            name: "Stat row",
-            when: "Number, label, delta Badge or Sparkline; vertical Separators between stats.",
+            name: "Stat + StatGroup",
+            slug: "stat",
+            when: "Label, value, delta and Sparkline; the group draws the lines between stats.",
           },
           { name: "Sparkline", slug: "sparkline" },
           { name: "Meter", slug: "meter" },
