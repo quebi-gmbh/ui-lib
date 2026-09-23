@@ -16,7 +16,7 @@ export const cardMeta: ComponentMeta = {
     ],
     whenNot: [
       "Never nest a card in a card. The inner one is a section: a `Heading` and a `Separator`.",
-      "Items that share the same fields are rows, not cards: a `Table` (`DataTable`, `ServerTable`) or a list.",
+      "Items that share the same fields are rows, not cards: a `Table` (`DataTable`, `ServerTable`) or a list of `Item` rows.",
       "More than about six cards of the same shape is a list. Scanning a grid of identical boxes is slower than reading down a column.",
       "Don't put a card around a page section just to separate it. Whitespace and a `Heading` do that.",
       "Don't wrap a key/value block in a card. That is a `DescriptionList`.",
@@ -38,7 +38,7 @@ export const cardMeta: ComponentMeta = {
       {
         job: "A list item",
         use: [
-          { name: "Divided list rows", slug: "separator", when: "Static rows." },
+          { name: "Item", slug: "item", when: "Static rows: media, title, meta, an action." },
           { name: "GridList", slug: "grid-list", when: "Rows the user acts on." },
           { name: "ListBox", slug: "list-box", when: "Rows the user chooses from." },
           { name: "Tree", slug: "tree", when: "A hierarchy." },

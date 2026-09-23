@@ -106,6 +106,7 @@ import { headingOgScene } from "./heading.og"
 import { iconTileOgScene } from "./icon-tile.og"
 import { inputOgScene } from "./input.og"
 import { inputOtpOgScene } from "./input-otp.og"
+import { itemOgScene } from "./item.og"
 import { keyboardOgScene } from "./keyboard.og"
 import { leaderboardOgScene } from "./leaderboard.og"
 import { lineChartOgScene } from "./line-chart.og"
@@ -271,6 +272,7 @@ export const ogScenes: Record<string, OgScene> = {
   "icon-tile": iconTileOgScene,
   "input": inputOgScene,
   "input-otp": inputOtpOgScene,
+  "item": itemOgScene,
   "keyboard": keyboardOgScene,
   "leaderboard": leaderboardOgScene,
   "line-chart": lineChartOgScene,

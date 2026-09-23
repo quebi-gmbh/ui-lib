@@ -17,6 +17,7 @@ import {
 } from "@/components/description-list"
 import { FormattedNumber } from "@/components/formatted-number"
 import { Heading } from "@/components/heading"
+import { Item, ItemContent, ItemGroup, ItemMeta, ItemTitle } from "@/components/item"
 import { Note } from "@/components/note"
 import { Separator } from "@/components/separator"
 import { Sparkline } from "@/components/sparkline"
@@ -175,7 +176,7 @@ export const cardExamples: ComponentExample[] = [
   {
     title: "A card per list item → divided rows",
     description:
-      "Three boxes of the same shape are a list. Rows separated by a hairline read faster, and they stay readable at thirty. Reach for GridList when the rows are actionable.",
+      "Three boxes of the same shape are a list. Item rows in an ItemGroup, separated by a hairline, read faster, and they stay readable at thirty. Reach for GridList when the rows are actionable.",
     insteadOf: () => (
       <div className="flex max-w-sm flex-col gap-3">
         {MEMBERS.map((m) => (
@@ -186,17 +187,16 @@ export const cardExamples: ComponentExample[] = [
       </div>
     ),
     render: () => (
-      <ul className="flex max-w-sm flex-col">
-        {MEMBERS.map((m, index) => (
-          <li key={m.id}>
-            {index > 0 && <Separator />}
-            <div className="flex items-center justify-between gap-4 py-3">
-              <span className="text-sm font-medium text-quebi-fg">{m.name}</span>
-              <span className="text-sm text-quebi-fg-muted">{m.role}</span>
-            </div>
-          </li>
+      <ItemGroup className="max-w-sm">
+        {MEMBERS.map((m) => (
+          <Item key={m.id}>
+            <ItemContent>
+              <ItemTitle>{m.name}</ItemTitle>
+            </ItemContent>
+            <ItemMeta>{m.role}</ItemMeta>
+          </Item>
         ))}
-      </ul>
+      </ItemGroup>
     ),
   },
   {

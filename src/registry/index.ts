@@ -97,6 +97,7 @@ import { headingExamples } from "./heading.examples"
 import { iconTileExamples } from "./icon-tile.examples"
 import { inputExamples } from "./input.examples"
 import { inputOtpExamples } from "./input-otp.examples"
+import { itemExamples } from "./item.examples"
 import { keyboardExamples } from "./keyboard.examples"
 import { leaderboardExamples } from "./leaderboard.examples"
 import { lineChartExamples } from "./line-chart.examples"
@@ -263,6 +264,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "icon-tile": iconTileExamples,
   "input": inputExamples,
   "input-otp": inputOtpExamples,
+  "item": itemExamples,
   "keyboard": keyboardExamples,
   "leaderboard": leaderboardExamples,
   "line-chart": lineChartExamples,
