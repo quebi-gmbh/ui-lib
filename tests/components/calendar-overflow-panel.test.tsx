@@ -156,4 +156,45 @@ describe("the all-day band's overflow", () => {
     await user.click(within(panel).getByText("Holiday 3"))
     expect(clicked).toEqual(["hol-2"])
   })
+
+  /**
+   * And draws the rows the way the grid draws them.
+   *
+   * A filled row carries the 2px colour accent down its left edge, and
+   * `--radius-quebi-sm` is 8px on a 20px row — so a radius on that side bends
+   * the accent into a crescent hooked into a pill, which is the defect
+   * `tests/components/calendar-surfaces.test.tsx` pins for the chip and the
+   * band (task #176). The panel was the surface it survived on, because the
+   * radius used to arrive from this call site instead of from the row.
+   */
+  test("a filled row in the panel is square on the accented edge", async () => {
+    const holiday: CalendarEvent = {
+      id: "hol",
+      title: "Holiday",
+      start: at(MONDAY, 0),
+      end: at(MONDAY.add({ days: 1 }), 0),
+      allDay: true,
+    }
+    const { container } = render(
+      <WeekView
+        date={MONDAY}
+        events={[holiday, { ...holiday, id: "hol-2" }, { ...holiday, id: "hol-3" }]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+      />,
+    )
+
+    await userEvent.setup().click(moreLink(container))
+    const panel = await screen.findByRole("dialog")
+    const row = panel.querySelector<HTMLElement>('[data-slot="calendar-day-event"]')
+    const className = row?.className ?? ""
+
+    expect(className).toContain("border-l-2")
+    expect(className).toContain("rounded-l-none")
+    // The radius is the row's own, so there is nothing here to get wrong — and
+    // the trailing corners keep it.
+    expect(className).toContain("rounded-quebi-sm")
+    expect(className).not.toContain("rounded-l-quebi-sm")
+  })
 })

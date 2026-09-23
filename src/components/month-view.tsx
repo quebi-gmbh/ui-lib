@@ -477,20 +477,19 @@ function bandGeometry(band: EventBand, dayCount: number): React.CSSProperties {
 }
 
 /**
- * Which of a chip's corners are cut.
+ * Which of a chip's corners the *week boundary* cuts.
  *
- * The accented edge is never rounded (task #176). `--radius-quebi-sm` is 8px
- * and the chip is 20px tall, so two corners eat 16px of the 20 and the 2px
- * border tapers as it turns — the series line reads as a crescent hooked into
- * a pill. `TimedBlock` already rounds only its trailing corners for the same
- * reason. A chip cut at the week boundary squares that side too, so the halves
- * read as one event.
+ * Only that one, now: the accented edge is squared by `CalendarEventRow`
+ * itself (task #176, and see the radius there), because whether a row draws
+ * the accent is the row's own business and the panel lists the same events
+ * with no geometry at all. What is left is what the grid knows and the row
+ * cannot — that this chip is one half of an event cut at the end of a week,
+ * and the two halves read as one thing only if the cut is square.
  */
 function bandCorners(band: EventBand): string {
-  const filled = isAllDayEvent(band.event)
   return cn(
-    filled || band.continuesBefore ? "rounded-l-none" : "rounded-l-quebi-sm",
-    filled && band.continuesAfter ? "rounded-r-none" : "rounded-r-quebi-sm",
+    band.continuesBefore && "rounded-l-none",
+    isAllDayEvent(band.event) && band.continuesAfter && "rounded-r-none",
   )
 }
 
