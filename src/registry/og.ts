@@ -158,6 +158,7 @@ import { sunburstChartOgScene } from "./sunburst-chart.og"
 import { switchOgScene } from "./switch.og"
 import { tableOgScene } from "./table.og"
 import { tableControlsOgScene } from "./table-controls.og"
+import { tableOfContentsOgScene } from "./table-of-contents.og"
 import { tableShellOgScene } from "./table-shell.og"
 import { tabsOgScene } from "./tabs.og"
 import { tagFieldOgScene } from "./tag-field.og"
@@ -328,6 +329,7 @@ export const ogScenes: Record<string, OgScene> = {
   "switch": switchOgScene,
   "table": tableOgScene,
   "table-controls": tableControlsOgScene,
+  "table-of-contents": tableOfContentsOgScene,
   "table-shell": tableShellOgScene,
   "tabs": tabsOgScene,
   "tag-field": tagFieldOgScene,

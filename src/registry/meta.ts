@@ -148,6 +148,7 @@ import { sunburstChartMeta } from "./sunburst-chart.meta"
 import { switchMeta } from "./switch.meta"
 import { tableMeta } from "./table.meta"
 import { tableControlsMeta } from "./table-controls.meta"
+import { tableOfContentsMeta } from "./table-of-contents.meta"
 import { tableShellMeta } from "./table-shell.meta"
 import { tabsMeta } from "./tabs.meta"
 import { tagFieldMeta } from "./tag-field.meta"
@@ -319,6 +320,7 @@ export const metaRegistry: ComponentMeta[] = [
   switchMeta,
   tableMeta,
   tableControlsMeta,
+  tableOfContentsMeta,
   tableShellMeta,
   tabsMeta,
   tagFieldMeta,

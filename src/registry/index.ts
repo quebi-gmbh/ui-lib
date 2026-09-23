@@ -149,6 +149,7 @@ import { sunburstChartExamples } from "./sunburst-chart.examples"
 import { switchExamples } from "./switch.examples"
 import { tableExamples } from "./table.examples"
 import { tableControlsExamples } from "./table-controls.examples"
+import { tableOfContentsExamples } from "./table-of-contents.examples"
 import { tableShellExamples } from "./table-shell.examples"
 import { tabsExamples } from "./tabs.examples"
 import { tagFieldExamples } from "./tag-field.examples"
@@ -320,6 +321,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "switch": switchExamples,
   "table": tableExamples,
   "table-controls": tableControlsExamples,
+  "table-of-contents": tableOfContentsExamples,
   "table-shell": tableShellExamples,
   "tabs": tabsExamples,
   "tag-field": tagFieldExamples,
