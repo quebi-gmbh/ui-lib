@@ -68,6 +68,14 @@ function month(first: CalendarDate): CalendarEvent[] {
   ]
 }
 
+/** The same month, moved by `offset` months and with ids of its own. */
+function shifted(first: CalendarDate, offset: number): CalendarEvent[] {
+  return month(first.add({ months: offset })).map((event) => ({
+    ...event,
+    id: `${event.id}@${offset}`,
+  }))
+}
+
 const DefaultMonth = () => {
   const first = startOfMonth(today(TIME_ZONE))
   return <MonthView events={month(first)} calendars={CALENDARS} timeZone={TIME_ZONE} />
@@ -194,6 +202,77 @@ const DragToMove = () => {
 }
 
 /**
+ * Two months beside each other — the shape a booking or planning calendar takes,
+ * because "is there room the week after next" is a question that straddles the
+ * 30th. Each grid dims its own leading and trailing days: a day outside
+ * September is outside it whatever is drawn to the right of it.
+ */
+const TwoMonths = () => {
+  const first = startOfMonth(today(TIME_ZONE))
+  return (
+    <MonthView
+      range={{ months: 2 }}
+      events={[...month(first), ...shifted(first, 1)]}
+      calendars={CALENDARS}
+      timeZone={TIME_ZONE}
+      weekHeight={104}
+    />
+  )
+}
+
+/**
+ * Eight weeks, anchored on a week rather than on a month: the heading is a week
+ * picker, the chevrons slide the strip one week at a time, and no day is
+ * dimmed because nothing in a strip is outside it. The only seam left is where
+ * the months change, and the 1st says so itself.
+ */
+const RollingWeeks = () => {
+  const first = startOfMonth(today(TIME_ZONE))
+  return (
+    <MonthView
+      range={{ weeks: 8 }}
+      events={[...month(first), ...shifted(first, 1)]}
+      calendars={CALENDARS}
+      timeZone={TIME_ZONE}
+      weekHeight={96}
+    />
+  )
+}
+
+/**
+ * The same two months through a window, with the months either side showing a
+ * slice of themselves. How many are in the window is the reader's to change,
+ * which is the one thing about a calendar's density a reader answers better
+ * than the page does.
+ */
+const MonthCarousel = () => {
+  const first = startOfMonth(today(TIME_ZONE))
+  const [shown, setShown] = useState(2)
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <MonthView
+        range={{ months: 2, carousel: true }}
+        events={[
+          ...shifted(first, -1),
+          ...month(first),
+          ...shifted(first, 1),
+          ...shifted(first, 2),
+        ]}
+        calendars={CALENDARS}
+        timeZone={TIME_ZONE}
+        weekHeight={96}
+        onMonthsChange={setShown}
+      />
+      <p className="text-quebi-fg-muted text-sm">
+        Months in the window: {shown}. Hover a peeking month to read it, and press
+        the chevron on it to go there — the blur eases rather than clearing, and
+        the month stays inert until it is the one you are looking at.
+      </p>
+    </div>
+  )
+}
+
+/**
  * A month grid ends mid-week, so the last row usually has empty cells in the
  * corner. That is where a legend can sit for free — and `variant="overlay"` is
  * what keeps it a legend on the months where it does not.
@@ -231,6 +310,24 @@ export const monthViewExamples: ComponentExample[] = [
     description:
       "The corner a month ends in is usually empty, which makes it the cheapest place to put the key — and the least reliable, because next month the weeks reach it. variant=\"overlay\" settles that: the row sits on an elevated, blurred surface, so it reads the same over a spare Saturday and over a full one. Placement stays a class, not a prop.",
     render: () => <OverlayLegend />,
+  },
+  {
+    title: "Two months, side by side",
+    description:
+      "range={{ months: 2 }} draws this month and the next in one view. The heading names the pair — September – Oktober 2026 — and the chevrons step a whole page, so stepping forward lands on November and December rather than on an overlapping pair. Each grid keeps its own weekday header and dims its own outside days; a chip dragged past the edge of its month clamps there, because the grid beside it is a coordinate space of its own.",
+    render: () => <TwoMonths />,
+  },
+  {
+    title: "A carousel of months",
+    description:
+      "carousel: true draws the side-by-side view through a window. The months either side show a slice of themselves under a veil that ramps outwards — two masked backdrop-blur layers and a dimming gradient, so a peek is sharp where it meets the window and blurred at its outer edge rather than uniformly frosted. Hovering one eases the veil — half the blur, a lighter tint — so it can be read without stopping being a peek; a chevron drawn on it steps there, and the month stays inert either way, because seeing next month is not being in it. With the toolbar present those chevrons are a pointer affordance and stay out of the tab order — the same two presses are already in it — and without one they become everyone's. How many months the window holds is the reader's: range.months seeds the segmented control and onMonthsChange reports what was picked. Every move travels the whole way — a chevron step, Today, or a jump from the month picker slides past every month in between — while the label and your state have the new month from the first frame. Only the ends of a journey are drawn as real months; the ones it only passes are placeholders of the right shape, because nobody can read a grid going by at that speed. A press mid-flight carries on from where the band had got to. Every month in the band is drawn six rows tall, so a February cannot shorten the calendar under the chevron that stepped to it.",
+    render: () => <MonthCarousel />,
+  },
+  {
+    title: "A rolling strip of weeks",
+    description:
+      "range={{ weeks: 8 }} is the same grid with the month taken out of it: a fixed eight rows starting with the week the anchor date falls in. The reader picks a start week rather than a month — the heading opens a week picker — and the chevrons move it one week at a time, so the strip slides rather than paging. Nothing is dimmed, since no day is outside a strip, and the 1st carries its month name as the one marker of where the seam is.",
+    render: () => <RollingWeeks />,
   },
   {
     title: "\"+N more\" overflow",

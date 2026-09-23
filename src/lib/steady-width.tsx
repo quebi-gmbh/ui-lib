@@ -56,8 +56,8 @@ export interface SteadyWidthHandle<T extends HTMLElement> {
  * Put the returned `ref` and `style` on the element that holds the changing
  * text, and give it `truncate` (or any `overflow` that is not `visible`): the
  * reservation is a `width`, so the element shrinks under pressure like any
- * other flex item, and the measurement reads `scrollWidth`, which is the
- * content's width whether or not the box is currently cut short.
+ * other flex item, and the measurement is taken with that width lifted, so it
+ * is the content's own width rather than the last number this hook wrote.
  *
  * `shape` is what the reservation is *for* — the format of the string rather
  * than the string. Pass the things that change how wide the content can ever
@@ -88,15 +88,27 @@ export function useSteadyWidth<T extends HTMLElement>(shape: string): SteadyWidt
   useIsomorphicLayoutEffect(() => {
     const node = ref.current
     if (!node) return
-    // `scrollWidth` is an integer and the text it measures is not, so a
-    // reservation taken straight from it can land half a pixel short of the
-    // content it was taken for — and half a pixel short of a `truncate` is an
-    // ellipsis on a box with nothing wrong with it. The pixel of slack is added
-    // only while the content is actually overflowing its box, which is what
-    // keeps this from ratcheting: once the box fits, `scrollWidth` reports the
-    // box, and `Math.max` returns the number it already had.
-    const natural = node.scrollWidth + (node.scrollWidth > node.clientWidth ? 1 : 0)
-    if (natural > 0) setReserved((previous) => Math.max(previous, natural))
+    // `scrollWidth` is an integer and the text under it is not: it is the real
+    // width *rounded*, so for half the strings in a font it rounds down, and a
+    // box reserved at its own content minus a fraction of a pixel is an
+    // ellipsis on a box with nothing wrong with it. That is what the calendar
+    // toolbar's heading was doing at any viewport width — `September 2026` is
+    // 115-and-a-bit pixels of Outfit, it reserved 115, and it stayed truncated
+    // for as long as the label said September.
+    //
+    // So the reading is rounded *up*, by taking the integer and adding one, and
+    // it is taken with the reservation lifted. Lifting it is what keeps the
+    // slack from ratcheting: read through a reservation the content already
+    // fits inside and `scrollWidth` reports the reservation, so every pass
+    // would reserve a pixel more than the last. Lifted, every pass measures the
+    // same content and `Math.max` returns the number it already had. Both the
+    // lift and the restore happen inside the layout effect, so the browser
+    // never paints the element at its unreserved width.
+    const applied = node.style.width
+    if (applied) node.style.width = ""
+    const content = node.scrollWidth
+    if (applied) node.style.width = applied
+    if (content > 0) setReserved((previous) => Math.max(previous, content + 1))
   })
 
   return { ref, style: reserved > 0 ? { width: reserved } : undefined }

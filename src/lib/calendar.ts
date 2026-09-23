@@ -644,6 +644,28 @@ export function weekRange(
 }
 
 /**
+ * `count` whole weeks, the first of them the week `date` falls in.
+ *
+ * `monthRange`'s shape for a view anchored on a week rather than on a month: a
+ * rolling strip that starts where the reader put it and runs on for as many
+ * rows as were asked for. Nothing in a strip is "outside" it — there is no
+ * month for a day to belong to or not — so the rows carry no month to dim
+ * against, and the grid drawing them says where the months change some other
+ * way.
+ */
+export function weekStrip(
+  date: CalendarDate,
+  locale: string,
+  count = 6,
+  firstDayOfWeek?: Parameters<typeof startOfWeek>[2],
+): CalendarDate[][] {
+  const start = startOfWeek(date, locale, firstDayOfWeek)
+  return Array.from({ length: Math.max(1, Math.trunc(count)) }, (_, week) =>
+    Array.from({ length: 7 }, (_, day) => start.add({ days: week * 7 + day })),
+  )
+}
+
+/**
  * The month grid `date` falls in: whole weeks, starting on the locale's first
  * day, covering every day of the month and the leading and trailing days that
  * complete the first and last weeks.
@@ -652,6 +674,10 @@ export function weekRange(
  * February beginning on a Monday draws four rows instead of four rows and two
  * empty ones. A caller wanting a fixed height should fix the container's, not
  * the grid's.
+ *
+ * The rows themselves are `weekStrip`'s — a month grid is a strip that happens
+ * to begin and end where a month does, and the two counting the days apart
+ * would be two answers to which day a row starts on.
  */
 export function monthRange(
   date: CalendarDate,
@@ -662,11 +688,8 @@ export function monthRange(
   const start = startOfWeek(first, locale, firstDayOfWeek)
   const daysInMonth = first.calendar.getDaysInMonth(first)
   const lead = first.compare(start)
-  const weeks = Math.ceil((lead + daysInMonth) / 7)
 
-  return Array.from({ length: weeks }, (_, week) =>
-    Array.from({ length: 7 }, (_, day) => start.add({ days: week * 7 + day })),
-  )
+  return weekStrip(first, locale, Math.ceil((lead + daysInMonth) / 7), firstDayOfWeek)
 }
 
 /** True if `day` is one of the days of `month`'s own month — the grid's dimming test. */

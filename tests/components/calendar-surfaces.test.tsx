@@ -352,6 +352,9 @@ describe("a selected block outranks the blocks it touches", () => {
 describe("the colour accent is a straight line, not a crescent", () => {
   const chipFor = (container: HTMLElement, id: string) => slot(container, "calendar-chip", id)
 
+  // The radius is the row's own shorthand now, and a caller squares a corner
+  // over the top of it — so what a corner ends up as is the shorthand unless a
+  // `rounded-<side>-none` from the call site has displaced it.
   test("a filled month chip is square on the accented edge and round on the other", () => {
     const { container } = render(
       <MonthView
@@ -365,9 +368,8 @@ describe("the colour accent is a straight line, not a crescent", () => {
     )
     const className = chipFor(container, "trip")?.className ?? ""
     expect(className).toContain("rounded-l-none")
-    expect(className).not.toContain("rounded-l-quebi-sm")
     // The trailing edge keeps the radius: only the accent is straightened.
-    expect(className).toContain("rounded-r-quebi-sm")
+    expect(className).toContain("rounded-quebi-sm")
     // And it is the accent that makes the difference.
     expect(className).toContain("border-l-2")
     expect(className).toContain(CALENDAR_COLORS.blue.edge)
@@ -386,8 +388,8 @@ describe("the colour accent is a straight line, not a crescent", () => {
     )
     const className = chipFor(container, "one")?.className ?? ""
     expect(className).not.toContain("border-l-2")
-    expect(className).toContain("rounded-l-quebi-sm")
-    expect(className).toContain("rounded-r-quebi-sm")
+    expect(className).toContain("rounded-quebi-sm")
+    expect(className).not.toContain("rounded-l-none")
   })
 
   test("the week all-day band gets the same treatment", () => {

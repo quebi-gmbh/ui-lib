@@ -34,14 +34,19 @@ import { SteadyWidth, useSteadyWidth } from "../../src/lib/steady-width"
  * keyed by the element's text, which is what lets one render say 260px and the
  * next say 90px.
  *
+ * It answers the way a browser does, in the two ways that decide whether the
+ * hook is right: the number is an *integer*, rounded from text that is not one,
+ * and it is the width of the *box* whenever the box is the wider of the two —
+ * so a value the hook has already written to `style.width` is what it reads
+ * back, unless it lifts that width before reading. Both are what `widths`
+ * holding a fraction is for.
+ *
  * The property stays on the prototype for the rest of the file — replacing it
  * is cheap, removing it is not, and an empty map answers 0, which is exactly
  * what happy-dom answered before. The `afterEach` empties the map, so no test
  * here inherits another's widths and no test elsewhere sees anything new.
  */
 const widths = new Map<string, number>()
-/** Boxes narrower than their content — the case the hook adds a pixel for. */
-const boxes = new Map<string, number>()
 let stubbed = false
 
 function stubScrollWidth() {
@@ -54,11 +59,13 @@ function stubScrollWidth() {
       Object.defineProperty(prototype, property, {
         configurable: true,
         get(this: Element) {
-          const text = this.textContent ?? ""
-          const content = widths.get(text) ?? 0
-          // Default the box to its content: a fitting box is the steady state,
-          // and the tests that care about a short one say so in `boxes`.
-          return property === "scrollWidth" ? content : (boxes.get(text) ?? content)
+          const content = widths.get(this.textContent ?? "") ?? 0
+          const applied = Number.parseFloat((this as HTMLElement).style?.width ?? "")
+          const box = Number.isNaN(applied) ? content : applied
+          // `scrollWidth` is the scrollable overflow, which is the content when
+          // it spills and the box when it fits; `clientWidth` is only ever the
+          // box. Both are rounded, because a browser's are.
+          return Math.round(property === "scrollWidth" ? Math.max(content, box) : box)
         },
       })
     }
@@ -67,7 +74,6 @@ function stubScrollWidth() {
 
 afterEach(() => {
   widths.clear()
-  boxes.clear()
 })
 
 describe("SteadyWidth reserves every string the slot can hold", () => {
@@ -118,13 +124,14 @@ describe("useSteadyWidth keeps the widest width it has held", () => {
 
   const probe = () => screen.getByTestId("probe")
 
-  test("it reserves what it measured", () => {
+  test("it reserves a pixel more than it measured", () => {
     stubScrollWidth()
     widths.set("Donnerstag, 24. September 2026", 260)
 
     render(<Probe shape="day|de-DE|" text="Donnerstag, 24. September 2026" />)
 
-    expect(probe().style.width).toBe("260px")
+    // The pixel is the rounding, not generosity: see the fractional case below.
+    expect(probe().style.width).toBe("261px")
   })
 
   test("a narrower label does not give the width back", () => {
@@ -137,7 +144,7 @@ describe("useSteadyWidth keeps the widest width it has held", () => {
 
     // The point of the whole exercise: `Today` and the forward chevron are
     // still where the reader left them.
-    expect(probe().style.width).toBe("260px")
+    expect(probe().style.width).toBe("261px")
   })
 
   test("a wider label takes the extra width and keeps it", () => {
@@ -146,13 +153,13 @@ describe("useSteadyWidth keeps the widest width it has held", () => {
     widths.set("Donnerstag, 24. September 2026", 260)
 
     const { rerender } = render(<Probe shape="day|de-DE|" text="September 2026" />)
-    expect(probe().style.width).toBe("140px")
+    expect(probe().style.width).toBe("141px")
 
     rerender(<Probe shape="day|de-DE|" text="Donnerstag, 24. September 2026" />)
-    expect(probe().style.width).toBe("260px")
+    expect(probe().style.width).toBe("261px")
 
     rerender(<Probe shape="day|de-DE|" text="September 2026" />)
-    expect(probe().style.width).toBe("260px")
+    expect(probe().style.width).toBe("261px")
   })
 
   test("a change of shape drops the reservation instead of stranding it", () => {
@@ -165,20 +172,27 @@ describe("useSteadyWidth keeps the widest width it has held", () => {
 
     // A year is four characters. Holding 260px open for it would be the same
     // defect wearing the other face.
-    expect(probe().style.width).toBe("40px")
+    expect(probe().style.width).toBe("41px")
   })
 
-  test("a box that is cutting its content short reserves a pixel more than it read", () => {
+  test("text whose width rounds down is not reserved short", () => {
     stubScrollWidth()
-    widths.set("Donnerstag, 24. September 2026", 260)
-    boxes.set("Donnerstag, 24. September 2026", 259)
+    // The reported case, to the tenth of a pixel: `September 2026` in the
+    // toolbar heading is 115.2px of Outfit, `scrollWidth` says 115, and a box
+    // reserved at 115 cuts its own label to `September 202…` — at 3440px, with
+    // nothing else on the row asking for the space (comment on /month-view).
+    widths.set("September 2026", 115.2)
 
-    render(<Probe shape="day|de-DE|" text="Donnerstag, 24. September 2026" />)
+    const { rerender } = render(<Probe shape="month|de-DE|" text="September 2026" />)
+    expect(probe().style.width).toBe("116px")
 
-    // `scrollWidth` is an integer over text that is not, so a reservation of
-    // exactly what it read can leave the box half a pixel short — and half a
-    // pixel short of `truncate` is an ellipsis nobody asked for.
-    expect(probe().style.width).toBe("261px")
+    // And the pixel of slack does not compound. The measurement is taken with
+    // the reservation lifted, so a second pass reads the same 115 rather than
+    // the 116 it wrote — reading through the box is what would make this 117,
+    // then 118, for as long as the component renders.
+    rerender(<Probe shape="month|de-DE|" text="September 2026" />)
+    rerender(<Probe shape="month|de-DE|" text="September 2026" />)
+    expect(probe().style.width).toBe("116px")
   })
 
   test("an unmeasurable box reserves nothing at all", () => {

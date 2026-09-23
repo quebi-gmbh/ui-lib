@@ -1773,7 +1773,17 @@ export function CalendarEventRow<E extends CalendarEvent>({
     "flex h-5 cursor-pointer items-center gap-1.5 overflow-hidden px-1.5 text-left text-xs",
     "transition-colors duration-150",
     "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
-    filled ? cn(palette.band, "border-l-2", palette.edge) : "hover:bg-quebi-surface/[0.06]",
+    // The radius is the row's, not the caller's, because it is the same
+    // decision as the accent and only the row knows whether it draws one: an
+    // 8px radius on a 20px row bends the 2px `edge` into a hook that thins to
+    // nothing at both ends, so a row with the accent is square on that side —
+    // the treatment `TimedBlock` and the all-day band already give their own
+    // edge (task #176). Callers still cut corners further; `className` is
+    // merged after this.
+    "rounded-quebi-sm",
+    filled
+      ? cn(palette.band, "border-l-2", palette.edge, "rounded-l-none")
+      : "hover:bg-quebi-surface/[0.06]",
     // Selection is an outline, not the inset ring focus uses: it sits
     // outside the border box, so it neither overpaints `edge` nor vanishes
     // when the same row takes focus. `outline-solid` is load-bearing — it
@@ -1879,7 +1889,7 @@ export function DayOverflowPanel<E extends CalendarEvent>({
                 close()
                 onActivate(activated)
               }}
-              className="w-full rounded-quebi-sm"
+              className="w-full"
               slot="calendar-day-event"
             />
           ))}
