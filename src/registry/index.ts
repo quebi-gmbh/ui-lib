@@ -120,6 +120,7 @@ import { pieChartExamples } from "./pie-chart.examples"
 import { popoverExamples } from "./popover.examples"
 import { progressBarExamples } from "./progress-bar.examples"
 import { progressCircleExamples } from "./progress-circle.examples"
+import { quickActionsExamples } from "./quick-actions.examples"
 import { radarChartExamples } from "./radar-chart.examples"
 import { radialBarChartExamples } from "./radial-bar-chart.examples"
 import { radioExamples } from "./radio.examples"
@@ -286,6 +287,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "popover": popoverExamples,
   "progress-bar": progressBarExamples,
   "progress-circle": progressCircleExamples,
+  "quick-actions": quickActionsExamples,
   "radar-chart": radarChartExamples,
   "radial-bar-chart": radialBarChartExamples,
   "radio": radioExamples,
