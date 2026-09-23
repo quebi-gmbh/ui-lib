@@ -137,6 +137,7 @@ import { skeletonMeta } from "./skeleton.meta"
 import { sliderMeta } from "./slider.meta"
 import { snippetMeta } from "./snippet.meta"
 import { sparklineMeta } from "./sparkline.meta"
+import { statMeta } from "./stat.meta"
 import { statusDotMeta } from "./status-dot.meta"
 import { stepperMeta } from "./stepper.meta"
 import { sunburstChartMeta } from "./sunburst-chart.meta"
@@ -303,6 +304,7 @@ export const metaRegistry: ComponentMeta[] = [
   sliderMeta,
   snippetMeta,
   sparklineMeta,
+  statMeta,
   statusDotMeta,
   stepperMeta,
   sunburstChartMeta,

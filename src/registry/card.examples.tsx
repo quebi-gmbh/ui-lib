@@ -7,7 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/card"
-import { Badge } from "@/components/badge"
 import { Button } from "@/components/button"
 import { ChoiceBox, ChoiceBoxItem } from "@/components/choice-box"
 import {
@@ -20,6 +19,7 @@ import { Heading } from "@/components/heading"
 import { Note } from "@/components/note"
 import { Separator } from "@/components/separator"
 import { Sparkline } from "@/components/sparkline"
+import { Stat, StatDelta, StatGroup } from "@/components/stat"
 import {
   Table,
   TableBody,
@@ -43,9 +43,27 @@ const INVOICES = [
 ]
 
 const KPIS = [
-  { label: "Signups", value: 1284, delta: "+12%", series: [12, 18, 14, 22, 26, 30, 34, 41] },
-  { label: "Active kiosks", value: 312, delta: "+3%", series: [290, 294, 296, 301, 305, 309, 312] },
-  { label: "Checkout errors", value: 17, delta: "−40%", series: [41, 38, 30, 29, 22, 19, 17] },
+  {
+    label: "Signups",
+    value: 1284,
+    delta: 0.12,
+    fallIsGood: false,
+    series: [12, 18, 14, 22, 26, 30, 34, 41],
+  },
+  {
+    label: "Active kiosks",
+    value: 312,
+    delta: 0.03,
+    fallIsGood: false,
+    series: [290, 294, 296, 301, 305, 309, 312],
+  },
+  {
+    label: "Checkout errors",
+    value: 17,
+    delta: -0.4,
+    fallIsGood: true,
+    series: [41, 38, 30, 29, 22, 19, 17],
+  },
 ]
 
 export const cardExamples: ComponentExample[] = [
@@ -240,7 +258,7 @@ export const cardExamples: ComponentExample[] = [
   {
     title: "KPI cards → a stat row",
     description:
-      "A number does not need a box to be read. Label, value and a delta or sparkline, with vertical separators between the stats, carry the same data in a third of the ink.",
+      "A number does not need a box to be read. A StatGroup of Stats — label, value, delta and sparkline, with a hairline between them — carries the same data in a third of the ink.",
     insteadOf: () => (
       <div className="grid max-w-md grid-cols-3 gap-3">
         {KPIS.map((k) => (
@@ -254,26 +272,17 @@ export const cardExamples: ComponentExample[] = [
       </div>
     ),
     render: () => (
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-stretch sm:gap-6">
-        {KPIS.map((k, index) => (
-          <div key={k.label} className="flex items-stretch gap-6">
-            {/* Between stats in a row; a stack needs no line, the gap does it. */}
-            {index > 0 && (
-              <Separator orientation="vertical" className="hidden h-auto sm:block" />
-            )}
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-quebi-fg-muted">{k.label}</span>
-              <span className="text-2xl font-semibold text-quebi-fg tabular-nums">
-                <FormattedNumber value={k.value} />
-              </span>
-              <span className="flex items-center gap-2">
-                <Badge intent="success">{k.delta}</Badge>
-                <Sparkline data={k.series} className="text-quebi-brand-text" />
-              </span>
-            </div>
-          </div>
+      <StatGroup>
+        {KPIS.map((k) => (
+          <Stat
+            key={k.label}
+            label={k.label}
+            value={k.value}
+            delta={<StatDelta value={k.delta} invert={k.fallIsGood} />}
+            trend={<Sparkline data={k.series} className="text-quebi-brand-text" />}
+          />
         ))}
-      </div>
+      </StatGroup>
     ),
   },
   {
