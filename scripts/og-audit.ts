@@ -58,16 +58,19 @@ export const STAGE_MARGIN_PX = 8
  * The scenes whose surface is pinned to an edge of the window, with the reason
  * each one is, measured against the canvas instead of against the stage.
  *
- * Only these three. A modal, an alert dialog and a command palette are also
+ * Only these four. A modal, an alert dialog and a command palette are also
  * portalled out of the stage, and they are *not* here: `magnifyOverlays` in
  * `src/routes/og.$slug.tsx` nudges an unpinned surface back between the frame's
  * bands, so a dialog that would have grown over the logo has no excuse. What is
- * left is the three surfaces whose whole shape is "attached to the edge of the
- * window", which is a thing the image has to be allowed to show.
+ * left is the surfaces whose whole shape is "attached to the edge of the
+ * window", which is a thing the image has to be allowed to show. Quick Actions
+ * is here because its panel *is* a `DrawerContent` on every side it has — a
+ * picture of its menu anywhere else would be a picture of some other component.
  */
 export const OFF_STAGE: Record<string, string> = {
   drawer: "the drawer spans the viewport's width and is pinned to its bottom edge",
   sheet: "the sheet spans the viewport's height and is pinned to a side of it",
+  "quick-actions": "the panel is a Drawer: it spans the viewport's width and is pinned to its bottom edge",
   toast: "the toast region is pinned to a viewport corner",
 }
 
@@ -84,8 +87,9 @@ export const OFF_STAGE: Record<string, string> = {
  *
  * The number is what the scene measures today, less a pixel of slack. It is a
  * floor, not a licence: a scene that gets smaller than the size its exception
- * was written for fails like any other. Two of the entries are not calendars at
- * all — a Drawer and a Sheet are sized by the window, so `magnifyOverlays` in
+ * was written for fails like any other. Three of the entries are not calendars
+ * at all — a Drawer, a Sheet and the Drawer Quick Actions opens are sized by the
+ * window, so `magnifyOverlays` in
  * `src/routes/og.$slug.tsx` deliberately leaves them alone, and their type is
  * whatever the app's own is.
  */
@@ -112,6 +116,10 @@ export const FLOOR_EXCEPTIONS: Record<string, { px: number; reason: string }> = 
   sheet: {
     px: 14,
     reason: "full-bleed: the panel spans the window's height, for the same reason as drawer",
+  },
+  "quick-actions": {
+    px: 14,
+    reason: "full-bleed: the panel is a bottom Drawer, for the same reason as drawer",
   },
 }
 
