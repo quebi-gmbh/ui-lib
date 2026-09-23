@@ -38,7 +38,8 @@ import { cn } from "@/lib/utils"
  * Table — quebi design system
  *
  * Built on react-aria-components. A borderless data table inside a rounded,
- * cyan-tinted surface. Headers use muted quebi foreground in small uppercase
+ * cyan-tinted surface — or, with `variant="plain"`, on no surface at all: rows
+ * divided by hairlines on whatever the table sits on. Headers use muted quebi foreground in small uppercase
  * caps; rows separate with faint cyan borders, lift to a subtle white tint on
  * hover, and fill with brand teal at low opacity when selected. Supports
  * selection, sorting, dragging, resizable columns, striping, and grid lines.
@@ -47,6 +48,20 @@ import { cn } from "@/lib/utils"
 interface TableProps extends Omit<TablePrimitiveProps, "className"> {
   allowResize?: boolean
   className?: string
+  /**
+   * `surface` (default) draws the table on its own bordered, rounded panel —
+   * for a table that stands alone on a page. `plain` draws no panel: a header
+   * rule and row dividers on whatever is behind it. Use `plain` under a
+   * heading in a page section, and inside a Card or a dashboard widget, where
+   * the surface would be a box drawn inside a box.
+   */
+  variant?: "surface" | "plain"
+  /**
+   * Take the inline padding off the first and last columns, so their text
+   * lines up with the heading and prose around the table instead of sitting
+   * one gutter in. Meant for `plain`; on a `surface` it puts text against the
+   * border.
+   */
   bleed?: boolean
   grid?: boolean
   striped?: boolean
@@ -71,6 +86,7 @@ const Root = (props: TableProps) => {
 const Table = ({
   allowResize,
   className,
+  variant = "surface",
   bleed = false,
   grid = false,
   striped = false,
@@ -91,8 +107,22 @@ const Table = ({
           reach, not what sticky positioning resolves against.
         */}
         <div
+          data-slot="table-surface"
+          data-variant={variant}
           className={cn(
-            "quebi-scrollbar quebi-scrollbar-corners relative overflow-auto whitespace-nowrap rounded-quebi-md border border-quebi-line/10 bg-quebi-bg [--gutter-y:--spacing(3)]",
+            "quebi-scrollbar quebi-scrollbar-corners relative overflow-auto whitespace-nowrap [--gutter-y:--spacing(3)]",
+            variant === "surface" && "rounded-quebi-md border border-quebi-line/10 bg-quebi-bg",
+            // The header cells are filled with the page colour so that a
+            // sticky header hides the rows scrolling under it. On a panel that
+            // fill is invisible; with no panel it is a dark strip across
+            // whatever the table sits on — a Card's tint, most often. A plain
+            // table's header takes the colour of what is behind it instead.
+            variant === "plain" && "[&_th]:bg-transparent",
+            // On the header cells and body cells alike, and on the checkbox and
+            // drag gutters too when they are the first column: the edge is the
+            // table's, whatever column happens to be at it.
+            bleed &&
+              "[&_:is(th,td):first-child]:ps-0 [&_:is(th,td):last-child]:pe-0",
             className,
           )}
         >

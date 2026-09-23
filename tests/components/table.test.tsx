@@ -45,6 +45,58 @@ describe("Table", () => {
     expect(within(table).getByRole("rowheader")).toHaveTextContent("Galaxy S24")
   })
 
+  test("draws its own panel by default, and none when plain", () => {
+    const panel = () =>
+      document.querySelector('[data-slot="table-surface"]')?.className.split(/\s+/) ?? []
+
+    const surface = render(<BasicTable />)
+    expect(panel()).toContain("rounded-quebi-md")
+    expect(panel()).toContain("border")
+    surface.unmount()
+
+    // A plain table is rows on whatever is behind it — the case a page section
+    // or a Card needs, where the panel would be a box drawn inside a box.
+    render(
+      <Table aria-label="Devices" variant="plain">
+        <TableHeader>
+          <TableColumn isRowHeader>Name</TableColumn>
+        </TableHeader>
+        <TableBody>
+          <TableRow id="1">
+            <TableCell>Galaxy S24</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    )
+    expect(panel()).not.toContain("rounded-quebi-md")
+    expect(panel()).not.toContain("border")
+    expect(panel().some((c) => c.startsWith("bg-"))).toBe(false)
+    expect(screen.getByRole("grid", { name: "Devices" })).toBeInTheDocument()
+  })
+
+  test("bleed takes the padding off the outer columns, and only when asked", () => {
+    const flush = "[&_:is(th,td):first-child]:ps-0"
+    const panel = () => document.querySelector('[data-slot="table-surface"]')?.className ?? ""
+
+    const plain = render(<BasicTable />)
+    expect(panel()).not.toContain(flush)
+    plain.unmount()
+
+    render(
+      <Table aria-label="Devices" variant="plain" bleed>
+        <TableHeader>
+          <TableColumn isRowHeader>Name</TableColumn>
+        </TableHeader>
+        <TableBody>
+          <TableRow id="1">
+            <TableCell>Galaxy S24</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    )
+    expect(panel()).toContain(flush)
+  })
+
   test("renders every cell of the row", () => {
     render(<BasicTable />)
 

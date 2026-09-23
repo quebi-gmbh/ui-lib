@@ -4,12 +4,12 @@ export const cardMeta: ComponentMeta = {
   slug: "card",
   name: "Card",
   description:
-    "A surface for a self-contained unit that sits beside a few others of a different kind. Composes a header, content, and footer, with default and feature variants plus an optional hover glow. Most things that look like they want a card want a heading, a list or a table instead — read `usage` first.",
+    "A surface for a self-contained unit that sits beside a few others of a different kind. Composes a header, content, and footer, with default and feature variants plus an optional hover glow. Most things that look like they want a card want a heading, a list or a table instead — read its usage guidance first.",
   category: "Layout",
   tags: ["layout", "surface", "container", "display"],
   usage: {
     when: [
-      "A small number of *different*, self-contained units side by side — each with its own title and, often, its own actions.",
+      "A small number of different, self-contained units side by side — each with its own title and, often, its own actions.",
       "A dashboard widget: a chart with a title and a menu, next to widgets that are not charts.",
       "A feature or pricing tile, where each tile is one offer and there are three or four of them.",
       "A gallery item that is mostly media. Put `p-0 overflow-hidden` on the Card to let the image run edge to edge.",

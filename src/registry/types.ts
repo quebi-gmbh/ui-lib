@@ -80,6 +80,14 @@ export interface ComponentExample {
    * the page's "What to use instead" section, beside `ComponentMeta.usage`.
    */
   insteadOf?: () => ReactNode
+  /**
+   * What the gallery draws around the example. `card` (the default) centres it
+   * in a framed box, which suits a control shown alone. `none` puts it on the
+   * page background at full width — for a component that is itself a surface
+   * or belongs on the page rather than in a panel (a Card, a Table), where the
+   * frame would be a box drawn round a box.
+   */
+  frame?: "card" | "none"
 }
 
 /**

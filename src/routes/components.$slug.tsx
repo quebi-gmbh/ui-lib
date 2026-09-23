@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react"
 import { Badge } from "@/components/badge"
 import { Card } from "@/components/card"
 import { Link as UiLink } from "@/components/link"
+import { Code } from "@/components/text"
 import {
   DescriptionDetails,
   DescriptionList,
@@ -56,8 +57,15 @@ function isAlternative(example: ComponentExample) {
 }
 
 function countExamples(examples: ComponentExample[]) {
-  const alternativeCount = examples.filter(isAlternative).length
-  return { exampleCount: examples.length - alternativeCount, alternativeCount }
+  const gallery = examples.filter((e) => !isAlternative(e))
+  return {
+    exampleCount: gallery.length,
+    // Which of them are drawn without the gallery's card, so the skeleton
+    // draws the same shape: a card outline that vanishes when the table it was
+    // standing in for arrives is the jump the skeleton exists to prevent.
+    exampleFrames: gallery.map((e) => e.frame ?? "card"),
+    alternativeCount: examples.length - gallery.length,
+  }
 }
 
 export function meta({ loaderData: d }: Route.MetaArgs) {
@@ -169,17 +177,27 @@ function ExampleList({ examples }: { examples: ComponentExample[] }) {
               {example.description}
             </p>
           )}
-          <Card className="mt-4 min-h-30 items-center justify-center p-8">
-            {/* One boundary per card, inside the card. An example that reaches
-                for something of its own — a lazily imported chart, a resource
-                read with `use()` — blanks its own box and leaves its heading,
-                its description and the fourteen cards around it alone. Without
-                it the first example to suspend takes the whole gallery back to
-                the fallback. */}
-            <Suspense fallback={<ExampleBodySkeleton index={index} />}>
-              {example.render()}
-            </Suspense>
-          </Card>
+          {/* One boundary per example, inside its frame. An example that
+              reaches for something of its own — a lazily imported chart, a
+              resource read with `use()` — blanks its own box and leaves its
+              heading, its description and the fourteen examples around it
+              alone. Without it the first example to suspend takes the whole
+              gallery back to the fallback. */}
+          {example.frame === "none" ? (
+            // No card: the example is a surface itself, or belongs on the page
+            // rather than in a panel, and a frame would be a box round a box.
+            <div className="mt-4">
+              <Suspense fallback={<ExampleBodySkeleton index={index} />}>
+                {example.render()}
+              </Suspense>
+            </div>
+          ) : (
+            <Card className="mt-4 min-h-30 items-center justify-center p-8">
+              <Suspense fallback={<ExampleBodySkeleton index={index} />}>
+                {example.render()}
+              </Suspense>
+            </Card>
+          )}
         </div>
       ))}
     </>
@@ -229,6 +247,22 @@ function AlternativeList({ examples }: { examples: ComponentExample[] }) {
   )
 }
 
+/**
+ * The usage lines are written for llms.txt as much as for this page, so a name
+ * to type is in backticks. Here that is inline code rather than two stray
+ * characters. Odd segments of a split on the backtick are the code.
+ */
+function WithCode({ text }: { text: string }) {
+  return (
+    <>
+      {text.split("`").map((part, index) =>
+        // biome-ignore lint/suspicious/noArrayIndexKey: segments of one fixed string; their position is their identity.
+        index % 2 === 1 ? <Code key={index}>{part}</Code> : <Fragment key={index}>{part}</Fragment>,
+      )}
+    </>
+  )
+}
+
 /** When to use, when not to — straight from the metadata, so part of the frame. */
 function UsageGuidance({ name, usage }: { name: string; usage: ComponentUsage }) {
   return (
@@ -237,7 +271,9 @@ function UsageGuidance({ name, usage }: { name: string; usage: ComponentUsage })
         <h2 className="text-lg font-semibold text-quebi-fg">Use a {name.toLowerCase()} when</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-quebi-fg-muted">
           {usage.when.map((line) => (
-            <li key={line}>{line}</li>
+            <li key={line}>
+              <WithCode text={line} />
+            </li>
           ))}
         </ul>
       </div>
@@ -245,7 +281,9 @@ function UsageGuidance({ name, usage }: { name: string; usage: ComponentUsage })
         <h2 className="text-lg font-semibold text-quebi-fg">Don't</h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-quebi-fg-muted">
           {usage.whenNot.map((line) => (
-            <li key={line}>{line}</li>
+            <li key={line}>
+              <WithCode text={line} />
+            </li>
           ))}
         </ul>
       </div>
@@ -333,7 +371,7 @@ export default function ComponentDetail({ loaderData }: Route.ComponentProps) {
       {component.usage && <UsageGuidance name={component.name} usage={component.usage} />}
 
       <div className="mt-12 space-y-10">
-        <Suspense fallback={<GallerySkeleton count={loaderData.exampleCount} />}>
+        <Suspense fallback={<GallerySkeleton count={loaderData.exampleCount} frames={loaderData.exampleFrames} />}>
           <Gallery />
         </Suspense>
       </div>

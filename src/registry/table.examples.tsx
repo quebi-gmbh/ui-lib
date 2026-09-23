@@ -8,7 +8,32 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/table"
+import { Card, CardContent, CardHeader } from "@/components/card"
+import { Heading } from "@/components/heading"
 import type { ComponentExample } from "./types"
+
+/** The same four columns every example here draws. */
+const PlanRows = () => (
+  <>
+    <TableHeader>
+      <TableColumn isRowHeader>Plan</TableColumn>
+      <TableColumn>Data</TableColumn>
+      <TableColumn>Contract</TableColumn>
+      {/* A price is end-aligned, so the digits line up by place value. */}
+      <TableColumn className="text-end">Monthly</TableColumn>
+    </TableHeader>
+    <TableBody items={plans}>
+      {(p) => (
+        <TableRow>
+          <TableCell>{p.name}</TableCell>
+          <TableCell>{p.data}</TableCell>
+          <TableCell>{p.contract}</TableCell>
+          <TableCell className="text-end tabular-nums">{p.monthly}</TableCell>
+        </TableRow>
+      )}
+    </TableBody>
+  </>
+)
 
 const plans = [
   { id: 1, name: "Essentials 20", data: "20 GB 4G", contract: "24 months", monthly: "$19.00" },
@@ -20,6 +45,7 @@ const plans = [
 export const tableExamples: ComponentExample[] = [
   {
     title: "Default",
+    frame: "none",
     description: "A basic table with a row-header column.",
     render: () => (
       <Table aria-label="Plans">
@@ -27,7 +53,7 @@ export const tableExamples: ComponentExample[] = [
           <TableColumn isRowHeader>Plan</TableColumn>
           <TableColumn>Data</TableColumn>
           <TableColumn>Contract</TableColumn>
-          <TableColumn>Monthly</TableColumn>
+          <TableColumn className="text-end">Monthly</TableColumn>
         </TableHeader>
         <TableBody items={plans}>
           {(p) => (
@@ -35,7 +61,7 @@ export const tableExamples: ComponentExample[] = [
               <TableCell>{p.name}</TableCell>
               <TableCell>{p.data}</TableCell>
               <TableCell>{p.contract}</TableCell>
-              <TableCell>{p.monthly}</TableCell>
+              <TableCell className="text-end tabular-nums">{p.monthly}</TableCell>
             </TableRow>
           )}
         </TableBody>
@@ -43,7 +69,53 @@ export const tableExamples: ComponentExample[] = [
     ),
   },
   {
+    title: "Plain",
+    frame: "none",
+    description:
+      "The plain variant drops the panel: a header rule and row dividers on whatever is behind the table. The right table for a page section — the heading above it already says where the section starts, and a border round the rows would say it twice.",
+    render: () => (
+      <section className="flex flex-col gap-4">
+        <Heading level={3}>Plans</Heading>
+        <Table aria-label="Plans" variant="plain">
+          <PlanRows />
+        </Table>
+      </section>
+    ),
+  },
+  {
+    title: "Plain, bleeding to the edge",
+    frame: "none",
+    description:
+      "Bleed takes the padding off the first and last columns, so Plan lines up with the heading and the end-aligned prices with the right edge of the text column. Read down the left edge of this example and there is one line, not two.",
+    render: () => (
+      <section className="flex flex-col gap-2">
+        <Heading level={3}>Plans</Heading>
+        <p className="text-sm text-quebi-fg-muted">Prices include VAT. Cancel monthly plans anytime.</p>
+        <Table aria-label="Plans" variant="plain" bleed className="mt-2">
+          <PlanRows />
+        </Table>
+      </section>
+    ),
+  },
+  {
+    title: "Plain, in a dashboard widget",
+    frame: "none",
+    description:
+      "The one place a table does belong in a card: a widget with its own title, beside widgets that are not tables. The card is the surface, so the table is plain and bleeds — a surface table here would be a box inside a box, and its padding would put the first column one gutter to the right of the card's title.",
+    render: () => (
+      <Card className="max-w-xl">
+        <CardHeader title="Top plans" description="By new contracts this month." />
+        <CardContent>
+          <Table aria-label="Top plans" variant="plain" bleed>
+            <PlanRows />
+          </Table>
+        </CardContent>
+      </Card>
+    ),
+  },
+  {
     title: "Selectable",
+    frame: "none",
     description: "Multiple selection adds a checkbox column in the header and each row.",
     render: () => {
       const Selectable = () => {
@@ -59,7 +131,7 @@ export const tableExamples: ComponentExample[] = [
               <TableColumn isRowHeader>Plan</TableColumn>
               <TableColumn>Data</TableColumn>
               <TableColumn>Contract</TableColumn>
-              <TableColumn>Monthly</TableColumn>
+              <TableColumn className="text-end">Monthly</TableColumn>
             </TableHeader>
             <TableBody items={plans}>
               {(p) => (
@@ -67,7 +139,7 @@ export const tableExamples: ComponentExample[] = [
                   <TableCell>{p.name}</TableCell>
                   <TableCell>{p.data}</TableCell>
                   <TableCell>{p.contract}</TableCell>
-                  <TableCell>{p.monthly}</TableCell>
+                  <TableCell className="text-end tabular-nums">{p.monthly}</TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -79,6 +151,7 @@ export const tableExamples: ComponentExample[] = [
   },
   {
     title: "Sortable",
+    frame: "none",
     description: "Sortable columns show a chevron and reorder rows on click.",
     render: () => {
       const Sortable = () => {
@@ -107,7 +180,7 @@ export const tableExamples: ComponentExample[] = [
               <TableColumn id="contract" allowsSorting>
                 Contract
               </TableColumn>
-              <TableColumn id="monthly" allowsSorting>
+              <TableColumn id="monthly" allowsSorting className="text-end">
                 Monthly
               </TableColumn>
             </TableHeader>
@@ -117,7 +190,7 @@ export const tableExamples: ComponentExample[] = [
                   <TableCell>{p.name}</TableCell>
                   <TableCell>{p.data}</TableCell>
                   <TableCell>{p.contract}</TableCell>
-                  <TableCell>{p.monthly}</TableCell>
+                  <TableCell className="text-end tabular-nums">{p.monthly}</TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -129,6 +202,7 @@ export const tableExamples: ComponentExample[] = [
   },
   {
     title: "Striped & grid",
+    frame: "none",
     description: "Zebra striping plus vertical grid lines for dense data.",
     render: () => (
       <Table aria-label="Plans" striped grid>
@@ -136,7 +210,7 @@ export const tableExamples: ComponentExample[] = [
           <TableColumn isRowHeader>Plan</TableColumn>
           <TableColumn>Data</TableColumn>
           <TableColumn>Contract</TableColumn>
-          <TableColumn>Monthly</TableColumn>
+          <TableColumn className="text-end">Monthly</TableColumn>
         </TableHeader>
         <TableBody items={plans}>
           {(p) => (
@@ -144,7 +218,7 @@ export const tableExamples: ComponentExample[] = [
               <TableCell>{p.name}</TableCell>
               <TableCell>{p.data}</TableCell>
               <TableCell>{p.contract}</TableCell>
-              <TableCell>{p.monthly}</TableCell>
+              <TableCell className="text-end tabular-nums">{p.monthly}</TableCell>
             </TableRow>
           )}
         </TableBody>
@@ -153,6 +227,7 @@ export const tableExamples: ComponentExample[] = [
   },
   {
     title: "Empty",
+    frame: "none",
     description: "The default empty state when there are no rows.",
     render: () => (
       <Table aria-label="Plans">
@@ -160,7 +235,7 @@ export const tableExamples: ComponentExample[] = [
           <TableColumn isRowHeader>Plan</TableColumn>
           <TableColumn>Data</TableColumn>
           <TableColumn>Contract</TableColumn>
-          <TableColumn>Monthly</TableColumn>
+          <TableColumn className="text-end">Monthly</TableColumn>
         </TableHeader>
         <TableBody items={[]}>{() => <TableRow />}</TableBody>
       </Table>
