@@ -110,6 +110,7 @@ import { itemOgScene } from "./item.og"
 import { keyboardOgScene } from "./keyboard.og"
 import { leaderboardOgScene } from "./leaderboard.og"
 import { lineChartOgScene } from "./line-chart.og"
+import { listOgScene } from "./list.og"
 import { linkOgScene } from "./link.og"
 import { linkButtonOgScene } from "./link-button.og"
 import { linkToggleGroupOgScene } from "./link-toggle-group.og"
@@ -278,6 +279,7 @@ export const ogScenes: Record<string, OgScene> = {
   "keyboard": keyboardOgScene,
   "leaderboard": leaderboardOgScene,
   "line-chart": lineChartOgScene,
+  "list": listOgScene,
   "link": linkOgScene,
   "link-button": linkButtonOgScene,
   "link-toggle-group": linkToggleGroupOgScene,

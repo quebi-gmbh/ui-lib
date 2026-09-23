@@ -100,6 +100,7 @@ import { itemMeta } from "./item.meta"
 import { keyboardMeta } from "./keyboard.meta"
 import { leaderboardMeta } from "./leaderboard.meta"
 import { lineChartMeta } from "./line-chart.meta"
+import { listMeta } from "./list.meta"
 import { linkMeta } from "./link.meta"
 import { linkButtonMeta } from "./link-button.meta"
 import { linkToggleGroupMeta } from "./link-toggle-group.meta"
@@ -269,6 +270,7 @@ export const metaRegistry: ComponentMeta[] = [
   keyboardMeta,
   leaderboardMeta,
   lineChartMeta,
+  listMeta,
   linkMeta,
   linkButtonMeta,
   linkToggleGroupMeta,

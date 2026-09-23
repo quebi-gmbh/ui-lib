@@ -101,6 +101,7 @@ import { itemExamples } from "./item.examples"
 import { keyboardExamples } from "./keyboard.examples"
 import { leaderboardExamples } from "./leaderboard.examples"
 import { lineChartExamples } from "./line-chart.examples"
+import { listExamples } from "./list.examples"
 import { linkExamples } from "./link.examples"
 import { linkButtonExamples } from "./link-button.examples"
 import { linkToggleGroupExamples } from "./link-toggle-group.examples"
@@ -270,6 +271,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "keyboard": keyboardExamples,
   "leaderboard": leaderboardExamples,
   "line-chart": lineChartExamples,
+  "list": listExamples,
   "link": linkExamples,
   "link-button": linkButtonExamples,
   "link-toggle-group": linkToggleGroupExamples,
