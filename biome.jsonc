@@ -241,20 +241,24 @@
         "app/**/*.{tsx,jsx}",
         "src/**/*.{tsx,jsx}",
         // format-values-through-the-library — The formatters this rule points at are implemented there: FormattedNumber, FormattedDate and the Calendar's month/year labels format through Intl themselves — via the cached constructors in `@/lib/intl`, which build one formatter per (locale, options) pair instead of one per rendered value — which is what makes the rest of the codebase able not to.
+        // seed-toggles-with-default-selected — That is the layer that reads the metadata off the field and names it onto a control.
         "!src/components/**",
         // format-values-through-the-library — The formatters this rule points at are implemented there: FormattedNumber, FormattedDate and the Calendar's month/year labels format through Intl themselves — via the cached constructors in `@/lib/intl`, which build one formatter per (locale, options) pair instead of one per rendered value — which is what makes the rest of the codebase able not to.
+        // seed-toggles-with-default-selected — That is the layer that reads the metadata off the field and names it onto a control.
         "!components/ui/**"
       ],
       "plugins": [
         // Format numbers and dates through the library, with an explicit locale
-        "./ui-lib-rules/format-values-through-the-library.grit"
+        "./ui-lib-rules/format-values-through-the-library.grit",
+        // Never spread getInputProps onto a Checkbox or Switch
+        "./ui-lib-rules/seed-toggles-with-default-selected.grit"
       ]
     },
     {
       "includes": [
         "app/**/*.{tsx,jsx}",
         "src/**/*.{tsx,jsx}",
-        // local scope, no-nested-card — One file, one rule, and the same argument as the conform-binding entry above: the Card page's "What to use instead" section draws the card-shaped version of each alternative beside the alternative itself, and the first of them is "A card inside a card → sections" — whose insteadOf is a Card with two Cards in it, written that way because it is the thing the rule exists to stop and the page has to show it.
+        // local scope, no-nested-card — One file, one rule: the Card page's "What to use instead" section draws the card-shaped version of each alternative beside the alternative itself, and the first of them is "A card inside a card → sections" — whose insteadOf is a Card with two Cards in it, written that way because it is the thing the rule exists to stop and the page has to show it.
         "!src/registry/card.examples.tsx"
       ],
       "plugins": [
@@ -300,22 +304,6 @@
       "plugins": [
         // Validate on the server with the same schema
         "./ui-lib-rules/validate-on-the-server-with-the-same-schema.grit"
-      ]
-    },
-    {
-      "includes": [
-        "app/**/*.{tsx,jsx}",
-        "src/**/*.{tsx,jsx}",
-        // seed-toggles-with-default-selected — That is the layer that reads the metadata off the field and names it onto a control.
-        "!src/components/**",
-        // seed-toggles-with-default-selected — That is the layer that reads the metadata off the field and names it onto a control.
-        "!components/ui/**",
-        // local scope, seed-toggles-with-default-selected — One file, one rule, because that file renders the banned shape on purpose: <Switch {...getInputProps(field, { type: "checkbox" })}> is the spread this rule exists to stop, and the two tests around it measure what it costs — the switch renders off, and nothing in the DOM records the loss.
-        "!tests/conform-binding.test.tsx"
-      ],
-      "plugins": [
-        // Never spread getInputProps onto a Checkbox or Switch
-        "./ui-lib-rules/seed-toggles-with-default-selected.grit"
       ]
     },
     {

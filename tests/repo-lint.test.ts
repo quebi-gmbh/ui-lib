@@ -260,8 +260,8 @@ describe("the repo obeys the rules it publishes", () => {
     // run through the real config. `bind-fields-through-conform` looked for
     // `$meta.name` with `$meta` unbound, so any `.name` property access on a
     // control was a finding — `<Select defaultSelectedKey={person.name}>` was an
-    // error, at a severity that stops the commit, and Biome has no suppression
-    // comment for a GritQL diagnostic. Both controls are in one file so the
+    // error, at a severity that stops the commit, and the only way out was a
+    // `biome-ignore` on every one of them. Both controls are in one file so the
     // check is not "the rule went quiet": one of them is still a real binding,
     // and the assertion below says which one was reported.
     const probe = "src/routes/__lint_probe__.tsx"
@@ -298,7 +298,7 @@ describe("the repo obeys the rules it publishes", () => {
     // `render-field-text-through-the-field` looked for `$field.errors` with
     // `$field` unbound, so `<p>{response.errors}</p>` was an error telling the
     // reader to put `id={field.errorId}` on a GraphQL response — nothing that
-    // sentence names exists there, and a GritQL diagnostic cannot be suppressed.
+    // sentence names exists there, and the only way out was a suppression per site.
     // Both paragraphs are in one file so the assertion is not "the rule went
     // quiet": the second is a real unreferenced field error, and the span below
     // says it is the one reported.

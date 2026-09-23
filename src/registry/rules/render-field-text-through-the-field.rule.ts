@@ -111,8 +111,8 @@ export const renderFieldTextThroughTheFieldRule: RuleMeta = {
     //    `<div>{validation.errors.map((e) => e.message)}</div>` as unreferenced
     //    field errors (task #196, the same hole as task #194 in
     //    bind-fields-through-conform), telling the reader to put
-    //    `id={field.errorId}` on a GraphQL response — at error severity, with no
-    //    suppression comment available for a GritQL diagnostic. $field is
+    //    `id={field.errorId}` on a GraphQL response — at error severity, and the
+    //    only way out was a `biome-ignore lint/plugin/…` at every call site. $field is
     //    therefore the same chain that rule pins: `field`, or `fields.x` with
     //    anything in front of it (`props.fields.email`) and any fieldset depth
     //    behind it (`fields.address.street`). It is a shape test, not a type
@@ -134,7 +134,7 @@ export const renderFieldTextThroughTheFieldRule: RuleMeta = {
     message:
       "This renders field errors in an element the control cannot reference. Inside a react-aria field use <FieldError> from @/components/field; outside one, put id={field.errorId} on this element so the aria-describedby that getInputProps already emits resolves to it. See https://ui-lib.quebi.de/rules/render-field-text-through-the-field",
     grep: "<(p|span|div)[^>]*>\\s*\\{[a-zA-Z0-9_$.]*\\bfields?\\b[a-zA-Z0-9_$.]*\\.errors",
-    note: "The check finds error text in an element with no id; it cannot tell whether you are inside a react-aria field, which is what decides between FieldError and an explicit id. The object the errors are read off has to be spelled like a field — `field`, `props.field`, `fields.email`, `fields.address.street` — so `<p>{response.errors}</p>` on a GraphQL response is not a finding; until task #196 it was, and an error with no suppression comment available. What is bought with that is what is lost: a field reached through an alias (an item out of `getFieldList()`, `const emailField = fields.email`) is spelled like a domain object and goes unreported. It does not look at labels at all — a placeholder standing in for a label stays a review question, worth looking for whenever you touch a form.",
+    note: "The check finds error text in an element with no id; it cannot tell whether you are inside a react-aria field, which is what decides between FieldError and an explicit id. The object the errors are read off has to be spelled like a field — `field`, `props.field`, `fields.email`, `fields.address.street` — so `<p>{response.errors}</p>` on a GraphQL response is not a finding; until task #196 it was, and an error whose only way out was a suppression at every call site. What is bought with that is what is lost: a field reached through an alias (an item out of `getFieldList()`, `const emailField = fields.email`) is spelled like a domain object and goes unreported. It does not look at labels at all — a placeholder standing in for a label stays a review question, worth looking for whenever you touch a form.",
   },
   tags: ["forms", "conform", "accessibility", "aria", "tier-2"],
 }

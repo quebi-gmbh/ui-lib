@@ -73,7 +73,7 @@ export const intentButtonsMustNotBeTypeButtonRule: RuleMeta = {
     {
       scope: "A control that must not submit, dispatching the intent from its handler instead",
       reason:
-        "If a button genuinely cannot be type=\"submit\" — it sits inside another form's markup, or a parent owns submission — call form.insert(...) from the handler rather than spreading getButtonProps: Conform's dispatch builds its own submitter and the intent still arrives. Spreading the props and keeping type=\"button\" is the one combination that silently does nothing, so if a case really needs it, suppress it with the reason written out.",
+        "If a button genuinely cannot be type=\"submit\" — it sits inside another form's markup, or a parent owns submission — call form.insert(...) from the handler rather than spreading getButtonProps: Conform's dispatch builds its own submitter and the intent still arrives. Spreading the props and keeping type=\"button\" is the one combination that silently does nothing, so if a case really needs it, suppress it on the line above with `// biome-ignore lint/plugin/intent-buttons-must-not-be-type-button: <reason>` and write the reason out.",
     },
   ],
   enforcement: {

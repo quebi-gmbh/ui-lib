@@ -271,7 +271,12 @@ small. No route needs a `HydrateFallback`: every one of them is prerendered with
   in a fixture is reported exactly as it is in a route, and a test in `repo-lint.test.ts` proves
   it. Anything else is a `biome-ignore` whose reason says what forces it, and there is one:
   `conform-binding.test.tsx` imports react-aria primitives because it is asserting what react-aria
-  itself does with an id. Note the one thing you cannot write in the file — Biome has no
-  suppression comment for a GritQL plugin diagnostic, so a fixture that renders a banned shape on
-  purpose (the `getInputProps` spread, in that same file) needs a `localScopes` entry naming the
-  path and the rule.
+  itself does with an id. The same file renders the banned `getInputProps` spread on purpose and
+  needs nothing for it: the plugin rules scope themselves by their record's `appliesTo`, which is
+  app code, so they do not read `tests/` at all.
+- A plugin (GritQL) diagnostic is suppressed like any other, by name:
+  `// biome-ignore lint/plugin/<rule-id>: <reason>`, where the name is the `.grit` file's name —
+  which is the rule id. The bare `lint/plugin` form is valid too and quiets *every* plugin rule on
+  that node, so do not write it. The repo said for a long time that plugin diagnostics could not be
+  suppressed at all, and two `localScopes` entries were argued from that premise; it was never true
+  of the Biome in `node_modules`, and `tests/plugin-suppression.test.ts` now pins what is.

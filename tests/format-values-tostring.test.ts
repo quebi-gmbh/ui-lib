@@ -9,8 +9,9 @@
  *
  * That makes the negatives the load-bearing half of this file: a widening
  * matched by position is one `until` clause away from reporting every
- * `key={id.toString()}` in the repo, and Biome has no suppression comment for a
- * GritQL diagnostic, so a false positive here has no local escape hatch at all.
+ * `key={id.toString()}` in the repo, and the only escape from a false positive
+ * here is a `biome-ignore lint/plugin/format-values-through-the-library` at
+ * every site it lands on.
  * Each `false` below is a shape the rule is deliberately blind to, with the
  * reason it is blind to it.
  *
