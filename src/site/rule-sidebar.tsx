@@ -12,7 +12,7 @@ import { ScrollSurface } from "@/site/scroll-surface"
  *
  * It used to be the same shape as ComponentSidebar and deliberately so. It no
  * longer is: ComponentSidebar collapses its groups because it has 140 entries
- * in thirteen categories and did not fit on a screen. Fourteen rules in four
+ * in thirteen categories and did not fit on a screen. Fifteen rules in four
  * groups do fit, and hiding them behind a click would cost a reader the one
  * view that shows the whole rule set at once. If the rules grow past a screen,
  * the two shapes should converge again.

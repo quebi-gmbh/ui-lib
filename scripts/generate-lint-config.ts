@@ -139,6 +139,12 @@ export const localScopes: LocalScope[] = [
     reason:
       "One file, one rule, because that file renders the banned shape on purpose: <Switch {...getInputProps(field, { type: \"checkbox\" })}> is the spread this rule exists to stop, and the two tests around it measure what it costs — the switch renders off, and nothing in the DOM records the loss. A rule firing on its own counter-example is the rule working, and there is nowhere to say so in the file: Biome has no suppression comment for a GritQL plugin diagnostic, which is why this is a table entry rather than a biome-ignore. Scoped to the one path so that a real spread in any other fixture is still reported.",
   },
+  {
+    includes: ["src/registry/card.examples.tsx"],
+    rules: ["no-nested-card"],
+    reason:
+      "One file, one rule, and the same argument as the conform-binding entry above: the Card page's \"What to use instead\" section draws the card-shaped version of each alternative beside the alternative itself, and the first of them is \"A card inside a card → sections\" — whose insteadOf is a Card with two Cards in it, written that way because it is the thing the rule exists to stop and the page has to show it. Biome has no suppression comment for a plugin diagnostic, so it is a table entry. Scoped to the one path: every other examples file, which agents copy verbatim through /api/components/<slug>.json, is still checked, and so is the render half of this one if it is ever moved into a file of its own.",
+  },
 ]
 
 /**

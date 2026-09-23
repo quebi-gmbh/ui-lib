@@ -1,0 +1,44 @@
+// A card inside a card is a section
+// AUTO-GENERATED from https://ui-lib.quebi.de/api/rules/no-nested-card.json — do not edit by hand.
+//
+// https://ui-lib.quebi.de/rules/no-nested-card
+//
+// This file says what the rule is, not where it applies. A plugin listed in
+// the top-level `plugins` runs against every file Biome lints, so scope it
+// with an `overrides` entry — Biome resolves `includes` against the project
+// root, which is the one thing a $filename regex in here could not do:
+//
+//   {
+//     "overrides": [
+//       {
+//         "includes": [
+//           "app/**/*.{tsx,jsx}",
+//           "src/**/*.{tsx,jsx}"
+//         ],
+//         "plugins": [
+//           "./ui-lib-rules/no-nested-card.grit"
+//         ]
+//       }
+//     ]
+//   }
+
+language js;
+
+or {
+  JsxElement(opening_element = JsxOpeningElement(name = $name)),
+  JsxSelfClosingElement(name = $name)
+} as $card where {
+  $name <: r"^Card$",
+  $card <: within JsxElement(
+    opening_element = JsxOpeningElement(name = $outer),
+    children = $kids
+  ) where {
+    $outer <: r"^Card$",
+    $kids <: contains $card
+  },
+  register_diagnostic(
+    span = $card,
+    message = "A Card inside a Card is a section: the inner one is dividing the outer one into parts, which a Heading does — add a Separator if a line is needed. If the inner cards repeat with the same fields, they are rows in a Table or a list. See https://ui-lib.quebi.de/rules/no-nested-card",
+    severity = "warn"
+  )
+}

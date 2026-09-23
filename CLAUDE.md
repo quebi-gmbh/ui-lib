@@ -77,13 +77,15 @@ If your PR is green and nothing merges it, run the check before looking for a to
 
 ## The rules are not advice, they are lint
 
-`/rules` publishes fourteen rules about using this library. They are enforced here too, so the same
+`/rules` publishes fifteen rules about using this library. They are enforced here too, so the same
 messages you would give a consumer are the ones you get:
 
 - **Layout is yours. Appearance is the library's.** Raw `button`, `a`, `input`, `select`,
   `textarea`, `form`, `label`, `dialog` and `table` are banned — import the component the message
   names. `div`/`span` are fine until their classes describe a surface (radius + border = you are
-  rebuilding `Card`). Design values are quebi tokens, never `bg-[#f00]` or `text-gray-500`.
+  rebuilding `Card`). And a `Card` written inside a `Card` is a section — a `Heading`, with a
+  `Separator` if a line is needed. Design values are quebi tokens, never `bg-[#f00]` or
+  `text-gray-500`.
 - **Validation is yours. Wiring is the library's.** Conform fields bind through the `conform-*`
   variants; label, description and error come from the field, not from markup beside it. Never
   spread `getInputProps` onto a `Checkbox` or `Switch` (both props are dropped in silence);
@@ -219,9 +221,9 @@ small. No route needs a `HydrateFallback`: every one of them is prerendered with
 
 - `bun run lint` is Biome's recommended set *plus* the rules this repo publishes, over `src/**`,
   `scripts/**`, `tests/**` and the root config files — including `src/components/**`. The
-  library source is excepted from nine of the fourteen by the records themselves; what still
-  applies there is the element ban minus `<input>`, plus the two platform-defaults rules, which
-  the library has no reason to break and so no reason to be excused from. A raw `<button>` in a
+  library source is excepted from nine of the fifteen by the records themselves; what still
+  applies there is the element ban minus `<input>`, the two platform-defaults rules and
+  `no-nested-card`, which the library has no reason to break and so no reason to be excused from. A raw `<button>` in a
   library component fails the pre-commit hook like anywhere else. Its
   `biome-ignore lint/a11y/...` comments now land on rules that actually run, which is what let the
   directory back into the file list.

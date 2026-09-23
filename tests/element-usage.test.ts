@@ -328,3 +328,86 @@ describe(FORMAT, () => {
     )
   })
 })
+
+const NESTED = "no-nested-card"
+
+describe(NESTED, () => {
+  test("true positive: a Card written in a Card's content", () => {
+    const code = component(
+      `    <Card>\n      <CardHeader title="Settings" />\n      <CardContent>\n        <Card><CardHeader title="General" /></Card>\n      </CardContent>\n    </Card>`,
+    )
+    expect(fires(NESTED, code)).toBe(true)
+  })
+
+  test("true positive: a self-closing Card, directly inside", () => {
+    expect(fires(NESTED, component(`    <Card><Card /></Card>`))).toBe(true)
+  })
+
+  test("true positive: a Card per item, mapped inside a Card", () => {
+    const code = component(
+      `    <Card>\n      <div className="flex flex-col gap-3">\n        {props.members.map((m: any) => <Card key={m.id}>{m.name}</Card>)}\n      </div>\n    </Card>`,
+    )
+    expect(fires(NESTED, code)).toBe(true)
+  })
+
+  test("each inner Card is reported once, and the outer one never", () => {
+    // The report lands on the card that has to change. Two inner cards are two
+    // findings; the outer card, which `within` also sees as "inside a Card"
+    // because it counts the node itself, is not a third.
+    const code = component(`    <Card>\n      <Card>One</Card>\n      <Card>Two</Card>\n    </Card>`)
+    expect(fireCount(NESTED, code)).toBe(2)
+  })
+
+  test("three levels deep is two findings", () => {
+    const code = component(`    <Card>\n      <Card>\n        <Card>Deepest</Card>\n      </Card>\n    </Card>`)
+    expect(fireCount(NESTED, code)).toBe(2)
+  })
+
+  test("true negative: sections — a Heading and a Separator inside one Card", () => {
+    const code = component(
+      `    <Card>\n      <CardContent>\n        <Heading level={4}>General</Heading>\n        <Separator />\n        <Heading level={4}>Danger zone</Heading>\n      </CardContent>\n    </Card>`,
+    )
+    expect(fires(NESTED, code)).toBe(false)
+  })
+
+  test("true negative: cards side by side in a grid", () => {
+    const code = component(`    <div className="grid grid-cols-3 gap-3">\n      <Card>One</Card>\n      <Card>Two</Card>\n    </div>`)
+    expect(fires(NESTED, code)).toBe(false)
+  })
+
+  test("no false positive: the Card parts are not Cards", () => {
+    const code = component(
+      `    <Card>\n      <CardHeader title="Plan" />\n      <CardContent>Body</CardContent>\n      <CardFooter><CardAction /></CardFooter>\n    </Card>`,
+    )
+    expect(fires(NESTED, code)).toBe(false)
+  })
+
+  test("no false positive: a component whose name merely starts with Card", () => {
+    const code = component(`    <Card>\n      <CardList items={props.items} />\n      <Cardinality value={3} />\n    </Card>`)
+    expect(fires(NESTED, code)).toBe(false)
+  })
+
+  test("known blind spot: a Card rendered by a child component", () => {
+    // Lexical on purpose. This is also the shape of the site's own gallery — a
+    // framed Card around each example, some of which are Cards — and the reason
+    // the gallery is not reported: frame and specimen are two components.
+    const code = `function Member(props: any) {\n  return <Card>{props.name}</Card>\n}\n${component(
+      `    <Card>{props.members.map((m: any) => <Member key={m.id} name={m.name} />)}</Card>`,
+    )}`
+    expect(fires(NESTED, code)).toBe(false)
+  })
+
+  test("known blind spot: a Card passed in a prop", () => {
+    // It is inside the outer element but not inside its children, which is the
+    // clause that also stops a lone Card from matching itself.
+    expect(fires(NESTED, component(`    <Card footer={<Card />}>Body</Card>`))).toBe(false)
+  })
+
+  test("true positive: the published rule does not carry this repo's scope for the Card page", () => {
+    // The anti-example in card.examples.tsx is excused by a `localScopes` entry,
+    // which is this repo's config and not the rule's. A consumer's copy of that
+    // file is reported like any other.
+    const code = component(`    <Card><Card /></Card>`)
+    expect(fires(NESTED, code, "src/registry/card.examples.tsx")).toBe(true)
+  })
+})
