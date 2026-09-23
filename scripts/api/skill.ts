@@ -47,6 +47,8 @@ and installs the required npm packages.
    component's \`name\` / \`description\` / \`tags\`. The catalog is small; reason over it directly
    (there is no search endpoint).
 2. \`WebFetch ${BASE_URL}/api/components/<name>.json\` — returns metadata plus the inlined raw \`source\`.
+   If it has a \`usage\` field, read it before placing the component: \`whenNot\` and \`instead\` say
+   when a different component is the right answer.
 3. Write \`source\` into the project (e.g. \`components/ui/<name>.tsx\`).
 4. Resolve \`registryDependencies\` recursively — each entry is another component slug or a shared
    lib (\`lib-utils\` → \`lib/utils.ts\`, the \`cn\` helper). Fetch and add each the same way.
@@ -101,6 +103,8 @@ installed.
 - ❌ Don't hand-write the component API from memory — fetch the real source.
 - ❌ Don't hand-roll a \`<button>\`, \`<input>\`, \`<a>\` or \`<dialog>\` in app code — import the component
   (see the rules above). This holds even when the element is unstyled.
+- ❌ Don't wrap everything in a \`Card\` — no card in a card, no card per list item, no card grid for
+  records that share their fields. Its \`usage\` names what to use instead.
 - ❌ Don't forget the \`registryDependencies\` (the component won't compile without \`lib/utils\` and any
   sibling components).
 `
