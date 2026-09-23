@@ -63,16 +63,29 @@ export function ExampleBodySkeleton({ index = 0 }: { index?: number }) {
  * One unit of the gallery: heading bar, description line, card box — the shape
  * `ExampleList` renders for every entry in a component's examples file.
  */
-export function ExampleCardSkeleton({ index = 0 }: { index?: number }) {
+export function ExampleCardSkeleton({
+  index = 0,
+  frame = "card",
+}: {
+  index?: number
+  /** The example's own `frame`: no card outline for one drawn on the page. */
+  frame?: "card" | "none"
+}) {
   return (
     <div>
       <Skeleton className={cn("h-6", cycle(TITLE_WIDTHS, index))} />
       <Skeleton soft className={cn("mt-2 h-4", cycle(DESCRIPTION_WIDTHS, index))} />
-      {/* The same Card the real example is rendered into, so the outline does
-          not appear or move when the content lands. */}
-      <Card className="mt-4 min-h-30 items-center justify-center p-8">
-        <ExampleBodySkeleton index={index} />
-      </Card>
+      {/* The same frame the real example is rendered into, so the outline does
+          not appear, vanish or move when the content lands. */}
+      {frame === "none" ? (
+        <div className="mt-4">
+          <ExampleBodySkeleton index={index} />
+        </div>
+      ) : (
+        <Card className="mt-4 min-h-30 items-center justify-center p-8">
+          <ExampleBodySkeleton index={index} />
+        </Card>
+      )}
     </div>
   )
 }
@@ -91,12 +104,19 @@ export function ExampleCardSkeleton({ index = 0 }: { index?: number }) {
  * `space-y-10` stack, exactly like the real cards, so the two states space
  * themselves identically.
  */
-export function GallerySkeleton({ count }: { count: number }) {
+export function GallerySkeleton({
+  count,
+  frames,
+}: {
+  count: number
+  /** Each example's `frame`, in order, when the loader knows them. */
+  frames?: readonly ("card" | "none")[]
+}) {
   return (
     <>
       {Array.from({ length: count }, (_, index) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: the index *is* the identity here — these are n indistinguishable placeholders, and nothing reorders them.
-        <ExampleCardSkeleton key={index} index={index} />
+        <ExampleCardSkeleton key={index} index={index} frame={frames?.[index]} />
       ))}
     </>
   )

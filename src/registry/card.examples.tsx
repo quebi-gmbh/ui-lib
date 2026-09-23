@@ -51,6 +51,7 @@ const KPIS = [
 export const cardExamples: ComponentExample[] = [
   {
     title: "Default",
+    frame: "none",
     description: "A muted surface with the signature faint cyan border.",
     render: () => (
       <Card className="max-w-sm">
@@ -71,6 +72,7 @@ export const cardExamples: ComponentExample[] = [
   },
   {
     title: "Feature",
+    frame: "none",
     description: "The brand-tinted variant with a glow. Reserve it for the hero card.",
     render: () => (
       <Card variant="feature" className="max-w-sm">
@@ -91,6 +93,7 @@ export const cardExamples: ComponentExample[] = [
   },
   {
     title: "Interactive",
+    frame: "none",
     description: "Opt in to the hover lift + glow for link- or button-like cards.",
     render: () => (
       <Card interactive className="max-w-sm cursor-pointer">
@@ -103,6 +106,7 @@ export const cardExamples: ComponentExample[] = [
   },
   {
     title: "With action",
+    frame: "none",
     description: "CardAction pins a control to the top-right of the header.",
     render: () => (
       <Card className="max-w-sm">
@@ -118,6 +122,7 @@ export const cardExamples: ComponentExample[] = [
   },
   {
     title: "Composed manually",
+    frame: "none",
     description: "Use CardTitle and CardDescription directly for full control.",
     render: () => (
       <Card className="max-w-sm">
