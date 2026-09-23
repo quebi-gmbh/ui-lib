@@ -69,9 +69,9 @@ describe(BIND, () => {
 
   test("no false positive: a plain object that happens to have a `name`", () => {
     // Task #194. `.name` is an ordinary property of ordinary domain objects, and
-    // `$meta` used to be unbound — so every one of these was an error, with no
-    // suppression comment available and nothing to do about it but rename the
-    // domain property. The object has to be spelled like a field now.
+    // `$meta` used to be unbound — so every one of these was an error, and nothing
+    // to do about it but rename the domain property or suppress the rule at
+    // every call site. The object has to be spelled like a field now.
     expect(fires(BIND, component(`    <Select aria-label="Role" defaultSelectedKey={person.name} />`))).toBe(false)
     expect(fires(BIND, component(`    <SearchField value={String(values.name ?? "")} />`))).toBe(false)
     expect(fires(BIND, component(`    <NumberField defaultValue={props.user.name} />`))).toBe(false)
@@ -164,9 +164,8 @@ describe(FIELD_TEXT, () => {
     // Task #196, the same hole as #194 one rule over. `.errors` is an ordinary
     // property of ordinary objects — a GraphQL response, a validation summary —
     // and `$field` used to be unbound, so each of these was an error telling the
-    // reader to put `id={field.errorId}` on it, with no suppression comment
-    // available for a GritQL diagnostic and nothing to do but rename the
-    // property. The object has to be spelled like a field now.
+    // reader to put `id={field.errorId}` on it, and nothing to do but
+    // rename the property or suppress the rule at every call site. The object has to be spelled like a field now.
     expect(fires(FIELD_TEXT, component(`    <p>{response.errors}</p>`))).toBe(false)
     expect(
       fires(FIELD_TEXT, component(`    <div>{validation.errors.map((e) => e.message)}</div>`)),

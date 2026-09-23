@@ -94,14 +94,14 @@ return (
   data={members}
   getRowId={(m) => String(m.id)}
 />`,
-      note: "Twelve members loaded in one go is a DataTable, not a server-driven table: the same column definitions, sorted by the row model instead of by hand. Sorting in the browser is correct here — it is only wrong when it is pretending to be a query. If ServerTable's filter popovers are what you actually wanted, keep it and suppress this rule with a reason that says where the rows come from.",
+      note: "Twelve members loaded in one go is a DataTable, not a server-driven table: the same column definitions, sorted by the row model instead of by hand. Sorting in the browser is correct here — it is only wrong when it is pretending to be a query. If ServerTable's filter popovers are what you actually wanted, keep it and suppress this rule — `// biome-ignore lint/plugin/no-client-sorting-on-a-server-driven-table: <reason>` — with a reason that says where the rows come from.",
     },
   ],
   exceptions: [
     {
       scope: "A ServerTable over a dataset that is complete in the browser",
       reason:
-        "Nothing stops you rendering ServerTable over a list you already hold in full — a demo that fakes the server, or a screen where the filter popovers are the feature and the twelve rows behind them are not worth a round trip. There the client sort is the query, and there is nothing to disagree with. Say so in a biome-ignore whose reason names where the rows come from; that note is the difference between a carve-out someone decided and one nobody noticed. DataTable is usually the better answer, and it is the same columns.",
+        "Nothing stops you rendering ServerTable over a list you already hold in full — a demo that fakes the server, or a screen where the filter popovers are the feature and the twelve rows behind them are not worth a round trip. There the client sort is the query, and there is nothing to disagree with. Say so in a `biome-ignore lint/plugin/no-client-sorting-on-a-server-driven-table` whose reason names where the rows come from; that note is the difference between a carve-out someone decided and one nobody noticed. DataTable is usually the better answer, and it is the same columns.",
     },
   ],
   enforcement: {

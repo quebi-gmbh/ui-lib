@@ -508,11 +508,21 @@ export function buildRuleChecks(
 
   const judgementCalls = rule.exceptions.filter((e) => !e.paths?.length)
   if (judgementCalls.length > 0 && biome) {
-    const target = biome.via === "rule" ? `lint/${biome.rule}` : "plugin"
+    // A plugin diagnostic is suppressed by the plugin's name, which Biome takes
+    // from the .grit file's name — so `lint/plugin/<rule id>` for a plugin saved
+    // where the plugin check above says to save it. The bare `lint/plugin`
+    // category also works, and quiets every plugin rule on the node at once;
+    // that is the form not to publish. (Until task #224 this printed `plugin:`
+    // with no `lint/`, which Biome accepts and applies to nothing.)
+    const target = biome.via === "rule" ? `lint/${biome.rule}` : `lint/plugin/${rule.id}`
+    const pluginNote =
+      biome.via === "plugin"
+        ? ` The rule is named by its plugin's file name, ${rule.id}.grit — a suppression that names this rule quiets this rule and no other plugin on the same line, and if the file is renamed Biome reports the comment as having no effect rather than guessing. \`lint/plugin\` on its own is valid too and quiets every plugin rule on the node at once; name the rule instead.`
+        : ""
     checks.push({
       tool: "biome",
       title: "Claiming an exception that is not a path",
-      description: `${judgementCalls.length === 1 ? "One exception on this rule is" : `${judgementCalls.length} exceptions on this rule are`} a judgement call, so ${judgementCalls.length === 1 ? "it" : "they"} cannot be a path. Biome's suppression syntax has a slot for the reason — fill it, because that note is what makes the carve-out reviewable instead of invisible.`,
+      description: `${judgementCalls.length === 1 ? "One exception on this rule is" : `${judgementCalls.length} exceptions on this rule are`} a judgement call, so ${judgementCalls.length === 1 ? "it" : "they"} cannot be a path. Biome's suppression syntax has a slot for the reason — fill it, because that note is what makes the carve-out reviewable instead of invisible.${pluginNote}`,
       language: "tsx",
       // The line form, because it is the one that works everywhere a violation
       // can be: above a call, an import, or a JSX attribute. Only directly

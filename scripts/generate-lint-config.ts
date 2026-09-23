@@ -89,9 +89,12 @@ export interface LocalScope {
  * entries rather than one "tests are different" line: a rendering fixture is app
  * code that happens to assert instead of ship, so what it genuinely cannot do is
  * named one item at a time — the <form> element alone out of the tier-1 list,
- * the server-validation rule for fixtures that have no route action, and one
- * rule in one file that renders a banned shape on purpose — and everything else
- * is left switched on. What that buys is the property the whole file list is
+ * and the server-validation rule for fixtures that have no route action — and
+ * everything else is left switched on. (The plugin rules mostly need no entry
+ * here at all: each is loaded for its record's `appliesTo`, which is app code,
+ * so tests/ is outside them. Where one does reach a fixture, a
+ * `biome-ignore lint/plugin/<rule id>` on the line names one rule on one node,
+ * which is narrower than any entry in this table.) What that buys is the property the whole file list is
  * for: a raw `<button>`, a `toLocaleString()` or a `confirm()` in a fixture is
  * reported there exactly as it would be in `src/routes/`.
  *
@@ -134,16 +137,10 @@ export const localScopes: LocalScope[] = [
       "One file, one rule, for the same reason the tests entry exists: an OG scene is a still life photographed by scripts/screenshot-og.ts, and there is no route action behind it to return a lastResult. Every conform-* scene needs field metadata, which only useForm can produce, so OgForm calls it once here rather than thirty-two times — and this is where that concession is written down. This entry was written while the check could not fire on the call anyway — its pattern matched `useForm($options)` and missed the `useForm<T>({ … })` written here — on the argument that a scope stating why should outlive the accident that made it moot. Task #163 fixed the pattern, the check reaches this call now, and the entry is what is keeping it quiet.",
   },
   {
-    includes: ["tests/conform-binding.test.tsx"],
-    rules: ["seed-toggles-with-default-selected"],
-    reason:
-      "One file, one rule, because that file renders the banned shape on purpose: <Switch {...getInputProps(field, { type: \"checkbox\" })}> is the spread this rule exists to stop, and the two tests around it measure what it costs — the switch renders off, and nothing in the DOM records the loss. A rule firing on its own counter-example is the rule working, and there is nowhere to say so in the file: Biome has no suppression comment for a GritQL plugin diagnostic, which is why this is a table entry rather than a biome-ignore. Scoped to the one path so that a real spread in any other fixture is still reported.",
-  },
-  {
     includes: ["src/registry/card.examples.tsx"],
     rules: ["no-nested-card"],
     reason:
-      "One file, one rule, and the same argument as the conform-binding entry above: the Card page's \"What to use instead\" section draws the card-shaped version of each alternative beside the alternative itself, and the first of them is \"A card inside a card → sections\" — whose insteadOf is a Card with two Cards in it, written that way because it is the thing the rule exists to stop and the page has to show it. Biome has no suppression comment for a plugin diagnostic, so it is a table entry. Scoped to the one path: every other examples file, which agents copy verbatim through /api/components/<slug>.json, is still checked, and so is the render half of this one if it is ever moved into a file of its own.",
+      "One file, one rule: the Card page's \"What to use instead\" section draws the card-shaped version of each alternative beside the alternative itself, and the first of them is \"A card inside a card → sections\" — whose insteadOf is a Card with two Cards in it, written that way because it is the thing the rule exists to stop and the page has to show it. A `biome-ignore lint/plugin/no-nested-card` would name the rule just as narrowly, but it would take one comment per inner card, written into the drawing of the mistake, in the one kind of file agents read as the way to write things — so the counter-example stays a clean picture and the concession is written here instead. Scoped to the one path: every other examples file, which agents copy verbatim through /api/components/<slug>.json, is still checked, and so is the render half of this one if it is ever moved into a file of its own.",
   },
 ]
 
@@ -189,7 +186,7 @@ export const localScopes: LocalScope[] = [
  * looked exactly like a deliberate one. Reading them one at a time settled it:
  * the raw <button>s were shortcuts and are ui-lib's Button now, a class
  * assertion naming `bg-red-500/10` is a token assertion now, and what is left is
- * three narrow entries in `localScopes` plus one `biome-ignore` whose reason
+ * two narrow entries in `localScopes` plus one `biome-ignore` whose reason
  * says what forces it. The fixtures are code this repo ships nothing of and
  * relies on entirely; they get the same reading as everything else.
  *

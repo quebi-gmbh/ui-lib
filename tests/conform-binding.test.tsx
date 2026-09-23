@@ -131,9 +131,10 @@ describe("getInputProps is not spreadable onto a react-aria control", () => {
     // checking, and it is wrong.
     // The rule set bans this shape (seed-toggles-with-default-selected), and it
     // is rendered here on purpose: the two tests below measure what it costs.
-    // Biome cannot suppress a GritQL plugin diagnostic in place, so the argument
-    // is a `localScopes` entry naming this file and that one rule — see
-    // scripts/generate-lint-config.ts.
+    // Nothing excuses it, because nothing has to: the rule's appliesTo is app
+    // code (src/**, app/**), so it does not read tests/. If that ever widens,
+    // the answer is a `biome-ignore lint/plugin/seed-toggles-with-default-selected`
+    // on this line — plugin diagnostics are suppressed by name (task #224).
     return <Switch {...getInputProps(field, { type: "checkbox" })}>Notify me</Switch>
   }
 

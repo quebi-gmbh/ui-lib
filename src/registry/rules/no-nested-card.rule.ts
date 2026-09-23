@@ -101,7 +101,7 @@ export const noNestedCardRule: RuleMeta = {
     {
       scope: "An inset preview of something that is itself a card",
       reason:
-        "A settings card showing what a notification card will look like, or a theme picker drawing a sample card, nests a surface because the surface is the content. Say so on the line above the inner card with `{/* biome-ignore lint/plugin: <reason> */}`, whose reason names what the inner card is a picture of. Biome suppresses plugin diagnostics as one category rather than by rule, so that comment quiets every plugin rule on that element — keep it on the one line that needs it.",
+        "A settings card showing what a notification card will look like, or a theme picker drawing a sample card, nests a surface because the surface is the content. Say so on the line above the inner card with `{/* biome-ignore lint/plugin/no-nested-card: <reason> */}`, whose reason names what the inner card is a picture of. Name the rule: a bare `lint/plugin` is accepted too, and it quiets every plugin rule on that element — the hardcoded colour and the hand-built surface along with the nesting.",
     },
   ],
   enforcement: {
