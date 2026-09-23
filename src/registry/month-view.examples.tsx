@@ -264,8 +264,9 @@ const MonthCarousel = () => {
         onMonthsChange={setShown}
       />
       <p className="text-quebi-fg-muted text-sm">
-        Months in the window: {shown}. The two at the edges are inert — blurred,
-        untabbable, and not read out.
+        Months in the window: {shown}. Hover a peeking month to read it, and press
+        the chevron on it to go there — the blur lifts, but the month stays inert
+        until it is the one you are looking at.
       </p>
     </div>
   )
@@ -319,7 +320,7 @@ export const monthViewExamples: ComponentExample[] = [
   {
     title: "A carousel of months",
     description:
-      "carousel: true draws the side-by-side view through a window: the months either side show a slice of themselves, blurred and dimmed, and the chevrons move one month rather than a page — so the month that was peeking is the month you get. The segmented control in the toolbar is the reader's, not the caller's: range.months seeds it and onMonthsChange reports what was picked. The peeking months are inert, so a blurred grid is not a tab stop and not read out. A month step redraws rather than slides — an unbounded band has no origin to translate against — but changing the count is a change of geometry, so the cells widen and the band slides under them.",
+      "carousel: true draws the side-by-side view through a window. The months either side show a slice of themselves under a veil that ramps outwards — two masked backdrop-blur layers and a dimming gradient, so a peek is sharp where it meets the window and blurred at its outer edge rather than uniformly frosted. Hovering one lifts the veil; a chevron drawn on it steps there, and the month stays inert either way, because seeing next month is not being in it. With the toolbar present those chevrons are a pointer affordance and stay out of the tab order — the same two presses are already in it — and without one they become everyone's. How many months the window holds is the reader's: range.months seeds the segmented control and onMonthsChange reports what was picked. A month step redraws rather than slides, but changing the count is a change of geometry, so the cells widen and the band slides under them.",
     render: () => <MonthCarousel />,
   },
   {

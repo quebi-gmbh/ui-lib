@@ -145,14 +145,14 @@ describe("range={{ weeks: 8 }}", () => {
 })
 
 describe("range={{ months: 2, carousel: true }}", () => {
-  /** The band's cells, in order: the month they draw, and whether they peek. */
+  /** The band's cells, in order: how wide, and whether they are a peek. */
   const cells = (container: HTMLElement) =>
     Array.from(
       container.querySelectorAll<HTMLElement>('[data-slot="month-carousel"] > div > div'),
     ).map((cell) => ({
       basis: cell.style.flexBasis,
-      peeking: cell.hasAttribute("inert"),
-      blurred: cell.className.includes("blur-xs"),
+      peeking: cell.querySelector("[inert]") !== null,
+      veiled: cell.querySelector('[data-slot="month-peek-veil"]') !== null,
     }))
 
   test("draws one month more at each end than it shows, and makes them inert", () => {
@@ -162,7 +162,7 @@ describe("range={{ months: 2, carousel: true }}", () => {
     const band = cells(container)
     expect(band).toHaveLength(4)
     expect(band.map((cell) => cell.peeking)).toEqual([true, false, false, true])
-    expect(band.map((cell) => cell.blurred)).toEqual([true, false, false, true])
+    expect(band.map((cell) => cell.veiled)).toEqual([true, false, false, true])
     expect(container.querySelectorAll('[data-slot="month-grid"]')).toHaveLength(4)
 
     // The heading names the window, not the band: August and November are
@@ -233,5 +233,100 @@ describe("range={{ months: 2, carousel: true }}", () => {
       "4",
     ])
     expect(screen.getByRole("radio", { name: "4 months" })).toHaveAttribute("aria-checked", "true")
+  })
+})
+
+describe("the carousel's peeking months", () => {
+  const peeks = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll<HTMLElement>('[data-slot="month-peek-veil"]'))
+
+  test("carry a chevron onto the month they are a picture of", async () => {
+    const stepped: string[] = []
+    const { container } = view({
+      range: { months: 2, carousel: true },
+      onDateChange: (day) => stepped.push(day.toString()),
+    })
+
+    const back = container.querySelector<HTMLElement>('[aria-label="Previous month"]')
+    const forward = container.querySelector<HTMLElement>('[aria-label="Next month"]')
+    expect(back).not.toBeNull()
+    expect(forward).not.toBeNull()
+
+    const user = userEvent.setup()
+    await user.click(forward as HTMLElement)
+    await user.click(back as HTMLElement)
+    // One month each way — the same two presses the toolbar's chevrons are.
+    // `date` is pinned here, so the second press measures from September too.
+    expect(stepped).toEqual(["2026-10-21", "2026-08-21"])
+  })
+
+  test("the chevrons are the pointer's path while the toolbar is the keyboard's", () => {
+    const { container, rerender } = view({ range: { months: 2, carousel: true } })
+
+    // With a toolbar the same two presses are already in the tab order, so
+    // these are hidden from it and from the accessible tree.
+    const withToolbar = container.querySelector<HTMLElement>('[aria-label="Next month"]')
+    expect(withToolbar).toHaveAttribute("tabindex", "-1")
+    expect(withToolbar?.parentElement).toHaveAttribute("aria-hidden", "true")
+    expect(screen.queryByRole("button", { name: "Next month" })).toBeNull()
+
+    rerender(
+      <MonthView
+        date={MONDAY}
+        events={[]}
+        locale={LOCALE}
+        timeZone={ZONE}
+        now={null}
+        range={{ months: 2, carousel: true }}
+        showToolbar={false}
+      />,
+    )
+    // Without one they are the only way through the months, and then they are
+    // everyone's.
+    expect(screen.getByRole("button", { name: "Next month" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Previous month" })).toBeInTheDocument()
+  })
+
+  test("the veil ramps outwards, mirrored at the two ends, and lifts on hover", () => {
+    const { container } = view({ range: { months: 2, carousel: true } })
+
+    const [leading, trailing] = peeks(container)
+    expect(peeks(container)).toHaveLength(2)
+
+    // Two blur layers and a dimming gradient, each masked from the outer edge
+    // inwards — and mirrored, so both ends blur away from the window.
+    const layers = (veil: HTMLElement) =>
+      Array.from(veil.children).map((layer) => layer.className)
+    const [leadingNear, leadingFar, leadingDim] = layers(leading as HTMLElement)
+    expect(leadingNear).toContain("backdrop-blur-xs")
+    expect(leadingFar).toContain("backdrop-blur-xs")
+    expect(leadingNear).toContain("mask-r-from-0% mask-r-to-75%")
+    expect(leadingFar).toContain("mask-r-from-0% mask-r-to-35%")
+    expect(leadingDim).toContain("bg-gradient-to-l from-transparent to-quebi-bg/70")
+
+    const [trailingNear, trailingFar, trailingDim] = layers(trailing as HTMLElement)
+    expect(trailingNear).toContain("backdrop-blur-xs")
+    expect(trailingFar).toContain("backdrop-blur-xs")
+    expect(trailingNear).toContain("mask-l-from-0% mask-l-to-75%")
+    expect(trailingFar).toContain("mask-l-from-0% mask-l-to-35%")
+    expect(trailingDim).toContain("bg-gradient-to-r from-transparent to-quebi-bg/70")
+
+    // Every layer fades on its own rather than the box around them fading for
+    // all three: an ancestor below full opacity is a backdrop root, and a
+    // `backdrop-filter` inside one samples nothing, so a wrapper fade would
+    // drop both blurs on the transition's first frame.
+    for (const veil of peeks(container)) {
+      expect(veil.className).not.toContain("opacity")
+      for (const layer of Array.from(veil.children)) {
+        expect(layer.className).toContain("group-hover:opacity-0")
+        expect(layer.className).toContain("transition-opacity")
+      }
+    }
+
+    // The month it covers is still inert while the veil is lifted: seeing next
+    // month is not being in it.
+    const cells = container.querySelectorAll('[data-slot="month-carousel"] > div > div')
+    expect((cells[0] as HTMLElement).className).toContain("group")
+    expect(cells[0]?.querySelector("[inert]")).not.toBeNull()
   })
 })

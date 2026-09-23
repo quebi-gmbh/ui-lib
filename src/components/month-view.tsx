@@ -1,9 +1,11 @@
 "use client"
 
 import { type CalendarDate, startOfMonth, type ZonedDateTime } from "@internationalized/date"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { useMove } from "react-aria"
-import { Button } from "react-aria-components"
+import { Button as AriaButton } from "react-aria-components"
+import { Button } from "@/components/button"
 import {
   type CalendarEvent,
   type CalendarEventChange,
@@ -123,9 +125,17 @@ import { cn } from "@/lib/utils"
  * Three decisions worth knowing about, because each of them is a thing a
  * carousel usually does and this one does not:
  *
- * - **The neighbours are `inert`, not merely faded.** A blurred month is a
- *   picture of what is next; its day buttons are not tab stops, its chips are
- *   not draggable, and a screen reader is not read a month nobody can see.
+ * - **The neighbours are `inert`, not merely faded**, and they stay that way
+ *   even when the veil lifts. A peeking month is a picture of what is next: its
+ *   day buttons are not tab stops, its chips are not draggable, and a screen
+ *   reader is not read a month nobody is looking at. Hovering one clears the
+ *   veil so it can be read, and the chevron drawn over it is how you go there —
+ *   *seeing* next month is not being in it.
+ * - **The blur ramps rather than covering.** Two masked `backdrop-blur` layers
+ *   and a dimming gradient over the same axis, so a peek is sharp where it
+ *   meets the window and blurred at its outer edge. A uniform blur reads as a
+ *   frosted panel stuck to the side of the calendar; a ramp reads as the page
+ *   carrying on past the edge of what you are looking at.
  * - **It is not `Carousel`.** That component is embla over a fixed list of
  *   slides, and this is an unbounded run of months generated from a date the
  *   toolbar owns. There is no list to be at slide 3 of, and the prev/next
@@ -264,6 +274,12 @@ export interface MonthViewProps<E extends CalendarEvent = CalendarEvent> {
    * here are days.
    */
   onEventChange?: (event: E, next: CalendarEventChange) => void
+  /**
+   * The names of the chevrons a carousel draws over its peeking months — the
+   * place to translate them. Default "Previous month" / "Next month".
+   */
+  previousMonthLabel?: string
+  nextMonthLabel?: string
   /** What a screen reader is told a movable chip can do. */
   moveHintLabel?: string
   /** The line announced after a move. Defaults to the event and its new date. */
@@ -658,6 +674,8 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
   labelVariant = "picker",
   isEventEditable,
   onEventChange,
+  previousMonthLabel = "Previous month",
+  nextMonthLabel = "Next month",
   moveHintLabel = "Press the arrow keys to move this event to another day.",
   moveAnnouncement,
   className,
@@ -843,45 +861,69 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
             )}
             style={{ transform: `translateX(-${(1 - carousel.peek) * cellWidth}%)` }}
           >
-            {grids.map((grid) => (
-              <div
-                key={grid.key}
-                // `inert` rather than a class and a `tabIndex={-1}`: a month
-                // nobody can see should not be a tab stop, should not be read
-                // out, and should not answer a click that lands on the blurred
-                // slice of it. One attribute says all three.
-                inert={grid.peeking || undefined}
-                className={cn(
-                  "shrink-0 px-1.5 transition-[flex-basis,filter,opacity] duration-300 ease-out",
-                  "motion-reduce:transition-none",
-                  grid.peeking && "blur-xs opacity-60",
-                )}
-                style={{ flexBasis: `${cellWidth}%` }}
-              >
-                <MonthGrid
-                  weeks={grid.weeks}
-                  month={grid.month}
-                  events={events}
-                  calendars={calendars}
-                  timeZone={timeZone}
-                  locale={locale}
-                  weekHeight={weekHeight}
-                  maxLanes={maxLanes}
-                  moreLabel={moreLabel}
-                  onMoreClick={onMoreClick}
-                  onDayClick={onDayClick}
-                  onEventClick={onEventClick}
-                  selectedEventId={selectedEventId ?? null}
-                  onSelectionChange={onSelectionChange}
-                  today={todayDate}
-                  isEventEditable={isEventEditable}
-                  onEventChange={onEventChange}
-                  announce={announce}
-                  hintId={hintId}
-                  className="w-full"
-                />
-              </div>
-            ))}
+            {grids.map((grid, index) => {
+              const side = !grid.peeking ? null : index === 0 ? "start" : "end"
+              return (
+                <div
+                  key={grid.key}
+                  // `group` so the veil can lift on hover, and the hover is the
+                  // cell's rather than the grid's: the grid inside is `inert`
+                  // and therefore not hit-testable, so the pointer over a
+                  // peeking month lands here.
+                  className={cn(
+                    "group relative shrink-0 px-1.5",
+                    "transition-[flex-basis] duration-300 ease-out motion-reduce:transition-none",
+                  )}
+                  style={{ flexBasis: `${cellWidth}%` }}
+                >
+                  {/* `inert` rather than a class and a `tabIndex={-1}`: a month
+                      nobody is looking at should not be a tab stop, should not
+                      be read out, and should not answer a click that lands on
+                      it. One attribute says all three — and it stays true while
+                      the veil is lifted, because seeing next month is not the
+                      same as being in it. The chevron is how you get there. */}
+                  <div inert={grid.peeking || undefined}>
+                    <MonthGrid
+                      weeks={grid.weeks}
+                      month={grid.month}
+                      events={events}
+                      calendars={calendars}
+                      timeZone={timeZone}
+                      locale={locale}
+                      weekHeight={weekHeight}
+                      maxLanes={maxLanes}
+                      moreLabel={moreLabel}
+                      onMoreClick={onMoreClick}
+                      onDayClick={onDayClick}
+                      onEventClick={onEventClick}
+                      selectedEventId={selectedEventId ?? null}
+                      onSelectionChange={onSelectionChange}
+                      today={todayDate}
+                      isEventEditable={isEventEditable}
+                      onEventChange={onEventChange}
+                      announce={announce}
+                      hintId={hintId}
+                      className="w-full"
+                    />
+                  </div>
+
+                  {side ? (
+                    <MonthPeek
+                      side={side}
+                      label={side === "start" ? previousMonthLabel : nextMonthLabel}
+                      onStep={side === "start" ? navigation.goToPrevious : navigation.goToNext}
+                      // The toolbar's chevrons are the same two presses, so
+                      // with a toolbar these are a pointer affordance and stay
+                      // out of the tab order rather than making every carousel
+                      // two tab stops longer for a control the reader has
+                      // already passed. Without one they are the only way
+                      // through the months, and then they are everyone's.
+                      isFocusable={!showToolbar}
+                    />
+                  ) : null}
+                </div>
+              )
+            })}
           </div>
         </div>
       ) : (
@@ -937,6 +979,117 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
         </>
       ) : null}
     </div>
+  )
+}
+
+/** What every layer of the veil does when the pointer is on the month. */
+const VEIL_FADE =
+  "transition-opacity duration-200 ease-out group-hover:opacity-0 motion-reduce:transition-none"
+
+interface MonthPeekProps {
+  /** Which end of the window this month is at. */
+  side: "start" | "end"
+  label: string
+  onStep: () => void
+  /** Is this chevron the keyboard's way through the months, or the pointer's? */
+  isFocusable: boolean
+}
+
+/**
+ * What makes a peeking month read as a peek: a veil that ramps, and the
+ * chevron that takes you into it.
+ *
+ * The blur is *progressive* — two `backdrop-blur` layers, each masked to begin
+ * further out than the last, so the month is sharp where it meets the window
+ * and eight pixels of blur at its outer edge, with a dimming gradient over the
+ * same axis. A single uniform blur reads as a frosted panel stuck to the side
+ * of the calendar; a ramp reads as the page carrying on past the edge of what
+ * you are looking at, which is what the peek is a picture of. It is masks and
+ * a gradient rather than an animated filter for a plain reason: no browser
+ * interpolates a blur radius across an element, and stacking two cheap ones is
+ * how every progressive blur is actually built.
+ *
+ * The veil lifts on hover, and each layer carries its own opacity transition
+ * rather than the box around them carrying one for all three. That is not a
+ * style choice: an ancestor at less than full opacity is a backdrop root, and a
+ * `backdrop-filter` inside one has nothing left to sample — so fading the
+ * wrapper would drop both blurs on the first frame of the transition and the
+ * reveal would pop instead of fading. Fading each layer is the same picture and
+ * composites correctly, because opacity on the filtered element applies to the
+ * filter's own result.
+ *
+ * The month stays `inert` while the veil is lifted: *seeing* next month is not
+ * being in it, and the chevron is how you get there.
+ */
+function MonthPeek({ side, label, onStep, isFocusable }: MonthPeekProps) {
+  const leading = side === "start"
+  return (
+    <>
+      <div
+        data-slot="month-peek-veil"
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+      >
+        {/* Two layers of the same 4px blur rather than one of 8: masked to
+            different distances they compound where they overlap, which is the
+            ramp — nothing at the window's edge, four pixels across the middle,
+            eight at the outside. */}
+        <div
+          className={cn(
+            "absolute inset-0 backdrop-blur-xs",
+            VEIL_FADE,
+            leading ? "mask-r-from-0% mask-r-to-75%" : "mask-l-from-0% mask-l-to-75%",
+          )}
+        />
+        <div
+          className={cn(
+            "absolute inset-0 backdrop-blur-xs",
+            VEIL_FADE,
+            leading ? "mask-r-from-0% mask-r-to-35%" : "mask-l-from-0% mask-l-to-35%",
+          )}
+        />
+        {/* The page's own background over the same ramp, so the month dims as
+            it blurs instead of staying a sharp-edged grey rectangle. */}
+        <div
+          className={cn(
+            "absolute inset-0",
+            VEIL_FADE,
+            leading
+              ? "bg-gradient-to-l from-transparent to-quebi-bg/70"
+              : "bg-gradient-to-r from-transparent to-quebi-bg/70",
+          )}
+        />
+      </div>
+
+      {/* The chevron is centred in the peek rather than pinned to the window's
+          edge: it sits on the month it takes you to, which is the thing the
+          press is about. `pointer-events-none` on the box, back on for the
+          button, so the rest of the peek stays hoverable-through to the cell. */}
+      {/* `aria-hidden` sits on the box rather than on the button: react-aria
+          passes through the ARIA props it knows and this is not one of them,
+          and a wrapper hides the subtree just as well. It is only safe because
+          the button inside is out of the tab order — an `aria-hidden` element
+          that can still be focused is the worse bug of the two. */}
+      <div
+        aria-hidden={isFocusable ? undefined : true}
+        className="pointer-events-none absolute inset-0 flex items-center justify-center"
+      >
+        <Button
+          intent="outline"
+          size="sq-sm"
+          aria-label={label}
+          excludeFromTabOrder={!isFocusable}
+          onPress={onStep}
+          className="pointer-events-auto rounded-full bg-quebi-elevated/80 shadow-md backdrop-blur-sm"
+        >
+          {leading ? (
+            <ChevronLeft data-slot="icon" aria-hidden="true" />
+          ) : (
+            <ChevronRight data-slot="icon" aria-hidden="true" />
+          )}
+        </Button>
+      </div>
+    </>
   )
 }
 
@@ -1169,7 +1322,7 @@ function MonthWeek<E extends CalendarEvent>({
               )}
             >
               <div className="flex justify-end px-1.5 pt-1" style={{ height: CELL_HEADER }}>
-                <Button
+                <AriaButton
                   onPress={() => onDayClick?.(day)}
                   isDisabled={!onDayClick}
                   className={cn(
@@ -1189,7 +1342,7 @@ function MonthWeek<E extends CalendarEvent>({
                     ...(opensMonth ? { month: "short" as const } : {}),
                     timeZone,
                   }).format(dayToDate(day, timeZone))}
-                </Button>
+                </AriaButton>
               </div>
             </div>
           )
