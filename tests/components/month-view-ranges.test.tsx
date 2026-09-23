@@ -43,13 +43,11 @@ const view = (props: Partial<React.ComponentProps<typeof MonthView>> = {}) =>
 
 /** The band's cells, in order: how wide, whether outside the window, how tall. */
 const cells = (container: HTMLElement) =>
-  Array.from(container.querySelectorAll<HTMLElement>('[data-slot="month-band"] > div')).map(
-    (cell) => ({
-      basis: cell.style.flexBasis,
-      outside: cell.querySelector("[inert]") !== null,
-      rows: cell.querySelectorAll('[data-slot="month-grid"] > div').length,
-    }),
-  )
+  Array.from(container.querySelectorAll<HTMLElement>('[data-slot="month-cell"]')).map((cell) => ({
+    basis: cell.style.flexBasis,
+    outside: cell.querySelector("[inert]") !== null,
+    rows: cell.querySelectorAll('[data-slot="month-grid"] > div').length,
+  }))
 
 /** Every day button of a grid, in order: what it says, and whether it is dimmed. */
 const dayCells = (grid: Element) =>
@@ -155,17 +153,18 @@ describe("range={{ weeks: 8 }}", () => {
 })
 
 describe("range={{ months: 2, carousel: true }}", () => {
-  test("draws two months more at each end than it shows, and makes them inert", () => {
+  test("draws one month more at each end than it shows, and makes them inert", () => {
     const { container } = view({ range: { months: 2, carousel: true } })
 
-    // Two months in the window, one peeking at each end, and one spare behind
-    // each peek for a step to slide into: six grids drawn, four of them inert.
+    // Two months in the window and one peeking at each end: four grids, the
+    // two at the ends inert. At rest that is all a band holds — a journey
+    // adds what it needs for as long as it is moving.
     const band = cells(container)
-    expect(band).toHaveLength(6)
-    expect(band.map((cell) => cell.outside)).toEqual([true, true, false, false, true, true])
-    expect(container.querySelectorAll('[data-slot="month-grid"]')).toHaveLength(6)
+    expect(band).toHaveLength(4)
+    expect(band.map((cell) => cell.outside)).toEqual([true, false, false, true])
+    expect(container.querySelectorAll('[data-slot="month-grid"]')).toHaveLength(4)
 
-    // The heading names the window, not the band: the four around it are
+    // The heading names the window, not the band: the two around it are
     // drawn, and nobody is looking at them.
     expect(screen.getByText("September–Oktober 2026")).toBeInTheDocument()
   })
@@ -175,19 +174,21 @@ describe("range={{ months: 2, carousel: true }}", () => {
     // whole calendar two rows shorter in February — and the chevrons, which
     // are centred on it, would move under the press that stepped there.
     const { container } = view({ range: { months: 2, carousel: true } })
-    expect(cells(container).map((cell) => cell.rows)).toEqual([6, 6, 6, 6, 6, 6])
+    expect(cells(container).map((cell) => cell.rows)).toEqual([6, 6, 6, 6])
   })
 
   test("is laid out in percentages of the window, peek included", () => {
     // Two months and a quarter of a month at each end is 2.5 cells across, so
-    // a cell is 40% of the window. The band starts two cells before the window,
-    // so sliding it by all but the peek of those two — 1.75 cells, 70% —
-    // puts September at the window's left edge with August peeking in.
+    // a cell is 40% of the window. September is the origin and is put a
+    // quarter-cell (10%) in from the left; August, one cell before it, is
+    // placed by the spacer's -40% and shows through that quarter.
     const { container } = view({ range: { months: 2, carousel: { peek: 0.25 } } })
     expect(cells(container)[0]?.basis).toBe("40%")
 
     const track = container.querySelector<HTMLElement>('[data-slot="month-band"]')
-    expect(track?.style.transform).toBe("translateX(-70%)")
+    expect(track?.style.transform).toBe("translateX(10%)")
+    const origin = container.querySelector<HTMLElement>('[data-slot="month-band-origin"]')
+    expect(origin?.style.marginLeft).toBe("-40%")
   })
 
   test("steps one month, because the month peeking in is the one you get", async () => {
@@ -219,8 +220,8 @@ describe("range={{ months: 2, carousel: true }}", () => {
 
     await userEvent.setup().click(screen.getByRole("radio", { name: "3 months" }))
     expect(chosen).toEqual([3])
-    // Three in the window and two either side: seven grids, each narrower.
-    expect(cells(container)).toHaveLength(7)
+    // Three in the window and one either side: five grids, each narrower.
+    expect(cells(container)).toHaveLength(5)
     expect(screen.getByText("September–November 2026")).toBeInTheDocument()
   })
 
@@ -228,7 +229,7 @@ describe("range={{ months: 2, carousel: true }}", () => {
     const { container } = view({ range: { months: 2, carousel: { choices: [] } } })
 
     expect(screen.queryByRole("radiogroup", { name: "Months shown" })).toBeNull()
-    expect(cells(container)).toHaveLength(6)
+    expect(cells(container)).toHaveLength(4)
   })
 
   test("a count the choices do not offer is added to them, so one is always on", () => {
@@ -363,47 +364,12 @@ describe("the carousel's peeking months", () => {
 
     // The month behind it is still inert while the veil is lifted: seeing next
     // month is not being in it.
-    expect(cells(container)[1]?.outside).toBe(true)
+    expect(cells(container)[0]?.outside).toBe(true)
     // And the hover is the overlay's own, so hovering the middle of the window
     // does not clear the veils at its edges.
     for (const peek of peeks(container)) {
       expect(peek.className).toContain("group/peek")
     }
-  })
-
-  test("a move is inverted for a frame, which is what the reader sees travel", () => {
-    // The press commits the month at once and the band is put back where it
-    // was for one frame, without a transition, then released. Two months at a
-    // quarter peek is a 40% cell and a -70% band; inverted by one cell that is
-    // -30%, which is exactly where the band stood before the press.
-    const carousel = { months: 2, carousel: { peek: 0.25 } } as const
-    const at = (months: number) => (
-      <MonthView
-        date={MONDAY.add({ months })}
-        events={[]}
-        locale={LOCALE}
-        timeZone={ZONE}
-        now={null}
-        range={carousel}
-      />
-    )
-
-    const { container, rerender } = view({ range: carousel })
-    const band = () => container.querySelector<HTMLElement>('[data-slot="month-band"]')
-    // Nothing has moved yet, so nothing is inverted.
-    expect(band()?.style.transform).toBe("translateX(-70%)")
-
-    rerender(at(1))
-    expect(band()?.style.transform).toBe("translateX(-30%)")
-    expect(band()?.className).toContain("transition-none")
-
-    // `Today` and the month picker move further than the band can hold, so
-    // they travel one cell from the side they came from — the inversion is
-    // capped, not skipped, and it still says which way the calendar went.
-    rerender(at(5))
-    expect(band()?.style.transform).toBe("translateX(-30%)")
-    rerender(at(-3))
-    expect(band()?.style.transform).toBe("translateX(-110%)")
   })
 
   test("the band travels on the house curve for things that move", () => {
@@ -419,7 +385,7 @@ describe("the carousel's peeking months", () => {
     // The cells widen on the same curve: when the count changes they resize
     // while the band slides under them, and two curves would read as two
     // events rather than one movement.
-    const cell = container.querySelector<HTMLElement>('[data-slot="month-band"] > div')
+    const cell = container.querySelector<HTMLElement>('[data-slot="month-cell"]')
     expect(cell?.className).toContain("ease-quebi-travel")
     expect(cell?.className).toContain("duration-400")
   })

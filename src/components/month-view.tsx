@@ -2,7 +2,7 @@
 
 import { type CalendarDate, startOfMonth, type ZonedDateTime } from "@internationalized/date"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { useMove } from "react-aria"
 import { Button as AriaButton } from "react-aria-components"
 import { Button } from "@/components/button"
@@ -141,22 +141,20 @@ import { cn } from "@/lib/utils"
  *   slides, and this is an unbounded run of months generated from a date the
  *   toolbar owns. There is no list to be at slide 3 of, and the prev/next
  *   controls already exist one component up.
- * - **Every move travels, and the date does not wait for it.** The press commits
- *   the month immediately — the label, `onDateChange` and every grid in the band
- *   are the new month from the first frame — and then the band is *put back*
- *   where it was for exactly one frame, with transitions off, and released.
- *   What the reader sees is the months gliding; what the state sees is a date
- *   that changed once, cleanly. The usual arrangement is the other way round —
- *   animate, then commit when the transition ends — and it is a state machine
- *   that stops committing the moment transitions are off, which
- *   `prefers-reduced-motion` does. Here reduced motion drops the animation and
- *   nothing else: the frame is still rendered, it simply is not travelled.
- *   A chevron step is a true slide — the month that was peeking is the one that
- *   arrives, and the travel is the distance between them. `Today` and the month
- *   picker move further than any band could hold (a year is twelve cells of
- *   months nobody asked to see), so they glide in by one cell from the side
- *   they came from. Either way the reader is told which way the calendar went,
- *   which is the one thing a cut cannot say.
+ * - **Every move travels the whole way, and the date does not wait for it.**
+ *   The press commits the month immediately — the label and `onDateChange`
+ *   have it from the first frame — and the band then journeys from where it
+ *   was to where it now belongs, over every month in between: a jump to next
+ *   year slides past eleven of them. Only the ends of the journey are drawn
+ *   properly, the window it left and the window it is going to with their
+ *   peeks; the months it only passes are placeholders of the right shape,
+ *   because each is on screen for a few frames and nobody can read a grid in
+ *   that time. See `useCarouselTravel` for how the band moves without anything
+ *   on screen jumping — including a second press that lands mid-flight, which
+ *   carries on from where the band had got to rather than starting again.
+ *   The date committing first is also what makes reduced motion safe: the
+ *   animation-first arrangement, commit when the transition ends, stops
+ *   committing the moment transitions are off. Here the band simply arrives.
  * - **Every month in a carousel is six rows.** The single-month view draws only
  *   the rows its month needs, which is right for a month you are looking at and
  *   wrong for a band you are stepping through — February would make the whole
@@ -623,31 +621,174 @@ interface MonthGridSpec {
   key: string
   month: CalendarDate | null
   weeks: CalendarDate[][]
-  /** Is this one of the months being read, or one of the four around them? */
+}
+
+/** `2026-09` as a number, so a move can be measured in months. */
+const monthOrdinal = (date: CalendarDate) => date.year * 12 + date.month
+
+/** One cell of a carousel's band. */
+interface CarouselCell {
+  /** The month's own string, so a month keeps its DOM across a journey. */
+  key: string
+  month: CalendarDate
+  /** Drawn in full, or a placeholder for a month the band is only passing. */
+  full: boolean
+  /** One of the months being read — the only ones that are not `inert`. */
   inWindow: boolean
 }
 
+/** A one-cell step takes this long; longer journeys take a little longer. */
+const TRAVEL_MS = 400
+/** What each further cell adds, so a year reads as further than a month. */
+const TRAVEL_PER_CELL_MS = 50
+/** And the ceiling, so a jump across years is still a jump. */
+const TRAVEL_MAX_MS = 900
+/** How long after its end a journey that never reported ending is settled anyway. */
+const SETTLE_GRACE_MS = 120
+
+const legDuration = (cells: number) =>
+  Math.min(TRAVEL_MAX_MS, TRAVEL_MS + TRAVEL_PER_CELL_MS * Math.max(0, cells - 1))
+
 /**
- * How many cells a carousel draws before its window, and after it.
+ * Where a carousel's band is, and where it is going.
  *
- * Two: the month peeking in, and one more behind that one. The spare is what a
- * step slides into — the band moves by a whole cell, so without a month already
- * standing where the peek is going there would be a cell-wide hole at the
- * leading edge for the length of the animation. It is drawn, clipped, and never
- * seen until it is needed.
+ * The band is laid out against an `origin` month — the cell for month `k` sits
+ * `k - origin` cells from it — and that origin is held still for the whole of a
+ * journey. That is the property everything else rests on: months can be added
+ * to either end of the band while it is moving without a single cell already on
+ * screen changing position, so a second press mid-flight is just a new `focus`,
+ * and the browser carries the transform on from wherever it had got to. Only
+ * when the band comes to rest is it laid out again, around where it stopped,
+ * and that happens in a frame with no transitions, because it changes numbers
+ * and not pixels.
  */
-const CAROUSEL_MARGIN = 2
+interface CarouselTravel {
+  origin: number
+  /** The window's first month: where the band is at rest, or where it is going. */
+  focus: number
+  /**
+   * Every window this journey has been heading for, origin first. Each of them
+   * is drawn in full, with its peeks; the months between them are not.
+   */
+  stops: readonly number[]
+  /**
+   * `rest` — still; only a change of count animates. `travel` — moving to
+   * `focus`. `settle` — just laid out again around where it stopped: one frame
+   * with nothing animating, then `rest`.
+   */
+  phase: "rest" | "travel" | "settle"
+  /** Did this leg begin while the band was already moving? */
+  retarget: boolean
+  duration: number
+  /** Counts legs, so a timer set for one leg cannot settle the next. */
+  leg: number
+}
 
-/** `2026-09` as a number, so a step can be measured in months. */
-const monthOrdinal = (date: CalendarDate) => date.year * 12 + date.month
+const restAt = (ordinal: number, leg = 0): CarouselTravel => ({
+  origin: ordinal,
+  focus: ordinal,
+  stops: [ordinal],
+  phase: "rest",
+  retarget: false,
+  duration: TRAVEL_MS,
+  leg,
+})
 
-// A layout effect so the inverted position is rendered before the browser
-// paints — a `useEffect` here would paint the jump first, which is the thing
-// the inversion exists to hide. The prerender has no layout and no paint and
-// React warns about `useLayoutEffect` there, so it takes the one that does
-// nothing instead; `src/lib/steady-width.tsx` makes the same swap for the same
-// reason.
-const useIsomorphicLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect
+/** The band after it arrives: laid out around `focus`, in a frame that does not animate. */
+const settled = (travel: CarouselTravel): CarouselTravel =>
+  travel.phase === "travel" ? { ...restAt(travel.focus, travel.leg), phase: "settle" } : travel
+
+/** Whether the reader has asked for less motion — read at the moment of a move. */
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" &&
+  typeof window.matchMedia === "function" &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+/**
+ * The next state of the band when the window's first month becomes `to`.
+ *
+ * From rest, a journey begins where the band is. Mid-flight, it *continues*:
+ * the origin is kept, the new window joins the stops, and only the target
+ * moves — the browser retargets a running transition from its current value,
+ * so a third press on `›` picks up speed from where the second one had got to
+ * rather than jumping to the end of it first.
+ */
+function journey(travel: CarouselTravel, to: number, animate: boolean): CarouselTravel {
+  const leg = travel.leg + 1
+  if (!animate) return { ...restAt(to, leg), phase: "settle" }
+  if (travel.phase === "travel") {
+    return {
+      ...travel,
+      focus: to,
+      stops: travel.stops.includes(to) ? travel.stops : [...travel.stops, to],
+      retarget: true,
+      duration: legDuration(Math.abs(to - travel.focus)),
+      leg,
+    }
+  }
+  return {
+    origin: travel.focus,
+    focus: to,
+    stops: [travel.focus, to],
+    phase: "travel",
+    retarget: false,
+    duration: legDuration(Math.abs(to - travel.focus)),
+    leg,
+  }
+}
+
+/**
+ * A carousel's position, and the handler that tells it a journey is over.
+ *
+ * A move is noticed during render rather than in an effect — the band for the
+ * new month is drawn in the same commit as the new month, so there is no frame
+ * in which the label says October and the band has not heard. The transform
+ * changes in that commit too, and the browser transitions it from the value it
+ * last painted, which is where the band was.
+ */
+function useCarouselTravel(ordinal: number, enabled: boolean) {
+  const [travel, setTravel] = useState(() => restAt(ordinal))
+
+  if (ordinal !== travel.focus) {
+    setTravel(journey(travel, ordinal, enabled && !prefersReducedMotion()))
+  }
+
+  // `transitionend` is how a journey says it is over, but a transition that
+  // never ran never ends — a background tab, a band that was never laid out —
+  // so a timer settles it a beat after it should have finished. It is keyed on
+  // the leg, so a press mid-flight replaces it rather than racing it.
+  const { phase, duration, leg } = travel
+  useEffect(() => {
+    if (phase !== "travel") return
+    const timer = setTimeout(
+      () => setTravel((current) => (current.leg === leg ? settled(current) : current)),
+      duration + SETTLE_GRACE_MS,
+    )
+    return () => clearTimeout(timer)
+  }, [phase, duration, leg])
+
+  // One frame laid out and still, then free to animate a change of count again.
+  useEffect(() => {
+    if (phase !== "settle") return
+    const rest = () =>
+      setTravel((current) => (current.phase === "settle" ? { ...current, phase: "rest" } : current))
+    if (typeof requestAnimationFrame !== "function") {
+      rest()
+      return
+    }
+    const frame = requestAnimationFrame(rest)
+    return () => cancelAnimationFrame(frame)
+  }, [phase])
+
+  const onTransitionEnd = (event: React.TransitionEvent<HTMLElement>) => {
+    // The cells' own `flex-basis` transitions bubble here too; only the band's
+    // transform is the journey.
+    if (event.target !== event.currentTarget || event.propertyName !== "transform") return
+    setTravel(settled)
+  }
+
+  return { travel, onTransitionEnd }
+}
 
 /** The carousel's settings, with every default already applied. */
 interface ResolvedCarousel {
@@ -661,6 +802,9 @@ const CAROUSEL_DEFAULT_CHOICES = [1, 2, 3]
 
 /** Every month in a carousel is drawn six rows tall. See the band below. */
 const CAROUSEL_WEEK_ROWS = 6
+
+/** How many months' rows a carousel keeps before starting its cache again. */
+const WEEKS_CACHE_LIMIT = 48
 
 /**
  * `carousel` as the four things the render needs, or null for no carousel.
@@ -767,73 +911,65 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
           key: "strip",
           month: null,
           weeks: weekStrip(navigation.date, locale, stripWeeks, firstDayOfWeek),
-          inWindow: true,
         },
       ]
     }
-    const window = startOfMonth(navigation.date)
-    const lead = carousel ? CAROUSEL_MARGIN : 0
-    const first = window.subtract({ months: lead })
-    const count = carousel ? visibleMonths + 2 * CAROUSEL_MARGIN : monthCount
-    return Array.from({ length: count }, (_, index) => {
+    // The carousel draws its band below, from where the band *is* rather than
+    // from the date alone.
+    if (carousel) return []
+    const first = startOfMonth(navigation.date)
+    return Array.from({ length: monthCount }, (_, index) => {
       const month = first.add({ months: index })
-      return {
+      return { key: month.toString(), month, weeks: monthRange(month, locale, firstDayOfWeek) }
+    })
+  }, [stripWeeks, monthCount, carousel, navigation.date, locale, firstDayOfWeek])
+
+  const ordinal = monthOrdinal(navigation.date)
+  const { travel, onTransitionEnd } = useCarouselTravel(ordinal, carousel !== null)
+
+  // Each month's rows, kept across journeys. A month drawn before a settle and
+  // after it has to be handed the *same* arrays, because `MonthWeek` packs its
+  // events against the identity of its week — new arrays on the frame the band
+  // comes to rest would repack every grid on screen at the moment nothing on
+  // screen has changed. Cleared when it has grown past a few years of browsing
+  // rather than never, and whenever what a week *is* changes.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the dependencies are the invalidation — a new locale or first day is a new answer to which days a row holds
+  const weeksCache = useMemo(() => new Map<string, CalendarDate[][]>(), [locale, firstDayOfWeek])
+  const carouselWeeks = (month: CalendarDate) => {
+    const key = month.toString()
+    const cached = weeksCache.get(key)
+    if (cached) return cached
+    if (weeksCache.size > WEEKS_CACHE_LIMIT) weeksCache.clear()
+    const weeks = weekStrip(month, locale, CAROUSEL_WEEK_ROWS, firstDayOfWeek)
+    weeksCache.set(key, weeks)
+    return weeks
+  }
+
+  // The band: every month from one before the earliest stop to one after the
+  // latest window, which is exactly the run the band can be seen to pass over.
+  // The stops and their peeks are drawn in full — where the journey started,
+  // where it is going, and anywhere a press mid-flight sent it — and the
+  // months between them are placeholders. A jump to next year slides past
+  // eleven months of the right shape without packing a single event into them:
+  // they are on screen for a few frames each, and a grid nobody can read in
+  // that time is not worth the work of drawing one.
+  const band = useMemo(() => {
+    if (!carousel) return { lo: 0, cells: [] as CarouselCell[] }
+    const anchor = startOfMonth(navigation.date)
+    const lo = Math.min(...travel.stops) - 1
+    const hi = Math.max(...travel.stops) + visibleMonths
+    const cells: CarouselCell[] = []
+    for (let k = lo; k <= hi; k++) {
+      const month = anchor.add({ months: k - ordinal })
+      cells.push({
         key: month.toString(),
         month,
-        // Six rows for every month in a carousel, where four other months are
-        // one press away. A grid that draws only the rows its month needs is
-        // the right answer for a month you are looking at and the wrong one
-        // for a band you are stepping through: February would make the whole
-        // calendar two rows shorter, and everything anchored to its height —
-        // the chevrons, the page below it — would jump under the press that
-        // did it. The extra rows are the neighbouring months' days, dimmed,
-        // which is what the other four corners of the grid already show.
-        weeks: carousel
-          ? weekStrip(month, locale, CAROUSEL_WEEK_ROWS, firstDayOfWeek)
-          : monthRange(month, locale, firstDayOfWeek),
-        inWindow: !carousel || (index >= lead && index < lead + visibleMonths),
-      }
-    })
-  }, [stripWeeks, monthCount, visibleMonths, carousel, navigation.date, locale, firstDayOfWeek])
-
-  // The step being animated, in cells, and the frame it is cleared on. A month
-  // press commits the date immediately and then *puts the band back* where it
-  // was for one frame; releasing it to its real position is what the reader
-  // sees as the slide. Inverting the move rather than deferring it is what
-  // keeps the date honest — every consumer, and the label above the grid, has
-  // the new month from the first frame, and nothing here has to be undone if
-  // the animation never runs.
-  const [invert, setInvert] = useState(0)
-  const ordinal = monthOrdinal(navigation.date)
-  const previousOrdinal = useRef(ordinal)
-  useIsomorphicLayoutEffect(() => {
-    const delta = ordinal - previousOrdinal.current
-    previousOrdinal.current = ordinal
-    // One month, and only one: a chevron. `Today` and the month picker jump by
-    // however many they jump by, and there is no band wide enough to slide
-    // that far — those arrive rather than travel.
-    if (carousel === null || delta === 0) {
-      // The band belongs to the month it is showing, and leaving it inverted
-      // would leave the calendar a cell to the side of itself until something
-      // else moved it.
-      setInvert(0)
-      return
+        full: travel.stops.some((stop) => k >= stop - 1 && k <= stop + visibleMonths),
+        inWindow: k >= travel.focus && k < travel.focus + visibleMonths,
+      })
     }
-    // One cell, whichever way, however far the date went. A chevron step is a
-    // true slide — the month that was peeking is the one that arrives, and the
-    // travel is exactly the distance between them. `Today` and the month
-    // picker are the same movement over a distance no band could hold: a year
-    // is twelve cells of months nobody asked to see, so the jump glides in by
-    // one from the side it came from. What the reader is told either way is
-    // which direction the calendar moved, which is the thing a cut cannot say.
-    setInvert(Math.sign(delta))
-    if (typeof requestAnimationFrame !== "function") {
-      setInvert(0)
-      return
-    }
-    const frame = requestAnimationFrame(() => setInvert(0))
-    return () => cancelAnimationFrame(frame)
-  }, [ordinal, carousel === null])
+    return { lo, cells }
+  }, [carousel, navigation.date, ordinal, travel.stops, travel.focus, visibleMonths])
 
   const maxLanes = Math.max(1, Math.floor((weekHeight - CELL_HEADER) / LANE_HEIGHT))
 
@@ -857,14 +993,17 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
           }).format(next.start.toDate())}`,
     )
 
-  // The heading names what is *in* the window; the months peeking at its edges
-  // are not being looked at yet.
-  const shown = grids.filter((grid) => grid.inWindow)
-  const firstMonth = shown[0]?.month
-  const lastMonth = shown[shown.length - 1]?.month
+  // The heading names what is *in* the window — never the months peeking at
+  // its edges, and never the ones a moving band is passing. It is read from the
+  // date, which changes once, rather than from the band, which is mid-journey.
+  const windowStart = startOfMonth(navigation.date)
   const defaultLabel =
-    firstMonth && lastMonth
-      ? calendarMonthRangeLabel(firstMonth, lastMonth, { locale, timeZone })
+    stripWeeks === null
+      ? calendarMonthRangeLabel(
+          windowStart,
+          windowStart.add({ months: (carousel ? visibleMonths : monthCount) - 1 }),
+          { locale, timeZone },
+        )
       : // A strip has no month to name, so it names its ends — the same range
         // label the week view's heading uses, over eight weeks instead of one.
         calendarRangeLabel(grids[0]?.weeks.flat() ?? [], { locale, timeZone })
@@ -943,50 +1082,74 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
             data-slot="month-band"
             className={cn(
               "flex items-start",
-              // Everything the band does is this one transition: the months
-              // glide when a chevron steps them, and the cells widen and the
-              // band slides under them when the reader changes the count.
-              // Except for the single frame that sets the slide up, which has
-              // to arrive without one.
-              // `ease-quebi-travel` rather than the house `ease-out`: the band
-              // starts from rest in front of the reader, and a curve that
-              // begins at full speed reads as a jump caught halfway. Out of
-              // rest and back into it, over the 400ms a cell-wide step takes.
-              invert === 0
-                ? "transition-transform duration-400 ease-quebi-travel motion-reduce:transition-none"
-                : "transition-none",
+              travel.phase === "settle"
+                ? // The frame that lays the band out again around where it
+                  // stopped. The numbers change and the pixels do not, and a
+                  // transition would animate the numbers.
+                  "transition-none"
+                : cn(
+                    "transition-transform duration-400 motion-reduce:transition-none",
+                    // Out of rest and back into it: the band starts still in
+                    // front of the reader, and a curve that begins at full
+                    // speed reads as a jump caught halfway. A press that lands
+                    // mid-flight is the exception — the band is already moving,
+                    // and easing in again would stall it for a beat before it
+                    // picked up speed it already had.
+                    travel.retarget ? "ease-out" : "ease-quebi-travel",
+                  ),
             )}
-            // `CAROUSEL_MARGIN - peek` cells left of the band's start puts the
-            // window's first month at the window's own left edge, with a peek
-            // of the month before it showing. `invert` gives one of those cells
-            // back for a frame, which is where the slide starts from.
+            // Month `k` sits `k - origin` cells from the origin, which is held
+            // still for the whole of a journey; the window's first month is put
+            // a peek's width in from the window's left edge, with the month
+            // before it showing through that peek.
             style={{
-              transform: `translateX(-${(CAROUSEL_MARGIN - carousel.peek - invert) * cellWidth}%)`,
+              transform: `translateX(${-(travel.focus - travel.origin - carousel.peek) * cellWidth}%)`,
+              transitionDuration: travel.phase === "travel" ? `${travel.duration}ms` : undefined,
             }}
+            onTransitionEnd={onTransitionEnd}
           >
-            {grids.map((grid) => (
+            {/* Where the band's first cell starts, measured from the origin.
+                A spacer rather than a transform, because a transform is what
+                is animating: when a journey adds months to the near end of the
+                band, this takes up exactly the cells they add, in the same
+                frame, and nothing already on screen moves. It animates only at
+                rest, alongside the cells, when the count changes. */}
+            <div
+              aria-hidden="true"
+              data-slot="month-band-origin"
+              className={cn(
+                "shrink-0",
+                travel.phase === "rest"
+                  ? "transition-[margin-left] duration-400 ease-quebi-travel motion-reduce:transition-none"
+                  : "transition-none",
+              )}
+              style={{ marginLeft: `${(band.lo - travel.origin) * cellWidth}%` }}
+            />
+            {band.cells.map((cell) => (
               <div
-                  key={grid.key}
-                  className={cn(
-                    "shrink-0 px-1.5",
-                    // The same travel, because it is the same movement: when
-                    // the count changes these widen while the band slides
-                    // under them, and two curves would read as two events.
-                    "transition-[flex-basis] duration-400 ease-quebi-travel",
-                    "motion-reduce:transition-none",
-                  )}
-                  style={{ flexBasis: `${cellWidth}%` }}
-                >
-                {/* `inert` rather than a class and a `tabIndex={-1}`: a month
-                    nobody is looking at should not be a tab stop, should not be
-                    read out, and should not answer a click that lands on it.
-                    One attribute says all three — and it stays true while the
-                    veil is lifted, because seeing next month is not the same as
-                    being in it. The chevron is how you get there. */}
-                <div inert={!grid.inWindow || undefined}>
+                key={cell.key}
+                data-slot="month-cell"
+                className={cn(
+                  "shrink-0 px-1.5",
+                  // The same travel, because it is the same movement: when the
+                  // count changes these widen while the band slides under them,
+                  // and two curves would read as two events.
+                  "transition-[flex-basis] duration-400 ease-quebi-travel",
+                  "motion-reduce:transition-none",
+                )}
+                style={{ flexBasis: `${cellWidth}%` }}
+              >
+                {cell.full ? (
+                  // `inert` rather than a class and a `tabIndex={-1}`: a month
+                  // nobody is looking at should not be a tab stop, should not
+                  // be read out, and should not answer a click that lands on
+                  // it. One attribute says all three — and it stays true while
+                  // the veil is eased, because seeing next month is not the
+                  // same as being in it. The chevron is how you get there.
+                  <div inert={!cell.inWindow || undefined}>
                     <MonthGrid
-                      weeks={grid.weeks}
-                      month={grid.month}
+                      weeks={carouselWeeks(cell.month)}
+                      month={cell.month}
                       events={events}
                       calendars={calendars}
                       timeZone={timeZone}
@@ -1007,7 +1170,9 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
                       className="w-full"
                     />
                   </div>
-
+                ) : (
+                  <MonthPlaceholder weekHeight={weekHeight} />
+                )}
               </div>
             ))}
           </div>
@@ -1227,6 +1392,39 @@ function MonthPeek({ side, width, label, onStep, isFocusable }: MonthPeekProps) 
           )}
         </Button>
       </div>
+    </div>
+  )
+}
+
+/**
+ * A month the band is only passing through: the right shape and nothing else.
+ *
+ * A jump to next year slides past eleven months, each on screen for a few
+ * frames. Drawing them properly means packing every event into every week of
+ * each of them for a picture nobody has time to read, so they are drawn as
+ * what the reader can actually see at that speed — a card of the right size
+ * going by. Size is the part that has to be exact: the header strip is the
+ * same line of `text-xs` the weekday row is, and the rows are `weekHeight`
+ * each, so the band is one height from end to end and the full months either
+ * side of a run of these line up with them.
+ */
+function MonthPlaceholder({ weekHeight }: { weekHeight: number }) {
+  return (
+    <div
+      aria-hidden="true"
+      data-slot="month-placeholder"
+      className="w-full overflow-hidden rounded-quebi-md border border-quebi-line/10 bg-quebi-bg"
+    >
+      <div className="border-quebi-line/10 border-b py-2 text-xs">{"\u00a0"}</div>
+      {Array.from({ length: CAROUSEL_WEEK_ROWS }, (_, row) => (
+        <div
+          // The rows are a fixed count in a fixed order and never reorder.
+          // biome-ignore lint/suspicious/noArrayIndexKey: six empty rows have no identity but their place
+          key={row}
+          className="border-quebi-line/10 border-b last:border-b-0"
+          style={{ height: weekHeight }}
+        />
+      ))}
     </div>
   )
 }
