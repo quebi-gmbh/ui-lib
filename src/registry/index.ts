@@ -109,6 +109,7 @@ import { menuExamples } from "./menu.examples"
 import { meterExamples } from "./meter.examples"
 import { modalExamples } from "./modal.examples"
 import { monthPickerExamples } from "./month-picker.examples"
+import { miniMonthExamples } from "./mini-month.examples"
 import { monthViewExamples } from "./month-view.examples"
 import { multipleSelectExamples } from "./multiple-select.examples"
 import { navbarExamples } from "./navbar.examples"
@@ -274,6 +275,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "meter": meterExamples,
   "modal": modalExamples,
   "month-picker": monthPickerExamples,
+  "mini-month": miniMonthExamples,
   "month-view": monthViewExamples,
   "multiple-select": multipleSelectExamples,
   "navbar": navbarExamples,

@@ -106,6 +106,7 @@ import { listBoxMeta } from "./list-box.meta"
 import { loaderMeta } from "./loader.meta"
 import { menuMeta } from "./menu.meta"
 import { meterMeta } from "./meter.meta"
+import { miniMonthMeta } from "./mini-month.meta"
 import { modalMeta } from "./modal.meta"
 import { monthPickerMeta } from "./month-picker.meta"
 import { monthViewMeta } from "./month-view.meta"
@@ -271,6 +272,7 @@ export const metaRegistry: ComponentMeta[] = [
   loaderMeta,
   menuMeta,
   meterMeta,
+  miniMonthMeta,
   modalMeta,
   monthPickerMeta,
   monthViewMeta,
