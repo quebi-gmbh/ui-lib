@@ -126,6 +126,7 @@ import { navbarOgScene } from "./navbar.og"
 import { noteOgScene } from "./note.og"
 import { numberFieldOgScene } from "./number-field.og"
 import { paginationOgScene } from "./pagination.og"
+import { panelOgScene } from "./panel.og"
 import { pieChartOgScene } from "./pie-chart.og"
 import { popoverOgScene } from "./popover.og"
 import { progressBarOgScene } from "./progress-bar.og"
@@ -292,6 +293,7 @@ export const ogScenes: Record<string, OgScene> = {
   "note": noteOgScene,
   "number-field": numberFieldOgScene,
   "pagination": paginationOgScene,
+  "panel": panelOgScene,
   "pie-chart": pieChartOgScene,
   "popover": popoverOgScene,
   "progress-bar": progressBarOgScene,

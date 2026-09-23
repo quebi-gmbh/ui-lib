@@ -117,6 +117,7 @@ import { navbarExamples } from "./navbar.examples"
 import { noteExamples } from "./note.examples"
 import { numberFieldExamples } from "./number-field.examples"
 import { paginationExamples } from "./pagination.examples"
+import { panelExamples } from "./panel.examples"
 import { pieChartExamples } from "./pie-chart.examples"
 import { popoverExamples } from "./popover.examples"
 import { progressBarExamples } from "./progress-bar.examples"
@@ -284,6 +285,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "note": noteExamples,
   "number-field": numberFieldExamples,
   "pagination": paginationExamples,
+  "panel": panelExamples,
   "pie-chart": pieChartExamples,
   "popover": popoverExamples,
   "progress-bar": progressBarExamples,

@@ -116,6 +116,7 @@ import { navbarMeta } from "./navbar.meta"
 import { noteMeta } from "./note.meta"
 import { numberFieldMeta } from "./number-field.meta"
 import { paginationMeta } from "./pagination.meta"
+import { panelMeta } from "./panel.meta"
 import { pieChartMeta } from "./pie-chart.meta"
 import { popoverMeta } from "./popover.meta"
 import { progressBarMeta } from "./progress-bar.meta"
@@ -283,6 +284,7 @@ export const metaRegistry: ComponentMeta[] = [
   noteMeta,
   numberFieldMeta,
   paginationMeta,
+  panelMeta,
   pieChartMeta,
   popoverMeta,
   progressBarMeta,
