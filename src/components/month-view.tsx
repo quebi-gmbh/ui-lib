@@ -128,9 +128,10 @@ import { cn } from "@/lib/utils"
  * - **The neighbours are `inert`, not merely faded**, and they stay that way
  *   even when the veil lifts. A peeking month is a picture of what is next: its
  *   day buttons are not tab stops, its chips are not draggable, and a screen
- *   reader is not read a month nobody is looking at. Hovering one clears the
- *   veil so it can be read, and the chevron drawn over it is how you go there —
- *   *seeing* next month is not being in it.
+ *   reader is not read a month nobody is looking at. Hovering one *eases* the
+ *   veil — half the blur, a lighter tint — so it can be read without stopping
+ *   being a peek, and the chevron drawn over it is how you go there. *Seeing*
+ *   next month is not being in it.
  * - **The blur ramps rather than covering.** Two masked `backdrop-blur` layers
  *   and a dimming gradient over the same axis, so a peek is sharp where it
  *   meets the window and blurred at its outer edge. A uniform blur reads as a
@@ -1075,9 +1076,20 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
   )
 }
 
-/** What every layer of the veil does when the pointer is on the peek. */
-const VEIL_FADE =
-  "transition-opacity duration-200 ease-out group-hover/peek:opacity-0 motion-reduce:transition-none"
+/**
+ * How every layer of the veil answers a pointer on the peek — and each of them
+ * answers differently, because hovering a peek eases the blur rather than
+ * clearing it.
+ *
+ * Lifting the veil entirely made the hover a second window: a month at full
+ * sharpness beside the ones being read, with nothing but its position saying
+ * which was which. Easing it keeps the peek a peek and still lets it be read.
+ * The compounding layer goes, which is a real halving of the blur rather than a
+ * blurred picture turned down — eight pixels at the outer edge become four, on
+ * the same ramp — and the tint lightens so the days underneath come through.
+ */
+const VEIL_TRANSITION =
+  "transition-opacity duration-200 ease-out motion-reduce:transition-none"
 
 interface MonthPeekProps {
   /** Which end of the window this peek sits at. */
@@ -1111,18 +1123,18 @@ interface MonthPeekProps {
  * across an element, and stacking two cheap ones is how every progressive blur
  * is actually built.
  *
- * The veil lifts on hover, and each layer carries its own opacity transition
- * rather than the box around them carrying one for all three. That is not a
- * style choice: an ancestor at less than full opacity is a backdrop root, and a
- * `backdrop-filter` inside one has nothing left to sample — so fading the
- * wrapper would drop both blurs on the first frame of the transition and the
- * reveal would pop. Fading each layer is the same picture and composites
- * correctly, because opacity on the filtered element applies to the filter's
- * own result.
+ * The veil eases on hover — see `VEIL_TRANSITION` for what each layer does —
+ * and each layer carries its own opacity transition rather than the box around
+ * them carrying one for all three. That is not a style choice: an ancestor at
+ * less than full opacity is a backdrop root, and a `backdrop-filter` inside one
+ * has nothing left to sample — so fading the wrapper would drop both blurs on
+ * the first frame of the transition and the reveal would pop. Fading each layer
+ * is the same picture and composites correctly, because opacity on the filtered
+ * element applies to the filter's own result.
  *
  * The overlay takes the pointer rather than passing it through, which costs
  * nothing: everything under it is `inert`. The month stays that way while the
- * veil is lifted — *seeing* next month is not being in it, and the chevron is
+ * veil is eased — *seeing* next month is not being in it, and the chevron is
  * how you get there.
  */
 function MonthPeek({ side, width, label, onStep, isFocusable }: MonthPeekProps) {
@@ -1145,14 +1157,19 @@ function MonthPeek({ side, width, label, onStep, isFocusable }: MonthPeekProps) 
         <div
           className={cn(
             "absolute inset-0 backdrop-blur-xs",
-            VEIL_FADE,
+            VEIL_TRANSITION,
+            "group-hover/peek:opacity-80",
             leading ? "mask-r-from-0% mask-r-to-100%" : "mask-l-from-0% mask-l-to-100%",
           )}
         />
+        {/* The one that goes on hover: with it the strip reaches eight pixels
+            at the viewport's edge, without it four, and the ramp is the same
+            shape either way. */}
         <div
           className={cn(
             "absolute inset-0 backdrop-blur-xs",
-            VEIL_FADE,
+            VEIL_TRANSITION,
+            "group-hover/peek:opacity-0",
             leading ? "mask-r-from-0% mask-r-to-50%" : "mask-l-from-0% mask-l-to-50%",
           )}
         />
@@ -1161,7 +1178,8 @@ function MonthPeek({ side, width, label, onStep, isFocusable }: MonthPeekProps) 
         <div
           className={cn(
             "absolute inset-0",
-            VEIL_FADE,
+            VEIL_TRANSITION,
+            "group-hover/peek:opacity-40",
             leading
               ? "bg-gradient-to-l from-transparent to-quebi-bg/70"
               : "bg-gradient-to-r from-transparent to-quebi-bg/70",

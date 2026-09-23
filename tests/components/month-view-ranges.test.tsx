@@ -341,6 +341,14 @@ describe("the carousel's peeking months", () => {
     expect(trailingFar).toContain("mask-l-from-0% mask-l-to-50%")
     expect(trailingDim).toContain("bg-gradient-to-r from-transparent to-quebi-bg/70")
 
+    // Hovering eases the veil rather than clearing it: the compounding blur
+    // goes — eight pixels at the outer edge become four, on the same ramp —
+    // the wide one stays, and the tint lightens. A peek at full sharpness is a
+    // second window with nothing but its position saying it is not one.
+    expect(leadingNear).toContain("group-hover/peek:opacity-80")
+    expect(leadingFar).toContain("group-hover/peek:opacity-0")
+    expect(leadingDim).toContain("group-hover/peek:opacity-40")
+
     // Every layer fades on its own rather than the box around them fading for
     // all three: an ancestor below full opacity is a backdrop root, and a
     // `backdrop-filter` inside one samples nothing, so a wrapper fade would
@@ -348,7 +356,7 @@ describe("the carousel's peeking months", () => {
     for (const veil of veils(container)) {
       expect(veil.className).not.toContain("opacity")
       for (const layer of Array.from(veil.children)) {
-        expect(layer.className).toContain("group-hover/peek:opacity-0")
+        expect(layer.className).toContain("group-hover/peek:opacity-")
         expect(layer.className).toContain("transition-opacity")
       }
     }
