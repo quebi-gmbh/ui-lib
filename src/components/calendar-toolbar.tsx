@@ -1235,6 +1235,29 @@ export function calendarMonthLabel(
   }).format(dayToDate(month, timeZone))
 }
 
+/**
+ * `September – Oktober 2026` — the heading for a run of months.
+ *
+ * `Intl.formatRange` again, for the reason `calendarRangeLabel` gives: the year
+ * is said once when both months share it and twice when they do not, and which
+ * of those a locale does, and how, is not this file's to decide. One month in
+ * and out is `calendarMonthLabel` exactly, so a side-by-side view that has been
+ * narrowed to a single month reads the same as the single-month view does.
+ */
+export function calendarMonthRangeLabel(
+  first: CalendarDate,
+  last: CalendarDate,
+  { locale, timeZone = DEFAULT_CALENDAR_TIME_ZONE, length = "long" }: RangeLabelOptions = {},
+): string {
+  if (!locale) return ""
+  if (first.compare(last) === 0) return calendarMonthLabel(first, { locale, timeZone, length })
+  return getDateTimeFormat(locale, {
+    month: length === "short" ? "short" : "long",
+    year: "numeric",
+    timeZone,
+  }).formatRange(dayToDate(first, timeZone), dayToDate(last, timeZone))
+}
+
 /** `2026` — a year view's heading, through the same formatter as every other. */
 export function calendarYearLabel(
   year: CalendarDate,

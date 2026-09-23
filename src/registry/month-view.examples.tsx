@@ -68,6 +68,11 @@ function month(first: CalendarDate): CalendarEvent[] {
   ]
 }
 
+/** The same month one month on, with ids of its own so the two can be shown together. */
+function nextMonth(first: CalendarDate): CalendarEvent[] {
+  return month(first.add({ months: 1 })).map((event) => ({ ...event, id: `${event.id}-next` }))
+}
+
 const DefaultMonth = () => {
   const first = startOfMonth(today(TIME_ZONE))
   return <MonthView events={month(first)} calendars={CALENDARS} timeZone={TIME_ZONE} />
@@ -194,6 +199,44 @@ const DragToMove = () => {
 }
 
 /**
+ * Two months beside each other — the shape a booking or planning calendar takes,
+ * because "is there room the week after next" is a question that straddles the
+ * 30th. Each grid dims its own leading and trailing days: a day outside
+ * September is outside it whatever is drawn to the right of it.
+ */
+const TwoMonths = () => {
+  const first = startOfMonth(today(TIME_ZONE))
+  return (
+    <MonthView
+      range={{ months: 2 }}
+      events={[...month(first), ...nextMonth(first)]}
+      calendars={CALENDARS}
+      timeZone={TIME_ZONE}
+      weekHeight={104}
+    />
+  )
+}
+
+/**
+ * Eight weeks, anchored on a week rather than on a month: the heading is a week
+ * picker, the chevrons slide the strip one week at a time, and no day is
+ * dimmed because nothing in a strip is outside it. The only seam left is where
+ * the months change, and the 1st says so itself.
+ */
+const RollingWeeks = () => {
+  const first = startOfMonth(today(TIME_ZONE))
+  return (
+    <MonthView
+      range={{ weeks: 8 }}
+      events={[...month(first), ...nextMonth(first)]}
+      calendars={CALENDARS}
+      timeZone={TIME_ZONE}
+      weekHeight={96}
+    />
+  )
+}
+
+/**
  * A month grid ends mid-week, so the last row usually has empty cells in the
  * corner. That is where a legend can sit for free — and `variant="overlay"` is
  * what keeps it a legend on the months where it does not.
@@ -231,6 +274,18 @@ export const monthViewExamples: ComponentExample[] = [
     description:
       "The corner a month ends in is usually empty, which makes it the cheapest place to put the key — and the least reliable, because next month the weeks reach it. variant=\"overlay\" settles that: the row sits on an elevated, blurred surface, so it reads the same over a spare Saturday and over a full one. Placement stays a class, not a prop.",
     render: () => <OverlayLegend />,
+  },
+  {
+    title: "Two months, side by side",
+    description:
+      "range={{ months: 2 }} draws this month and the next in one view. The heading names the pair — September – Oktober 2026 — and the chevrons step a whole page, so stepping forward lands on November and December rather than on an overlapping pair. Each grid keeps its own weekday header and dims its own outside days; a chip dragged past the edge of its month clamps there, because the grid beside it is a coordinate space of its own.",
+    render: () => <TwoMonths />,
+  },
+  {
+    title: "A rolling strip of weeks",
+    description:
+      "range={{ weeks: 8 }} is the same grid with the month taken out of it: a fixed eight rows starting with the week the anchor date falls in. The reader picks a start week rather than a month — the heading opens a week picker — and the chevrons move it one week at a time, so the strip slides rather than paging. Nothing is dimmed, since no day is outside a strip, and the 1st carries its month name as the one marker of where the seam is.",
+    render: () => <RollingWeeks />,
   },
   {
     title: "\"+N more\" overflow",

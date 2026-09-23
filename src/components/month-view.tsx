@@ -1,6 +1,6 @@
 "use client"
 
-import type { CalendarDate, ZonedDateTime } from "@internationalized/date"
+import { type CalendarDate, startOfMonth, type ZonedDateTime } from "@internationalized/date"
 import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { useMove } from "react-aria"
 import { Button } from "react-aria-components"
@@ -20,7 +20,8 @@ import {
   withoutCancelling,
 } from "@/components/calendar-shell"
 import {
-  calendarMonthLabel,
+  calendarMonthRangeLabel,
+  calendarRangeLabel,
   type CalendarToolbarLabelVariant,
   CalendarToolbar,
   type CalendarViewName,
@@ -35,6 +36,7 @@ import {
   limitLanes,
   monthRange,
   packBands,
+  weekStrip,
 } from "@/lib/calendar"
 import { getDateTimeFormat } from "@/lib/intl"
 import { cn } from "@/lib/utils"
@@ -76,13 +78,57 @@ import { cn } from "@/lib/utils"
  * travelled, so both halves of a trip spanning a weekend can be picked up. The
  * day grids refuse their cut blocks because a drop there is an absolute
  * position, and half a block off the axis has no position to report.
+ *
+ * ## Two months, or eight weeks
+ *
+ * `range` says what the grid is a grid *of*, and there are two answers because
+ * there are two questions a month grid gets asked:
+ *
+ * - `{ months: 2 }` draws two month grids beside each other — this month and
+ *   the next — which is the shape every booking and planning calendar uses,
+ *   because "is there room the week after next" is a question that straddles
+ *   the 30th. Each grid keeps its own header row and dims its own leading and
+ *   trailing days, since a day outside September is outside it whatever is
+ *   drawn to the right. The chevrons step a whole page, so stepping forward
+ *   from September–October lands on November–December and no month is read
+ *   twice.
+ * - `{ weeks: 8 }` drops the month entirely: eight rows of seven days, the
+ *   first of them the week the anchor date falls in, and no dimming at all
+ *   because nothing in a strip is outside it. The heading is a *week* picker
+ *   rather than a month one — the reader is choosing where the strip starts,
+ *   and the chevrons slide it one week at a time, which is what makes it read
+ *   as endless rather than as pages. The one seam left is the month boundary,
+ *   and the grid marks it where it happens: the 1st says `1. Okt` instead of
+ *   `1`.
+ *
+ * Both are the same grid, the same packing and the same gesture. What a drag
+ * cannot do is cross from one grid to the next: each is its own coordinate
+ * space, and a pointer over October's grid is not measurable against
+ * September's, so a chip dragged off the edge of its own month clamps to it.
  */
+
+/**
+ * What the grid draws. One object rather than two numbers, because "how many
+ * months" and "how many weeks" are answers to the same question and a view
+ * that had been told both would have to ignore one of them in silence.
+ */
+export type MonthViewRange =
+  /** Whole months, side by side. `1` is the default single grid. */
+  | { months: number }
+  /** A rolling strip of whole weeks, anchored on a week rather than a month. */
+  | { weeks: number }
+
 export interface MonthViewProps<E extends CalendarEvent = CalendarEvent> {
-  /** Any day in the month on show. Controlled. */
+  /** Any day in the month on show — or in the first month, or in the strip's first week. Controlled. */
   date?: CalendarDate
   /** Any day in the initial month. Defaults to today; pin it on a prerendered route. */
   defaultDate?: CalendarDate
   onDateChange?: (date: CalendarDate) => void
+  /**
+   * One month, several months side by side, or a rolling strip of weeks.
+   * Default `{ months: 1 }`. See the note above.
+   */
+  range?: MonthViewRange
   events: readonly E[]
   calendars?: readonly CalendarSource[]
   timeZone?: string
@@ -110,8 +156,12 @@ export interface MonthViewProps<E extends CalendarEvent = CalendarEvent> {
   /**
    * The toolbar's heading as a picker, or as plain text. Default "picker".
    *
-   * A month grid, not a day one: the heading here reads `September 2026`, and
-   * a day picker would ask for a day this grid never shows the choice of.
+   * Which grid it opens follows `range` rather than being a prop of its own,
+   * because the heading names what you are looking at and the picker has to
+   * offer that: months are picked by month (`September 2026`, and a day picker
+   * would ask for a day this grid never shows the choice of), and a strip is
+   * picked by week, because the week it starts on is the only thing about it
+   * the reader chooses.
    */
   labelVariant?: CalendarToolbarLabelVariant
   /**
@@ -444,10 +494,22 @@ function bandCorners(band: EventBand): string {
   )
 }
 
+/** `range`'s default, hoisted so it is not a new object on every render. */
+const SINGLE_MONTH: MonthViewRange = { months: 1 }
+
+/** One grid to draw: its weeks, and the month it dims against — or no month. */
+interface MonthGridSpec {
+  /** Stable across a step, so React keeps the rows it can. */
+  key: string
+  month: CalendarDate | null
+  weeks: CalendarDate[][]
+}
+
 export function MonthView<E extends CalendarEvent = CalendarEvent>({
   date,
   defaultDate,
   onDateChange,
+  range = SINGLE_MONTH,
   events,
   calendars,
   timeZone = DEFAULT_CALENDAR_TIME_ZONE,
@@ -475,56 +537,87 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
 }: MonthViewProps<E>) {
   const locale = useCalendarLocale(localeProp)
   const todayDate = useCalendarToday(now, timeZone)
+
+  // Read as numbers before anything else touches it: `range` is written as an
+  // object literal in JSX and is therefore a new identity every render, so the
+  // grids have to be memoised on what it *says*. Both are clamped once, here —
+  // `{ months: 0 }` is a view of nothing, and a view of nothing is a bug
+  // wherever it is drawn.
+  const stripWeeks = "weeks" in range ? Math.max(1, Math.trunc(range.weeks)) : null
+  const monthCount = "weeks" in range ? 1 : Math.max(1, Math.trunc(range.months))
+
   const navigation = useCalendarNavigation({
     date,
     defaultDate,
     onDateChange,
-    step: { months: 1 },
+    // A page at a time in months — September–October steps to November–December
+    // rather than to an overlapping pair — and one week at a time in a strip,
+    // which is the whole of what "endless" means here.
+    step: stripWeeks === null ? { months: monthCount } : { weeks: 1 },
     timeZone,
   })
 
-  const weeks = useMemo(
-    () => monthRange(navigation.date, locale, firstDayOfWeek),
-    [navigation.date, locale, firstDayOfWeek],
-  )
-  const maxLanes = Math.max(1, Math.floor((weekHeight - CELL_HEADER) / LANE_HEIGHT))
-  const headerDays = weeks[0] ?? []
+  const grids = useMemo<MonthGridSpec[]>(() => {
+    if (stripWeeks !== null) {
+      return [
+        {
+          key: "strip",
+          month: null,
+          weeks: weekStrip(navigation.date, locale, stripWeeks, firstDayOfWeek),
+        },
+      ]
+    }
+    const first = startOfMonth(navigation.date)
+    return Array.from({ length: monthCount }, (_, index) => {
+      const month = first.add({ months: index })
+      return { key: month.toString(), month, weeks: monthRange(month, locale, firstDayOfWeek) }
+    })
+  }, [stripWeeks, monthCount, navigation.date, locale, firstDayOfWeek])
 
-  const gridRef = useRef<HTMLDivElement>(null)
+  const maxLanes = Math.max(1, Math.floor((weekHeight - CELL_HEADER) / LANE_HEIGHT))
+
   const hintId = useId()
   const [announcement, setAnnouncement] = useState("")
-  const move = useMonthEventMove<E>({
-    weeks,
-    weekHeight,
-    gridRef,
-    isEventEditable,
-    onEventChange,
-    hintId,
-    announce: (event, next) =>
-      setAnnouncement(
-        moveAnnouncement
-          ? moveAnnouncement(event, next)
-          : `${event.title}: ${getDateTimeFormat(locale, {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-              timeZone,
-            }).format(next.start.toDate())}`,
-      ),
-  })
 
-  const ghosts = useMemo(
-    () => (move.preview ? previewBands(events, move.preview, weeks, timeZone) : []),
-    [move.preview, events, weeks, timeZone],
-  )
+  // Each grid has its own move controller, so `enabled` is asked here as well:
+  // the hint and the live region belong to the view, and they are needed under
+  // exactly the condition every one of those controllers turns on under.
+  const moveEnabled = onEventChange !== undefined && isEventEditable !== undefined
+
+  const announce = (event: E, next: CalendarEventChange) =>
+    setAnnouncement(
+      moveAnnouncement
+        ? moveAnnouncement(event, next)
+        : `${event.title}: ${getDateTimeFormat(locale, {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            timeZone,
+          }).format(next.start.toDate())}`,
+    )
+
+  const firstMonth = grids[0]?.month
+  const lastMonth = grids[grids.length - 1]?.month
+  const defaultLabel =
+    firstMonth && lastMonth
+      ? calendarMonthRangeLabel(firstMonth, lastMonth, { locale, timeZone })
+      : // A strip has no month to name, so it names its ends — the same range
+        // label the week view's heading uses, over eight weeks instead of one.
+        calendarRangeLabel(grids[0]?.weeks.flat() ?? [], { locale, timeZone })
 
   return (
     <div data-slot="month-view" className={cn("flex w-full flex-col gap-3", className)}>
       {showToolbar ? (
         <CalendarToolbar
-          label={label ?? calendarMonthLabel(navigation.date, { locale, timeZone })}
+          label={label ?? defaultLabel}
           labelVariant={labelVariant}
-          pickerGranularity="month"
+          pickerGranularity={stripWeeks === null ? "month" : "week"}
+          // Which seven days a row is, told to the grid the heading opens as
+          // well — a week picker that disagreed with the strip about where a
+          // week starts would hand back a week the strip then redraws as a
+          // different one. `WeekView` passes the same pair for the same reason.
+          locale={locale}
+          firstDayOfWeek={firstDayOfWeek}
           date={navigation.date}
           onDateChange={navigation.goTo}
           view={view}
@@ -536,75 +629,38 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
         />
       ) : null}
 
-      <div className="w-full overflow-hidden rounded-quebi-md border border-quebi-line/10 bg-quebi-bg">
-        <div className="grid grid-cols-7 border-quebi-line/10 border-b">
-          {headerDays.map((day) => (
-            <div
-              key={day.toString()}
-              className="px-2 py-2 text-center text-quebi-fg-subtle text-xs uppercase"
-            >
-              {getDateTimeFormat(locale, { weekday: "short", timeZone }).format(
-                dayToDate(day, timeZone),
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* The weeks share one box, and that box is what a drag is measured
-            against: a chip lives in its own row, and a row has no coordinate
-            space the row above it is expressible in. It is also where the
-            ghost is drawn, for the same reason `CalendarShell` draws its own
-            across the whole grid rather than inside a day column. */}
-        <div ref={gridRef} data-slot="month-grid" className="relative">
-          {weeks.map((week, weekIndex) => (
-            <MonthWeek
-              key={week[0]?.toString() ?? ""}
-              week={week}
-              weekIndex={weekIndex}
-              month={navigation.date}
-              events={events}
-              calendars={calendars}
-              timeZone={timeZone}
-              locale={locale}
-              weekHeight={weekHeight}
-              maxLanes={maxLanes}
-              moreLabel={moreLabel}
-              onMoreClick={onMoreClick}
-              onDayClick={onDayClick}
-              onEventClick={onEventClick}
-              selectedEventId={selectedEventId ?? null}
-              onSelectionChange={onSelectionChange}
-              today={todayDate}
-              move={move}
-            />
-          ))}
-
-          {ghosts.map(({ weekIndex, band }) => (
-            <CalendarEventRow
-              key={`${band.event.id}:${weekIndex}`}
-              slot="month-move-preview"
-              isPreview
-              event={band.event}
-              calendars={calendars}
-              locale={locale}
-              timeZone={timeZone}
-              isSelected={false}
-              onActivate={NO_OP}
-              style={{
-                ...bandGeometry(band, DAYS_PER_WEEK),
-                // The lane is the one the drop would give it — clamped to the
-                // last lane the cell draws, because a target day that is
-                // already full puts the chip behind its own "+N more" and a
-                // ghost on the lane after that would hang into the week below.
-                top:
-                  weekIndex * weekHeight +
-                  CELL_HEADER +
-                  Math.min(band.lane, maxLanes - 1) * LANE_HEIGHT,
-              }}
-              className={cn("absolute", bandCorners(band))}
-            />
-          ))}
-        </div>
+      {/* However many grids there are, they are one row of them: a single month
+          is a single flex child at full width, and the wrap is what makes two
+          months stack instead of squeeze on a narrow page. `min-w-72` is the
+          width below which seven columns stop being readable, and it is only
+          set when there is more than one grid — a lone month narrower than
+          that is still the only thing on the page. */}
+      <div className="flex w-full flex-wrap items-start gap-3">
+        {grids.map((grid) => (
+          <MonthGrid
+            key={grid.key}
+            weeks={grid.weeks}
+            month={grid.month}
+            events={events}
+            calendars={calendars}
+            timeZone={timeZone}
+            locale={locale}
+            weekHeight={weekHeight}
+            maxLanes={maxLanes}
+            moreLabel={moreLabel}
+            onMoreClick={onMoreClick}
+            onDayClick={onDayClick}
+            onEventClick={onEventClick}
+            selectedEventId={selectedEventId ?? null}
+            onSelectionChange={onSelectionChange}
+            today={todayDate}
+            isEventEditable={isEventEditable}
+            onEventChange={onEventChange}
+            announce={announce}
+            hintId={hintId}
+            className={grids.length > 1 ? "min-w-72" : undefined}
+          />
+        ))}
       </div>
 
       {/* The keyboard half of the gesture needs saying out loud, twice over: a
@@ -613,7 +669,7 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
           not a channel every reader has. The region is `polite` — a move is
           the reader's own doing, so it waits its turn rather than
           interrupting. */}
-      {move.enabled ? (
+      {moveEnabled ? (
         <>
           <span id={hintId} className="sr-only">
             {moveHintLabel}
@@ -627,13 +683,168 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
   )
 }
 
+interface MonthGridProps<E extends CalendarEvent> {
+  weeks: CalendarDate[][]
+  /** The month the leading and trailing days are dimmed against. Null in a strip. */
+  month: CalendarDate | null
+  events: readonly E[]
+  calendars: readonly CalendarSource[] | undefined
+  timeZone: string
+  locale: string
+  weekHeight: number
+  maxLanes: number
+  moreLabel: (count: number) => string
+  onMoreClick: ((day: CalendarDate, events: E[]) => void) | undefined
+  onDayClick: ((day: CalendarDate) => void) | undefined
+  onEventClick: ((event: E) => void) | undefined
+  selectedEventId: string | null
+  onSelectionChange: ((id: string | null) => void) | undefined
+  today: CalendarDate | null
+  isEventEditable: boolean | ((event: E) => boolean) | undefined
+  onEventChange: ((event: E, next: CalendarEventChange) => void) | undefined
+  announce: (event: E, next: CalendarEventChange) => void
+  hintId: string
+  className?: string
+}
+
+/**
+ * One box of weekday headers and week rows — the whole of what a month grid is
+ * drawn as, and what a side-by-side view draws more than one of.
+ *
+ * The move gesture is set up here rather than in `MonthView` because it is
+ * measured against *this* box: a cell is numbered `week * 7 + column` from this
+ * grid's own top-left, and the pointer is placed against this grid's rect. Two
+ * months are therefore two controllers, which is also the answer to what
+ * happens when a chip is dragged past the edge of its own month — it clamps
+ * there, because the grid next to it is a coordinate space this gesture cannot
+ * express.
+ */
+function MonthGrid<E extends CalendarEvent>({
+  weeks,
+  month,
+  events,
+  calendars,
+  timeZone,
+  locale,
+  weekHeight,
+  maxLanes,
+  moreLabel,
+  onMoreClick,
+  onDayClick,
+  onEventClick,
+  selectedEventId,
+  onSelectionChange,
+  today,
+  isEventEditable,
+  onEventChange,
+  announce,
+  hintId,
+  className,
+}: MonthGridProps<E>) {
+  const gridRef = useRef<HTMLDivElement>(null)
+  const move = useMonthEventMove<E>({
+    weeks,
+    weekHeight,
+    gridRef,
+    isEventEditable,
+    onEventChange,
+    announce,
+    hintId,
+  })
+
+  const ghosts = useMemo(
+    () => (move.preview ? previewBands(events, move.preview, weeks, timeZone) : []),
+    [move.preview, events, weeks, timeZone],
+  )
+
+  const headerDays = weeks[0] ?? []
+
+  return (
+    <div
+      className={cn(
+        "min-w-0 flex-1 overflow-hidden rounded-quebi-md border border-quebi-line/10 bg-quebi-bg",
+        className,
+      )}
+    >
+      <div className="grid grid-cols-7 border-quebi-line/10 border-b">
+        {headerDays.map((day) => (
+          <div
+            key={day.toString()}
+            className="px-2 py-2 text-center text-quebi-fg-subtle text-xs uppercase"
+          >
+            {getDateTimeFormat(locale, { weekday: "short", timeZone }).format(
+              dayToDate(day, timeZone),
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* The weeks share one box, and that box is what a drag is measured
+          against: a chip lives in its own row, and a row has no coordinate
+          space the row above it is expressible in. It is also where the
+          ghost is drawn, for the same reason `CalendarShell` draws its own
+          across the whole grid rather than inside a day column. */}
+      <div ref={gridRef} data-slot="month-grid" className="relative">
+        {weeks.map((week, weekIndex) => (
+          <MonthWeek
+            key={week[0]?.toString() ?? ""}
+            week={week}
+            weekIndex={weekIndex}
+            month={month}
+            events={events}
+            calendars={calendars}
+            timeZone={timeZone}
+            locale={locale}
+            weekHeight={weekHeight}
+            maxLanes={maxLanes}
+            moreLabel={moreLabel}
+            onMoreClick={onMoreClick}
+            onDayClick={onDayClick}
+            onEventClick={onEventClick}
+            selectedEventId={selectedEventId}
+            onSelectionChange={onSelectionChange}
+            today={today}
+            move={move}
+          />
+        ))}
+
+        {ghosts.map(({ weekIndex, band }) => (
+          <CalendarEventRow
+            key={`${band.event.id}:${weekIndex}`}
+            slot="month-move-preview"
+            isPreview
+            event={band.event}
+            calendars={calendars}
+            locale={locale}
+            timeZone={timeZone}
+            isSelected={false}
+            onActivate={NO_OP}
+            style={{
+              ...bandGeometry(band, DAYS_PER_WEEK),
+              // The lane is the one the drop would give it — clamped to the
+              // last lane the cell draws, because a target day that is
+              // already full puts the chip behind its own "+N more" and a
+              // ghost on the lane after that would hang into the week below.
+              top:
+                weekIndex * weekHeight +
+                CELL_HEADER +
+                Math.min(band.lane, maxLanes - 1) * LANE_HEIGHT,
+            }}
+            className={cn("absolute", bandCorners(band))}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
 const NO_OP = () => {}
 
 interface MonthWeekProps<E extends CalendarEvent> {
   week: CalendarDate[]
   /** Which row this is, so a chip can say which cell it was grabbed from. */
   weekIndex: number
-  month: CalendarDate
+  /** The month to dim against, or null in a strip, where no day is outside. */
+  month: CalendarDate | null
   events: readonly E[]
   calendars: readonly CalendarSource[] | undefined
   timeZone: string
@@ -685,8 +896,13 @@ function MonthWeek<E extends CalendarEvent>({
     <div className="relative border-quebi-line/10 border-b last:border-b-0" style={{ height: weekHeight }}>
       <div className="grid h-full grid-cols-7">
         {week.map((day) => {
-          const outside = !isInMonth(day, month)
+          const outside = month !== null && !isInMonth(day, month)
           const isToday = today !== null && today.compare(day) === 0
+          // The one seam a strip still has. With no month above the grid to
+          // say which one you are reading, the 1st says it itself — `1. Okt`
+          // — and every other day stays a bare number, because a date line
+          // that spelled the month out twice a row would be reading noise.
+          const opensMonth = month === null && day.day === 1
           return (
             <div
               key={day.toString()}
@@ -711,9 +927,11 @@ function MonthWeek<E extends CalendarEvent>({
                         : "text-quebi-fg",
                   )}
                 >
-                  {getDateTimeFormat(locale, { day: "numeric", timeZone }).format(
-                    dayToDate(day, timeZone),
-                  )}
+                  {getDateTimeFormat(locale, {
+                    day: "numeric",
+                    ...(opensMonth ? { month: "short" as const } : {}),
+                    timeZone,
+                  }).format(dayToDate(day, timeZone))}
                 </Button>
               </div>
             </div>
