@@ -38,7 +38,8 @@ import {
   packBands,
   weekStrip,
 } from "@/lib/calendar"
-import { getDateTimeFormat } from "@/lib/intl"
+import { ToggleGroup, ToggleGroupItem } from "@/components/toggle-group"
+import { getDateTimeFormat, getNumberFormat } from "@/lib/intl"
 import { cn } from "@/lib/utils"
 
 /**
@@ -105,6 +106,39 @@ import { cn } from "@/lib/utils"
  * cannot do is cross from one grid to the next: each is its own coordinate
  * space, and a pointer over October's grid is not measurable against
  * September's, so a chip dragged off the edge of its own month clamps to it.
+ *
+ * ## The carousel
+ *
+ * `{ months: 2, carousel: true }` is the side-by-side view through a window:
+ * the months either side of it show a slice of themselves, blurred and dimmed,
+ * and the chevrons move by one month rather than by a page — so the month that
+ * was peeking is the month you get, and the reader can see what they are
+ * stepping into before they step. How many months the window holds is *the
+ * reader's* choice here rather than the caller's: `choices` puts a segmented
+ * control in the toolbar beside the view switcher, and `onMonthsChange`
+ * reports what was picked. It is the one thing about a calendar's density that
+ * a reader can answer better than the page can — a laptop holds three months,
+ * the same page on a tablet holds one.
+ *
+ * Three decisions worth knowing about, because each of them is a thing a
+ * carousel usually does and this one does not:
+ *
+ * - **The neighbours are `inert`, not merely faded.** A blurred month is a
+ *   picture of what is next; its day buttons are not tab stops, its chips are
+ *   not draggable, and a screen reader is not read a month nobody can see.
+ * - **It is not `Carousel`.** That component is embla over a fixed list of
+ *   slides, and this is an unbounded run of months generated from a date the
+ *   toolbar owns. There is no list to be at slide 3 of, and the prev/next
+ *   controls already exist one component up.
+ * - **A month step redraws rather than slides.** A band with no fixed origin
+ *   has nothing to translate against, and the usual trick — animate, then
+ *   commit on `transitionend` — is a state machine that stops committing the
+ *   moment transitions are off, which `prefers-reduced-motion` does. What does
+ *   animate is the one change that is a change of *geometry* rather than of
+ *   content: switching the window from two months to three widens the cells
+ *   and slides the band under them. There is no swipe, either, and for a
+ *   sharper reason — on a touch screen a swipe across the grid is the gesture
+ *   that drags an event to another day.
  */
 
 /**
@@ -113,10 +147,49 @@ import { cn } from "@/lib/utils"
  * that had been told both would have to ignore one of them in silence.
  */
 export type MonthViewRange =
-  /** Whole months, side by side. `1` is the default single grid. */
-  | { months: number }
+  | {
+      /**
+       * Whole months, side by side. `1` is the default single grid.
+       *
+       * In a carousel this is where the reader starts rather than where they
+       * are kept: it seeds the window, and `choices` is what they may change
+       * it to. Passing a new one moves the window back — the prop leads, the
+       * reader's choice follows it, which is what makes the count controllable
+       * from outside without a second prop for the same number.
+       */
+      months: number
+      /** Draw them through a window, with the months either side peeking in. */
+      carousel?: boolean | MonthCarouselOptions
+    }
   /** A rolling strip of whole weeks, anchored on a week rather than a month. */
   | { weeks: number }
+
+/** How the window is cut, and what the reader may change about it. */
+export interface MonthCarouselOptions {
+  /**
+   * How much of the month either side shows, as a fraction of one grid.
+   * Default 0.22, clamped to between 0.05 and 0.5.
+   *
+   * Enough to read a weekday header and the shape of the first week — which is
+   * what makes it a preview of somewhere to go rather than a decorative edge.
+   * Half is the ceiling because at more than that the thing peeking is as
+   * present as the thing in the window, and the window has stopped being one.
+   */
+  peek?: number
+  /**
+   * The counts the reader may switch between, as a segmented control in the
+   * toolbar. Default `[1, 2, 3]`, plus `months` if it is not among them.
+   *
+   * An empty list draws no control and the count stays the caller's, which is
+   * the carousel with the reader's half of it turned off — a page that decides
+   * its own density from its own breakpoint wants exactly that.
+   */
+  choices?: readonly number[]
+  /** The control's accessible name. Default "Months shown". */
+  choicesLabel?: string
+  /** `(n) => "2 months"` — what one choice is called to a screen reader. */
+  choiceLabel?: (count: number) => string
+}
 
 export interface MonthViewProps<E extends CalendarEvent = CalendarEvent> {
   /** Any day in the month on show — or in the first month, or in the strip's first week. Controlled. */
@@ -125,10 +198,18 @@ export interface MonthViewProps<E extends CalendarEvent = CalendarEvent> {
   defaultDate?: CalendarDate
   onDateChange?: (date: CalendarDate) => void
   /**
-   * One month, several months side by side, or a rolling strip of weeks.
-   * Default `{ months: 1 }`. See the note above.
+   * One month, several months side by side, a carousel of them, or a rolling
+   * strip of weeks. Default `{ months: 1 }`. See the note above.
    */
   range?: MonthViewRange
+  /**
+   * Fires when the reader changes how many months a carousel shows.
+   *
+   * The view keeps the choice itself, so this is a report rather than a
+   * requirement — take it to persist the density, or to move `range.months`
+   * with it, or ignore it.
+   */
+  onMonthsChange?: (months: number) => void
   events: readonly E[]
   calendars?: readonly CalendarSource[]
   timeZone?: string
@@ -502,6 +583,44 @@ interface MonthGridSpec {
   key: string
   month: CalendarDate | null
   weeks: CalendarDate[][]
+  /** Drawn at the edge of a carousel: a slice of a month, not a month. */
+  peeking: boolean
+}
+
+/** The carousel's settings, with every default already applied. */
+interface ResolvedCarousel {
+  peek: number
+  choices: readonly number[]
+  choicesLabel: string
+  choiceLabel: (count: number) => string
+}
+
+const CAROUSEL_DEFAULT_CHOICES = [1, 2, 3]
+
+/**
+ * `carousel` as the four things the render needs, or null for no carousel.
+ *
+ * `choices` always contains the count the view is on, however it got there: a
+ * segmented control whose options do not include the current one has no
+ * selected segment, and a control with nothing selected is a control that
+ * looks broken rather than one that is showing a state.
+ */
+function resolveCarousel(
+  carousel: boolean | MonthCarouselOptions | undefined,
+  months: number,
+): ResolvedCarousel | null {
+  if (!carousel) return null
+  const options = carousel === true ? {} : carousel
+  const choices = options.choices ?? CAROUSEL_DEFAULT_CHOICES
+  return {
+    peek: Math.min(0.5, Math.max(0.05, options.peek ?? 0.22)),
+    choices:
+      choices.length === 0 || choices.includes(months)
+        ? choices
+        : [...choices, months].sort((a, b) => a - b),
+    choicesLabel: options.choicesLabel ?? "Months shown",
+    choiceLabel: options.choiceLabel ?? ((count) => (count === 1 ? "1 month" : `${count} months`)),
+  }
 }
 
 export function MonthView<E extends CalendarEvent = CalendarEvent>({
@@ -509,6 +628,7 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
   defaultDate,
   onDateChange,
   range = SINGLE_MONTH,
+  onMonthsChange,
   events,
   calendars,
   timeZone = DEFAULT_CALENDAR_TIME_ZONE,
@@ -544,15 +664,32 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
   // wherever it is drawn.
   const stripWeeks = "weeks" in range ? Math.max(1, Math.trunc(range.weeks)) : null
   const monthCount = "weeks" in range ? 1 : Math.max(1, Math.trunc(range.months))
+  const carousel = "weeks" in range ? null : resolveCarousel(range.carousel, monthCount)
+
+  // The reader's count, seeded from the prop and re-seeded whenever the prop
+  // changes — the adjust-state-during-render pattern rather than an effect,
+  // because a render that drew the old count first would be a frame of the
+  // wrong number of months. The caller leads and the reader follows, which is
+  // what lets one number be owned from either side without a second prop for
+  // it. Outside a carousel there is no control and the count is the prop.
+  const [chosenMonths, setChosenMonths] = useState(monthCount)
+  const [seededFrom, setSeededFrom] = useState(monthCount)
+  if (seededFrom !== monthCount) {
+    setSeededFrom(monthCount)
+    setChosenMonths(monthCount)
+  }
+  const visibleMonths = carousel ? chosenMonths : monthCount
 
   const navigation = useCalendarNavigation({
     date,
     defaultDate,
     onDateChange,
     // A page at a time in months — September–October steps to November–December
-    // rather than to an overlapping pair — and one week at a time in a strip,
-    // which is the whole of what "endless" means here.
-    step: stripWeeks === null ? { months: monthCount } : { weeks: 1 },
+    // rather than to an overlapping pair — one week at a time in a strip, which
+    // is the whole of what "endless" means there, and one month at a time in a
+    // carousel, because the month peeking in at the edge is the thing the press
+    // is a press towards.
+    step: stripWeeks !== null ? { weeks: 1 } : { months: carousel ? 1 : monthCount },
     timeZone,
   })
 
@@ -563,15 +700,25 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
           key: "strip",
           month: null,
           weeks: weekStrip(navigation.date, locale, stripWeeks, firstDayOfWeek),
+          peeking: false,
         },
       ]
     }
-    const first = startOfMonth(navigation.date)
-    return Array.from({ length: monthCount }, (_, index) => {
+    // A carousel draws one month more at each end than it shows, and those two
+    // are what the window is cut out of.
+    const window = startOfMonth(navigation.date)
+    const first = carousel ? window.subtract({ months: 1 }) : window
+    const count = carousel ? visibleMonths + 2 : monthCount
+    return Array.from({ length: count }, (_, index) => {
       const month = first.add({ months: index })
-      return { key: month.toString(), month, weeks: monthRange(month, locale, firstDayOfWeek) }
+      return {
+        key: month.toString(),
+        month,
+        weeks: monthRange(month, locale, firstDayOfWeek),
+        peeking: carousel !== null && (index === 0 || index === count - 1),
+      }
     })
-  }, [stripWeeks, monthCount, navigation.date, locale, firstDayOfWeek])
+  }, [stripWeeks, monthCount, visibleMonths, carousel, navigation.date, locale, firstDayOfWeek])
 
   const maxLanes = Math.max(1, Math.floor((weekHeight - CELL_HEADER) / LANE_HEIGHT))
 
@@ -595,14 +742,25 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
           }).format(next.start.toDate())}`,
     )
 
-  const firstMonth = grids[0]?.month
-  const lastMonth = grids[grids.length - 1]?.month
+  // The heading names what is *in* the window; the months peeking at its edges
+  // are not being looked at yet.
+  const shown = grids.filter((grid) => !grid.peeking)
+  const firstMonth = shown[0]?.month
+  const lastMonth = shown[shown.length - 1]?.month
   const defaultLabel =
     firstMonth && lastMonth
       ? calendarMonthRangeLabel(firstMonth, lastMonth, { locale, timeZone })
       : // A strip has no month to name, so it names its ends — the same range
         // label the week view's heading uses, over eight weeks instead of one.
         calendarRangeLabel(grids[0]?.weeks.flat() ?? [], { locale, timeZone })
+
+  /** One cell as a percentage of the window: the band's whole geometry. */
+  const cellWidth = carousel ? 100 / (visibleMonths + 2 * carousel.peek) : 100
+
+  const chooseMonths = (count: number) => {
+    setChosenMonths(count)
+    onMonthsChange?.(count)
+  }
 
   return (
     <div data-slot="month-view" className={cn("flex w-full flex-col gap-3", className)}>
@@ -625,42 +783,134 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
           onPrevious={navigation.goToPrevious}
           onNext={navigation.goToNext}
           onToday={navigation.goToToday}
-        />
+        >
+          {/* The toolbar's `children` slot, which is the one right after the
+              view switcher — the two controls are the same question asked
+              twice (how much calendar is on screen), so they sit together and
+              are drawn the same way. */}
+          {carousel && carousel.choices.length > 1 ? (
+            <ToggleGroup
+              size="sm"
+              height="control"
+              aria-label={carousel.choicesLabel}
+              disallowEmptySelection
+              selectedKeys={[String(visibleMonths)]}
+              onSelectionChange={(keys) => {
+                const key = [...keys][0]
+                if (typeof key === "string") chooseMonths(Number(key))
+              }}
+            >
+              {carousel.choices.map((count) => (
+                <ToggleGroupItem key={count} id={String(count)} aria-label={carousel.choiceLabel(count)}>
+                  {/* A digit is still a number, and this site is prerendered:
+                      `getNumberFormat` is how every other number here reaches
+                      the DOM, so a locale that writes its digits differently
+                      writes these ones too. */}
+                  {getNumberFormat(locale, {}).format(count)}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          ) : null}
+        </CalendarToolbar>
       ) : null}
 
-      {/* However many grids there are, they are one row of them: a single month
-          is a single flex child at full width, and the wrap is what makes two
-          months stack instead of squeeze on a narrow page. `min-w-72` is the
-          width below which seven columns stop being readable, and it is only
-          set when there is more than one grid — a lone month narrower than
-          that is still the only thing on the page. */}
-      <div className="flex w-full flex-wrap items-start gap-3">
-        {grids.map((grid) => (
-          <MonthGrid
-            key={grid.key}
-            weeks={grid.weeks}
-            month={grid.month}
-            events={events}
-            calendars={calendars}
-            timeZone={timeZone}
-            locale={locale}
-            weekHeight={weekHeight}
-            maxLanes={maxLanes}
-            moreLabel={moreLabel}
-            onMoreClick={onMoreClick}
-            onDayClick={onDayClick}
-            onEventClick={onEventClick}
-            selectedEventId={selectedEventId ?? null}
-            onSelectionChange={onSelectionChange}
-            today={todayDate}
-            isEventEditable={isEventEditable}
-            onEventChange={onEventChange}
-            announce={announce}
-            hintId={hintId}
-            className={grids.length > 1 ? "min-w-72" : undefined}
-          />
-        ))}
-      </div>
+      {carousel ? (
+        // The window, and the band that runs through it. The band is `visible
+        // + 2` cells wide, each cell `100 / (visible + 2 * peek)` percent of
+        // the window; sliding it left by all but the peek of one cell puts the
+        // first month of the window at the window's own left edge and leaves a
+        // slice of the month before it showing. Percentages throughout, so the
+        // arithmetic holds at any width without measuring anything — which is
+        // also why the gutter is padding inside a cell rather than a `gap`: a
+        // gap is a length, and a length in this sum would have to be measured.
+        <div data-slot="month-carousel" className="w-full overflow-hidden">
+          <div
+            className={cn(
+              "flex items-start",
+              // The one honest animation here: changing the count changes the
+              // geometry, so the cells widen and the band slides under them.
+              // A month step changes the *content* and is not animated — see
+              // the note at the top of this file.
+              "transition-transform duration-300 ease-out motion-reduce:transition-none",
+            )}
+            style={{ transform: `translateX(-${(1 - carousel.peek) * cellWidth}%)` }}
+          >
+            {grids.map((grid) => (
+              <div
+                key={grid.key}
+                // `inert` rather than a class and a `tabIndex={-1}`: a month
+                // nobody can see should not be a tab stop, should not be read
+                // out, and should not answer a click that lands on the blurred
+                // slice of it. One attribute says all three.
+                inert={grid.peeking || undefined}
+                className={cn(
+                  "shrink-0 px-1.5 transition-[flex-basis,filter,opacity] duration-300 ease-out",
+                  "motion-reduce:transition-none",
+                  grid.peeking && "blur-xs opacity-60",
+                )}
+                style={{ flexBasis: `${cellWidth}%` }}
+              >
+                <MonthGrid
+                  weeks={grid.weeks}
+                  month={grid.month}
+                  events={events}
+                  calendars={calendars}
+                  timeZone={timeZone}
+                  locale={locale}
+                  weekHeight={weekHeight}
+                  maxLanes={maxLanes}
+                  moreLabel={moreLabel}
+                  onMoreClick={onMoreClick}
+                  onDayClick={onDayClick}
+                  onEventClick={onEventClick}
+                  selectedEventId={selectedEventId ?? null}
+                  onSelectionChange={onSelectionChange}
+                  today={todayDate}
+                  isEventEditable={isEventEditable}
+                  onEventChange={onEventChange}
+                  announce={announce}
+                  hintId={hintId}
+                  className="w-full"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        /* However many grids there are, they are one row of them: a single
+           month is a single flex child at full width, and the wrap is what
+           makes two months stack instead of squeeze on a narrow page.
+           `min-w-72` is the width below which seven columns stop being
+           readable, and it is only set when there is more than one grid — a
+           lone month narrower than that is still the only thing on the page. */
+        <div className="flex w-full flex-wrap items-start gap-3">
+          {grids.map((grid) => (
+            <MonthGrid
+              key={grid.key}
+              weeks={grid.weeks}
+              month={grid.month}
+              events={events}
+              calendars={calendars}
+              timeZone={timeZone}
+              locale={locale}
+              weekHeight={weekHeight}
+              maxLanes={maxLanes}
+              moreLabel={moreLabel}
+              onMoreClick={onMoreClick}
+              onDayClick={onDayClick}
+              onEventClick={onEventClick}
+              selectedEventId={selectedEventId ?? null}
+              onSelectionChange={onSelectionChange}
+              today={todayDate}
+              isEventEditable={isEventEditable}
+              onEventChange={onEventChange}
+              announce={announce}
+              hintId={hintId}
+              className={grids.length > 1 ? "min-w-72" : undefined}
+            />
+          ))}
+        </div>
+      )}
 
       {/* The keyboard half of the gesture needs saying out loud, twice over: a
           movable chip is described as movable before anyone tries, and every

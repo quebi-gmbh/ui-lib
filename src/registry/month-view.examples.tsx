@@ -68,9 +68,12 @@ function month(first: CalendarDate): CalendarEvent[] {
   ]
 }
 
-/** The same month one month on, with ids of its own so the two can be shown together. */
-function nextMonth(first: CalendarDate): CalendarEvent[] {
-  return month(first.add({ months: 1 })).map((event) => ({ ...event, id: `${event.id}-next` }))
+/** The same month, moved by `offset` months and with ids of its own. */
+function shifted(first: CalendarDate, offset: number): CalendarEvent[] {
+  return month(first.add({ months: offset })).map((event) => ({
+    ...event,
+    id: `${event.id}@${offset}`,
+  }))
 }
 
 const DefaultMonth = () => {
@@ -209,7 +212,7 @@ const TwoMonths = () => {
   return (
     <MonthView
       range={{ months: 2 }}
-      events={[...month(first), ...nextMonth(first)]}
+      events={[...month(first), ...shifted(first, 1)]}
       calendars={CALENDARS}
       timeZone={TIME_ZONE}
       weekHeight={104}
@@ -228,11 +231,43 @@ const RollingWeeks = () => {
   return (
     <MonthView
       range={{ weeks: 8 }}
-      events={[...month(first), ...nextMonth(first)]}
+      events={[...month(first), ...shifted(first, 1)]}
       calendars={CALENDARS}
       timeZone={TIME_ZONE}
       weekHeight={96}
     />
+  )
+}
+
+/**
+ * The same two months through a window, with the months either side showing a
+ * slice of themselves. How many are in the window is the reader's to change,
+ * which is the one thing about a calendar's density a reader answers better
+ * than the page does.
+ */
+const MonthCarousel = () => {
+  const first = startOfMonth(today(TIME_ZONE))
+  const [shown, setShown] = useState(2)
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <MonthView
+        range={{ months: 2, carousel: true }}
+        events={[
+          ...shifted(first, -1),
+          ...month(first),
+          ...shifted(first, 1),
+          ...shifted(first, 2),
+        ]}
+        calendars={CALENDARS}
+        timeZone={TIME_ZONE}
+        weekHeight={96}
+        onMonthsChange={setShown}
+      />
+      <p className="text-quebi-fg-muted text-sm">
+        Months in the window: {shown}. The two at the edges are inert — blurred,
+        untabbable, and not read out.
+      </p>
+    </div>
   )
 }
 
@@ -280,6 +315,12 @@ export const monthViewExamples: ComponentExample[] = [
     description:
       "range={{ months: 2 }} draws this month and the next in one view. The heading names the pair — September – Oktober 2026 — and the chevrons step a whole page, so stepping forward lands on November and December rather than on an overlapping pair. Each grid keeps its own weekday header and dims its own outside days; a chip dragged past the edge of its month clamps there, because the grid beside it is a coordinate space of its own.",
     render: () => <TwoMonths />,
+  },
+  {
+    title: "A carousel of months",
+    description:
+      "carousel: true draws the side-by-side view through a window: the months either side show a slice of themselves, blurred and dimmed, and the chevrons move one month rather than a page — so the month that was peeking is the month you get. The segmented control in the toolbar is the reader's, not the caller's: range.months seeds it and onMonthsChange reports what was picked. The peeking months are inert, so a blurred grid is not a tab stop and not read out. A month step redraws rather than slides — an unbounded band has no origin to translate against — but changing the count is a change of geometry, so the cells widen and the band slides under them.",
+    render: () => <MonthCarousel />,
   },
   {
     title: "A rolling strip of weeks",

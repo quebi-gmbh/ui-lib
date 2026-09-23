@@ -143,3 +143,95 @@ describe("range={{ weeks: 8 }}", () => {
     expect(stepped).toEqual(["2026-09-28"])
   })
 })
+
+describe("range={{ months: 2, carousel: true }}", () => {
+  /** The band's cells, in order: the month they draw, and whether they peek. */
+  const cells = (container: HTMLElement) =>
+    Array.from(
+      container.querySelectorAll<HTMLElement>('[data-slot="month-carousel"] > div > div'),
+    ).map((cell) => ({
+      basis: cell.style.flexBasis,
+      peeking: cell.hasAttribute("inert"),
+      blurred: cell.className.includes("blur-xs"),
+    }))
+
+  test("draws one month more at each end than it shows, and makes them inert", () => {
+    const { container } = view({ range: { months: 2, carousel: true } })
+
+    // Two months in the window, one peeking at each end: four grids drawn.
+    const band = cells(container)
+    expect(band).toHaveLength(4)
+    expect(band.map((cell) => cell.peeking)).toEqual([true, false, false, true])
+    expect(band.map((cell) => cell.blurred)).toEqual([true, false, false, true])
+    expect(container.querySelectorAll('[data-slot="month-grid"]')).toHaveLength(4)
+
+    // The heading names the window, not the band: August and November are
+    // drawn, but nobody is looking at them yet.
+    expect(screen.getByText("September–Oktober 2026")).toBeInTheDocument()
+  })
+
+  test("is laid out in percentages of the window, peek included", () => {
+    // Two months and a quarter of a month at each end is 2.5 cells across, so
+    // a cell is 40% of the window; sliding the band by all but the peek of one
+    // cell — 75% of 40% — puts September at the window's left edge.
+    const { container } = view({ range: { months: 2, carousel: { peek: 0.25 } } })
+    expect(cells(container)[0]?.basis).toBe("40%")
+
+    const track = container.querySelector<HTMLElement>('[data-slot="month-carousel"] > div')
+    expect(track?.style.transform).toBe("translateX(-30%)")
+  })
+
+  test("steps one month, because the month peeking in is the one you get", async () => {
+    const stepped: string[] = []
+    view({
+      range: { months: 2, carousel: true },
+      onDateChange: (day) => stepped.push(day.toString()),
+    })
+
+    await userEvent.setup().click(screen.getByRole("button", { name: "Next" }))
+    expect(stepped).toEqual(["2026-10-21"])
+  })
+
+  test("the reader chooses how many months are in the window", async () => {
+    const chosen: number[] = []
+    const { container } = view({
+      range: { months: 2, carousel: true },
+      onMonthsChange: (count) => chosen.push(count),
+    })
+
+    // The control offers the default counts, with the current one selected.
+    const group = screen.getByRole("radiogroup", { name: "Months shown" })
+    expect(Array.from(group.querySelectorAll("button")).map((item) => item.textContent)).toEqual([
+      "1",
+      "2",
+      "3",
+    ])
+    expect(screen.getByRole("radio", { name: "2 months" })).toHaveAttribute("aria-checked", "true")
+
+    await userEvent.setup().click(screen.getByRole("radio", { name: "3 months" }))
+    expect(chosen).toEqual([3])
+    // Three in the window and one peeking either side: five grids, each a
+    // fifth narrower than before.
+    expect(cells(container)).toHaveLength(5)
+    expect(screen.getByText("September–November 2026")).toBeInTheDocument()
+  })
+
+  test("an empty choice list is the carousel with the reader's half turned off", () => {
+    const { container } = view({ range: { months: 2, carousel: { choices: [] } } })
+
+    expect(screen.queryByRole("radiogroup", { name: "Months shown" })).toBeNull()
+    expect(cells(container)).toHaveLength(4)
+  })
+
+  test("a count the choices do not offer is added to them, so one is always on", () => {
+    view({ range: { months: 4, carousel: { choices: [1, 2] } } })
+
+    const group = screen.getByRole("radiogroup", { name: "Months shown" })
+    expect(Array.from(group.querySelectorAll("button")).map((item) => item.textContent)).toEqual([
+      "1",
+      "2",
+      "4",
+    ])
+    expect(screen.getByRole("radio", { name: "4 months" })).toHaveAttribute("aria-checked", "true")
+  })
+})
