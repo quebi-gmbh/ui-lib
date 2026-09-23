@@ -131,10 +131,9 @@ describe("getInputProps is not spreadable onto a react-aria control", () => {
     // checking, and it is wrong.
     // The rule set bans this shape (seed-toggles-with-default-selected), and it
     // is rendered here on purpose: the two tests below measure what it costs.
-    // Nothing excuses it, because nothing has to: the rule's appliesTo is app
-    // code (src/**, app/**), so it does not read tests/. If that ever widens,
-    // the answer is a `biome-ignore lint/plugin/seed-toggles-with-default-selected`
-    // on this line — plugin diagnostics are suppressed by name (task #224).
+    // The plugin rules read tests/ (task #225), so the concession is named on
+    // the one node that needs it rather than in a table.
+    // biome-ignore lint/plugin/seed-toggles-with-default-selected: this is the banned spread, rendered so the tests below can measure the default and the required flag it drops.
     return <Switch {...getInputProps(field, { type: "checkbox" })}>Notify me</Switch>
   }
 
