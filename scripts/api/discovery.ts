@@ -77,7 +77,7 @@ export async function emitDiscoveryFiles({
     "## Discovery endpoints",
     "",
     `- [${BASE_URL}/api/index.json](${BASE_URL}/api/index.json) — full catalog: every component with name, description, category, tags, npm \`dependencies\`, \`registryDependencies\`, and file URLs. Fetch this first.`,
-    `- ${BASE_URL}/api/components/<name>.json — one component: the above plus inlined raw \`source\` and syntax-highlighted \`highlighted\` HTML.`,
+    `- ${BASE_URL}/api/components/<name>.json — one component: the above plus inlined raw \`source\` and syntax-highlighted \`highlighted\` HTML. Where it carries \`usage\` (when to use it, when not to, and what to use instead), read that before placing the component.`,
     `- ${BASE_URL}/api/components/<name>.tsx — raw, copy-paste-ready source.`,
     `- [${BASE_URL}/api/registry.json](${BASE_URL}/api/registry.json) — shadcn-compatible registry index.`,
     `- ${BASE_URL}/r/<name>.json — shadcn registry item (source + resolved dependency URLs).`,
@@ -108,6 +108,7 @@ export async function emitDiscoveryFiles({
     "- Prefer fetching `.json` over scraping the HTML pages at `/components/<name>`.",
     "",
     ...rulesLlmsSection(),
+    ...usageLlmsSection(),
     "## Components",
     ...metaRegistry.map(
       (m) => `- [${m.name}](${BASE_URL}/api/components/${m.slug}.json): ${m.description}`,
@@ -143,4 +144,42 @@ export async function emitDiscoveryFiles({
     "",
   ].join("\n")
   await writeFile(join(PUBLIC, "robots.txt"), robots)
+}
+
+/**
+ * The `usage` guidance, for the components that carry it, in full. It is also
+ * in each component's JSON, but an agent that reads llms.txt and picks from the
+ * catalog by description never fetches the JSON of the component it should
+ * *not* have picked — so the "don't" half has to be here, where it is read
+ * before the choice.
+ */
+function usageLlmsSection(): string[] {
+  const guided = metaRegistry.filter((m) => m.usage)
+  if (guided.length === 0) return []
+  return [
+    "## When not to use a component",
+    "",
+    ...guided.flatMap((m) => {
+      const usage = m.usage
+      if (!usage) return []
+      return [
+        `### ${m.name}`,
+        "",
+        "Use it when:",
+        ...usage.when.map((line) => `- ${line}`),
+        "",
+        "Don't:",
+        ...usage.whenNot.map((line) => `- ${line}`),
+        "",
+        "Instead, by what it was doing:",
+        ...usage.instead.map(
+          (group) =>
+            `- ${group.job}: ${group.use
+              .map((alt) => (alt.when ? `${alt.name} (${alt.when[0].toLowerCase()}${alt.when.slice(1).replace(/\.$/, "")})` : alt.name))
+              .join("; ")}`,
+        ),
+        "",
+      ]
+    }),
+  ]
 }

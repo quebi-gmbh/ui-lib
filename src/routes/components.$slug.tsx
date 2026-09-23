@@ -1,20 +1,27 @@
-import { Suspense, lazy, type ComponentType } from "react"
+import { Fragment, Suspense, lazy, type ComponentType } from "react"
 import { Link, data, useParams } from "react-router"
 import { ChevronRight } from "lucide-react"
 import { Badge } from "@/components/badge"
 import { Card } from "@/components/card"
+import { Link as UiLink } from "@/components/link"
+import {
+  DescriptionDetails,
+  DescriptionList,
+  DescriptionTerm,
+} from "@/components/description-list"
 import { metaRegistry } from "@/registry/meta"
 import { loadExamples } from "@/registry/examples-lazy"
 import { loadSource } from "@/registry/sources-lazy"
 import { CodeBlock } from "@/site/code-block"
 import {
+  AlternativesSkeleton,
   CodeBlockSkeleton,
   ExampleBodySkeleton,
   GallerySkeleton,
   SourceUnavailable,
 } from "@/site/page-states"
 import { seo } from "@/lib/seo"
-import type { ComponentExample } from "@/registry/types"
+import type { ComponentExample, ComponentUsage } from "@/registry/types"
 import type { Route } from "./+types/components.$slug"
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -38,8 +45,19 @@ export async function loader({ params }: Route.LoaderArgs) {
     name: component.name,
     description: component.description,
     category: component.category,
-    exampleCount: (await loadExamples(component.slug)).length,
+    // Counted apart, because they are drawn in two places: an example with
+    // `insteadOf` belongs to the "What to use instead" section, not the gallery.
+    ...countExamples(await loadExamples(component.slug)),
   }
+}
+
+function isAlternative(example: ComponentExample) {
+  return example.insteadOf !== undefined
+}
+
+function countExamples(examples: ComponentExample[]) {
+  const alternativeCount = examples.filter(isAlternative).length
+  return { exampleCount: examples.length - alternativeCount, alternativeCount }
 }
 
 export function meta({ loaderData: d }: Route.MetaArgs) {
@@ -89,12 +107,31 @@ function galleryFor(slug: string): ComponentType {
   let Gallery = galleries.get(slug)
   if (!Gallery) {
     Gallery = lazy(async () => {
-      const examples = await loadExamples(slug)
+      const examples = (await loadExamples(slug)).filter((e) => !isAlternative(e))
       return { default: () => <ExampleList examples={examples} /> }
     })
     galleries.set(slug, Gallery)
   }
   return Gallery
+}
+
+/**
+ * The same treatment for the examples that show what to use instead. Same
+ * chunk as the gallery — `loadExamples` resolves one module per slug — but its
+ * own boundary, because it is its own section with its own heading above it.
+ */
+const alternativeLists = new Map<string, ComponentType>()
+
+function alternativesFor(slug: string): ComponentType {
+  let Alternatives = alternativeLists.get(slug)
+  if (!Alternatives) {
+    Alternatives = lazy(async () => {
+      const examples = (await loadExamples(slug)).filter(isAlternative)
+      return { default: () => <AlternativeList examples={examples} /> }
+    })
+    alternativeLists.set(slug, Alternatives)
+  }
+  return Alternatives
 }
 
 /** The same per-slug lazy treatment for the baked source block. */
@@ -149,6 +186,102 @@ function ExampleList({ examples }: { examples: ComponentExample[] }) {
   )
 }
 
+/**
+ * Each alternative beside the thing it replaces. Deliberately not framed in the
+ * gallery's Card: the "instead" half is shown on the page background, which is
+ * where it would sit in an app — and a card drawn inside a card is the first
+ * thing this section tells you not to do.
+ */
+function AlternativeList({ examples }: { examples: ComponentExample[] }) {
+  return (
+    <>
+      {examples.map((example, index) => (
+        <div key={example.title}>
+          <h3 className="text-base font-semibold text-quebi-fg">{example.title}</h3>
+          {example.description && (
+            <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
+              {example.description}
+            </p>
+          )}
+          {/* min-w-0: a grid item defaults to its content's min width, so a
+              table in one half would push the page sideways on a phone. */}
+          <div className="mt-4 grid gap-6 md:grid-cols-2">
+            <div className="min-w-0">
+              <span className="quebi-eyebrow">Instead of</span>
+              <div className="mt-3 opacity-70">
+                <Suspense fallback={<ExampleBodySkeleton index={index} />}>
+                  {example.insteadOf?.()}
+                </Suspense>
+              </div>
+            </div>
+            <div className="min-w-0">
+              <span className="quebi-eyebrow">Use</span>
+              <div className="mt-3">
+                <Suspense fallback={<ExampleBodySkeleton index={index} />}>
+                  {example.render()}
+                </Suspense>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </>
+  )
+}
+
+/** When to use, when not to — straight from the metadata, so part of the frame. */
+function UsageGuidance({ name, usage }: { name: string; usage: ComponentUsage }) {
+  return (
+    <div className="mt-12 grid gap-8 md:grid-cols-2">
+      <div>
+        <h2 className="text-lg font-semibold text-quebi-fg">Use a {name.toLowerCase()} when</h2>
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-quebi-fg-muted">
+          {usage.when.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <h2 className="text-lg font-semibold text-quebi-fg">Don't</h2>
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-quebi-fg-muted">
+          {usage.whenNot.map((line) => (
+            <li key={line}>{line}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+/** The alternatives by job, as a table of links. Also from the metadata. */
+function AlternativeTable({ usage }: { usage: ComponentUsage }) {
+  return (
+    <DescriptionList className="mt-4 max-w-quebi-content">
+      {usage.instead.map((group) => (
+        <Fragment key={group.job}>
+          <DescriptionTerm>{group.job}</DescriptionTerm>
+          <DescriptionDetails>
+            <ul className="flex flex-col gap-1">
+              {group.use.map((alt) => (
+                <li key={alt.name}>
+                  {alt.slug ? (
+                    <UiLink href={`/components/${alt.slug}`} className="font-medium">
+                      {alt.name}
+                    </UiLink>
+                  ) : (
+                    <span className="font-medium text-quebi-fg">{alt.name}</span>
+                  )}
+                  {alt.when && <span className="text-quebi-fg-muted"> — {alt.when}</span>}
+                </li>
+              ))}
+            </ul>
+          </DescriptionDetails>
+        </Fragment>
+      ))}
+    </DescriptionList>
+  )
+}
+
 export default function ComponentDetail({ loaderData }: Route.ComponentProps) {
   const { slug } = useParams()
   const component = slug ? metaRegistry.find((c) => c.slug === slug) : undefined
@@ -157,6 +290,7 @@ export default function ComponentDetail({ loaderData }: Route.ComponentProps) {
 
   const Gallery = galleryFor(component.slug)
   const Source = sourceFor(component.slug)
+  const Alternatives = alternativesFor(component.slug)
 
   return (
     <div>
@@ -196,11 +330,28 @@ export default function ComponentDetail({ loaderData }: Route.ComponentProps) {
         </div>
       </div>
 
+      {component.usage && <UsageGuidance name={component.name} usage={component.usage} />}
+
       <div className="mt-12 space-y-10">
         <Suspense fallback={<GallerySkeleton count={loaderData.exampleCount} />}>
           <Gallery />
         </Suspense>
       </div>
+
+      {component.usage && (
+        <div className="mt-16">
+          <h2 className="text-lg font-semibold text-quebi-fg">What to use instead</h2>
+          <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
+            By what the {component.name.toLowerCase()} was doing.
+          </p>
+          <AlternativeTable usage={component.usage} />
+          <div className="mt-10 space-y-12">
+            <Suspense fallback={<AlternativesSkeleton count={loaderData.alternativeCount} />}>
+              <Alternatives />
+            </Suspense>
+          </div>
+        </div>
+      )}
 
       <div className="mt-16">
         <h2 className="text-lg font-semibold text-quebi-fg">Source</h2>

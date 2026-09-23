@@ -21,6 +21,51 @@ export interface ComponentMeta {
    * in neither state.
    */
   noOgScene?: string
+  /**
+   * When to reach for this component, when not to, and what to use instead.
+   *
+   * Set on the components agents over-use rather than on every one: a Card is
+   * the easiest surface in the library to reach for, and the gallery only ever
+   * showed how to use one. This is plain data rather than prose in an example
+   * because the examples never leave the site, while this field is spread into
+   * `/api/components/<slug>.json`, the catalog in `/api/index.json`, and the
+   * usage section of llms.txt, which is where an agent actually reads it.
+   */
+  usage?: ComponentUsage
+}
+
+/** See {@link ComponentMeta.usage}. */
+export interface ComponentUsage {
+  /** Situations this component is the right answer for. Short, one per line. */
+  when: string[]
+  /** Situations it is the wrong answer for. Each one names what to use instead. */
+  whenNot: string[]
+  /**
+   * The alternatives, grouped by the job the component was being asked to do —
+   * which is the question that picks between them.
+   */
+  instead: UsageAlternativeGroup[]
+}
+
+/** One row of {@link ComponentUsage.instead}: "the card was doing X — use one of these". */
+export interface UsageAlternativeGroup {
+  /** What the component was being used for, e.g. "A list item". */
+  job: string
+  use: UsageAlternative[]
+}
+
+/** Something to use instead. */
+export interface UsageAlternative {
+  /** What to write, e.g. "GridList" or "Whitespace + Heading". */
+  name: string
+  /**
+   * Registry slug when the alternative is a ui-lib component. Checked against
+   * the registry by `tests/registry-usage.test.ts`, so a renamed component
+   * fails the suite instead of leaving guidance that points nowhere.
+   */
+  slug?: string
+  /** Which of several alternatives this one is for. */
+  when?: string
 }
 
 /** A single rendered example within a component's gallery entry. */
@@ -28,6 +73,13 @@ export interface ComponentExample {
   title: string
   description?: string
   render: () => ReactNode
+  /**
+   * Set on an example that shows what to use *instead of* this component:
+   * `render` draws the alternative, and this draws the version it replaces, so
+   * the page can put them side by side. Such examples leave the gallery for
+   * the page's "What to use instead" section, beside `ComponentMeta.usage`.
+   */
+  insteadOf?: () => ReactNode
 }
 
 /**

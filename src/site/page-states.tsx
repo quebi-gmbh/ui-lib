@@ -102,6 +102,43 @@ export function GallerySkeleton({ count }: { count: number }) {
   )
 }
 
+/**
+ * The "What to use instead" section's waiting state: per alternative, a heading
+ * bar, a description line, and the two labelled halves side by side — the shape
+ * `AlternativeList` renders. Unframed, like the real thing. Zero renders
+ * nothing, for the same reason as {@link GallerySkeleton}.
+ */
+export function AlternativesSkeleton({ count }: { count: number }) {
+  return (
+    <>
+      {Array.from({ length: count }, (_, index) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: n indistinguishable placeholders; nothing reorders them.
+        <div key={index}>
+          <Skeleton className={cn("h-5", cycle(TITLE_WIDTHS, index))} />
+          <Skeleton soft className={cn("mt-2 h-4", cycle(DESCRIPTION_WIDTHS, index))} />
+          {/* The two eyebrows are static words, so they are real text here too. */}
+          {/* min-w-0: a grid item defaults to its content's min width, so a
+              table in one half would push the page sideways on a phone. */}
+          <div className="mt-4 grid gap-6 md:grid-cols-2">
+            <div className="min-w-0">
+              <span className="quebi-eyebrow">Instead of</span>
+              <div className="mt-3">
+                <ExampleBodySkeleton index={index} />
+              </div>
+            </div>
+            <div className="min-w-0">
+              <span className="quebi-eyebrow">Use</span>
+              <div className="mt-3">
+                <ExampleBodySkeleton index={index + 1} />
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </>
+  )
+}
+
 const CODE_LINE_WIDTHS = ["w-3/4", "w-1/2", "w-5/6", "w-2/3", "w-11/12", "w-1/3"] as const
 const CODE_INDENTS = ["", "ml-4", "ml-4", "ml-8", "ml-4", ""] as const
 
