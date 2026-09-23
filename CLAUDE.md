@@ -237,7 +237,7 @@ small. No route needs a `HydrateFallback`: every one of them is prerendered with
   exception paths and any `localScopes` entries as `!` lines. That is what lets the file list above
   be the repo's code rather than only its TSX — a `.ts` file is linted by Biome's recommended set
   and by the built-in rules the records configure, and the plugin rules stay quiet about a file no
-  record claims. Widen a record's `appliesTo` and its override widens with it; there is nothing
+  record claims (plus `tests/**/*.tsx`, which the repo adds — see below). Widen a record's `appliesTo` and its override widens with it; there is nothing
   per-plugin to hand-edit. A built-in is scoped by the config that switches it on instead, so its
   `appliesTo` is documentation — which is why `no-browser-dialogs` names `.ts` and `.js` too: a
   `confirm()` in a helper module is the same bug as one in a component, and the rule really does
@@ -264,16 +264,20 @@ small. No route needs a `HydrateFallback`: every one of them is prerendered with
   Each project config declares its own copy for tsc; Bun reads only the root one, and without it
   every component import fails at runtime with "Cannot find module '@/lib/utils'".
 - `tests/**/*.tsx` is in the file list now, so a rendering fixture gets the same reading as
-  `src/routes/`. Two things a fixture genuinely cannot do are named one at a time in
-  `localScopes`: a raw `<form>` (a Conform form binds to one, and react-router's `<Form>` would
-  need a router mounted around every test), and `useForm` without `lastResult` (there is no route
-  action to return one). The `<form>` entry excuses that element and no other — a raw `<button>`
-  in a fixture is reported exactly as it is in a route, and a test in `repo-lint.test.ts` proves
-  it. Anything else is a `biome-ignore` whose reason says what forces it, and there is one:
-  `conform-binding.test.tsx` imports react-aria primitives because it is asserting what react-aria
-  itself does with an id. The same file renders the banned `getInputProps` spread on purpose and
-  needs nothing for it: the plugin rules scope themselves by their record's `appliesTo`, which is
-  app code, so they do not read `tests/` at all.
+  `src/routes/` — from the built-ins through the file list, and from the plugin rules through
+  `localPluginIncludes` in `scripts/generate-lint-config.ts`, which adds `tests/**/*.tsx` to every
+  plugin override on the repo side (the published `appliesTo` stays app code). Until task #225 that
+  second half was missing and no GritQL rule read `tests/` at all. Three things are named one at a
+  time in `localScopes`: a raw `<form>` (a Conform form binds to one, and react-router's `<Form>`
+  would need a router mounted around every test), `useForm` without `lastResult` (there is no route
+  action to return one), and the two class-string rules for `tests/components/**` only (a
+  component test quotes the library's own classes to assert them). The `<form>` entry excuses that
+  element and no other — a raw `<button>` in a fixture is reported exactly as it is in a route —
+  and `repo-lint.test.ts` proves each entry is what changes the answer. Anything else is a
+  `biome-ignore` whose reason says what forces it: `conform-binding.test.tsx` imports react-aria
+  primitives because it is asserting what react-aria itself does with an id, and renders the
+  banned `getInputProps` spread under a `biome-ignore lint/plugin/seed-toggles-with-default-selected`
+  because measuring what that spread drops is the test.
 - A plugin (GritQL) diagnostic is suppressed like any other, by name:
   `// biome-ignore lint/plugin/<rule-id>: <reason>`, where the name is the `.grit` file's name —
   which is the rule id. The bare `lint/plugin` form is valid too and quiets *every* plugin rule on

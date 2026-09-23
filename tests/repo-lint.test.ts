@@ -255,6 +255,55 @@ describe("the repo obeys the rules it publishes", () => {
     expect(restricted.map(describeDiagnostic)).toHaveLength(1)
   })
 
+  test("the plugin rules read test fixtures, and the tests/ local scopes are what quiets them", () => {
+    // Task #225. Each plugin is loaded by an override whose `includes` is its
+    // record's `appliesTo` — app code — so until `localPluginIncludes` no
+    // GritQL rule read tests/ at all: a nested Card or a hardcoded colour in a
+    // fixture was silent, and the tests/ entries in `localScopes` naming a
+    // plugin rule were excusing it from a run it was never part of. One probe,
+    // three addresses, so each entry is shown to be what changes the answer:
+    // src/routes (every rule), tests/ (no server-validation), and
+    // tests/components/ (no class-string rules either).
+    const source = [
+      'import { useForm } from "@conform-to/react"',
+      'import { Card } from "@/components/card"',
+      "export const Probe = () => {",
+      "  useForm({ defaultValue: {} })",
+      "  return (",
+      "    <Card>",
+      "      <Card>",
+      '        <div className="bg-[#f00]" />',
+      "      </Card>",
+      "    </Card>",
+      "  )",
+      "}",
+      "",
+    ].join("\n")
+    const rules = [
+      "no-nested-card",
+      "no-hardcoded-design-values",
+      "validate-on-the-server-with-the-same-schema",
+    ]
+    const reportedAt = (probe: string): string[] => {
+      let diagnostics: Diagnostic[]
+      try {
+        writeFileSync(join(ROOT, probe), source)
+        diagnostics = lint([probe])
+      } finally {
+        rmSync(join(ROOT, probe), { force: true })
+      }
+      return rules.filter((id) => diagnostics.some((d) => textOf(d).includes(`/rules/${id}`)))
+    }
+    expect(reportedAt("src/routes/__lint_probe_plugins__.tsx")).toEqual(rules)
+    expect(reportedAt("tests/__lint_probe_plugins__.test.tsx")).toEqual([
+      "no-nested-card",
+      "no-hardcoded-design-values",
+    ])
+    expect(reportedAt("tests/components/__lint_probe_plugins__.test.tsx")).toEqual([
+      "no-nested-card",
+    ])
+  })
+
   test("a plain object with a `name` is not reported as a hand-wired Conform field", () => {
     // Task #194, reproduced the way it was found: a scratch file in src/routes/
     // run through the real config. `bind-fields-through-conform` looked for

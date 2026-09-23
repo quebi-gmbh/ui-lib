@@ -89,14 +89,17 @@ export interface LocalScope {
  * entries rather than one "tests are different" line: a rendering fixture is app
  * code that happens to assert instead of ship, so what it genuinely cannot do is
  * named one item at a time — the <form> element alone out of the tier-1 list,
- * and the server-validation rule for fixtures that have no route action — and
- * everything else is left switched on. (The plugin rules mostly need no entry
- * here at all: each is loaded for its record's `appliesTo`, which is app code,
- * so tests/ is outside them. Where one does reach a fixture, a
+ * the server-validation rule for fixtures that have no route action, and the two
+ * class-string rules for the tests of the library layer — and everything else is
+ * left switched on. The plugin rules reach tests/ at all only because of
+ * `localPluginIncludes` below; before task #225 they did not, and the
+ * server-validation entry was excusing a rule that never ran there. Where a
+ * single node in a fixture needs a plugin rule quiet, a
  * `biome-ignore lint/plugin/<rule id>` on the line names one rule on one node,
- * which is narrower than any entry in this table.) What that buys is the property the whole file list is
- * for: a raw `<button>`, a `toLocaleString()` or a `confirm()` in a fixture is
- * reported there exactly as it would be in `src/routes/`.
+ * which is narrower than any entry in this table. What that buys is the property
+ * the whole file list is for: a raw `<button>`, a `toLocaleString()`, a
+ * `confirm()`, a nested Card or a `getInputProps` spread onto a Switch in a
+ * fixture is reported there exactly as it would be in `src/routes/`.
  *
  * `src/lib/*.ts` is the one entry that is not about a kind of code but about
  * how a file leaves this repo: a `@/lib/*` module is published as its own
@@ -129,6 +132,12 @@ export const localScopes: LocalScope[] = [
     rules: ["validate-on-the-server-with-the-same-schema"],
     reason:
       "A fixture has no server to validate on. The rule reads a useForm call with no `lastResult` as \"nothing on the server parses this schema\", which is the right reading of an app and a false one of a test: the value it asks for is what a route action returned, and a test that mounts a component has no route. Quieting it by passing a hand-built lastResult would be the worse outcome — the fixture would then assert a server round-trip it never made. Its companion, gate-last-result-on-idle-navigation, needs no entry and does not get one: that rule fires on a lastResult that is present and ungated, so a fixture without one never reaches it, and a fixture that grows one still has to gate it.",
+  },
+  {
+    includes: ["tests/components/**/*.tsx"],
+    rules: ["no-hardcoded-design-values", "no-appearance-classes-on-layout-elements"],
+    reason:
+      "A component test asserts what the library draws, and what the library draws is appearance: `toHaveClass(\"after:w-[2px]\")` pins the Tabs indicator, `toContain(\"bg-cyan-500\")` pins a DaySchedule lane colour, a query for `rounded-full border-2` finds a Stepper bullet. Both rules are a class-string match, so they read those assertions as a fixture hand-building a surface — but the string is the component's, quoted to check it, and the records already except src/components/** from both on the argument that the library owns appearance. This is that layer's tests. Scoped to tests/components/: a fixture elsewhere in tests/ renders app-shaped code and is held to both rules like src/routes.",
   },
   {
     includes: ["src/registry/og-scene.tsx"],
@@ -186,8 +195,8 @@ export const localScopes: LocalScope[] = [
  * looked exactly like a deliberate one. Reading them one at a time settled it:
  * the raw <button>s were shortcuts and are ui-lib's Button now, a class
  * assertion naming `bg-red-500/10` is a token assertion now, and what is left is
- * two narrow entries in `localScopes` plus one `biome-ignore` whose reason
- * says what forces it. The fixtures are code this repo ships nothing of and
+ * narrow entries in `localScopes` plus two `biome-ignore`s whose reasons say
+ * what forces them. The fixtures are code this repo ships nothing of and
  * relies on entirely; they get the same reading as everything else.
  *
  * CSS stays out, and that is still a gap rather than a decision: Biome cannot
@@ -250,6 +259,38 @@ function elementScopedOverride(ruleId: string, elements: string[] | undefined): 
   return Object.keys(remaining).length
     ? { level: severityOf(rule), options: { elements: remaining } }
     : "off"
+}
+
+/**
+ * Paths this repo adds to every plugin rule's scope, on top of the record's
+ * `appliesTo`, and the argument for it.
+ *
+ * The published `appliesTo` is app code — `src/**` and `app/**` — which is the
+ * right thing to tell a consumer and leaves this repo's rendering fixtures out:
+ * each plugin is loaded by an override whose `includes` is that list, so until
+ * task #225 no GritQL rule read `tests/**\/*.tsx` at all, while the built-ins
+ * did (they are scoped by the file list). A Card inside a Card, a `bg-[#f00]`
+ * or a `getInputProps` spread onto a Switch in a fixture went unreported, and
+ * the `tests/` entries in `localScopes` that name a plugin rule were excusing
+ * it from a run it was never part of. Widening the records instead would
+ * publish ui-lib's filing system as guidance; this is the repo-side half, the
+ * mirror of `localScopes`, and the carve-outs there still apply on top of it.
+ */
+export const localPluginIncludes: { includes: string[]; reason: string } = {
+  includes: ["tests/**/*.tsx"],
+  reason:
+    "A rendering fixture is app code that asserts instead of ships, so it gets the plugin rules the same as src/routes — what it genuinely cannot do is a named entry in localScopes.",
+}
+
+/**
+ * A plugin override's `includes` with the repo's additions spliced in after
+ * the record's own globs and before its `!` carve-outs, so a local scope on
+ * `tests/` still subtracts from what this added.
+ */
+function withLocalPluginIncludes(includes: string[]): string[] {
+  const firstIgnore = includes.findIndex((glob) => glob.startsWith("!"))
+  const at = firstIgnore === -1 ? includes.length : firstIgnore
+  return [...includes.slice(0, at), ...localPluginIncludes.includes, ...includes.slice(at)]
 }
 
 /** Repo-local carve-outs for one plugin rule, pulled out of the scope table. */
@@ -334,7 +375,14 @@ export async function buildRepoConfig() {
         ...generated.linter.rules,
       },
     },
-    overrides: [...generated.overrides, ...localOverrides],
+    overrides: [
+      ...generated.overrides.map((override) =>
+        override.plugins
+          ? { ...override, includes: withLocalPluginIncludes(override.includes) }
+          : override,
+      ),
+      ...localOverrides,
+    ],
   }
 }
 
@@ -411,6 +459,12 @@ function annotate(json: string, config: Awaited<ReturnType<typeof buildRepoConfi
       if (!inOverrides) return line
       const override = config.overrides[index]
       if (!path || !override?.includes.includes(path)) return line
+      // The repo's own widening of a plugin's scope is an inclusion, not a
+      // carve-out, and gets its own argument — the carve-out reasons for the
+      // same glob belong on its `!` line, not on this one.
+      if (override.plugins && localPluginIncludes.includes.includes(path)) {
+        return `${indent}// local include — ${firstSentence(localPluginIncludes.reason)}\n${line}`
+      }
       const owners = new Set(
         plugins.filter((r) => override.plugins?.includes(`./${PLUGIN_DIR}/${r.id}.grit`)).map((r) => r.id),
       )
