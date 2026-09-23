@@ -243,6 +243,25 @@
      their width and disagree on their minimum are still two scrollbars. */
   --q-scroll-min:   32px;
 
+  /* ---------------- Motion ---------------- */
+  /* The curve for something that *travels* — a band of months stepping one
+     month sideways, a row widening to hold another one — as opposed to
+     something that merely arrives.
+
+     `ease-out` is the house default and it is right for arriving: an overlay is
+     already at speed when it enters the frame and all the reader sees is it
+     settling. It is wrong for a thing that starts from rest in front of you,
+     because it begins at full speed, and a calendar that leaves at full speed
+     reads as a jump caught halfway rather than as a movement. This one is
+     symmetric — it comes out of rest and back into it — which is what makes a
+     press feel like it moved the months rather than replaced them.
+
+     Cubic in and out: strong enough to be felt at the ends over the ~400ms a
+     cell-wide step takes, mild enough not to look like it is being animated
+     *at* you. `prefers-reduced-motion` drops the transition entirely, so this
+     is a curve for readers who asked for motion. */
+  --ease-quebi-travel: cubic-bezier(0.65, 0, 0.35, 1);
+
   /* ---------------- Shadows / glows ---------------- */
   /* Moved to the `@theme inline` block above, where they can flip per theme —
      nothing belongs here that has a light value and a dark one. */

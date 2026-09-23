@@ -371,41 +371,56 @@ describe("the carousel's peeking months", () => {
     }
   })
 
-  test("a one-month step is inverted for a frame, which is the slide", () => {
+  test("a move is inverted for a frame, which is what the reader sees travel", () => {
     // The press commits the month at once and the band is put back where it
     // was for one frame, without a transition, then released. Two months at a
     // quarter peek is a 40% cell and a -70% band; inverted by one cell that is
     // -30%, which is exactly where the band stood before the press.
     const carousel = { months: 2, carousel: { peek: 0.25 } } as const
-    const { container, rerender } = view({ range: carousel })
-    const band = () => container.querySelector<HTMLElement>('[data-slot="month-band"]')
-    expect(band()?.style.transform).toBe("translateX(-70%)")
-
-    rerender(
+    const at = (months: number) => (
       <MonthView
-        date={MONDAY.add({ months: 1 })}
+        date={MONDAY.add({ months })}
         events={[]}
         locale={LOCALE}
         timeZone={ZONE}
         now={null}
         range={carousel}
-      />,
+      />
     )
+
+    const { container, rerender } = view({ range: carousel })
+    const band = () => container.querySelector<HTMLElement>('[data-slot="month-band"]')
+    // Nothing has moved yet, so nothing is inverted.
+    expect(band()?.style.transform).toBe("translateX(-70%)")
+
+    rerender(at(1))
     expect(band()?.style.transform).toBe("translateX(-30%)")
     expect(band()?.className).toContain("transition-none")
 
-    // A jump of more than a month arrives rather than travelling: no band is
-    // wide enough to slide a quarter of a year.
-    rerender(
-      <MonthView
-        date={MONDAY.add({ months: 4 })}
-        events={[]}
-        locale={LOCALE}
-        timeZone={ZONE}
-        now={null}
-        range={carousel}
-      />,
-    )
-    expect(band()?.style.transform).toBe("translateX(-70%)")
+    // `Today` and the month picker move further than the band can hold, so
+    // they travel one cell from the side they came from — the inversion is
+    // capped, not skipped, and it still says which way the calendar went.
+    rerender(at(5))
+    expect(band()?.style.transform).toBe("translateX(-30%)")
+    rerender(at(-3))
+    expect(band()?.style.transform).toBe("translateX(-110%)")
+  })
+
+  test("the band travels on the house curve for things that move", () => {
+    // `ease-out` starts at full speed, which is right for something arriving
+    // from off screen and wrong for a band that starts from rest in front of
+    // the reader. See `--ease-quebi-travel` in the theme.
+    const { container } = view({ range: { months: 2, carousel: true } })
+    const band = container.querySelector<HTMLElement>('[data-slot="month-band"]')
+    expect(band?.className).toContain("ease-quebi-travel")
+    expect(band?.className).toContain("duration-400")
+    expect(band?.className).toContain("motion-reduce:transition-none")
+
+    // The cells widen on the same curve: when the count changes they resize
+    // while the band slides under them, and two curves would read as two
+    // events rather than one movement.
+    const cell = container.querySelector<HTMLElement>('[data-slot="month-band"] > div')
+    expect(cell?.className).toContain("ease-quebi-travel")
+    expect(cell?.className).toContain("duration-400")
   })
 })

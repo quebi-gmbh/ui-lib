@@ -141,8 +141,8 @@ import { cn } from "@/lib/utils"
  *   slides, and this is an unbounded run of months generated from a date the
  *   toolbar owns. There is no list to be at slide 3 of, and the prev/next
  *   controls already exist one component up.
- * - **A step slides, and the date does not wait for it.** The press commits the
- *   month immediately — the label, `onDateChange` and every grid in the band
+ * - **Every move travels, and the date does not wait for it.** The press commits
+ *   the month immediately — the label, `onDateChange` and every grid in the band
  *   are the new month from the first frame — and then the band is *put back*
  *   where it was for exactly one frame, with transitions off, and released.
  *   What the reader sees is the months gliding; what the state sees is a date
@@ -151,8 +151,12 @@ import { cn } from "@/lib/utils"
  *   that stops committing the moment transitions are off, which
  *   `prefers-reduced-motion` does. Here reduced motion drops the animation and
  *   nothing else: the frame is still rendered, it simply is not travelled.
- *   Only a one-month step travels; `Today` and the month picker arrive, since
- *   no band is wide enough to slide a year.
+ *   A chevron step is a true slide — the month that was peeking is the one that
+ *   arrives, and the travel is the distance between them. `Today` and the month
+ *   picker move further than any band could hold (a year is twelve cells of
+ *   months nobody asked to see), so they glide in by one cell from the side
+ *   they came from. Either way the reader is told which way the calendar went,
+ *   which is the one thing a cut cannot say.
  * - **Every month in a carousel is six rows.** The single-month view draws only
  *   the rows its month needs, which is right for a month you are looking at and
  *   wrong for a band you are stepping through — February would make the whole
@@ -808,14 +812,21 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
     // One month, and only one: a chevron. `Today` and the month picker jump by
     // however many they jump by, and there is no band wide enough to slide
     // that far — those arrive rather than travel.
-    if (carousel === null || Math.abs(delta) !== 1) {
-      // Including a jump that lands mid-slide: the band belongs to the month
-      // it is showing, and leaving it inverted would leave the calendar a cell
-      // to the side of itself until something else moved it.
+    if (carousel === null || delta === 0) {
+      // The band belongs to the month it is showing, and leaving it inverted
+      // would leave the calendar a cell to the side of itself until something
+      // else moved it.
       setInvert(0)
       return
     }
-    setInvert(delta)
+    // One cell, whichever way, however far the date went. A chevron step is a
+    // true slide — the month that was peeking is the one that arrives, and the
+    // travel is exactly the distance between them. `Today` and the month
+    // picker are the same movement over a distance no band could hold: a year
+    // is twelve cells of months nobody asked to see, so the jump glides in by
+    // one from the side it came from. What the reader is told either way is
+    // which direction the calendar moved, which is the thing a cut cannot say.
+    setInvert(Math.sign(delta))
     if (typeof requestAnimationFrame !== "function") {
       setInvert(0)
       return
@@ -937,8 +948,12 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
               // band slides under them when the reader changes the count.
               // Except for the single frame that sets the slide up, which has
               // to arrive without one.
+              // `ease-quebi-travel` rather than the house `ease-out`: the band
+              // starts from rest in front of the reader, and a curve that
+              // begins at full speed reads as a jump caught halfway. Out of
+              // rest and back into it, over the 400ms a cell-wide step takes.
               invert === 0
-                ? "transition-transform duration-300 ease-out motion-reduce:transition-none"
+                ? "transition-transform duration-400 ease-quebi-travel motion-reduce:transition-none"
                 : "transition-none",
             )}
             // `CAROUSEL_MARGIN - peek` cells left of the band's start puts the
@@ -954,7 +969,11 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
                   key={grid.key}
                   className={cn(
                     "shrink-0 px-1.5",
-                    "transition-[flex-basis] duration-300 ease-out motion-reduce:transition-none",
+                    // The same travel, because it is the same movement: when
+                    // the count changes these widen while the band slides
+                    // under them, and two curves would read as two events.
+                    "transition-[flex-basis] duration-400 ease-quebi-travel",
+                    "motion-reduce:transition-none",
                   )}
                   style={{ flexBasis: `${cellWidth}%` }}
                 >
