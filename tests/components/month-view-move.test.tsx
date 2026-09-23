@@ -289,8 +289,8 @@ describe("MonthView move", () => {
 
     const ghost = container.querySelector<HTMLElement>('[data-slot="month-move-preview"]')
     expect(ghost).not.toBeNull()
-    // Row 2, plus the 26px date line, plus one 22px lane.
-    expect(ghost?.style.top).toBe(`${2 * WEEK_HEIGHT + 26 + 22}px`)
+    // Row 2, plus the 28px date line, plus one 22px lane.
+    expect(ghost?.style.top).toBe(`${2 * WEEK_HEIGHT + 28 + 22}px`)
     // Column 4 of seven — Friday the 18th.
     expect(Number.parseFloat(ghost?.style.left ?? "")).toBeCloseTo((4 / 7) * 100, 6)
 
@@ -299,7 +299,7 @@ describe("MonthView move", () => {
     expect(
       chipOf(container, "standup")?.closest<HTMLElement>('[data-slot="calendar-event-move"]')
         ?.style.top,
-    ).toBe("26px")
+    ).toBe("28px")
   })
 
   test("either half of a chip the week cut can be picked up", () => {

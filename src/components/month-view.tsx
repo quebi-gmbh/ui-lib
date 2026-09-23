@@ -271,9 +271,17 @@ export interface MonthViewProps<E extends CalendarEvent = CalendarEvent> {
   className?: string
 }
 
-/** A chip is 20px tall on a 4px rhythm; the date line above them takes 24px. */
+/**
+ * A chip is 20px tall on a 4px rhythm, and `CELL_HEADER` is the band above them
+ * that the date line owns: `pt-1` plus the button's `h-6`, so 4 + 24.
+ *
+ * It is the date line's *height*, not an estimate of it — the wrapper below is
+ * given this number, because a header box the chips do not clear is a chip
+ * drawn over the day number. It used to be 26 against a 28px line, and the two
+ * pixels it was short ate the bottom of today's filled circle.
+ */
 const LANE_HEIGHT = 22
-const CELL_HEADER = 26
+const CELL_HEADER = 28
 
 /** `monthRange` returns whole weeks, and the grid that draws them is `grid-cols-7`. */
 const DAYS_PER_WEEK = 7
@@ -1160,7 +1168,7 @@ function MonthWeek<E extends CalendarEvent>({
                 outside && "bg-quebi-surface/[0.02]",
               )}
             >
-              <div className="flex justify-end px-1.5 pt-1">
+              <div className="flex justify-end px-1.5 pt-1" style={{ height: CELL_HEADER }}>
                 <Button
                   onPress={() => onDayClick?.(day)}
                   isDisabled={!onDayClick}
