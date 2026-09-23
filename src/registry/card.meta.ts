@@ -18,7 +18,7 @@ export const cardMeta: ComponentMeta = {
       "Never nest a card in a card. The inner one is a section: a `Heading` and a `Separator`.",
       "Items that share the same fields are rows, not cards: a `Table` (`DataTable`, `ServerTable`) or a list.",
       "More than about six cards of the same shape is a list. Scanning a grid of identical boxes is slower than reading down a column.",
-      "Don't put a card around a page section just to separate it. Whitespace and a `Heading` do that.",
+      "Don't put a card around a page section just to separate it. Whitespace and a `Heading` do that, and a `Panel` when the section needs a tint behind it.",
       "Don't wrap a key/value block in a card. That is a `DescriptionList`.",
       "Don't use a row of cards for KPIs. A bare stat — number, label, delta `Badge` or `Sparkline` — with vertical `Separator`s between them.",
       "Don't build a callout or a selectable option out of a card. Those are `Note` and `ChoiceBox`.",
@@ -29,6 +29,11 @@ export const cardMeta: ComponentMeta = {
         use: [
           { name: "Whitespace + Heading", slug: "heading" },
           { name: "Separator", slug: "separator" },
+          {
+            name: "Panel",
+            slug: "panel",
+            when: "A region that needs a tinted band behind it — no border, no radius.",
+          },
           {
             name: "Two-column settings layout",
             when: "Label and help text on the left, controls on the right, rows divided by a Separator.",

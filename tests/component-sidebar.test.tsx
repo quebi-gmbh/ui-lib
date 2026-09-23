@@ -102,7 +102,7 @@ describe("on the catalog index", () => {
 
     expect(isExpanded("Layout")).toBe(true)
     expect(isExpanded("Navigation")).toBe(false)
-    expect(componentLinks()).toEqual(["Card", "Container", "Scroll Area", "Separator"])
+    expect(componentLinks()).toEqual(["Card", "Container", "Panel", "Scroll Area", "Separator"])
   })
 })
 
