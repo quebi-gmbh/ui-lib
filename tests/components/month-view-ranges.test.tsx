@@ -287,6 +287,30 @@ describe("the carousel's peeking months", () => {
     expect(screen.getByRole("button", { name: "Previous month" })).toBeInTheDocument()
   })
 
+  test("the veil and the chevron cover the slice on screen, not the cell", () => {
+    // A peeking cell is a whole month wide and the band is slid so that only
+    // `peek` of it is inside the viewport — the side against the window. Both
+    // overlays are therefore that fraction wide and pinned to that side; drawn
+    // across the cell instead, they spend themselves in the clipped part and
+    // the carousel has no blur and no chevrons at all.
+    const { container } = view({ range: { months: 2, carousel: { peek: 0.3 } } })
+
+    const [leading, trailing] = peeks(container)
+    expect(leading?.style.width).toBe("30%")
+    expect(leading?.style.right).toBe("0px")
+    expect(leading?.style.left).toBe("")
+    expect(trailing?.style.width).toBe("30%")
+    expect(trailing?.style.left).toBe("0px")
+    expect(trailing?.style.right).toBe("")
+
+    const back = container.querySelector<HTMLElement>('[aria-label="Previous month"]')
+    const forward = container.querySelector<HTMLElement>('[aria-label="Next month"]')
+    expect(back?.parentElement?.style.width).toBe("30%")
+    expect(back?.parentElement?.style.right).toBe("0px")
+    expect(forward?.parentElement?.style.width).toBe("30%")
+    expect(forward?.parentElement?.style.left).toBe("0px")
+  })
+
   test("the veil ramps outwards, mirrored at the two ends, and lifts on hover", () => {
     const { container } = view({ range: { months: 2, carousel: true } })
 
@@ -300,15 +324,15 @@ describe("the carousel's peeking months", () => {
     const [leadingNear, leadingFar, leadingDim] = layers(leading as HTMLElement)
     expect(leadingNear).toContain("backdrop-blur-xs")
     expect(leadingFar).toContain("backdrop-blur-xs")
-    expect(leadingNear).toContain("mask-r-from-0% mask-r-to-75%")
-    expect(leadingFar).toContain("mask-r-from-0% mask-r-to-35%")
+    expect(leadingNear).toContain("mask-r-from-0% mask-r-to-100%")
+    expect(leadingFar).toContain("mask-r-from-0% mask-r-to-50%")
     expect(leadingDim).toContain("bg-gradient-to-l from-transparent to-quebi-bg/70")
 
     const [trailingNear, trailingFar, trailingDim] = layers(trailing as HTMLElement)
     expect(trailingNear).toContain("backdrop-blur-xs")
     expect(trailingFar).toContain("backdrop-blur-xs")
-    expect(trailingNear).toContain("mask-l-from-0% mask-l-to-75%")
-    expect(trailingFar).toContain("mask-l-from-0% mask-l-to-35%")
+    expect(trailingNear).toContain("mask-l-from-0% mask-l-to-100%")
+    expect(trailingFar).toContain("mask-l-from-0% mask-l-to-50%")
     expect(trailingDim).toContain("bg-gradient-to-r from-transparent to-quebi-bg/70")
 
     // Every layer fades on its own rather than the box around them fading for

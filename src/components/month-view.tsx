@@ -910,6 +910,7 @@ export function MonthView<E extends CalendarEvent = CalendarEvent>({
                   {side ? (
                     <MonthPeek
                       side={side}
+                      peek={carousel.peek}
                       label={side === "start" ? previousMonthLabel : nextMonthLabel}
                       onStep={side === "start" ? navigation.goToPrevious : navigation.goToNext}
                       // The toolbar's chevrons are the same two presses, so
@@ -989,6 +990,8 @@ const VEIL_FADE =
 interface MonthPeekProps {
   /** Which end of the window this month is at. */
   side: "start" | "end"
+  /** How much of the month is on screen, as a fraction of the cell it fills. */
+  peek: number
   label: string
   onStep: () => void
   /** Is this chevron the keyboard's way through the months, or the pointer's? */
@@ -1021,31 +1024,46 @@ interface MonthPeekProps {
  * The month stays `inert` while the veil is lifted: *seeing* next month is not
  * being in it, and the chevron is how you get there.
  */
-function MonthPeek({ side, label, onStep, isFocusable }: MonthPeekProps) {
+function MonthPeek({ side, peek, label, onStep, isFocusable }: MonthPeekProps) {
   const leading = side === "start"
+
+  // Both boxes are drawn over the *visible slice* of the month rather than over
+  // the cell holding it, and that is the whole of this component's geometry. A
+  // peeking cell is a full month wide, and the band is slid so that only a
+  // `peek` fraction of it — the side against the window — is inside the
+  // viewport; the rest is clipped. An `inset-0` box therefore spends almost all
+  // of itself where nothing can be seen, which is a veil that blurs nothing and
+  // a chevron nobody can click, both of them present in the DOM and invisible.
+  const slice: React.CSSProperties = {
+    width: `${peek * 100}%`,
+    ...(leading ? { right: 0 } : { left: 0 }),
+  }
+
   return (
     <>
       <div
         data-slot="month-peek-veil"
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-y-0"
+        style={slice}
       >
         {/* Two layers of the same 4px blur rather than one of 8: masked to
             different distances they compound where they overlap, which is the
-            ramp — nothing at the window's edge, four pixels across the middle,
-            eight at the outside. */}
+            ramp. Both run *away* from the window — sharp where the peek meets
+            the month being read, four pixels across the middle of the slice,
+            eight at the viewport's edge. */}
         <div
           className={cn(
             "absolute inset-0 backdrop-blur-xs",
             VEIL_FADE,
-            leading ? "mask-r-from-0% mask-r-to-75%" : "mask-l-from-0% mask-l-to-75%",
+            leading ? "mask-r-from-0% mask-r-to-100%" : "mask-l-from-0% mask-l-to-100%",
           )}
         />
         <div
           className={cn(
             "absolute inset-0 backdrop-blur-xs",
             VEIL_FADE,
-            leading ? "mask-r-from-0% mask-r-to-35%" : "mask-l-from-0% mask-l-to-35%",
+            leading ? "mask-r-from-0% mask-r-to-50%" : "mask-l-from-0% mask-l-to-50%",
           )}
         />
         {/* The page's own background over the same ramp, so the month dims as
@@ -1061,10 +1079,11 @@ function MonthPeek({ side, label, onStep, isFocusable }: MonthPeekProps) {
         />
       </div>
 
-      {/* The chevron is centred in the peek rather than pinned to the window's
-          edge: it sits on the month it takes you to, which is the thing the
-          press is about. `pointer-events-none` on the box, back on for the
-          button, so the rest of the peek stays hoverable-through to the cell. */}
+      {/* The chevron is centred in that same slice — the part of the month that
+          is actually on screen — so it reads as sitting on the month it takes
+          you to. `pointer-events-none` on the box, back on for the button, so
+          the rest of the peek stays hoverable-through to the cell and keeps
+          lifting the veil. */}
       {/* `aria-hidden` sits on the box rather than on the button: react-aria
           passes through the ARIA props it knows and this is not one of them,
           and a wrapper hides the subtree just as well. It is only safe because
@@ -1072,7 +1091,8 @@ function MonthPeek({ side, label, onStep, isFocusable }: MonthPeekProps) {
           that can still be focused is the worse bug of the two. */}
       <div
         aria-hidden={isFocusable ? undefined : true}
-        className="pointer-events-none absolute inset-0 flex items-center justify-center"
+        className="pointer-events-none absolute inset-y-0 flex items-center justify-center"
+        style={slice}
       >
         <Button
           intent="outline"
