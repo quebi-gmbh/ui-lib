@@ -108,6 +108,10 @@ export const FLOOR_EXCEPTIONS: Record<string, { px: number; reason: string }> = 
     px: 12,
     reason: "the same trigger and month, with two endpoints in the field",
   },
+  "year-view": {
+    px: 15,
+    reason: "three month cards of day numbers at the size YearView draws them, with the legend under them",
+  },
   drawer: {
     px: 14,
     reason:

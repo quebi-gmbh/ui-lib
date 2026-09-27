@@ -170,6 +170,7 @@ import { typingIndicatorExamples } from "./typing-indicator.examples"
 import { weekPickerExamples } from "./week-picker.examples"
 import { weekViewExamples } from "./week-view.examples"
 import { yearPickerExamples } from "./year-picker.examples"
+import { yearViewExamples } from "./year-view.examples"
 
 const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "activity-pulse": activityPulseExamples,
@@ -342,6 +343,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "week-picker": weekPickerExamples,
   "week-view": weekViewExamples,
   "year-picker": yearPickerExamples,
+  "year-view": yearViewExamples,
 }
 
 export const registry: ComponentEntry[] = metaRegistry.map((meta) => ({
