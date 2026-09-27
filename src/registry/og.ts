@@ -179,6 +179,7 @@ import { typingIndicatorOgScene } from "./typing-indicator.og"
 import { weekPickerOgScene } from "./week-picker.og"
 import { weekViewOgScene } from "./week-view.og"
 import { yearPickerOgScene } from "./year-picker.og"
+import { yearViewOgScene } from "./year-view.og"
 
 export const ogScenes: Record<string, OgScene> = {
   "activity-pulse": activityPulseOgScene,
@@ -350,4 +351,5 @@ export const ogScenes: Record<string, OgScene> = {
   "week-picker": weekPickerOgScene,
   "week-view": weekViewOgScene,
   "year-picker": yearPickerOgScene,
+  "year-view": yearViewOgScene,
 }

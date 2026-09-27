@@ -169,6 +169,7 @@ import { typingIndicatorMeta } from "./typing-indicator.meta"
 import { weekPickerMeta } from "./week-picker.meta"
 import { weekViewMeta } from "./week-view.meta"
 import { yearPickerMeta } from "./year-picker.meta"
+import { yearViewMeta } from "./year-view.meta"
 
 export const metaRegistry: ComponentMeta[] = [
   activityPulseMeta,
@@ -341,4 +342,5 @@ export const metaRegistry: ComponentMeta[] = [
   weekPickerMeta,
   weekViewMeta,
   yearPickerMeta,
+  yearViewMeta,
 ]
