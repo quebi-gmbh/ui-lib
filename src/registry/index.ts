@@ -158,6 +158,7 @@ import { textExamples } from "./text.examples"
 import { textFieldExamples } from "./text-field.examples"
 import { textareaExamples } from "./textarea.examples"
 import { timeFieldExamples } from "./time-field.examples"
+import { timelineExamples } from "./timeline.examples"
 import { toastExamples } from "./toast.examples"
 import { toggleExamples } from "./toggle.examples"
 import { toggleGroupExamples } from "./toggle-group.examples"
@@ -331,6 +332,7 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "text-field": textFieldExamples,
   "textarea": textareaExamples,
   "time-field": timeFieldExamples,
+  "timeline": timelineExamples,
   "toast": toastExamples,
   "toggle": toggleExamples,
   "toggle-group": toggleGroupExamples,

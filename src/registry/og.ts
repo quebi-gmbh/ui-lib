@@ -167,6 +167,7 @@ import { textOgScene } from "./text.og"
 import { textFieldOgScene } from "./text-field.og"
 import { textareaOgScene } from "./textarea.og"
 import { timeFieldOgScene } from "./time-field.og"
+import { timelineOgScene } from "./timeline.og"
 import { toastOgScene } from "./toast.og"
 import { toggleOgScene } from "./toggle.og"
 import { toggleGroupOgScene } from "./toggle-group.og"
@@ -339,6 +340,7 @@ export const ogScenes: Record<string, OgScene> = {
   "text-field": textFieldOgScene,
   "textarea": textareaOgScene,
   "time-field": timeFieldOgScene,
+  "timeline": timelineOgScene,
   "toast": toastOgScene,
   "toggle": toggleOgScene,
   "toggle-group": toggleGroupOgScene,
