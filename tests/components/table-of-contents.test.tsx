@@ -83,50 +83,94 @@ describe("TableOfContents", () => {
 
 describe("scroll-spy", () => {
   const tops: Record<string, number> = {}
-  let fire: (() => void) | null = null
+  let resized: (() => void) | null = null
   // Both stubs are removed rather than reassigned: `getBoundingClientRect` is
-  // inherited from Element, and happy-dom may not define IntersectionObserver at
-  // all, so writing the "original" back would leave an own property behind that
+  // inherited from Element, and happy-dom may not define ResizeObserver at all,
+  // so writing the "original" back would leave an own property behind that
   // later suites (the charts measure their containers) would read.
-  const hadObserver = Object.hasOwn(globalThis, "IntersectionObserver")
-  const Original = globalThis.IntersectionObserver
+  const hadObserver = Object.hasOwn(globalThis, "ResizeObserver")
+  const Original = globalThis.ResizeObserver
 
   beforeEach(() => {
-    globalThis.IntersectionObserver = class {
+    globalThis.ResizeObserver = class {
       constructor(callback: () => void) {
-        fire = callback
+        resized = callback
       }
       observe() {}
       unobserve() {}
       disconnect() {}
-      takeRecords() {
-        return []
-      }
-    } as unknown as typeof IntersectionObserver
+    } as unknown as typeof ResizeObserver
     HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
-      const top = tops[this.id] ?? 0
+      // A detached element measures as all zeros, as it does in a browser.
+      const top = this.isConnected ? (tops[this.id] ?? 0) : 0
       return { top, bottom: top + 20, left: 0, right: 0, width: 0, height: 20 } as DOMRect
     }
   })
 
   afterEach(() => {
-    if (hadObserver) globalThis.IntersectionObserver = Original
-    else Reflect.deleteProperty(globalThis, "IntersectionObserver")
+    if (hadObserver) globalThis.ResizeObserver = Original
+    else Reflect.deleteProperty(globalThis, "ResizeObserver")
     Reflect.deleteProperty(HTMLElement.prototype, "getBoundingClientRect")
-    fire = null
+    resized = null
   })
 
-  test("marks the last heading above the reading line", () => {
+  /** Run what the rail scheduled for the next frame. */
+  const nextFrame = () =>
+    act(async () => {
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)))
+    })
+
+  const current = () => screen.queryByRole("link", { current: "location" })
+
+  test("marks the last heading above the reading line", async () => {
     Object.assign(tops, { install: 400, cli: 800, usage: 1200 })
     render(<Page />)
-    expect(screen.queryByRole("link", { current: "location" })).toBeNull()
+    expect(current()).toBeNull()
 
     Object.assign(tops, { install: -300, cli: 50, usage: 500 })
-    act(() => fire?.())
-    expect(screen.getByRole("link", { name: "Using the CLI" })).toHaveAttribute(
-      "aria-current",
-      "location",
-    )
+    window.dispatchEvent(new Event("scroll"))
+    await nextFrame()
+    expect(current()).toHaveAccessibleName("Using the CLI")
+  })
+
+  test("follows a jump that carries every heading past the line at once", async () => {
+    // Home from the bottom of the page: no heading is anywhere near the
+    // reading line either side of the jump, which is exactly what an observer
+    // of a band around the line never hears about.
+    Object.assign(tops, { install: -3000, cli: -2000, usage: -1000 })
+    render(<Page />)
+    await nextFrame()
+    expect(current()).toHaveAccessibleName("Usage")
+
+    Object.assign(tops, { install: 400, cli: 800, usage: 1200 })
+    window.dispatchEvent(new Event("scroll"))
+    await nextFrame()
+    expect(current()).toBeNull()
+  })
+
+  test("measures the heading that is on the page, not one it replaced", async () => {
+    // A heading inside a Suspense boundary is a new element once the boundary
+    // resolves; the old one, held from mount, would read as passed forever.
+    Object.assign(tops, { install: 400, cli: 800, usage: 1200 })
+    render(<Page />)
+    const old = document.getElementById("cli")
+    old?.replaceWith(old.cloneNode(true))
+    window.dispatchEvent(new Event("scroll"))
+    await nextFrame()
+    expect(current()).toBeNull()
+  })
+
+  test("re-measures when the page moves under it without a scroll", async () => {
+    // Content above the headings finishing its load pushes them down.
+    Object.assign(tops, { install: 0, cli: 50, usage: 80 })
+    render(<Page />)
+    await nextFrame()
+    expect(current()).toHaveAccessibleName("Usage")
+
+    Object.assign(tops, { install: 400, cli: 800, usage: 1200 })
+    act(() => resized?.())
+    await nextFrame()
+    expect(current()).toBeNull()
   })
 })
 

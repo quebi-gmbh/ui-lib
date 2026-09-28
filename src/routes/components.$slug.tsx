@@ -21,8 +21,10 @@ import {
   GallerySkeleton,
   SourceUnavailable,
 } from "@/site/page-states"
+import { ANCHOR, headingId, OnThisPage, type PageSection } from "@/site/on-this-page"
 import { seo } from "@/lib/seo"
-import type { ComponentExample, ComponentUsage } from "@/registry/types"
+import { cn } from "@/lib/utils"
+import type { ComponentExample, ComponentMeta, ComponentUsage } from "@/registry/types"
 import type { Route } from "./+types/components.$slug"
 
 export async function loader({ params }: Route.LoaderArgs) {
@@ -40,7 +42,10 @@ export async function loader({ params }: Route.LoaderArgs) {
   // which the browser has in hand (embedded on first load, fetched on a
   // navigation) before the route renders. So the count costs one number in a
   // file that is already downloaded, and the examples chunk it counted is not
-  // shipped to the client on its account.
+  // shipped to the client on its account. The example titles go the same way
+  // for the same reason: the "on this page" rail lists them, and it is part of
+  // the frame (`src/site/on-this-page.tsx`).
+  const examples = await loadExamples(component.slug)
   return {
     slug: component.slug,
     name: component.name,
@@ -48,8 +53,35 @@ export async function loader({ params }: Route.LoaderArgs) {
     category: component.category,
     // Counted apart, because they are drawn in two places: an example with
     // `insteadOf` belongs to the "What to use instead" section, not the gallery.
-    ...countExamples(await loadExamples(component.slug)),
+    ...countExamples(examples),
+    contents: componentContents(component, examples),
   }
+}
+
+/** The page's headings, in page order, for the rail. Ids match the markup below. */
+function componentContents(
+  component: ComponentMeta,
+  examples: ComponentExample[],
+): PageSection[] {
+  const items: PageSection[] = []
+  if (component.usage) {
+    items.push({ id: "when", title: usageHeading(component.name) }, { id: "when-not", title: "Don't" })
+  }
+  for (const example of examples.filter((e) => !isAlternative(e))) {
+    items.push({ id: headingId("example", example.title), title: example.title })
+  }
+  if (component.usage) {
+    items.push({ id: "instead", title: "What to use instead" })
+    for (const example of examples.filter(isAlternative)) {
+      items.push({ id: headingId("instead", example.title), title: example.title, level: 3 })
+    }
+  }
+  items.push({ id: "source", title: "Source" })
+  return items
+}
+
+function usageHeading(name: string) {
+  return `Use a ${name.toLowerCase()} when`
 }
 
 function isAlternative(example: ComponentExample) {
@@ -106,8 +138,10 @@ export function meta({ loaderData: d }: Route.MetaArgs) {
  * pins both that and its one exception — a re-render *from above* while the
  * boundary is still dehydrated does force a client render, and then the
  * fallback does replace the content. Nothing between the router and these
- * boundaries holds state that changes on its own today; a future ancestor that
- * does would turn every component page into that flash, and the test says so.
+ * boundaries holds state that changes on its own today — the "on this page"
+ * rail does, and is their sibling rather than their ancestor for that reason — so
+ * a future ancestor that does would turn every component page into that flash,
+ * and the test says so.
  */
 const galleries = new Map<string, ComponentType>()
 
@@ -171,7 +205,12 @@ function ExampleList({ examples }: { examples: ComponentExample[] }) {
     <>
       {examples.map((example, index) => (
         <div key={example.title}>
-          <h2 className="text-lg font-semibold text-quebi-fg">{example.title}</h2>
+          <h2
+            id={headingId("example", example.title)}
+            className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}
+          >
+            {example.title}
+          </h2>
           {example.description && (
             <p className="mt-1 text-sm leading-relaxed text-quebi-fg-muted">
               {example.description}
@@ -215,7 +254,12 @@ function AlternativeList({ examples }: { examples: ComponentExample[] }) {
     <>
       {examples.map((example, index) => (
         <div key={example.title}>
-          <h3 className="text-base font-semibold text-quebi-fg">{example.title}</h3>
+          <h3
+            id={headingId("instead", example.title)}
+            className={cn(ANCHOR, "text-base font-semibold text-quebi-fg")}
+          >
+            {example.title}
+          </h3>
           {example.description && (
             <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
               {example.description}
@@ -268,7 +312,9 @@ function UsageGuidance({ name, usage }: { name: string; usage: ComponentUsage })
   return (
     <div className="mt-12 grid gap-8 md:grid-cols-2">
       <div>
-        <h2 className="text-lg font-semibold text-quebi-fg">Use a {name.toLowerCase()} when</h2>
+        <h2 id="when" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
+          {usageHeading(name)}
+        </h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-quebi-fg-muted">
           {usage.when.map((line) => (
             <li key={line}>
@@ -278,7 +324,9 @@ function UsageGuidance({ name, usage }: { name: string; usage: ComponentUsage })
         </ul>
       </div>
       <div>
-        <h2 className="text-lg font-semibold text-quebi-fg">Don't</h2>
+        <h2 id="when-not" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
+          Don't
+        </h2>
         <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-quebi-fg-muted">
           {usage.whenNot.map((line) => (
             <li key={line}>
@@ -331,7 +379,7 @@ export default function ComponentDetail({ loaderData }: Route.ComponentProps) {
   const Alternatives = alternativesFor(component.slug)
 
   return (
-    <div>
+    <OnThisPage contents={loaderData.contents}>
       <nav aria-label="Breadcrumb">
         <ol className="flex items-center gap-1.5 text-sm text-quebi-fg-subtle">
           <li>
@@ -378,7 +426,9 @@ export default function ComponentDetail({ loaderData }: Route.ComponentProps) {
 
       {component.usage && (
         <div className="mt-16">
-          <h2 className="text-lg font-semibold text-quebi-fg">What to use instead</h2>
+          <h2 id="instead" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
+            What to use instead
+          </h2>
           <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
             By what the {component.name.toLowerCase()} was doing.
           </p>
@@ -392,7 +442,9 @@ export default function ComponentDetail({ loaderData }: Route.ComponentProps) {
       )}
 
       <div className="mt-16">
-        <h2 className="text-lg font-semibold text-quebi-fg">Source</h2>
+        <h2 id="source" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
+          Source
+        </h2>
         <p className="mt-1 text-sm leading-relaxed text-quebi-fg-muted">
           Copy this into your project. Resolve its dependencies from the{" "}
           <code className="text-quebi-fg-subtle">registryDependencies</code> in the component's API
@@ -404,6 +456,6 @@ export default function ComponentDetail({ loaderData }: Route.ComponentProps) {
           </Suspense>
         </div>
       </div>
-    </div>
+    </OnThisPage>
   )
 }

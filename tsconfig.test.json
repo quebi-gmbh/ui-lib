@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2023", "DOM"],
-    "types": ["bun", "node"],
+    "types": ["bun", "node", "vite/client"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "skipLibCheck": true,
@@ -16,7 +16,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "rootDirs": [".", "./.react-router/types"]
   },
-  "include": ["tests"]
+  "include": ["tests", ".react-router/types/**/*"]
 }

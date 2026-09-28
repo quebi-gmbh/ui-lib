@@ -9,6 +9,7 @@
     "dev": "react-router dev",
     "generate:api": "bun run scripts/generate-api.ts",
     "generate:lint": "bun run scripts/generate-lint-config.ts",
+    "pretest": "bun run generate:api",
     "test": "bun test",
     "build": "bun run generate:api && react-router build && bun run check:prerender && bun run screenshot:og",
     "check:prerender": "bun run scripts/check-prerender.ts",

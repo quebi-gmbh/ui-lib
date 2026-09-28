@@ -22,9 +22,9 @@ import { Link } from "@/components/link"
  * A flat list is nested by `level` (an h3 after an h2 goes under it); an item
  * with `children` keeps them as given.
  *
- * **Scroll-spy** runs on an IntersectionObserver, and only after mount: the
- * first render marks nothing current, so the prerender and the hydration pass
- * agree. The current heading is the last one whose top has passed the reading
+ * **Scroll-spy** re-measures on scroll and on layout change, and only after
+ * mount: the first render marks nothing current, so the prerender and the
+ * hydration pass agree. The current heading is the last one whose top has passed the reading
  * line, `offset` down from the top of the scroll root. Pass `activeId` to own
  * the answer yourself (the observer is not started).
  *
@@ -77,7 +77,7 @@ export interface TableOfContentsProps
 }
 
 const ROW =
-  "block min-w-0 rounded-quebi-sm px-3 py-1.5 text-sm/5 no-underline transition-colors duration-150 hover:no-underline"
+  "block min-w-0 rounded-quebi-sm px-3 py-1.5 text-sm/5 wrap-break-word no-underline transition-colors duration-150 hover:no-underline"
 const RESTING =
   "font-normal text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg"
 const CURRENT = "bg-quebi-brand/10 font-medium text-quebi-brand-text hover:text-quebi-brand-text"
@@ -260,9 +260,14 @@ function flattenIds(items: TableOfContentsItem[]): string[] {
  * top is at or above the reading line `offset` px below the top of the scroll
  * root. `null` before mount and while the reader is above the first heading.
  *
- * The IntersectionObserver watches a band that ends at the reading line, so it
- * fires exactly when a heading crosses it; the answer is then measured rather
- * than read off the entries, which only describe the headings that moved.
+ * Measured on every scroll (once per frame) and whenever the page's size
+ * changes. Not on an IntersectionObserver: one watching a band above the
+ * reading line reports a heading that *crosses* the band, and a jump — Home,
+ * a scrollbar drag, a hash link — carries headings clean over it in one frame,
+ * so the answer stayed on whatever it was before the jump. Nor does an observer
+ * see a heading move because the content above it grew, which is how a page
+ * that finishes loading after mount ends up marking a heading nobody has
+ * reached.
  */
 export function useActiveHeading(
   ids: string[],
@@ -275,32 +280,45 @@ export function useActiveHeading(
   const key = ids.join("\u0000")
 
   useEffect(() => {
-    if (typeof IntersectionObserver === "undefined") return
-    const headings = key
-      .split("\u0000")
-      .filter(Boolean)
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => el !== null)
-    if (headings.length === 0) return
+    const ids = key.split("\u0000").filter(Boolean)
+    if (ids.length === 0) return
     const root = scrollRoot?.current ?? null
 
+    let frame = 0
     const measure = () => {
+      frame = 0
       const line = (root ? root.getBoundingClientRect().top : 0) + offset
       let current: string | null = null
-      for (const heading of headings) {
-        if (heading.getBoundingClientRect().top <= line + 1) current = heading.id
+      // Looked up on every pass, not once: a heading inside a Suspense
+      // boundary is a different element after the boundary resolves, and the
+      // one held from before reports a top of 0 from outside the document —
+      // "passed" — for as long as it is held.
+      for (const id of ids) {
+        const heading = document.getElementById(id)
+        if (heading && heading.getBoundingClientRect().top <= line + 1) current = id
       }
       setActive(current)
     }
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(measure)
+    }
 
-    const height = root ? root.clientHeight : window.innerHeight
-    const observer = new IntersectionObserver(measure, {
-      root,
-      rootMargin: `0px 0px ${-Math.max(0, height - offset)}px 0px`,
-    })
-    for (const heading of headings) observer.observe(heading)
+    const scroller: HTMLElement | Window = root ?? window
+    scroller.addEventListener("scroll", schedule, { passive: true })
+    window.addEventListener("resize", schedule)
+    // What moves a heading without a scroll: the content around it changing
+    // size. The window's content is the body; a panel's is its children.
+    const resize = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule)
+    for (const box of root ? [root, ...Array.from(root.children)] : [document.body]) {
+      resize?.observe(box)
+    }
     measure()
-    return () => observer.disconnect()
+    return () => {
+      cancelAnimationFrame(frame)
+      scroller.removeEventListener("scroll", schedule)
+      window.removeEventListener("resize", schedule)
+      resize?.disconnect()
+    }
   }, [key, scrollRoot, offset])
 
   return active

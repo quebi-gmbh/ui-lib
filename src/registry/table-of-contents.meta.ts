@@ -4,7 +4,7 @@ export const tableOfContentsMeta: ComponentMeta = {
   slug: "table-of-contents",
   name: "Table of Contents",
   description:
-    "The \"on this page\" rail: a nav of links to the headings of the document beside it, nested by heading level, with the heading being read marked current by an IntersectionObserver scroll-spy. A click scrolls smoothly (or instantly under reduced motion), writes the #id into the URL and moves focus to the heading. The items are data, so a prerendered page ships the list in its HTML; useTableOfContents collects them from the DOM where that does not matter.",
+    "The \"on this page\" rail: a nav of links to the headings of the document beside it, nested by heading level, with the heading being read marked current by a scroll-spy that re-measures on scroll and on layout change. A click scrolls smoothly (or instantly under reduced motion), writes the #id into the URL and moves focus to the heading. The items are data, so a prerendered page ships the list in its HTML; useTableOfContents collects them from the DOM where that does not matter.",
   category: "Navigation",
   tags: ["navigation", "toc", "table-of-contents", "on-this-page", "scroll-spy", "anchor", "nav"],
   usage: {

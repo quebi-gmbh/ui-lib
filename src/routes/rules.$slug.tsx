@@ -12,16 +12,44 @@ import {
 import { Note } from "@/components/note"
 import { Code } from "@/components/text"
 import { seo } from "@/lib/seo"
+import { cn } from "@/lib/utils"
+import { ANCHOR, headingId, OnThisPage, type PageSection } from "@/site/on-this-page"
 import { getRule, getRuleGroup, severityIntent } from "@/registry/rules"
+import type { RuleMeta } from "@/registry/rules/types"
 import { ruleChecks, ruleExampleHighlights } from "@/registry/rules/highlighted.generated"
 import type { Route } from "./+types/rules.$slug"
 
 export function loader({ params }: Route.LoaderArgs) {
   const rule = getRule(params.slug)
   if (!rule) throw data("Not found", { status: 404 })
-  // Only the serializable fields the meta descriptor needs; the page itself
-  // reads the full record from the in-memory registry.
-  return { id: rule.id, title: rule.title, summary: rule.summary }
+  // Only the serializable fields the meta descriptor and the "on this page"
+  // rail need; the page itself reads the full record from the in-memory registry.
+  return { id: rule.id, title: rule.title, summary: rule.summary, contents: ruleContents(rule) }
+}
+
+/** The page's headings, in page order, for the rail. Ids match the markup below. */
+function ruleContents(rule: RuleMeta): PageSection[] {
+  const checks = ruleChecks[rule.id] ?? []
+  return [
+    { id: "catches", title: "What this catches" },
+    { id: "why", title: "Why" },
+    ...(rule.replacements?.length ? [{ id: "instead", title: "Use this instead" }] : []),
+    ...(rule.classPolicy ? [{ id: "class-test", title: "The class test" }] : []),
+    { id: "examples", title: "Wrong / right" },
+    ...rule.examples.map((example) => ({
+      id: headingId("example", example.title),
+      title: example.title,
+      level: 3,
+    })),
+    ...(checks.length > 0
+      ? [
+          { id: "checks", title: "How to check this" },
+          ...checks.map((check) => ({ id: headingId("check", check.title), title: check.title, level: 3 })),
+        ]
+      : []),
+    { id: "exceptions", title: "Exceptions" },
+    { id: "scope", title: "Scope and enforcement" },
+  ]
 }
 
 export function meta({ loaderData: d }: Route.MetaArgs) {
@@ -38,7 +66,7 @@ function replacementLabel(element: string) {
   return /^[A-Za-z][A-Za-z0-9.]*$/.test(element) ? `<${element}>` : element
 }
 
-export default function RuleDetail() {
+export default function RuleDetail({ loaderData }: Route.ComponentProps) {
   const { slug } = useParams()
   const rule = getRule(slug)
   const group = rule ? getRuleGroup(rule.category) : undefined
@@ -48,7 +76,7 @@ export default function RuleDetail() {
   if (!rule) return null
 
   return (
-    <div>
+    <OnThisPage contents={loaderData.contents}>
       <nav aria-label="Breadcrumb">
         <ol className="flex items-center gap-1.5 text-sm text-quebi-fg-subtle">
           <li>
@@ -88,14 +116,18 @@ export default function RuleDetail() {
       </header>
 
       <section className="mt-12">
-        <h2 className="text-lg font-semibold text-quebi-fg">What this catches</h2>
+        <h2 id="catches" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
+          What this catches
+        </h2>
         <Note intent="warning" className="mt-3">
           {rule.failureMode}
         </Note>
       </section>
 
       <section className="mt-12">
-        <h2 className="text-lg font-semibold text-quebi-fg">Why</h2>
+        <h2 id="why" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
+          Why
+        </h2>
         <div className="mt-3 space-y-4">
           {rule.rationale.map((paragraph) => (
             <p
@@ -110,7 +142,9 @@ export default function RuleDetail() {
 
       {rule.replacements?.length ? (
         <section className="mt-12">
-          <h2 className="text-lg font-semibold text-quebi-fg">Use this instead</h2>
+          <h2 id="instead" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
+          Use this instead
+        </h2>
           <DescriptionList className="mt-4">
             {rule.replacements.map((replacement) => (
               <div key={replacement.element} className="contents">
@@ -147,7 +181,9 @@ export default function RuleDetail() {
 
       {rule.classPolicy ? (
         <section className="mt-12">
-          <h2 className="text-lg font-semibold text-quebi-fg">The class test</h2>
+          <h2 id="class-test" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
+          The class test
+        </h2>
           <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
             <Card>
               <CardTitle className="flex items-center gap-2 text-base">
@@ -185,11 +221,18 @@ export default function RuleDetail() {
       ) : null}
 
       <section className="mt-12">
-        <h2 className="text-lg font-semibold text-quebi-fg">Wrong / right</h2>
+        <h2 id="examples" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
+          Wrong / right
+        </h2>
         <div className="mt-4 space-y-10">
           {rule.examples.map((example, i) => (
             <article key={example.title}>
-              <h3 className="text-base font-semibold text-quebi-fg">{example.title}</h3>
+              <h3
+                id={headingId("example", example.title)}
+                className={cn(ANCHOR, "text-base font-semibold text-quebi-fg")}
+              >
+                {example.title}
+              </h3>
               {example.source ? (
                 <p className="mt-1 text-sm text-quebi-fg-subtle">
                   {example.sourceFixed ? "Was real code in " : "Real code from "}
@@ -223,7 +266,9 @@ export default function RuleDetail() {
 
       {checks.length > 0 ? (
         <section className="mt-12">
-          <h2 className="text-lg font-semibold text-quebi-fg">How to check this</h2>
+          <h2 id="checks" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
+          How to check this
+        </h2>
           <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
             Add one of these to your project and the rule holds without anyone having to remember
             it — including the agent writing half the JSX. The exceptions below are already applied,
@@ -239,7 +284,12 @@ export default function RuleDetail() {
             {checks.map((check) => (
               <article key={check.title}>
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-base font-semibold text-quebi-fg">{check.title}</h3>
+                  <h3
+                    id={headingId("check", check.title)}
+                    className={cn(ANCHOR, "text-base font-semibold text-quebi-fg")}
+                  >
+                    {check.title}
+                  </h3>
                   <Badge intent="outline">{check.tool}</Badge>
                 </div>
                 <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
@@ -262,7 +312,9 @@ export default function RuleDetail() {
       ) : null}
 
       <section className="mt-12">
-        <h2 className="text-lg font-semibold text-quebi-fg">Exceptions</h2>
+        <h2 id="exceptions" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
+          Exceptions
+        </h2>
         <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
           Carve-outs are part of the rule, not a way around it. Each one is already an ignore glob
           in the checks above, so the cases listed here need no disable comment — and a case that is
@@ -289,7 +341,9 @@ export default function RuleDetail() {
       </section>
 
       <section className="mt-12">
-        <h2 className="text-lg font-semibold text-quebi-fg">Scope and enforcement</h2>
+        <h2 id="scope" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
+          Scope and enforcement
+        </h2>
         <DescriptionList className="mt-4">
           <DescriptionTerm>Applies to</DescriptionTerm>
           <DescriptionDetails>
@@ -306,6 +360,6 @@ export default function RuleDetail() {
           <DescriptionDetails>{rule.enforcement.kind}</DescriptionDetails>
         </DescriptionList>
       </section>
-    </div>
+    </OnThisPage>
   )
 }
