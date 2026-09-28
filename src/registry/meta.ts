@@ -157,6 +157,7 @@ import { textMeta } from "./text.meta"
 import { textFieldMeta } from "./text-field.meta"
 import { textareaMeta } from "./textarea.meta"
 import { timeFieldMeta } from "./time-field.meta"
+import { timelineMeta } from "./timeline.meta"
 import { toastMeta } from "./toast.meta"
 import { toggleMeta } from "./toggle.meta"
 import { toggleGroupMeta } from "./toggle-group.meta"
@@ -330,6 +331,7 @@ export const metaRegistry: ComponentMeta[] = [
   textFieldMeta,
   textareaMeta,
   timeFieldMeta,
+  timelineMeta,
   toastMeta,
   toggleMeta,
   toggleGroupMeta,
