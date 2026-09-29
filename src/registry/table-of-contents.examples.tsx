@@ -1,5 +1,6 @@
 import { useRef } from "react"
 import { Heading } from "@/components/heading"
+import { ScrollArea } from "@/components/scroll-area"
 import { TableOfContents, type TableOfContentsItem } from "@/components/table-of-contents"
 import { Text } from "@/components/text"
 import type { ComponentExample } from "./types"
@@ -64,8 +65,10 @@ function PanelDocument({ sections, label }: { sections: Section[]; label?: strin
   const panel = useRef<HTMLDivElement>(null)
   return (
     <div className="flex w-full gap-8">
-      <div ref={panel} className="h-96 min-w-0 flex-1 overflow-y-auto pe-2">
-        <Sections sections={sections} />
+      <div className="h-96 min-w-0 flex-1">
+        <ScrollArea ref={panel} orientation="vertical" className="pe-2">
+          <Sections sections={sections} />
+        </ScrollArea>
       </div>
       <TableOfContents
         items={toItems(sections)}
