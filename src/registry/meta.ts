@@ -96,6 +96,7 @@ import { headingMeta } from "./heading.meta"
 import { iconTileMeta } from "./icon-tile.meta"
 import { inputMeta } from "./input.meta"
 import { inputOtpMeta } from "./input-otp.meta"
+import { structuredInputMeta } from "./structured-input.meta"
 import { itemMeta } from "./item.meta"
 import { keyboardMeta } from "./keyboard.meta"
 import { leaderboardMeta } from "./leaderboard.meta"
@@ -270,6 +271,7 @@ export const metaRegistry: ComponentMeta[] = [
   iconTileMeta,
   inputMeta,
   inputOtpMeta,
+  structuredInputMeta,
   itemMeta,
   keyboardMeta,
   leaderboardMeta,

@@ -151,6 +151,47 @@ describe("InputOTP click targeting", () => {
     expect(input.selectionEnd).toBe(2)
   })
 
+  test("a row that wraps: the slot under the pointer wins over the one above it", async () => {
+    const { input, slots } = renderOTP("123456")
+    // Three slots a line, so slot 4 sits directly below slot 1 — the layout a
+    // long code (an IBAN in a narrow column) wraps into.
+    slots.forEach((slot, index) => {
+      const column = index % 3
+      const row = Math.floor(index / 3)
+      slot.getBoundingClientRect = () =>
+        ({
+          left: column * SLOT_WIDTH,
+          right: (column + 1) * SLOT_WIDTH,
+          top: row * SLOT_WIDTH,
+          bottom: (row + 1) * SLOT_WIDTH,
+          width: SLOT_WIDTH,
+          height: SLOT_WIDTH,
+          x: column * SLOT_WIDTH,
+          y: row * SLOT_WIDTH,
+        }) as DOMRect
+    })
+
+    await act(async () => {
+      input.dispatchEvent(
+        new window.PointerEvent("pointerdown", {
+          bubbles: true,
+          cancelable: true,
+          button: 0,
+          clientX: centreOf(1),
+          clientY: SLOT_WIDTH * 1.5,
+        }),
+      )
+      input.focus()
+    })
+    await act(async () => {
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)))
+      await new Promise((resolve) => setTimeout(resolve, 60))
+    })
+
+    expect(input.selectionStart).toBe(4)
+    expect(input.selectionEnd).toBe(5)
+  })
+
   test("every slot carries the index the hit test reads back", () => {
     const { slots } = renderOTP("")
 

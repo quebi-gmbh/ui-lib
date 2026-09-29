@@ -11,25 +11,28 @@ import { cn } from "@/lib/utils"
  * than from its position among its siblings — the test is geometric, so it
  * stays correct in RTL and under any layout that splits the slots into groups.
  *
- * Only the horizontal extent is tested. The slots sit in a row under one
- * input that covers the whole container, so the column is what identifies a
- * slot; a container styled taller than its slots would otherwise reject a
- * click that plainly aimed at one.
+ * A slot the pointer is inside wins. Failing that, only the horizontal extent
+ * is tested: the slots usually sit in one row under an input that covers the
+ * whole container, so the column is what identifies a slot, and a container
+ * styled taller than its slots would otherwise reject a click that plainly
+ * aimed at one. The two-axis pass comes first for a row that wraps — a long
+ * code such as an IBAN in a narrow column — where one column holds a slot on
+ * every line.
  */
-function slotIndexAt(input: HTMLInputElement, clientX: number): number | null {
+function slotIndexAt(input: HTMLInputElement, clientX: number, clientY: number): number | null {
   const container = input.closest("[data-input-otp-container]")
   if (!container) return null
   const slots = Array.from(
     container.querySelectorAll<HTMLElement>('[data-slot="input-otp-slot"]'),
-  )
-  for (const slot of slots) {
-    const rect = slot.getBoundingClientRect()
-    if (clientX >= rect.left && clientX <= rect.right) {
-      const index = Number(slot.dataset.index)
-      return Number.isInteger(index) ? index : null
-    }
-  }
-  return null
+  ).map((slot) => ({ slot, rect: slot.getBoundingClientRect() }))
+  const inColumn = ({ rect }: { rect: DOMRect }) =>
+    clientX >= rect.left && clientX <= rect.right
+  const hit =
+    slots.find((entry) => inColumn(entry) && clientY >= entry.rect.top && clientY <= entry.rect.bottom) ??
+    slots.find(inColumn)
+  if (!hit) return null
+  const index = Number(hit.slot.dataset.index)
+  return Number.isInteger(index) ? index : null
 }
 
 /**
@@ -116,7 +119,7 @@ export function InputOTP({
       onPointerDown?.(event)
       const input = inputRef.current
       if (!input || input.disabled || event.defaultPrevented || event.button !== 0) return
-      const index = slotIndexAt(input, event.clientX)
+      const index = slotIndexAt(input, event.clientX, event.clientY)
       if (index === null || index >= input.value.length) return
       // Focusing the input, and the snap to end-of-value inside that, are the
       // pointerdown default action — both run after this handler returns, so
@@ -167,7 +170,7 @@ export function InputOTPSlot({
   size?: InputOtpSize
 }) {
   const inputOTPContext = use(OTPInputContext)
-  const { char, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {}
+  const { char, placeholderChar, hasFakeCaret, isActive } = inputOTPContext?.slots[index] ?? {}
   const { size } = useFieldSizing({ size: sizeProp })
 
   return (
@@ -190,7 +193,13 @@ export function InputOTPSlot({
       )}
       {...props}
     >
-      {char}
+      {char ?? (
+        // `InputOTP`'s `placeholder`, one character per slot. `input-otp`
+        // clears every one of them as soon as the first character is typed.
+        <span aria-hidden="true" className="text-quebi-fg-subtle">
+          {placeholderChar}
+        </span>
+      )}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="h-4 w-px animate-caret-blink bg-quebi-brand duration-1000" />
