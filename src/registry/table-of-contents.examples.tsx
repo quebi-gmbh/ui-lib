@@ -40,6 +40,15 @@ const RAIL: Section[] = [
   { id: "rail-danger", title: "Danger zone", level: 2 },
 ]
 
+const REFERENCE: Section[] = [
+  { id: "ref-props", title: "Props", level: 2 },
+  { id: "ref-items", title: "items", level: 3 },
+  { id: "ref-active", title: "activeId", level: 3 },
+  { id: "ref-hooks", title: "Hooks", level: 2 },
+  { id: "ref-collect", title: "collectTableOfContents", level: 3 },
+  { id: "ref-styling", title: "Styling", level: 2 },
+]
+
 const PARAGRAPH =
   "Each section is long enough to scroll past, so the rail has something to follow. The heading you are reading is marked in the rail beside it, and a click on any row brings its heading to the top and moves focus there."
 
@@ -61,22 +70,38 @@ function Sections({ sections }: { sections: Section[] }) {
 }
 
 /** A document in its own scrolling panel: the rail measures against that panel, not the window. */
-function PanelDocument({ sections, label }: { sections: Section[]; label?: string }) {
+function PanelDocument({
+  sections,
+  label,
+  side = "end",
+  collapsible,
+}: {
+  sections: Section[]
+  label?: string
+  side?: "start" | "end"
+  collapsible?: boolean
+}) {
   const panel = useRef<HTMLDivElement>(null)
+  const rail = (
+    <TableOfContents
+      items={toItems(sections)}
+      label={label}
+      scrollRoot={panel}
+      offset={24}
+      collapsible={collapsible}
+      className="w-56 shrink-0 self-start"
+    />
+  )
+  // The side is the order in the row — layout, not a prop of the rail.
   return (
     <div className="flex w-full gap-8">
+      {side === "start" && rail}
       <div className="h-96 min-w-0 flex-1">
         <ScrollArea ref={panel} orientation="vertical" className="pe-2">
           <Sections sections={sections} />
         </ScrollArea>
       </div>
-      <TableOfContents
-        items={toItems(sections)}
-        label={label}
-        scrollRoot={panel}
-        offset={24}
-        className="w-56 shrink-0 self-start"
-      />
+      {side === "end" && rail}
     </div>
   )
 }
@@ -93,6 +118,14 @@ export const tableOfContentsExamples: ComponentExample[] = [
     description:
       "Every entry at one level, and no visible label — the landmark is still named \"On this page\".",
     render: () => <PanelDocument sections={CHANGELOG} />,
+  },
+  {
+    title: "Start-side, collapsible",
+    description:
+      "The rail on the left of the content, with `collapsible`: the label is a button that folds the list away. The links stay in the HTML while it is closed, and the scroll-spy keeps tracking, so it opens on the current heading.",
+    render: () => (
+      <PanelDocument sections={REFERENCE} label="On this page" side="start" collapsible />
+    ),
   },
   {
     title: "Sticky rail",
