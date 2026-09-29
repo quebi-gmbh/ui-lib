@@ -72,7 +72,11 @@ export interface TableOfContentsProps
    * `sticky` bounds it to the viewport, so a long list scrolls itself. Defaults to true.
    */
   followActive?: boolean
-  /** Pin the rail to the top of its scrolling ancestor and bound its height to the viewport. */
+  /**
+   * Pin the rail to the top of its scrolling ancestor and bound its height to the viewport.
+   * It pins `--quebi-rail-top` below the top (1.5rem when unset) — declare that on an
+   * ancestor if a sticky header covers the top of the page, as `FilterRailLayout` reads it.
+   */
   sticky?: boolean
 }
 
@@ -161,7 +165,8 @@ export function TableOfContents({
       aria-labelledby={hasLabel ? labelId : undefined}
       className={cn(
         "flex min-w-0 flex-col gap-y-1",
-        sticky && "sticky top-6 max-h-[calc(100dvh-3rem)] overflow-y-auto overscroll-contain",
+        sticky &&
+          "sticky top-[var(--quebi-rail-top,--spacing(6))] max-h-[calc(100dvh-var(--quebi-rail-top,--spacing(6))---spacing(6))] overflow-y-auto overscroll-contain",
         className,
       )}
       {...props}
