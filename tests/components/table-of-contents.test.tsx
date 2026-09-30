@@ -174,6 +174,51 @@ describe("scroll-spy", () => {
   })
 })
 
+describe("TableOfContents collapsible", () => {
+  test("the label is a button that hides and shows the list", () => {
+    render(<TableOfContents items={ITEMS} label="Contents" collapsible />)
+    const nav = screen.getByRole("navigation", { name: "Contents" })
+    const toggle = within(nav).getByRole("button", { name: "Contents" })
+    expect(toggle).toHaveAttribute("aria-expanded", "true")
+    expect(within(nav).getByRole("link", { name: "Usage" })).toBeVisible()
+
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute("aria-expanded", "false")
+    const list = document.getElementById(toggle.getAttribute("aria-controls") ?? "")
+    expect(list).toHaveAttribute("hidden")
+    expect(within(nav).queryByRole("link", { name: "Usage" })).toBeNull()
+
+    fireEvent.click(toggle)
+    expect(toggle).toHaveAttribute("aria-expanded", "true")
+    expect(list).not.toHaveAttribute("hidden")
+  })
+
+  test("a collapsed rail still ships every link in the server render", () => {
+    const html = renderToString(
+      <TableOfContents items={ITEMS} collapsible defaultExpanded={false} />,
+    )
+    for (const item of ITEMS) expect(html).toContain(`href="#${item.id}"`)
+    expect(html).toContain('aria-expanded="false"')
+    expect(html).toContain("On this page")
+  })
+
+  test("a controlled isExpanded reports the toggle and waits for the owner", () => {
+    const calls: boolean[] = []
+    render(
+      <TableOfContents
+        items={ITEMS}
+        collapsible
+        isExpanded={false}
+        onExpandedChange={(next) => calls.push(next)}
+      />,
+    )
+    const toggle = screen.getByRole("button", { name: "On this page" })
+    fireEvent.click(toggle)
+    expect(calls).toEqual([true])
+    expect(toggle).toHaveAttribute("aria-expanded", "false")
+  })
+})
+
 describe("helpers", () => {
   test("nestTableOfContents puts deeper levels under the item before them", () => {
     const tree = nestTableOfContents([

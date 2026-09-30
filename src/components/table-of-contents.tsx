@@ -1,6 +1,8 @@
 "use client"
 
+import { ChevronDown } from "lucide-react"
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
+import { Button } from "react-aria-components"
 import { cn } from "@/lib/utils"
 import { Link } from "@/components/link"
 
@@ -38,6 +40,14 @@ import { Link } from "@/components/link"
  *
  * Give the headings a `scroll-mt-*` if a sticky header covers the top of the
  * page; `scrollIntoView` honours it.
+ *
+ * **`collapsible`** turns the label into a disclosure button that folds the
+ * list away — for a rail on the start side of the page, where it competes with
+ * the content for width, or a narrow layout that stacks it above the content.
+ * The list is hidden, not unmounted, so a collapsed rail still ships every link
+ * in the prerendered HTML, and the scroll-spy keeps running so the rail is
+ * current the moment it opens. Which side the rail sits on is layout, and
+ * layout is yours: put it first in the row.
  */
 
 export interface TableOfContentsItem {
@@ -72,8 +82,22 @@ export interface TableOfContentsProps
    * `sticky` bounds it to the viewport, so a long list scrolls itself. Defaults to true.
    */
   followActive?: boolean
-  /** Pin the rail to the top of its scrolling ancestor and bound its height to the viewport. */
+  /**
+   * Pin the rail to the top of its scrolling ancestor and bound its height to the viewport.
+   * It pins `--quebi-rail-top` below the top (1.5rem when unset) — declare that on an
+   * ancestor if a sticky header covers the top of the page, as `FilterRailLayout` reads it.
+   */
   sticky?: boolean
+  /**
+   * Make the label a button that shows and hides the list. Without a `label`,
+   * the button reads the `aria-label` (or "On this page").
+   */
+  collapsible?: boolean
+  /** Whether a collapsible rail starts open. Defaults to true. */
+  defaultExpanded?: boolean
+  /** Whether a collapsible rail is open, if you own it. */
+  isExpanded?: boolean
+  onExpandedChange?: (isExpanded: boolean) => void
 }
 
 const ROW =
@@ -92,6 +116,10 @@ export function TableOfContents({
   offset = 96,
   followActive = true,
   sticky = false,
+  collapsible = false,
+  defaultExpanded = true,
+  isExpanded: isExpandedProp,
+  onExpandedChange,
   className,
   ...props
 }: TableOfContentsProps) {
@@ -117,10 +145,18 @@ export function TableOfContents({
     onActiveChangeRef.current?.(activeId)
   }, [activeId, isControlled])
 
+  const [expandedState, setExpandedState] = useState(defaultExpanded)
+  const isExpanded = !collapsible || (isExpandedProp ?? expandedState)
+  const toggle = () => {
+    const next = !isExpanded
+    if (isExpandedProp === undefined) setExpandedState(next)
+    onExpandedChange?.(next)
+  }
+
   const navRef = useRef<HTMLElement>(null)
   useEffect(() => {
     const nav = navRef.current
-    if (!followActive || !activeId || !nav || nav.scrollHeight <= nav.clientHeight) return
+    if (!followActive || !isExpanded || !activeId || !nav || nav.scrollHeight <= nav.clientHeight) return
     const link = nav.querySelector<HTMLElement>(`[data-toc-id="${CSS.escape(activeId)}"]`)
     if (!link) return
     // Scroll the rail, never the page: `scrollIntoView` would move every
@@ -129,7 +165,7 @@ export function TableOfContents({
     const linkBox = link.getBoundingClientRect()
     if (linkBox.top < navBox.top) nav.scrollTop -= navBox.top - linkBox.top + 8
     else if (linkBox.bottom > navBox.bottom) nav.scrollTop += linkBox.bottom - navBox.bottom + 8
-  }, [activeId, followActive])
+  }, [activeId, followActive, isExpanded])
 
   const navigate = useCallback(
     (id: string, event: React.MouseEvent) => {
@@ -152,36 +188,76 @@ export function TableOfContents({
   )
 
   const labelId = useId()
+  const listId = useId()
   const hasLabel = label != null && label !== false
   return (
     <nav
       ref={navRef}
       data-slot="table-of-contents"
-      aria-label={hasLabel ? undefined : (ariaLabel ?? "On this page")}
-      aria-labelledby={hasLabel ? labelId : undefined}
+      aria-label={hasLabel || collapsible ? undefined : (ariaLabel ?? "On this page")}
+      aria-labelledby={hasLabel || collapsible ? labelId : undefined}
+      data-expanded={collapsible ? isExpanded : undefined}
       className={cn(
         "flex min-w-0 flex-col gap-y-1",
-        sticky && "sticky top-6 max-h-[calc(100dvh-3rem)] overflow-y-auto overscroll-contain",
+        sticky &&
+          "sticky top-[var(--quebi-rail-top,--spacing(6))] max-h-[calc(100dvh-var(--quebi-rail-top,--spacing(6))---spacing(6))] overflow-y-auto overscroll-contain",
         className,
       )}
       {...props}
     >
-      {hasLabel && (
-        <div id={labelId} className="px-3 font-medium text-quebi-fg-muted text-xs/6">
-          {label}
-        </div>
+      {collapsible ? (
+        <Button
+          aria-expanded={isExpanded}
+          aria-controls={listId}
+          onPress={toggle}
+          className={({ isFocusVisible }) =>
+            cn(
+              "flex w-full cursor-pointer items-center justify-between gap-2 rounded-quebi-sm px-3 text-start font-medium text-quebi-fg-muted text-xs/6 outline-hidden",
+              "transition-colors duration-150 hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
+              isFocusVisible && "ring-2 ring-quebi-brand-mark ring-inset",
+            )
+          }
+        >
+          <span id={labelId} className="min-w-0 truncate">
+            {hasLabel ? label : (ariaLabel ?? "On this page")}
+          </span>
+          <ChevronDown
+            aria-hidden="true"
+            className={cn(
+              "size-3.5 shrink-0 transition-transform duration-200",
+              !isExpanded && "-rotate-90",
+            )}
+          />
+        </Button>
+      ) : (
+        hasLabel && (
+          <div id={labelId} className="px-3 font-medium text-quebi-fg-muted text-xs/6">
+            {label}
+          </div>
+        )
       )}
-      <TocList items={tree} activeId={activeId} onNavigate={navigate} depth={0} />
+      <TocList
+        id={listId}
+        hidden={!isExpanded}
+        items={tree}
+        activeId={activeId}
+        onNavigate={navigate}
+        depth={0}
+      />
     </nav>
   )
 }
 
 function TocList({
+  id,
+  hidden,
   items,
   activeId,
   onNavigate,
   depth,
 }: {
+  id?: string
+  hidden?: boolean
   items: TableOfContentsItem[]
   activeId: string | null
   onNavigate: (id: string, event: React.MouseEvent) => void
@@ -189,9 +265,12 @@ function TocList({
 }) {
   return (
     <ul
+      id={id}
+      hidden={hidden}
       data-slot="table-of-contents-list"
       className={cn(
-        "flex min-w-0 flex-col gap-y-0.5",
+        // `flex` would beat the `hidden` attribute's display: none.
+        hidden ? "hidden" : "flex min-w-0 flex-col gap-y-0.5",
         depth > 0 && "ms-3 mt-0.5 border-quebi-line/10 border-s ps-2",
       )}
     >

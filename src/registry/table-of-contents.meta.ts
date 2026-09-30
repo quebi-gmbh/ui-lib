@@ -6,11 +6,12 @@ export const tableOfContentsMeta: ComponentMeta = {
   description:
     "The \"on this page\" rail: a nav of links to the headings of the document beside it, nested by heading level, with the heading being read marked current by a scroll-spy that re-measures on scroll and on layout change. A click scrolls smoothly (or instantly under reduced motion), writes the #id into the URL and moves focus to the heading. The items are data, so a prerendered page ships the list in its HTML; useTableOfContents collects them from the DOM where that does not matter.",
   category: "Navigation",
-  tags: ["navigation", "toc", "table-of-contents", "on-this-page", "scroll-spy", "anchor", "nav"],
+  tags: ["navigation", "toc", "collapsible", "table-of-contents", "on-this-page", "scroll-spy", "anchor", "nav"],
   usage: {
     when: [
       "A long page of prose or reference with several h2/h3 sections: docs, a rule page, a settings page read top to bottom.",
       "A sticky rail beside the content, so the reader can see where they are and jump elsewhere.",
+      "A `collapsible` rail on the start side of the page, or stacked above the content on a narrow layout, where the list should fold away until asked for.",
     ],
     whenNot: [
       "Don't use a TableOfContents to move between pages. Routes are a `Sidebar` or a `Navbar`.",
