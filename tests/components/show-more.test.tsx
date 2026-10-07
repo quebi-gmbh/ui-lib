@@ -48,7 +48,9 @@ test("neither state casts a shadow", () => {
   // A chip on a divider is in the page flow, and nothing there casts one —
   // the same rule `button.test.tsx` pins on every intent.
   for (const selected of [false, true]) {
-    const shadows = chipClasses({ defaultSelected: selected }).filter((c) => /(^|:)shadow-/.test(c))
+    const shadows = chipClasses({ defaultSelected: selected }).filter(
+      (c) => /(^|:)shadow-/.test(c) && !/(^|:)shadow-(?:\(--q-shadow-(?:control|action)\)|none)$/.test(c),
+    )
     expect(shadows, `the ${selected ? "selected" : "resting"} chip casts a shadow`).toEqual([])
   }
 })

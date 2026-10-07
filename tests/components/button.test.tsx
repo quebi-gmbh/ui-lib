@@ -55,10 +55,10 @@ describe("Button", () => {
     expect(button).not.toHaveClass("rounded-none")
   })
 
-  test("defaults to square", () => {
+  test("defaults to the theme's control radius, which is square in Ink & Paper", () => {
     render(<Button>Save</Button>)
 
-    expect(screen.getByRole("button", { name: "Save" })).toHaveClass("rounded-none")
+    expect(screen.getByRole("button", { name: "Save" })).toHaveClass("rounded-(--q-radius-control)")
   })
 })
 
@@ -145,6 +145,9 @@ describe("Button intents: the label on its own fill", () => {
   function resolve(value: string, values: Map<string, string>, behind: string) {
     const [name, alpha] = split(value)
     if (name === "transparent" || name === "current") return behind
+    // A theme variable for a ground, measured at its Ink & Paper default: the
+    // control ground is transparent while fields are underlines.
+    if (name === "(--q-field-bg)") return behind
     const hex = name.startsWith("quebi-")
       ? values.get(`q-${name.slice("quebi-".length)}`)
       : TAILWIND[name]
@@ -236,9 +239,13 @@ describe("Button hover: fill only", () => {
   /** The classes `buttonStyles` actually emits for one intent, post-merge. */
   const classesFor = (intent: (typeof INTENTS)[number]) => buttonStyles({ intent }).split(/\s+/)
 
-  test("no intent casts a shadow, at rest or on any state", () => {
+  test("no intent casts a shadow of its own — only the theme's, which Ink & Paper sets to none", () => {
+    // A theme may give controls a hard shadow (`--q-shadow-control`,
+    // `--q-shadow-action`) and drop it on press; a literal shadow utility would
+    // be one the theme cannot take back.
+    const themed = /(^|:)shadow-(?:\(--q-shadow-(?:control|action)\)|none)$/
     for (const intent of INTENTS) {
-      const shadows = classesFor(intent).filter((c) => /(^|:)shadow-/.test(c))
+      const shadows = classesFor(intent).filter((c) => /(^|:)shadow-/.test(c) && !themed.test(c))
       expect(shadows, `${intent} casts a shadow`).toEqual([])
     }
   })

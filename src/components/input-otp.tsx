@@ -183,7 +183,7 @@ export function InputOTPSlot({
       className={cn(
         "relative flex items-center justify-center text-quebi-fg",
         inputOtpSlotSizeStyles[size],
-        "border-y border-t-transparent border-b-quebi-rule bg-transparent outline-none",
+        "quebi-field outline-none",
         "transition-[border-color,box-shadow] duration-150",
         "data-[active=true]:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
         "aria-invalid:border-b-quebi-danger data-[active=true]:aria-invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",

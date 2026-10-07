@@ -23,12 +23,16 @@ import { cn, tv } from "@/lib/utils"
 export const buttonStyles = tv({
   base: [
     "inline-flex items-center justify-center gap-2",
-    "font-sans font-medium whitespace-nowrap select-none cursor-pointer",
-    "border border-solid",
+    "font-(family-name:--q-font-control) font-medium whitespace-nowrap select-none cursor-pointer",
+    "border-(length:--q-border-control) border-solid",
     // Named properties, not `transition-all`: `all` would also animate layout
     // and the focus ring. These are what the intents and `disabled:`/`pending:`
     // actually move.
-    "transition-[background-color,border-color,color,opacity] duration-150 ease-out",
+    // A theme with a hard shadow (`--q-shadow-*`) and a `--q-press` makes the
+    // button travel into its shadow under the pointer; in Ink & Paper both are
+    // zero, so only the colours move.
+    "transition-[background-color,border-color,color,opacity,translate,box-shadow] duration-150 ease-out",
+    "hover:translate-(--q-press) pressed:translate-(--q-press) hover:shadow-none pressed:shadow-none disabled:translate-0",
     "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
     "disabled:opacity-45 disabled:cursor-not-allowed",
     "pending:opacity-70 pending:cursor-wait",
@@ -42,17 +46,22 @@ export const buttonStyles = tv({
       // (gray-800 on Daylight, gray-300 on Cinematic); the label stays above
       // 4.5:1 at both ends.
       primary:
-        "bg-quebi-action border-quebi-action text-quebi-on-action hover:bg-quebi-action-hover hover:border-quebi-action-hover",
-      secondary: "bg-quebi-raised border-transparent text-quebi-fg hover:bg-quebi-pressed",
+        "bg-quebi-action border-quebi-action text-quebi-on-action shadow-(--q-shadow-action) hover:bg-quebi-action-hover hover:border-quebi-action-hover",
+      secondary:
+        "bg-quebi-raised border-transparent text-quebi-fg shadow-(--q-shadow-control) hover:bg-quebi-pressed",
       // The design's outline button: transparent, drawn by a line-strong rule.
-      outline: "bg-transparent border-quebi-rule text-quebi-fg hover:bg-quebi-raised",
+      outline:
+        // The control ground: transparent while fields are underlines, the card
+        // ground once a theme boxes them — an outline button is a box too.
+        "bg-(--q-field-bg) border-quebi-rule text-quebi-fg shadow-(--q-shadow-control) hover:bg-quebi-raised",
       ghost:
         "bg-transparent border-transparent text-quebi-fg-muted hover:bg-quebi-raised hover:text-quebi-fg",
       // The label is the page ground, not white: `--q-danger` is red-700 on
       // Daylight and red-400 on Cinematic, and only the ground flips with it —
       // white on red-400 is 2.8:1, ink on it is 7:1. Hover fades rather than
       // shifting hue, so there is no second red to keep in contrast.
-      danger: "bg-quebi-danger border-quebi-danger text-quebi-bg hover:opacity-90",
+      danger:
+        "bg-quebi-danger border-quebi-danger text-quebi-bg shadow-(--q-shadow-action) hover:opacity-90",
     },
     size: {
       xs: ["text-xs px-2.5 py-1.5", "*:data-[slot=icon]:size-3 *:data-[slot=loader]:size-3"],
@@ -77,7 +86,7 @@ export const buttonStyles = tv({
     // rely on the merge at all.
     isCircle: {
       true: "rounded-full",
-      false: "rounded-none",
+      false: "rounded-(--q-radius-control)",
     },
   },
   defaultVariants: {

@@ -45,7 +45,7 @@ export function Checkbox({ className, children, ...props }: CheckboxProps) {
               // Square, edged in `rule`. Shape is what tells a reader whether a
               // group takes one answer or several, so the box never rounds —
               // the radio beside it is the round one.
-              "relative flex size-[18px] shrink-0 items-center justify-center border border-quebi-rule bg-transparent",
+              "relative flex size-[18px] shrink-0 items-center justify-center rounded-(--q-radius-mark) border-(length:--q-border-control) border-quebi-rule bg-transparent",
               "transition-colors duration-150",
               // Checked and indeterminate are ink: `action` fill, `on-action` glyph.
               "group-data-[selected]:border-quebi-action group-data-[selected]:bg-quebi-action",

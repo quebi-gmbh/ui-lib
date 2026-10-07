@@ -121,7 +121,8 @@ describe("a text field draws an underline, not a ring", () => {
   const input = readFileSync(join(ROOT, "src", "components", "input.tsx"), "utf8")
 
   test("Input is underline-only and thickens the line on focus", () => {
-    expect(input).toContain("border-b-quebi-rule")
+    // The frame (`quebi-field`) is underline-only unless a theme boxes it.
+    expect(input).toContain("quebi-field")
     expect(input).toContain("focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]")
   })
 

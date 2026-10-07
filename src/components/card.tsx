@@ -33,11 +33,14 @@ const Card = ({ className, variant = "default", interactive = false, ...props }:
       className={cn(
         // flex-col + h-full so a child with `mt-auto` (e.g. the action button)
         // pins to the bottom and buttons align across a row of cards.
-        "flex flex-col h-full border p-6 text-quebi-fg",
+        "flex flex-col h-full p-6 text-quebi-fg",
+        // Shape from the theme: square, 1px and flat in Ink & Paper.
+        "rounded-(--q-radius-surface) border-(length:--q-border-surface) shadow-(--q-shadow-surface)",
         variant === "feature"
           ? "border-quebi-rule bg-quebi-raised"
-          : "border-quebi-hairline bg-quebi-bg",
-        interactive && "transition-colors duration-150 hover:bg-quebi-raised",
+          : "border-quebi-hairline bg-(--q-card)",
+        interactive &&
+          "transition-[background-color,translate,box-shadow] duration-150 hover:translate-(--q-press) hover:bg-quebi-raised hover:shadow-none",
         className,
       )}
       {...props}

@@ -136,7 +136,7 @@ export default function App() {
           this is the element that holds the header: any surface that pins
           itself to the viewport reads it instead of re-deriving the header's
           height, which is how `FilterRail` ended up stuck behind the bar. */}
-      <div className="flex min-h-screen flex-col bg-quebi-bg text-quebi-fg [--quebi-rail-top:--spacing(24)]">
+      <div className="flex min-h-screen flex-col bg-quebi-bg bg-(image:--q-page-image) bg-size-(--q-page-image-size) text-quebi-fg [--quebi-rail-top:--spacing(24)]">
         {/* The one global part of the site's pending state. What a navigation
             looks like is local — the clicked NavLink carries it — but "looks"
             is the operative word, and a live region is by nature one place for

@@ -38,7 +38,7 @@ export const badgeIntents = {
 export const badgeStyles = tv({
   base: [
     "inline-flex items-center gap-1.5",
-    "font-sans text-quebi-tag whitespace-nowrap",
+    "font-(family-name:--q-font-control) text-quebi-tag whitespace-nowrap",
     "rounded-full border px-3 py-1.5",
   ],
   variants: {

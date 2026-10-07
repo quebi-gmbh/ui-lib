@@ -233,7 +233,7 @@ export interface MonthPickerFieldProps extends Omit<MonthPickerProps, "autoFocus
  */
 const fieldTriggerStyles = cn(
   "inline-flex cursor-default items-center justify-between gap-x-2 bg-transparent py-2 text-sm text-quebi-fg tabular-nums",
-  "border-y border-t-transparent border-b-quebi-rule",
+  "quebi-field",
   "transition-[border-color,box-shadow] duration-150",
   "outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)] aria-expanded:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
   "disabled:cursor-not-allowed disabled:opacity-50",

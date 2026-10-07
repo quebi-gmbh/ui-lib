@@ -20,9 +20,9 @@ import { cn, tv } from "@/lib/utils"
 export const toggleStyles = tv({
   base: [
     "inline-flex items-center justify-center gap-2",
-    "font-sans font-medium whitespace-nowrap select-none cursor-pointer",
-    "border border-solid",
-    "transition-[background-color,border-color,color,opacity] duration-150 ease-out",
+    "font-(family-name:--q-font-control) font-medium whitespace-nowrap select-none cursor-pointer",
+    "border-(length:--q-border-control) border-solid",
+    "transition-[background-color,border-color,color,opacity,translate,box-shadow] duration-150 ease-out",
     "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
     "disabled:opacity-45 disabled:cursor-not-allowed",
     // react-aria slot convention — icons inherit current color
@@ -31,8 +31,10 @@ export const toggleStyles = tv({
   variants: {
     intent: {
       outline: [
-        "bg-transparent border-quebi-rule text-quebi-fg",
+        "bg-transparent border-quebi-rule text-quebi-fg shadow-(--q-shadow-control)",
         "hover:bg-quebi-raised",
+        // A theme with a hard shadow presses a selected toggle into it.
+        "selected:translate-(--q-press) selected:shadow-none",
         "selected:bg-quebi-action selected:border-quebi-action selected:text-quebi-on-action",
         "selected:hover:bg-quebi-action-hover selected:hover:border-quebi-action-hover",
       ],
@@ -60,7 +62,7 @@ export const toggleStyles = tv({
     // Radius belongs to the variant, not `base` — see button.tsx.
     isCircle: {
       true: "rounded-full",
-      false: "rounded-none",
+      false: "rounded-(--q-radius-control)",
     },
   },
   defaultVariants: {

@@ -173,7 +173,7 @@ export function ColorInput({ className, ...props }: InputProps) {
           "relative block w-full appearance-none text-sm text-quebi-fg tabular-nums uppercase",
           "placeholder:text-quebi-fg-subtle placeholder:normal-case",
           // `Input`'s underline at `md`; focus thickens it to 2px, no ring.
-          "border-y border-t-transparent border-b-quebi-rule bg-transparent px-0 py-2.5",
+          "quebi-field px-(--q-field-px) py-2.5",
           "transition-[border-color,box-shadow] duration-150",
           "outline-none focus:outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
           "invalid:border-b-quebi-danger data-invalid:border-b-quebi-danger",

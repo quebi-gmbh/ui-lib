@@ -3,7 +3,7 @@
  * WCAG contrast, on plain sRGB values. See `theme-import.ts`.
  */
 export type ThemeName = "light" | "dark"
-export type TokenKind = "color" | "font" | "length" | "shadow"
+export type TokenKind = "color" | "font" | "length" | "shadow" | "choice" | "image"
 
 export interface RGBA {
   r: number
@@ -24,22 +24,35 @@ export interface SourceValues {
 
 export type Lookup = (key: string) => RGBA
 
+export type TokenGroup = "ground" | "ink" | "line" | "action" | "state" | "stage" | "shape" | "type"
+
 export interface TokenSpec {
   /** The quebi token, as the page and the report name it. */
   key: string
-  /** The CSS variable the generated theme writes. */
+  /** The CSS variable the generated theme writes (a `choice` expands to several). */
   target: string
   kind: TokenKind
+  group: TokenGroup
   /** Names recognised in the uploaded file, in order of preference, without `--`. */
   names: string[]
   /** What the token paints in the library. */
   role: string
   required?: boolean
-  /** Colours and the shadow differ per theme; fonts and radii are set once. */
+  /** Colours and shadows differ per theme; fonts and shape are set once. */
   perTheme: boolean
+  /** Ink & Paper's own value — what the library paints when the token is not set. */
+  default: string | { light: string; dark: string }
+  /** For a `choice`: the values it takes. */
+  choices?: readonly string[]
+  /** Read from the file's own components when no property names it, in words. */
+  probe?: string
   /** How a missing colour is derived from the tokens before it, in words and in code. */
   fallback?: { note: string; derive: (get: Lookup, theme: ThemeName) => RGBA }
 }
+
+/** A token's default in one theme. */
+export const defaultOf = (spec: TokenSpec, theme: ThemeName) =>
+  typeof spec.default === "string" ? spec.default : spec.default[theme]
 
 // ---------------------------------------------------------------------------
 // Colour maths

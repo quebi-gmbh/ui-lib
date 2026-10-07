@@ -34,6 +34,13 @@ function radiusToken(name: string): number {
   return Number(declared[1]) * (declared[2] === "rem" ? 16 : 1)
 }
 
+/** A `--q-*` length's default, from the theme's shape block. */
+function themeLength(name: string): number {
+  const declared = THEME.match(new RegExp(`${name}:\\s*([0-9.]+)(px|rem)\\s*;`))
+  if (!declared) throw new Error(`no ${name} length in quebi-theme.css`)
+  return Number(declared[1]) * (declared[2] === "rem" ? 16 : 1)
+}
+
 /** The classes on the one `[data-slot=indicator]` of a rendered control. */
 function markClasses(element: React.ReactElement): string[] {
   const { container } = render(element)
@@ -60,6 +67,9 @@ function markRadius(classes: string[], box: number): number {
   // Square is the default in Ink & Paper: no radius class is a 0px corner.
   if (rounded.length === 0 || rounded[0] === "rounded-none") return 0
   if (rounded[0] === "rounded-full") return box / 2
+  // A theme variable: measured at its Ink & Paper default.
+  const variable = rounded[0].match(/^rounded-\((--q-[a-z-]+)\)$/)
+  if (variable) return Math.min(themeLength(variable[1]), box / 2)
   const token = rounded[0].match(/^rounded-(quebi-[a-z]+)$/)
   if (!token) throw new Error(`${rounded[0]} is not a quebi radius token`)
   // CSS clamps a radius that would overrun the edge it shares, so a token

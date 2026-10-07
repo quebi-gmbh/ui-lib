@@ -116,7 +116,7 @@ export function ToggleGroup({
             "border border-solid border-quebi-rule",
             orientation === "horizontal" ? "flex-row" : "flex-col",
             selectionMode === "single" ? "gap-0.5" : "gap-0",
-            isCircle ? "rounded-full" : "rounded-none",
+            isCircle ? "rounded-full" : "rounded-(--q-radius-control)",
             isFixedHeight && CONTROL_HEIGHTS[size],
             resolved,
           ),

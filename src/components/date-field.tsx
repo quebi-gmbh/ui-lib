@@ -49,9 +49,9 @@ export function DateField<T extends DateValue>({ className, ...props }: DateFiel
  * segmented field's height is its segments' line box.
  */
 const dateInputSizeStyles = {
-  xs: "px-0 py-1.5",
-  sm: "px-0 py-2",
-  md: "px-0 py-2.5",
+  xs: "px-(--q-field-px) py-1.5",
+  sm: "px-(--q-field-px) py-2",
+  md: "px-(--q-field-px) py-2.5",
 } as const
 
 type DateInputSize = keyof typeof dateInputSizeStyles
@@ -89,7 +89,7 @@ export function DateInput({
               : [
                   // `Input`'s underline: a transparent top border keeps the scale's
                   // height; focus or an open picker thickens the line to 2px, no ring.
-                  "border-y border-t-transparent border-b-quebi-rule bg-transparent",
+                  "quebi-field",
                   dateInputSizeStyles[size],
                   "transition-[border-color,box-shadow] duration-150",
                   "outline-none focus-within:outline-none focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",

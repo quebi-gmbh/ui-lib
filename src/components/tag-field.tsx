@@ -40,9 +40,9 @@ import { cn } from "@/lib/utils"
  * dependency of this file.
  */
 const tagFieldSizeStyles = {
-  xs: "text-xs px-0 py-1.5",
-  sm: "text-sm px-0 py-2",
-  md: "text-sm px-0 py-2.5",
+  xs: "text-xs px-(--q-field-px) py-1.5",
+  sm: "text-sm px-(--q-field-px) py-2",
+  md: "text-sm px-(--q-field-px) py-2.5",
 } as const
 
 type TagFieldSize = keyof typeof tagFieldSizeStyles
@@ -212,7 +212,7 @@ export function TagField({
             placeholder={placeholder}
             className={cn(
               "relative block w-full appearance-none bg-transparent text-quebi-fg placeholder:text-quebi-fg-subtle",
-              "border-y border-t-transparent border-b-quebi-rule",
+              "quebi-field",
               tagFieldSizeStyles[size],
               "transition-[border-color,box-shadow] duration-150",
               "outline-none focus:outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",

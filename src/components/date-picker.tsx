@@ -156,7 +156,7 @@ export function DatePickerTrigger({ className, ...props }: GroupProps) {
           // `Input`'s underline, under the segments and the calendar button
           // alike; focus anywhere inside, or the open calendar, thickens it.
           "group/dpt flex w-full items-stretch overflow-hidden bg-transparent",
-          "border-y border-t-transparent border-b-quebi-rule",
+          "quebi-field",
           "transition-[border-color,box-shadow] duration-150",
           "focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-focus)] group-open:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
           "data-invalid:border-b-quebi-danger data-invalid:focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",

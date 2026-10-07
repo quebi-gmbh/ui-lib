@@ -1,210 +1,45 @@
 import { useEffect, useMemo, useState } from "react"
-import { Badge } from "@/components/badge"
 import { Button } from "@/components/button"
-import { Checkbox } from "@/components/checkbox"
 import { DropZone } from "@/components/drop-zone"
 import { Eyebrow } from "@/components/eyebrow"
-import { Label } from "@/components/field"
 import { FileTrigger } from "@/components/file-trigger"
-import { Input } from "@/components/input"
-import { Link } from "@/components/link"
 import { Note } from "@/components/note"
 import { Switch } from "@/components/switch"
 import { Code } from "@/components/text"
-import { TextField } from "@/components/text-field"
 import { seo } from "@/lib/seo"
 import { cn } from "@/lib/utils"
 import { applyCustomTheme, clearCustomTheme, hasCustomTheme } from "@/site/custom-theme"
-import { canvasColor, type Extraction, extractTheme } from "@/site/theme-extract"
+import { Checks, Contract, Editor, Preview } from "@/site/theme-editor"
+import { canvasColor, extractTheme } from "@/site/theme-extract"
 import {
+  checks as runChecks,
   DARK_SELECTORS,
+  decodeTheme,
+  defaultValues,
+  encodeTheme,
   generateCss,
   type ImportResult,
   importTheme,
-  previewStyle,
-  type ResolvedToken,
   type ThemeName,
+  type ThemeValues,
   TOKENS,
 } from "@/site/theme-import"
 
 export function meta() {
   return seo({
-    title: "Theme import",
+    title: "Theme import and editor",
     description:
-      "Upload a design system's HTML file and turn its CSS custom properties into a quebi ui-lib theme: mapped, contrast-checked, previewed and downloadable. Runs in your browser; the file never leaves it.",
+      "Upload a design system's HTML file, or start from quebi, and edit every token of a ui-lib theme by hand: colours, type and shape, contrast-checked and previewed live, shareable as a link, downloadable as CSS.",
     path: "/theme",
   })
 }
 
 /** The section head the design repeats: a display-s heading, a mono number on the right. */
-function SectionHead({ title, count }: { title: string; count: string }) {
+function SectionHead({ title, count, id }: { title: string; count: string; id?: string }) {
   return (
-    <div className="mb-5 flex items-end justify-between gap-4">
+    <div id={id} className="mb-5 flex items-end justify-between gap-4">
       <h2 className="font-display text-quebi-display-s text-quebi-fg">{title}</h2>
       <Eyebrow as="span">{count}</Eyebrow>
-    </div>
-  )
-}
-
-const pad = (n: number) => String(n).padStart(2, "0")
-
-const KIND_LABEL = { color: "colour", font: "font stack", length: "length", shadow: "box-shadow" } as const
-
-/** The contract: every token, the names that fill it, and what happens when none does. */
-function Contract() {
-  return (
-    <div className="border-t border-quebi-rule">
-      <div className="hidden grid-cols-[9rem_1fr_1fr_11rem] gap-4 border-b border-b-quebi-rule py-2 md:grid">
-        <Eyebrow as="span">token</Eyebrow>
-        <Eyebrow as="span">recognised names</Eyebrow>
-        <Eyebrow as="span">paints</Eyebrow>
-        <Eyebrow as="span">if missing</Eyebrow>
-      </div>
-      {TOKENS.map((spec) => (
-        <div
-          key={spec.key}
-          className="grid grid-cols-1 gap-1 border-b border-quebi-hairline py-3 md:grid-cols-[9rem_1fr_1fr_11rem] md:gap-4"
-        >
-          <div>
-            <p className="font-mono text-quebi-code text-quebi-fg">{spec.key}</p>
-            <p className="text-quebi-caption text-quebi-fg-subtle">
-              {KIND_LABEL[spec.kind]}
-              {spec.perTheme ? " · per theme" : ""}
-            </p>
-          </div>
-          <p className="font-mono text-quebi-caption text-quebi-fg-muted">
-            {spec.names.map((n) => `--${n}`).join("  ")}
-          </p>
-          <p className="text-quebi-body-s text-quebi-fg-muted">{spec.role}</p>
-          <p className="text-quebi-caption text-quebi-fg-subtle">
-            {spec.required ? (
-              <span className="font-medium text-quebi-fg">required</span>
-            ) : spec.fallback ? (
-              <>derived: {spec.fallback.note}</>
-            ) : (
-              "library default"
-            )}
-          </p>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function Swatch({ token }: { token?: ResolvedToken }) {
-  if (!token?.value) return <span className="text-quebi-caption text-quebi-fg-subtle">default</span>
-  if (token.spec.kind !== "color") {
-    return <span className="font-mono text-quebi-caption break-all text-quebi-fg-muted">{token.value}</span>
-  }
-  return (
-    <span className="flex items-center gap-2">
-      <span
-        aria-hidden="true"
-        className="size-5 shrink-0 border border-quebi-hairline"
-        style={{ backgroundColor: token.value }}
-      />
-      <span className="font-mono text-quebi-caption text-quebi-fg-muted">{token.value}</span>
-    </span>
-  )
-}
-
-function originText(token?: ResolvedToken) {
-  if (!token) return ""
-  switch (token.origin.kind) {
-    case "found":
-      return `--${token.origin.property}`
-    case "derived":
-      return `derived: ${token.origin.note}`
-    case "unparsable":
-      return `--${token.origin.property} unreadable`
-    default:
-      return "library default"
-  }
-}
-
-/** What was found, theme by theme. */
-function Mapping({ result }: { result: ImportResult }) {
-  const themes = (["light", "dark"] as ThemeName[]).filter((t) => result.themes[t])
-  return (
-    <div className="border-t border-quebi-rule">
-      {TOKENS.map((spec) => (
-        <div
-          key={spec.key}
-          className="grid grid-cols-1 gap-2 border-b border-quebi-hairline py-3 md:grid-cols-[9rem_1fr_1fr] md:gap-4"
-        >
-          <p className="font-mono text-quebi-code text-quebi-fg">{spec.key}</p>
-          {themes.map((theme) => {
-            const token = result.themes[theme]?.[spec.key]
-            return (
-              <div key={theme} className="min-w-0">
-                {themes.length > 1 && <Eyebrow as="span">{theme}</Eyebrow>}
-                <Swatch token={token} />
-                <p className="mt-1 font-mono text-quebi-caption text-quebi-fg-subtle">{originText(token)}</p>
-              </div>
-            )
-          })}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function Checks({ result }: { result: ImportResult }) {
-  const failing = result.checks.filter((c) => !c.pass)
-  return (
-    <div>
-      <p className="mb-4 text-quebi-body text-quebi-fg-muted">
-        {failing.length === 0
-          ? `All ${result.checks.length} contrast checks pass.`
-          : `${failing.length} of ${result.checks.length} contrast checks fail. The theme still applies; fix these in the source file.`}
-      </p>
-      <div className="border-t border-quebi-rule">
-        {result.checks.map((c) => (
-          <div
-            key={`${c.theme}-${c.label}`}
-            className="grid grid-cols-[3.5rem_1fr_auto] items-baseline gap-x-3 gap-y-1 border-b border-quebi-hairline py-2 sm:grid-cols-[5rem_1fr_auto_auto] sm:gap-x-4"
-          >
-            <Eyebrow as="span">{c.theme}</Eyebrow>
-            <span className="min-w-0 text-quebi-body-s text-quebi-fg-muted">{c.label}</span>
-            <span className="col-start-2 font-mono text-quebi-caption text-quebi-fg sm:col-start-auto">
-              {c.ratio.toFixed(2)}:1 / {c.min}
-            </span>
-            <Badge intent={c.pass ? "success" : "danger"} className="col-start-3 row-start-1 sm:col-start-auto sm:row-start-auto">{c.pass ? "pass" : "fail"}</Badge>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
-/** The library, painted with the imported theme only inside this box. */
-function Preview({ result, theme }: { result: ImportResult; theme: ThemeName }) {
-  return (
-    <div
-      style={previewStyle(result, theme) as React.CSSProperties}
-      className="flex flex-col gap-5 border border-quebi-hairline bg-quebi-bg p-6 font-sans text-quebi-fg"
-    >
-      <Eyebrow>{theme === "light" ? "daylight" : "cinematic"} — preview</Eyebrow>
-      <h3 className="font-display text-quebi-display-s">components for your app.</h3>
-      <p className="text-quebi-body text-quebi-fg-muted">
-        Running text in the body ink, with an <Link href="#preview">inline link</Link> and a caption
-        below.
-      </p>
-      <TextField className="max-w-72">
-        <Label>email</Label>
-        <Input placeholder="you@company.com" />
-      </TextField>
-      <div className="flex flex-wrap items-center gap-3">
-        <Button>send message</Button>
-        <Button intent="outline">cancel</Button>
-        <Button intent="secondary">preview</Button>
-      </div>
-      <div className="flex flex-wrap items-center gap-4">
-        <Checkbox defaultSelected>remember me</Checkbox>
-        <Switch defaultSelected>notifications</Switch>
-        <Badge>typescript</Badge>
-        <Badge intent="danger">overdue</Badge>
-      </div>
     </div>
   )
 }
@@ -218,29 +53,67 @@ function download(css: string, name: string) {
   URL.revokeObjectURL(url)
 }
 
-interface Loaded {
-  fileName: string
-  extraction: Extraction
-  result: ImportResult
-  css: string
+interface Session {
+  name: string
+  values: ThemeValues
+  /** From an upload; a link or a blank start has none. */
+  imported?: ImportResult
+  fontFaces: string[]
+  notes: string[]
 }
 
-export default function ThemeImport() {
-  const [loaded, setLoaded] = useState<Loaded | null>(null)
+const HASH_KEY = "t="
+
+export default function ThemePage() {
+  const [session, setSession] = useState<Session | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [applied, setApplied] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [link, setLink] = useState<string | null>(null)
 
-  useEffect(() => setApplied(hasCustomTheme()), [])
+  // A shared link: the theme travels in the fragment, so it never reaches a server.
+  useEffect(() => {
+    setApplied(hasCustomTheme())
+    const hash = window.location.hash.slice(1)
+    if (!hash.startsWith(HASH_KEY)) return
+    decodeTheme(hash.slice(HASH_KEY.length))
+      .then((values) =>
+        setSession({
+          name: "shared theme",
+          values,
+          fontFaces: [],
+          notes: ["Loaded from a link. Embedded fonts do not travel in a link; their family names do."],
+        }),
+      )
+      .catch((e) => setError(`This theme link could not be read: ${e instanceof Error ? e.message : String(e)}`))
+  }, [])
+
+  // Keep the link current as the theme is edited.
+  useEffect(() => {
+    if (!session) return
+    let cancelled = false
+    const timer = setTimeout(async () => {
+      const encoded = await encodeTheme(session.values)
+      if (cancelled) return
+      const url = `${window.location.origin}${window.location.pathname}#${HASH_KEY}${encoded}`
+      window.history.replaceState(null, "", url)
+      setLink(url)
+    }, 250)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [session])
 
   // The preview boxes need the file's fonts, which are global by nature.
   useEffect(() => {
-    if (!loaded?.extraction.fontFaces.length) return
+    if (!session?.fontFaces.length) return
     const el = document.createElement("style")
-    el.textContent = loaded.extraction.fontFaces.join("\n")
+    el.textContent = session.fontFaces.join("\n")
     document.head.append(el)
     return () => el.remove()
-  }, [loaded])
+  }, [session?.fontFaces])
 
   async function load(file: File) {
     setBusy(true)
@@ -250,37 +123,58 @@ export default function ThemeImport() {
         throw new Error(`${file.name} is not an HTML file.`)
       }
       const extraction = await extractTheme(await file.text())
-      const result = importTheme(extraction.source, canvasColor)
-      const css = generateCss(result, extraction.fontFaces, file.name)
-      setLoaded({ fileName: file.name, extraction, result, css })
+      const imported = importTheme(extraction.source, extraction.probes, canvasColor)
+      if (imported.errors.length) throw new Error(imported.errors.join(" "))
+      setSession({
+        name: file.name.replace(/\.html?$/i, ""),
+        values: imported.values,
+        imported,
+        fontFaces: extraction.fontFaces,
+        notes: [...imported.notes, ...extraction.skipped.map((s) => `Ignored ${s}.`)],
+      })
     } catch (e) {
-      setLoaded(null)
       setError(e instanceof Error ? e.message : String(e))
     } finally {
       setBusy(false)
     }
   }
 
-  const found = useMemo(() => {
-    const light = loaded?.result.themes.light
-    return light ? Object.values(light).filter((t) => t.origin.kind === "found").length : 0
-  }, [loaded])
+  function edit(theme: ThemeName, key: string, value: string) {
+    setSession((s) => {
+      if (!s) return s
+      const values = { ...s.values, [theme]: { ...(s.values[theme] ?? {}), [key]: value } }
+      return { ...s, values }
+    })
+  }
 
-  const ok = loaded && loaded.result.errors.length === 0
+  function toggleDark(on: boolean) {
+    setSession((s) => {
+      if (!s) return s
+      const values: ThemeValues = { light: s.values.light }
+      if (on) values.dark = s.imported?.values.dark ?? defaultValues().dark
+      return { ...s, values }
+    })
+  }
+
+  const checkList = useMemo(() => (session ? runChecks(session.values, canvasColor) : []), [session])
+  const css = useMemo(
+    () => (session ? generateCss(session.values, session.fontFaces, session.name) : ""),
+    [session],
+  )
 
   return (
     <div className="quebi-shell pt-12 pb-6">
-      <Eyebrow>tools — theme import</Eyebrow>
+      <Eyebrow>tools — theme import and editor</Eyebrow>
       <h1 className="mt-3 font-display text-quebi-display-l text-quebi-fg">bring your own design system.</h1>
       <p className="mt-5 max-w-[60ch] text-quebi-body text-quebi-fg-muted">
-        Upload a design system as one HTML file. This page reads the CSS custom properties it declares,
-        maps them onto the tokens ui-lib paints with, checks their contrast, and gives you a
-        stylesheet to import after <Code>quebi-theme.css</Code>. Everything happens in your browser:
-        the file is never uploaded anywhere, and its scripts never run.
+        Upload a design system as one HTML file, or start from quebi's own theme. Every token is then
+        yours to edit — colours, type and shape — with a live preview, contrast checks, a link to share
+        and a stylesheet to import after <Code>quebi-theme.css</Code>. It all runs in your browser: the
+        file is never uploaded and its scripts never run.
       </p>
 
       <section className="mt-quebi-9">
-        <SectionHead title="upload" count="01" />
+        <SectionHead title="source" count="01" />
         <DropZone
           className="max-h-none min-h-48 w-full flex-col gap-3"
           getDropOperation={(types) => (types.has("text/html") || types.has("Files") ? "copy" : "cancel")}
@@ -290,18 +184,30 @@ export default function ThemeImport() {
           }}
         >
           <span className="text-quebi-body text-quebi-fg-muted">
-            {busy ? "reading…" : loaded ? loaded.fileName : "drop a design-system .html file here, or"}
+            {busy ? "reading…" : "drop a design-system .html file here, or"}
           </span>
-          <FileTrigger
-            acceptedFileTypes={["text/html", ".html", ".htm"]}
-            isPending={busy}
-            onSelect={(files) => {
-              const file = files?.[0]
-              if (file) load(file)
-            }}
-          >
-            choose a file
-          </FileTrigger>
+          <div className="flex flex-wrap justify-center gap-3">
+            <FileTrigger
+              acceptedFileTypes={["text/html", ".html", ".htm"]}
+              isPending={busy}
+              onSelect={(files) => {
+                const file = files?.[0]
+                if (file) load(file)
+              }}
+            >
+              choose a file
+            </FileTrigger>
+            <Button
+              intent="ghost"
+              size="sm"
+              onPress={() => {
+                setError(null)
+                setSession({ name: "custom", values: defaultValues(), fontFaces: [], notes: [] })
+              }}
+            >
+              start from quebi
+            </Button>
+          </div>
         </DropZone>
         {error && (
           <Note intent="danger" className="mt-4">
@@ -310,69 +216,99 @@ export default function ThemeImport() {
         )}
       </section>
 
-      {loaded && (
+      {session && (
         <>
           <section className="mt-quebi-9" aria-live="polite">
-            <SectionHead title="result" count={`${pad(found)} of ${pad(TOKENS.length)} found`} />
-            {loaded.result.errors.length > 0 && (
-              <Note intent="danger" className="mb-4">
-                {loaded.result.errors.join(" ")}
-              </Note>
-            )}
-            {[...loaded.result.notes, ...loaded.extraction.skipped.map((s) => `Ignored ${s}.`)].map(
-              (note) => (
-                <p key={note} className="mb-2 max-w-[80ch] text-quebi-body-s text-quebi-fg-muted">
-                  {note}
-                </p>
-              ),
-            )}
-            {ok && (
-              <div className="mt-6 flex flex-wrap gap-3">
+            <SectionHead
+              title={session.name}
+              count={`${checkList.filter((c) => !c.pass).length} failing checks`}
+            />
+            {session.notes.map((note) => (
+              <p key={note} className="mb-2 max-w-[80ch] text-quebi-body-s text-quebi-fg-muted">
+                {note}
+              </p>
+            ))}
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <Button
+                onPress={() => {
+                  applyCustomTheme(css)
+                  setApplied(true)
+                }}
+              >
+                apply to this site
+              </Button>
+              <Button intent="outline" onPress={() => download(css, `${session.name}.quebi-theme.css`)}>
+                download css
+              </Button>
+              <Button
+                intent="outline"
+                isDisabled={!link}
+                onPress={async () => {
+                  if (!link) return
+                  await navigator.clipboard.writeText(link)
+                  setCopied(true)
+                  setTimeout(() => setCopied(false), 2000)
+                }}
+              >
+                {copied ? "link copied" : "copy share link"}
+              </Button>
+              {applied && (
                 <Button
+                  intent="ghost"
                   onPress={() => {
-                    applyCustomTheme(loaded.css)
-                    setApplied(true)
+                    clearCustomTheme()
+                    setApplied(false)
                   }}
                 >
-                  apply to this site
+                  reset site to quebi
                 </Button>
-                <Button
-                  intent="outline"
-                  onPress={() => download(loaded.css, `${loaded.fileName.replace(/\.html?$/i, "")}.quebi-theme.css`)}
-                >
-                  download css
-                </Button>
-              </div>
+              )}
+            </div>
+            {link && (
+              <p className="mt-3 max-w-full truncate font-mono text-quebi-caption text-quebi-fg-subtle">
+                {link.length} characters · {link}
+              </p>
             )}
           </section>
 
-          {ok && (
-            <>
-              <section className="mt-quebi-9" id="preview">
-                <SectionHead title="preview" count="02 themes" />
-                <div className={cn("grid gap-6", loaded.result.themes.dark && "lg:grid-cols-2")}>
-                  <Preview result={loaded.result} theme="light" />
-                  {loaded.result.themes.dark && <Preview result={loaded.result} theme="dark" />}
-                </div>
-              </section>
+          <section className="mt-quebi-9" id="preview">
+            <SectionHead title="preview" count={session.values.dark ? "02 themes" : "01 theme"} />
+            <div className={cn("grid gap-6", session.values.dark && "lg:grid-cols-2")}>
+              <Preview values={session.values} theme="light" />
+              {session.values.dark && <Preview values={session.values} theme="dark" />}
+            </div>
+          </section>
 
-              <section className="mt-quebi-9">
-                <SectionHead title="mapping" count={`${pad(TOKENS.length)} tokens`} />
-                <Mapping result={loaded.result} />
-              </section>
+          <section className="mt-quebi-9">
+            <SectionHead title="editor" count={`${String(TOKENS.length).padStart(2, "0")} tokens`} />
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+              <p className="max-w-[60ch] text-quebi-body-s text-quebi-fg-muted">
+                Any CSS value works: colours in any syntax, lengths, font stacks, shadows. The preview,
+                the checks and the link follow every keystroke; a value the page cannot use is marked
+                and left out of the CSS.
+              </p>
+              <Switch isSelected={session.values.dark !== undefined} onChange={toggleDark}>
+                dark theme
+              </Switch>
+            </div>
+            <div className="mb-2 hidden grid-cols-[12rem_1fr_1fr] gap-4 md:grid">
+              <span />
+              <Eyebrow as="span">daylight</Eyebrow>
+              <Eyebrow as="span">{session.values.dark ? "cinematic" : ""}</Eyebrow>
+            </div>
+            <Editor values={session.values} origins={session.imported?.origins} onChange={edit} />
+          </section>
 
-              <section className="mt-quebi-9">
-                <SectionHead title="contrast" count={`${pad(loaded.result.checks.length)} checks`} />
-                <Checks result={loaded.result} />
-              </section>
-            </>
-          )}
+          <section className="mt-quebi-9">
+            <SectionHead title="contrast" count={`${String(checkList.length).padStart(2, "0")} checks`} />
+            <Checks checks={checkList} />
+          </section>
         </>
       )}
 
-      {applied && (
+      {applied && !session && (
         <Note className="mt-quebi-9" intent="info">
-          An imported theme is applied to this site in this browser.{" "}
+          A custom theme is applied to this site in this browser.{" "}
           <Button
             intent="ghost"
             size="xs"
@@ -387,41 +323,43 @@ export default function ThemeImport() {
       )}
 
       <section className="mt-quebi-10">
-        <SectionHead title="what the file must define" count={`${pad(TOKENS.length)} tokens`} />
+        <SectionHead title="what the file must define" count="02" />
         <div className="mb-8 grid max-w-[80ch] gap-3 text-quebi-body text-quebi-fg-muted">
           <p>
-            Tokens are read from <strong className="font-medium text-quebi-fg">CSS custom properties</strong>{" "}
-            in the file's <Code>&lt;style&gt;</Code> blocks — or inline on <Code>&lt;html&gt;</Code> —
-            as the browser resolves them on <Code>:root</Code>, so <Code>var()</Code> chains and any
-            colour syntax work. External stylesheets are not fetched.
+            Each token is filled in this order.{" "}
+            <strong className="font-medium text-quebi-fg">By name:</strong> a CSS custom property in the
+            file's <Code>&lt;style&gt;</Code> blocks (or inline on <Code>&lt;html&gt;</Code>), resolved by
+            the browser on <Code>:root</Code>, whose name is one of the names below or ends in one —{" "}
+            <Code>--bg-000</Code>, <Code>--ds-bg-000</Code> and <Code>--color-bg-000</Code> all fill{" "}
+            <Code>bg</Code>. An exact name beats a prefixed one.
           </p>
           <p>
-            A property fills a token when its name is one of the recognised names below, or ends in
-            one: <Code>--bg-000</Code>, <Code>--ds-bg-000</Code> and <Code>--color-bg-000</Code> all fill{" "}
-            <Code>bg</Code>. The first name in the list wins; an exact name beats a prefixed one.
+            <strong className="font-medium text-quebi-fg">By component:</strong> the first class rule
+            that looks like a page (<Code>.x-page</Code>), a button (<Code>.x-btn</Code>,{" "}
+            <Code>.x-button</Code>, <Code>.x-btn-solid</Code>), an input (<Code>.x-input</Code>,{" "}
+            <Code>.x-field input</Code>), a box (<Code>.x-box</Code>, <Code>.x-card</Code>,{" "}
+            <Code>.x-panel</Code>) or a checkbox (<Code>.x-check input</Code>) is rendered in a sandbox
+            and its computed radius, border, shadow, font and background are read back. That is where
+            shape comes from, and it wins over a name — <Code>--bg-000</Code> is the page in one system
+            and the card in the next — unless the property is named exactly after the token, like{" "}
+            <Code>--radius-control</Code>.
           </p>
           <p>
-            Only <Code>bg</Code> and <Code>fg</Code> are required. Every other colour falls back to a
-            value derived from them, and the result lists which ones were derived.
+            <strong className="font-medium text-quebi-fg">Otherwise:</strong> only <Code>bg</Code> and{" "}
+            <Code>fg</Code> are required. A missing colour is derived from them; anything else keeps
+            quebi's value. The editor shows where each value came from.
           </p>
           <p>
-            The dark theme is read with each of these switched on: {DARK_SELECTORS.map((s, i) => (
+            The dark theme is read with each of these switched on:{" "}
+            {DARK_SELECTORS.map((s, i) => (
               <span key={s}>
                 {i > 0 && ", "}
                 <Code>{s}</Code>
               </span>
             ))}
-            . If nothing changes, only Daylight is generated.
-          </p>
-          <p>
-            <Code>@font-face</Code> rules with <Code>data:</Code> or absolute URLs are carried into the
-            theme; relative ones are skipped. Fonts are then picked up through{" "}
-            <Code>--font-display</Code>, <Code>--font-text</Code> and <Code>--font-mono</Code>.
-          </p>
-          <p>
-            What a theme does not change is shape: buttons, inputs and cards stay square and ruled,
-            whatever the file's radii say — <Code>radius-s</Code> rounds only menus, popovers and
-            tooltips. The quebi logo is an image and keeps its own ink.
+            . <Code>@font-face</Code> rules with <Code>data:</Code> or absolute URLs come along with an
+            upload; a share link carries only font names. Values that could break out of a declaration —{" "}
+            <Code>;</Code>, braces, <Code>url()</Code> — are never written.
           </p>
         </div>
         <Contract />

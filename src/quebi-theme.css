@@ -308,6 +308,47 @@
  * `glow-to` in Daylight, 5.5:1. Never put gray-400 text on a light ground or
  * gray-600 on a dark one.
  */
+/*
+ * ---------------- Shape ----------------
+ * The structural decisions a design system makes besides its colours, as
+ * runtime variables the components read. The values here *are* Ink & Paper —
+ * square, 1px, no shadow, underline fields — so they change nothing on their
+ * own; they exist so an imported or edited theme (see /theme) can make the
+ * same components boxed, rounded, thick-ruled or hard-shadowed without a
+ * line of component code changing.
+ *
+ *   --q-radius-control   buttons, fields, toggles
+ *   --q-radius-surface   cards, dialogs
+ *   --q-radius-mark      the checkbox box
+ *   --q-border-control   border width of buttons, fields, marks
+ *   --q-border-surface   border width of cards
+ *   --q-press            how far a button travels into its shadow on press
+ *   --q-font-control     the face of buttons and tags
+ *   --q-field-*          the field frame: side border, whether the top edge
+ *                        is drawn (0 or 1), inline padding, ground — 0 / 0 /
+ *                        0 / transparent is the underline; a box sets all four
+ *   --q-page-image-size  the tile size of the page pattern (the pattern
+ *                        itself, `--q-page-image`, carries ink: per theme)
+ *
+ * Shadows are per theme (they carry ink) and live in the theme blocks below.
+ * They are written `0 0 #0000` rather than `none` so a focus treatment can
+ * list them beside its own shadow.
+ */
+:root {
+  --q-radius-control: 0px;
+  --q-radius-surface: 0px;
+  --q-radius-mark: 0px;
+  --q-border-control: 1px;
+  --q-border-surface: 1px;
+  --q-press: 0px;
+  --q-font-control: var(--font-sans);
+  --q-field-border-x: 0px;
+  --q-field-boxed: 0;
+  --q-field-px: 0px;
+  --q-field-bg: transparent;
+  --q-page-image-size: auto;
+}
+
 :root,
 .light {
   --q-bg:           #ffffff;
@@ -334,6 +375,13 @@
   --q-warn:         #92400e;  /* amber-800 */
   --q-success:      #065f46;  /* emerald-800 */
   --q-shadow-float: 0 1px 2px #0307120f, 0 12px 32px #03071214;
+  --q-shadow-control: 0 0 #0000;
+  --q-shadow-action: 0 0 #0000;
+  --q-shadow-surface: 0 0 #0000;
+  /* The ground of a card. The page itself in Ink & Paper; a design whose
+     boxes sit on a tinted page sets it apart. */
+  --q-card: var(--q-bg);
+  --q-page-image: none;
   /* Chart series: the gray ramp, alternating dark and light. */
   --q-chart-1:  #030712;
   --q-chart-2:  #9ca3af;
@@ -375,6 +423,11 @@
   --q-warn:         #fbbf24;  /* amber-400 */
   --q-success:      #34d399;  /* emerald-400 */
   --q-shadow-float: 0 0 0 1px #ffffff1a, 0 12px 32px #00000099;
+  --q-shadow-control: 0 0 #0000;
+  --q-shadow-action: 0 0 #0000;
+  --q-shadow-surface: 0 0 #0000;
+  --q-card: var(--q-bg);
+  --q-page-image: none;
   --q-chart-1:  #f9fafb;
   --q-chart-2:  #4b5563;
   --q-chart-3:  #9ca3af;
@@ -412,6 +465,27 @@
 /* The stage light: one soft directional glow from the top right. White over
    cool grey in Daylight, graphite over ink in Cinematic. Only on a Stage; no
    gradients anywhere else. */
+/* The frame every field-shaped control draws: an input, a select trigger, a
+   date group. Underline by default (see the shape variables above); a theme
+   that sets `--q-field-border-x`, `--q-field-boxed` and `--q-field-px` turns all
+   of them into boxes at once. Colours and focus stay with the component. */
+@utility quebi-field {
+  /* One edge colour for the whole frame, so an invalid field turns every
+     drawn edge red, not only the underline. The top edge is always there (it
+     keeps the height symmetric) and is mixed in only when fields are boxed. */
+  --q-field-edge: var(--color-quebi-rule);
+  border-style: solid;
+  border-width: var(--q-border-control) var(--q-field-border-x);
+  border-color: color-mix(in srgb, var(--q-field-edge) calc(var(--q-field-boxed) * 100%), transparent)
+    var(--q-field-edge) var(--q-field-edge);
+  &:is([data-invalid], [aria-invalid="true"]) {
+    --q-field-edge: var(--color-quebi-danger);
+  }
+  border-radius: var(--q-radius-control);
+  background-color: var(--q-field-bg);
+  box-shadow: var(--q-shadow-control);
+}
+
 @utility bg-quebi-stage {
   background: var(--q-stage-light);
 }
@@ -898,7 +972,9 @@
 /* ---------------- Sensible base styles ---------------- */
 @layer base {
   html {
-    background: var(--color-quebi-bg);
+    background-color: var(--color-quebi-bg);
+    background-image: var(--q-page-image);
+    background-size: var(--q-page-image-size);
     color: var(--color-quebi-fg);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;

@@ -290,7 +290,7 @@ export function MultiSelectControl<T extends MultiSelectOption>({
         className={cn(
           // `Input`'s underline, thickened to 2px while the input has focus.
           "flex w-full flex-wrap items-center gap-1.5 bg-transparent",
-          "border-y border-t-transparent border-b-quebi-rule",
+          "quebi-field",
           multiSelectControlSizeStyles[size],
           "transition-[border-color,box-shadow] duration-150",
           "focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",

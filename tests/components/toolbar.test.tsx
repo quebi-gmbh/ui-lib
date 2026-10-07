@@ -69,7 +69,7 @@ describe("ToolbarButton", () => {
       expect(control).toHaveClass("text-sm")
       expect(control).toHaveClass("px-3.5")
       expect(control).toHaveClass("py-2")
-      expect(control).toHaveClass("rounded-none")
+      expect(control).toHaveClass("rounded-(--q-radius-control)")
     }
   })
 
