@@ -107,7 +107,7 @@ export const noRawInteractiveElementsRule: RuleMeta = {
   href="https://github.com/quebi-gmbh"
   target="_blank"
   rel="noreferrer"
-  className="inline-flex items-center gap-2 rounded-quebi-sm border border-quebi-line/20 px-6 py-3 text-quebi-fg transition-colors duration-200 hover:border-quebi-brand hover:text-quebi-brand-text"
+  className="inline-flex items-center gap-2 rounded-none border border-quebi-hairline px-6 py-3 text-quebi-fg transition-colors duration-200 hover:border-quebi-action hover:text-quebi-fg"
 >
   GitHub
 </a>`,
@@ -125,7 +125,7 @@ export const noRawInteractiveElementsRule: RuleMeta = {
       wrong: `<button
   type="button"
   onClick={() => setMobileOpen((o) => !o)}
-  className="mb-4 inline-flex items-center gap-2 rounded-quebi-sm border border-quebi-line/20 px-3 py-2 text-sm text-quebi-fg-muted transition-colors duration-200 hover:border-quebi-brand hover:text-quebi-brand-text lg:hidden"
+  className="mb-4 inline-flex items-center gap-2 rounded-none border border-quebi-hairline px-3 py-2 text-sm text-quebi-fg-muted transition-colors duration-200 hover:border-quebi-action hover:text-quebi-fg lg:hidden"
   aria-expanded={mobileOpen}
 >
   <Menu className="h-4 w-4" />
@@ -157,7 +157,7 @@ export const noRawInteractiveElementsRule: RuleMeta = {
     onChange={(e) => setQuery(e.target.value)}
     placeholder="Search components"
     aria-label="Search components"
-    className="w-full rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] py-2 pr-3 pl-9 text-sm text-quebi-fg placeholder:text-quebi-fg-subtle transition-colors duration-200 focus:border-quebi-brand focus:outline-none"
+    className="w-full rounded-none border border-quebi-hairline bg-transparent py-2 pr-3 pl-9 text-sm text-quebi-fg placeholder:text-quebi-fg-subtle transition-colors duration-200 focus:border-quebi-action focus:outline-none"
   />
 </div>`,
       right: `import { SearchField, SearchInput } from "@/components/search-field"

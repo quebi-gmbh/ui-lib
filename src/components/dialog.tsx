@@ -17,7 +17,9 @@ import { Button, type ButtonProps } from "@/components/button"
  * body. Foundational — modal / popover / sheet / drawer compose this surface
  * inside their own overlay. Pair with react-aria's Modal/Popover to present it.
  *
- * Surface tokens: bg-quebi-elevated, border-quebi-line/10, rounded-quebi-md.
+ * Surface: `bg-quebi-elevated` with a hairline edge, square. The float shadow
+ * belongs to whichever overlay presents it. Titles are Outfit light at the
+ * title size; descriptions are running text in `fg-muted`.
  */
 const Dialog = ({
   role = "dialog",
@@ -29,7 +31,7 @@ const Dialog = ({
       data-slot="dialog"
       role={role}
       className={cn(
-        "peer/dialog group/dialog relative flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-hidden rounded-quebi-md border border-quebi-line/10 bg-quebi-elevated text-quebi-fg outline-none [--gutter:--spacing(6)] sm:[--gutter:--spacing(8)]",
+        "peer/dialog group/dialog relative flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-hidden border border-quebi-hairline bg-quebi-elevated text-quebi-fg outline-none [--gutter:--spacing(6)] sm:[--gutter:--spacing(8)]",
         className,
       )}
       {...props}
@@ -76,7 +78,7 @@ const DialogTitle = ({ className, ref, ...props }: DialogTitleProps) => (
   <Heading
     slot="title"
     ref={ref}
-    className={cn("text-balance font-semibold text-quebi-fg text-lg/6 sm:text-base/6", className)}
+    className={cn("text-balance font-display text-quebi-fg text-quebi-title", className)}
     {...props}
   />
 )
@@ -88,7 +90,7 @@ const DialogDescription = ({ className, ref, ...props }: DialogDescriptionProps)
   <p
     data-slot="description"
     className={cn(
-      "text-pretty text-base/6 text-quebi-fg-muted group-disabled:opacity-50 sm:text-sm/6",
+      "text-pretty text-quebi-body-s text-quebi-fg-muted group-disabled:opacity-50",
       className,
     )}
     ref={ref}
@@ -138,7 +140,7 @@ const DialogCloseIcon = ({ className, ...props }: CloseButtonIndicatorProps) => 
       aria-label="Close"
       slot="close"
       className={cn(
-        "close absolute end-1 top-1 z-50 grid size-8 place-content-center rounded-quebi-sm text-quebi-fg-muted transition-colors hover:bg-quebi-surface/[0.06] hover:text-quebi-fg focus:bg-quebi-surface/[0.06] focus:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark sm:end-2 sm:top-2 sm:size-7",
+        "close absolute end-1 top-1 z-50 grid size-8 place-content-center text-quebi-fg-muted transition-colors duration-150 hover:bg-quebi-raised hover:text-quebi-fg focus:bg-quebi-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset sm:end-2 sm:top-2 sm:size-7",
         className,
       )}
     >

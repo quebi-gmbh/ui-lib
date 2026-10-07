@@ -1,16 +1,7 @@
 "use client"
 
 import { Menu } from "lucide-react"
-import { LayoutGroup, motion } from "motion/react"
-import {
-  createContext,
-  use,
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useState,
-} from "react"
+import { createContext, use, useCallback, useEffect, useMemo, useState } from "react"
 import type { LinkProps } from "react-aria-components"
 import { composeRenderProps, Link } from "react-aria-components"
 import { twJoin, twMerge } from "tailwind-merge"
@@ -22,14 +13,15 @@ import { cn } from "@/lib/utils"
 /**
  * Navbar — quebi design system
  *
- * A responsive top/bottom navigation bar. On desktop it renders an inline bar
- * (surface bg-quebi-bg when it is flush with the page, bg-quebi-elevated for
- * the `float` intent and the inset content panel, hairline cyan border); below
- * the mobile breakpoint it collapses into a Sheet drawer toggled by the
- * NavbarTrigger.
+ * A responsive top/bottom navigation bar: the mark at the start, links in
+ * Outfit at nav size, and a hairline under the bar (`intent="plain"` drops it,
+ * for a bar that sits on a Stage). `float` lifts the bar off the page, so it
+ * is the one intent that takes the floating-surface treatment (elevated
+ * ground, small radius, the float shadow). Below the mobile breakpoint it
+ * collapses into a Sheet drawer toggled by the NavbarTrigger.
  *
- * The active link is marked with the brand teal indicator. Depth comes from the
- * quebi hairline border, not drop shadows.
+ * The current link — and a hovered one — is underlined 1px at a 5px offset,
+ * the same mark a text link carries. No pill, no indicator bar.
  *
  * Composes @/components/button, @/components/separator, and @/components/sheet.
  */
@@ -117,7 +109,7 @@ const NavbarProvider = ({
       <div
         className={twMerge(
           "peer/navbar group/navbar relative isolate z-10 flex w-full flex-col",
-          "has-data-navbar-inset:min-h-svh has-data-navbar-inset:bg-quebi-bg",
+          "has-data-navbar-inset:min-h-svh has-data-navbar-inset:bg-quebi-raised",
           className,
         )}
         {...props}
@@ -126,7 +118,7 @@ const NavbarProvider = ({
   )
 }
 
-type Intent = "default" | "float" | "inset"
+type Intent = "default" | "plain" | "float" | "inset"
 type Placement = "top" | "bottom"
 type Side = "left" | "right"
 
@@ -199,9 +191,9 @@ const Navbar = ({
         className={twMerge(
           "relative isolate hidden py-(--navbar-gutter) [--navbar-gutter:--spacing(2.5)] md:block",
           intent === "float" &&
-            "rounded-quebi-md bg-quebi-elevated py-0 *:data-[navbar=content]:max-w-7xl *:data-[navbar=content]:rounded-quebi-md *:data-[navbar=content]:border *:data-[navbar=content]:border-quebi-line/10 *:data-[navbar=content]:bg-quebi-elevated *:data-[navbar=content]:px-4 *:data-[navbar=content]:py-(--navbar-gutter)",
-          ["default", "inset"].includes(intent) && "px-4",
-          intent === "default" && "border-b border-quebi-line/10 bg-quebi-bg",
+            "py-0 *:data-[navbar=content]:max-w-7xl *:data-[navbar=content]:border *:data-[navbar=content]:border-quebi-hairline *:data-[navbar=content]:rounded-quebi-s *:data-[navbar=content]:bg-quebi-elevated *:data-[navbar=content]:shadow-quebi-float *:data-[navbar=content]:px-4 *:data-[navbar=content]:py-(--navbar-gutter)",
+          ["default", "plain", "inset"].includes(intent) && "px-4",
+          intent === "default" && "border-b border-quebi-hairline bg-quebi-bg",
           className,
         )}
       >
@@ -217,20 +209,17 @@ const Navbar = ({
 }
 
 const NavbarSection = ({ className, ...props }: React.ComponentProps<"div">) => {
-  const id = useId()
   return (
-    <LayoutGroup id={id}>
-      <div
-        data-slot="navbar-section"
-        className={twMerge(
-          "col-span-full grid grid-cols-[auto_1fr] flex-col gap-3 gap-y-0.5 md:flex md:flex-none md:grid-cols-none md:flex-row md:items-center md:gap-2.5",
-          className,
-        )}
-        {...props}
-      >
-        {props.children}
-      </div>
-    </LayoutGroup>
+    <div
+      data-slot="navbar-section"
+      className={twMerge(
+        "col-span-full grid grid-cols-[auto_1fr] flex-col gap-3 gap-y-0.5 md:flex md:flex-none md:grid-cols-none md:flex-row md:items-center md:gap-1.5",
+        className,
+      )}
+      {...props}
+    >
+      {props.children}
+    </div>
   )
 }
 
@@ -247,43 +236,23 @@ const NavbarItem = ({ className, isCurrent, ...props }: NavbarItemProps) => {
         cn(
           [
             "href" in props ? "cursor-pointer" : "cursor-default",
-            "group/navbar-item pressed:bg-quebi-surface/[0.06] pressed:text-quebi-fg hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
-            "text-quebi-fg-muted aria-[current=page]:text-quebi-fg aria-[current=page]:*:data-[slot=icon]:text-quebi-brand-text",
+            "group/navbar-item text-quebi-fg decoration-1 underline-offset-5 hover:underline aria-[current=page]:underline aria-[current=page]:*:data-[slot=icon]:text-quebi-fg",
             "col-span-full grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] supports-[grid-template-columns:subgrid]:grid-cols-subgrid md:supports-[grid-template-columns:subgrid]:grid-cols-none",
-            "relative min-w-0 items-center gap-x-3 rounded-quebi-sm p-2 text-start font-medium text-base/6 md:gap-x-(--navbar-gutter) md:px-(--navbar-gutter) md:py-[calc(var(--navbar-gutter)---spacing(0.5))] md:text-sm/5",
+            "relative min-w-0 items-center gap-x-3 p-2 text-start font-display text-quebi-link md:gap-x-(--navbar-gutter) md:px-(--navbar-gutter) md:py-[calc(var(--navbar-gutter)---spacing(0.5))] md:text-quebi-nav",
             "*:data-[slot=icon]:size-5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-quebi-fg-subtle md:*:data-[slot=icon]:size-4",
             "*:data-[slot=loader]:size-5 *:data-[slot=loader]:shrink-0 md:*:data-[slot=loader]:size-4",
             "*:not-nth-2:last:data-[slot=icon]:row-start-1 *:not-nth-2:last:data-[slot=icon]:ms-auto *:not-nth-2:last:data-[slot=icon]:size-5 md:*:not-nth-2:last:data-[slot=icon]:size-4",
             "*:data-[slot=avatar]:-m-0.5 *:data-[slot=avatar]:size-6 md:*:data-[slot=avatar]:size-5",
             "pressed:*:data-[slot=icon]:text-quebi-fg hover:*:data-[slot=icon]:text-quebi-fg",
             "transition-colors duration-150",
-            "outline-hidden focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+            "outline-hidden focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
             "text-start disabled:cursor-default disabled:opacity-50",
           ],
           resolved,
         ),
       )}
       {...props}
-    >
-      {(values) => (
-        <>
-          {typeof props.children === "function" ? props.children(values) : props.children}
-
-          {(isCurrent || values.isCurrent) && (
-            <motion.span
-              data-slot="current-indicator"
-              layoutId="current-indicator"
-              transition={{ type: "spring", stiffness: 500, damping: 40 }}
-              className={twJoin(
-                "absolute rounded-full bg-quebi-brand [--gutter:--spacing(0.5)]",
-                "inset-y-[calc(var(--navbar-gutter)---spacing(0.5))] -start-4 w-(--gutter) md:inset-y-auto md:w-auto",
-                "md:inset-x-2 md:-bottom-[calc(var(--navbar-gutter)+1px)] md:h-(--gutter)",
-              )}
-            />
-          )}
-        </>
-      )}
-    </Link>
+    />
   )
 }
 
@@ -312,9 +281,9 @@ const NavbarMobile = ({ className, ref, ...props }: React.ComponentProps<"div">)
         "group/navbar-mobile flex items-center gap-x-3 px-4 py-2.5 md:hidden",
         "group-has-data-navbar-sticky/navbar:sticky group-has-data-navbar-sticky/navbar:bg-quebi-bg",
         // top
-        "group-has-data-navbar-sticky/navbar:group-has-placement-top/navbar:top-0 group-has-data-navbar-sticky/navbar:group-has-placement-top/navbar:border-b group-has-data-navbar-sticky/navbar:group-has-placement-top/navbar:border-quebi-line/10",
+        "group-has-data-navbar-sticky/navbar:group-has-placement-top/navbar:top-0 group-has-data-navbar-sticky/navbar:group-has-placement-top/navbar:border-b group-has-data-navbar-sticky/navbar:group-has-placement-top/navbar:border-quebi-hairline",
         // bottom
-        "group-has-data-navbar-sticky/navbar:group-has-placement-bottom/navbar:bottom-0 group-has-data-navbar-sticky/navbar:group-has-placement-bottom/navbar:border-t group-has-data-navbar-sticky/navbar:group-has-placement-bottom/navbar:border-quebi-line/10",
+        "group-has-data-navbar-sticky/navbar:group-has-placement-bottom/navbar:bottom-0 group-has-data-navbar-sticky/navbar:group-has-placement-bottom/navbar:border-t group-has-data-navbar-sticky/navbar:group-has-placement-bottom/navbar:border-quebi-hairline",
         className,
       )}
       {...props}
@@ -327,10 +296,10 @@ const NavbarInset = ({ className, ref, children, ...props }: React.ComponentProp
     <div
       ref={ref}
       data-navbar-inset={true}
-      className={twMerge("flex flex-1 flex-col bg-quebi-bg pb-2 md:px-2", className)}
+      className={twMerge("flex flex-1 flex-col bg-quebi-raised pb-2 md:px-2", className)}
       {...props}
     >
-      <div className="grow bg-quebi-elevated p-6 md:rounded-quebi-md md:p-16 md:shadow-quebi-glow md:ring-1 md:ring-quebi-line/10">
+      <div className="grow bg-quebi-bg p-6 md:border md:border-quebi-hairline md:p-16">
         <div className="mx-auto max-w-7xl">{children}</div>
       </div>
     </div>

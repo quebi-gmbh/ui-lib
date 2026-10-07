@@ -18,19 +18,21 @@ const PLAYERS = [
 
 const MAX = PLAYERS[0]?.score ?? 0
 
-/** Three rows, so the teal fill is visibly proportional rather than decorative. */
+/** Three rows, so the ink rule is visibly proportional rather than decorative. */
 export const leaderboardOgScene: OgScene = {
   scale: 1.5,
   render: () => (
     <Leaderboard className="w-96">
       <LeaderboardHeader>
-        <LeaderboardTitle>Top players</LeaderboardTitle>
+        <LeaderboardTitle>top players</LeaderboardTitle>
       </LeaderboardHeader>
       <LeaderboardContent>
         {PLAYERS.map((player, index) => (
           <LeaderboardItem key={player.name} value={player.score} maxValue={MAX}>
             <LeaderboardStart>
-              <span className="text-quebi-fg-muted tabular-nums">{index + 1}.</span>
+              <span className="w-6 font-mono text-xs text-quebi-fg-subtle tabular-nums">
+                {String(index + 1).padStart(2, "0")}
+              </span>
               {player.name}
             </LeaderboardStart>
             <LeaderboardEnd>

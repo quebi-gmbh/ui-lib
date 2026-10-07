@@ -4,7 +4,7 @@ export const navbarMeta: ComponentMeta = {
   slug: "navbar",
   name: "Navbar",
   description:
-    "A responsive top or bottom navigation bar that collapses into a Sheet drawer on mobile, with a brand-teal active-link indicator. Composes Button, Separator, and Sheet.",
+    "A responsive top or bottom navigation bar that collapses into a Sheet drawer on mobile, with the current link underlined and a hairline under the bar (none with the plain intent). Composes Button, Separator, and Sheet.",
   category: "Navigation",
   tags: ["navbar", "navigation", "menu", "header", "responsive", "drawer"],
 }

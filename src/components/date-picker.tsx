@@ -27,8 +27,7 @@ import { fieldStyles } from "@/components/field"
  * Date Picker — quebi design system
  *
  * A segmented date input paired with a calendar overlay. The trigger uses the
- * quebi input chrome (translucent fill, cyan-tinted border, brand-teal focus
- * ring) with a calendar-icon button on the right; clicking it opens a Popover
+ * underline of `Input`, with a calendar-icon button on the right; clicking it opens a Popover
  * holding the Calendar (or a Modal on mobile). Composes
  * @/components/{calendar,range-calendar,modal,popover,date-field}. Foundational
  * — the Conform date-picker / date-range-picker variants depend on it.
@@ -145,9 +144,8 @@ export function DatePickerOverlay({
  * DatePickerTrigger — quebi design system
  *
  * DateInput on the left + calendar-icon button on the right, styled as one
- * unified control (shared cyan-tinted border, brand-teal focus ring). The
- * wrapper owns the outer border/ring; the inner DateInput is rendered `bare`
- * so it drops its own border + ring + rounding.
+ * control: one underline under both, owned by the wrapper. The inner
+ * DateInput is rendered `bare` so it draws no line of its own.
  */
 export function DatePickerTrigger({ className, ...props }: GroupProps) {
   return (
@@ -155,13 +153,13 @@ export function DatePickerTrigger({ className, ...props }: GroupProps) {
       data-slot="control"
       className={composeRenderProps(className, (resolved) =>
         cn(
-          "group/dpt flex w-full items-stretch overflow-hidden rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
-          "transition-[border-color,box-shadow] duration-200",
-          // Unguarded this *beat* the focus border below: both are (0,2,0) and
-          // Tailwind emits `focus-within` before `hover`, so pointing at a focused
-          // picker dropped the mark-teal border and left the ring floating off it.
-          "not-focus-within:hover:border-quebi-line/40",
-          "focus-within:border-quebi-brand-mark focus-within:ring-2 focus-within:ring-quebi-brand-mark focus-within:ring-offset-2 focus-within:ring-offset-quebi-bg",
+          // `Input`'s underline, under the segments and the calendar button
+          // alike; focus anywhere inside, or the open calendar, thickens it.
+          "group/dpt flex w-full items-stretch overflow-hidden bg-transparent",
+          "quebi-field",
+          "transition-[border-color,box-shadow] duration-150",
+          "focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-focus)] group-open:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+          "data-invalid:border-b-quebi-danger data-invalid:focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
           resolved,
         ),
       )}
@@ -173,14 +171,9 @@ export function DatePickerTrigger({ className, ...props }: GroupProps) {
       <Button
         data-slot="date-picker-trigger"
         className={cn(
-          "inline-flex cursor-pointer items-center border-quebi-line/20 border-l bg-quebi-surface/[0.02] px-3 text-quebi-fg-muted",
-          "transition-[border-color,color] duration-200",
-          // Guarded for the same reason as the wrapper border: this divider and
-          // that border are one edge, so they have to change together or the
-          // control reads as two.
-          "group-not-focus-within/dpt:group-hover/dpt:border-quebi-line/40 hover:text-quebi-fg",
-          "group-focus-within/dpt:border-quebi-brand-mark",
-          "outline-none focus-visible:outline-none",
+          "inline-flex cursor-pointer items-center bg-transparent ps-3 text-quebi-fg-subtle",
+          "transition-colors duration-150 hover:text-quebi-fg",
+          "outline-none focus-visible:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset",
         )}
       >
         <CalendarDays data-slot="icon" className="size-4" />

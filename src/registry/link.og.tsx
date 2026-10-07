@@ -1,7 +1,7 @@
 import { Link } from "@/components/link"
 import type { OgScene } from "./types"
 
-/** A link in a sentence, because a link out of prose is just teal text. */
+/** A link in a sentence, because a link out of prose is just underlined text. */
 export const linkOgScene: OgScene = {
   scale: 2,
   render: () => (

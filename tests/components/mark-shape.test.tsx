@@ -11,18 +11,12 @@
  * as single-select, including the one in `FilterPanel`, which is where it was
  * finally noticed (task #199).
  *
- * The fix was a new scale step, `--radius-quebi-xs` at 4px, and a one-class
- * edit — which is exactly the kind of change that a later "make the checkbox
- * match the inputs" tidy-up reverts without anyone seeing what it cost. So
- * what is pinned here is the invariant rather than the class: the mark's
- * radius, resolved through the theme, has to leave at least half of each edge
- * flat. At 18px that is 4.5px, and the token is 4px.
- *
- * The upper bound is not the whole statement. A hard square would pass it and
- * would be wrong for a different reason — it would be the only square corner
- * in a library whose every other surface is rounded, so the checkbox would
- * read as a foreign element rather than as a sibling of the input above it.
- * Hence the lower bound too: the mark is rounded, just not round.
+ * Ink & Paper settles it the plain way: controls are square, so the checkbox
+ * is a hard square and the radio a full circle, and the two cannot be read as
+ * each other. What is pinned is the invariant rather than the class — the
+ * mark's radius leaves at least half of each edge flat, and the two shapes
+ * differ — so a later "make the checkbox match something" edit that rounds it
+ * fails here with the reason attached.
  */
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
@@ -37,6 +31,13 @@ const THEME = readFileSync(join(import.meta.dir, "..", "..", "src", "quebi-theme
 function radiusToken(name: string): number {
   const declared = THEME.match(new RegExp(`--radius-${name}:\\s*([0-9.]+)(rem|px)\\s*;`))
   if (!declared) throw new Error(`no --radius-${name} in quebi-theme.css`)
+  return Number(declared[1]) * (declared[2] === "rem" ? 16 : 1)
+}
+
+/** A `--q-*` length's default, from the theme's shape block. */
+function themeLength(name: string): number {
+  const declared = THEME.match(new RegExp(`${name}:\\s*([0-9.]+)(px|rem)\\s*;`))
+  if (!declared) throw new Error(`no ${name} length in quebi-theme.css`)
   return Number(declared[1]) * (declared[2] === "rem" ? 16 : 1)
 }
 
@@ -62,8 +63,13 @@ function boxSize(classes: string[]): number {
 /** The mark's corner radius in px: `rounded-full` is half the box. */
 function markRadius(classes: string[], box: number): number {
   const rounded = classes.filter((className) => /^rounded(-|$)/.test(className))
-  expect(rounded).toHaveLength(1)
+  expect(rounded.length).toBeLessThanOrEqual(1)
+  // Square is the default in Ink & Paper: no radius class is a 0px corner.
+  if (rounded.length === 0 || rounded[0] === "rounded-none") return 0
   if (rounded[0] === "rounded-full") return box / 2
+  // A theme variable: measured at its Ink & Paper default.
+  const variable = rounded[0].match(/^rounded-\((--q-[a-z-]+)\)$/)
+  if (variable) return Math.min(themeLength(variable[1]), box / 2)
   const token = rounded[0].match(/^rounded-(quebi-[a-z]+)$/)
   if (!token) throw new Error(`${rounded[0]} is not a quebi radius token`)
   // CSS clamps a radius that would overrun the edge it shares, so a token
@@ -80,6 +86,8 @@ const radioMark = () =>
   )
 
 describe("the checkbox mark is a square, the radio mark is a circle", () => {
+  // Shape is the only thing that says whether a group takes one answer or
+  // several. Ink & Paper makes the checkbox a hard square; the radio stays round.
   test("the radio mark is a full circle", () => {
     const classes = radioMark()
     expect(markRadius(classes, boxSize(classes))).toBe(boxSize(classes) / 2)
@@ -90,11 +98,6 @@ describe("the checkbox mark is a square, the radio mark is a circle", () => {
     const box = boxSize(classes)
     // radius <= box / 4 on both corners of an edge leaves >= box / 2 straight.
     expect(markRadius(classes, box)).toBeLessThanOrEqual(box / 4)
-  })
-
-  test("the checkbox mark is still rounded, not a hard square", () => {
-    const classes = checkboxMark()
-    expect(markRadius(classes, boxSize(classes))).toBeGreaterThan(0)
   })
 
   test("the two marks are not the same shape", () => {

@@ -1,43 +1,36 @@
-import { tv, type VariantProps } from "tailwind-variants"
-import { cn } from "@/lib/utils"
+import type { VariantProps } from "tailwind-variants"
+import { cn, tv } from "@/lib/utils"
 
 /**
- * The quebi tint scale: a low-opacity fill, a matching saturated foreground and
- * a hairline border.
+ * The design's Tag, per intent: a pill on the raised ground in the muted ink.
  *
- * Named and exported because a second component draws the same tints on a
- * different geometry — `iconTileIntents` in `icon-tile.tsx` is a verbatim copy,
- * kept a copy so neither component drags the other into a consumer's project,
- * and pinned equal by `tests/components/icon-tile.test.tsx`. Editing a value
- * here without editing it there fails that test; that is the intended way to
- * find out.
+ * There is no hue here. `brand`, `accent` and `info` are the plain tag — they
+ * survive as names so call sites keep compiling, but emphasis in this system
+ * is size, weight or ink, not colour. The three state intents are the only
+ * tints: the state token as text over a 10% wash of itself. `ai` is the one
+ * fill, the action ink, and `outline` drops the ground for a hairline.
+ *
+ * Exported because `iconTileIntents` in `icon-tile.tsx` shares the key set and
+ * the three state tints, pinned by `tests/components/icon-tile.test.tsx`.
  */
 export const badgeIntents = {
-  neutral: "bg-quebi-surface/[0.06] border-quebi-surface/10 text-quebi-fg-muted",
-  brand: "bg-quebi-brand/10 border-quebi-brand/20 text-quebi-brand-text",
-  accent: "bg-purple-500/10 border-purple-500/20 text-quebi-accent",
-  success: "bg-emerald-500/10 border-emerald-500/20 text-quebi-success",
-  warning: "bg-amber-500/10 border-amber-500/20 text-quebi-warn",
-  danger: "bg-red-500/10 border-red-500/20 text-quebi-danger",
-  info: "bg-cyan-500/10 border-quebi-line/20 text-quebi-info",
-  // The one intent that is a fill rather than a tint, and the only one whose
-  // label crosses two colours. `text-quebi-on-brand` is dark ink, so the far
-  // stop is the one that decides legibility and a *darker* purple is the wrong
-  // direction: `purple-700` would read 2.12:1. `purple-400` is the vivid end of
-  // the sweep that the ink still clears — 7.81:1 over the mint, 6.07:1 at the
-  // midpoint, 5.60:1 over the purple, where `purple-500` was 3.74:1 and the
-  // label faded out across its own badge. Pinned by `tests/badge-contrast.test.ts`.
-  ai: "border-transparent bg-gradient-to-r from-quebi-brand to-purple-400 text-quebi-on-brand shadow-quebi-glow",
-  outline: "bg-transparent border-quebi-line/20 text-quebi-fg-muted",
+  neutral: "border-transparent bg-quebi-raised text-quebi-fg-muted",
+  brand: "border-transparent bg-quebi-raised text-quebi-fg-muted",
+  accent: "border-transparent bg-quebi-raised text-quebi-fg-muted",
+  success: "border-transparent bg-quebi-success/10 text-quebi-success",
+  warning: "border-transparent bg-quebi-warn/10 text-quebi-warn",
+  danger: "border-transparent bg-quebi-danger/10 text-quebi-danger",
+  info: "border-transparent bg-quebi-raised text-quebi-fg-muted",
+  ai: "border-transparent bg-quebi-action text-quebi-on-action",
+  outline: "border-quebi-hairline bg-transparent text-quebi-fg-muted",
 }
 
 /**
  * Badge — quebi design system
  *
- * Pill-shaped indicator. Every intent pairs a tinted, low-opacity background
- * with a matching saturated text color and a hairline border — the quebi
- * signature. Brand teal is reserved for feature highlights; the `ai` intent
- * uses the teal→purple gradient and should stay limited to AI surfaces.
+ * The Tag: Inter 500 at 12.5px (`text-quebi-tag`) in a pill. Write the label lowercase. The
+ * border is always present (transparent on the filled intents) so an
+ * `outline` badge is the same size as the rest of the row.
  *
  * Intents: neutral (default), brand, accent, success, warning, danger, info,
  * ai, outline. A badge with no text, holding only an icon, is an `IconTile`.
@@ -45,8 +38,8 @@ export const badgeIntents = {
 export const badgeStyles = tv({
   base: [
     "inline-flex items-center gap-1.5",
-    "font-sans text-xs font-semibold leading-none whitespace-nowrap",
-    "rounded-full px-2.5 py-1 border",
+    "font-(family-name:--q-font-control) text-quebi-tag whitespace-nowrap",
+    "rounded-full border px-3 py-1.5",
   ],
   variants: {
     intent: badgeIntents,
@@ -69,8 +62,8 @@ export function Badge({ intent, className, children, ...props }: BadgeProps) {
 }
 
 /**
- * Prepends a 6px colored dot glyph — use for live-state indicators ("Live",
- * "Draft", "Overdue", etc.). The dot inherits the badge's text color.
+ * Prepends a 6px dot — use for live-state indicators ("live", "draft",
+ * "overdue"). The dot inherits the badge's text colour.
  */
 export function BadgeDot() {
   return <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />

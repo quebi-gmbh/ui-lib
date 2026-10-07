@@ -3,12 +3,12 @@ import type { OgScene } from "./types"
 
 /** Three levels, one sentence: the scale is the thing being shown. */
 export const headingOgScene: OgScene = {
-  scale: 1.5,
+  scale: 1.2,
   render: () => (
-    <div className="flex flex-col gap-2">
-      <Heading level={1}>Match candidates in seconds</Heading>
-      <Heading level={2}>Match candidates in seconds</Heading>
-      <Heading level={3}>Match candidates in seconds</Heading>
+    <div className="flex flex-col gap-3">
+      <Heading level={1}>match in seconds.</Heading>
+      <Heading level={2}>match in seconds.</Heading>
+      <Heading level={3}>match in seconds.</Heading>
     </div>
   ),
 }

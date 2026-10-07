@@ -15,10 +15,9 @@ import { fieldStyles } from "@/components/field"
  * TimeField — quebi design system
  *
  * Built on react-aria-components. A segmented time input (hour / minute /
- * second / AM-PM) styled to match the quebi Input: a translucent field with a
- * cyan-tinted border that lifts to brand teal on focus, plus the quebi teal
- * ring. Each segment highlights with the brand tint while editing; invalid
- * uses red and disabled dims the field.
+ * second / AM-PM) drawn like `Input`: underline only, thickened on focus. The
+ * segment being edited is filled with `action` ink; invalid turns the line and
+ * the digits `danger`, and disabled dims the field.
  *
  * `shouldForceLeadingZeros` pads the hour segment to two digits — the same prop
  * `DateField` takes, doing the one thing a time has to pad. Under a locale
@@ -47,16 +46,16 @@ export function TimeField<T extends TimeValue>({ className, ...props }: TimeFiel
 /**
  * The padding half of the field size scale — the same three steps `Input` and
  * `DateInput` publish, so a time field and the button beside it are the same
- * height: `xs` is 30px and `sm` 38px, `md` is the default and unchanged.
+ * height: `xs` is 30px and `sm` 38px, `md` is the default.
  * Spelled out here rather than imported from `date-field` so `TimeField` does
  * not gain a sibling component as a registry dependency for three strings; the
  * type size travels with it below, because a segmented field's height is its
  * segments' line box.
  */
 const timeInputSizeStyles = {
-  xs: "px-2.5 py-1.5",
-  sm: "px-3 py-2",
-  md: "px-3 py-2.5",
+  xs: "px-(--q-field-px) py-1.5",
+  sm: "px-(--q-field-px) py-2",
+  md: "px-(--q-field-px) py-2.5",
 } as const
 
 type TimeInputSize = keyof typeof timeInputSizeStyles
@@ -85,23 +84,18 @@ export function TimeInput({ className, bare = false, size: sizeProp, ...props }:
             textSize,
             bare
               ? [
-                  "w-full rounded-none border-0 bg-transparent outline-none",
+                  "w-full border-0 bg-transparent outline-none",
                   timeInputSizeStyles[size],
                 ]
               : [
-                  // matches the quebi Input chrome.
-                  "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
+                  // `Input`'s underline: a transparent top border keeps the scale's
+                  // height; focus or an open picker thickens the line to 2px, no ring.
+                  "quebi-field",
                   timeInputSizeStyles[size],
-                  "transition-[border-color,box-shadow] duration-200",
-                  // `DateInput` is a `<div role="group">`, so the `enabled:` this line used
-                  // to carry never matched and the field had no hover feedback at all,
-                  // despite the chrome above claiming to match `Input`. The guards are what
-                  // `enabled:` was standing in for: hover must not outrank focus-within or
-                  // the open state, and must stay off a disabled field.
-                  "not-aria-disabled:not-focus-within:not-group-open:hover:border-quebi-line/40",
-                  "outline-none focus-within:border-quebi-brand-mark focus-within:outline-none focus-within:ring-2 focus-within:ring-quebi-brand-mark focus-within:ring-offset-2 focus-within:ring-offset-quebi-bg",
-                  "group-open:border-quebi-brand-mark group-open:ring-2 group-open:ring-quebi-brand-mark group-open:ring-offset-2 group-open:ring-offset-quebi-bg",
-                  "invalid:border-red-500 focus-within:invalid:ring-red-500/50",
+                  "transition-[border-color,box-shadow] duration-150",
+                  "outline-none focus-within:outline-none focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+                  "group-open:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+                  "data-invalid:border-b-quebi-danger focus-within:data-invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
                   "in-disabled:cursor-not-allowed in-disabled:opacity-50",
                 ],
             resolved,
@@ -124,10 +118,10 @@ export function TimeInput({ className, bare = false, size: sizeProp, ...props }:
             // below still name a colour, because they are states rather than a
             // resting style, and a state has to outrank what was inherited.
             className={cn(
-              "inline shrink-0 rounded px-1 py-0.5 tracking-wider caret-transparent outline-0 type-literal:px-0",
+              "inline shrink-0 px-1 py-0.5 tracking-wider caret-transparent outline-0 type-literal:px-0",
               "data-placeholder:not-data-focused:text-quebi-fg-subtle",
-              "focus:bg-quebi-brand/20 focus:text-quebi-fg",
-              "focus:data-invalid:bg-red-500/20 focus:data-invalid:text-quebi-danger",
+              "focus:bg-quebi-action focus:text-quebi-on-action",
+              "focus:data-invalid:bg-quebi-danger focus:data-invalid:text-quebi-on-action",
               "forced-colors:focus:bg-[Highlight] forced-colors:focus:text-[HighlightText]",
               "forced-color-adjust-none forced-colors:text-[ButtonText]",
               "in-disabled:opacity-50 disabled:opacity-50 forced-colors:disabled:text-[GrayText]",

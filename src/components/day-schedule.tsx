@@ -223,6 +223,11 @@ function tickShift(minute: number, isHorizontal: boolean) {
   return isHorizontal ? "-translate-x-1/2" : "-translate-y-1/2"
 }
 
+/**
+ * The two tones. The names are historical and kept because they are API: both
+ * are ink now — `brand` a solid ink bar, `cyan` a subtle grey one with a grey
+ * handle ring — so two neighbouring lanes still read apart without a hue.
+ */
 export type DayScheduleTone = "brand" | "cyan"
 
 export interface DaySpan {
@@ -233,15 +238,13 @@ export interface DaySpan {
   start: number
   /** Minutes from midnight, 0–1440. Always greater than `start`. */
   end: number
-  /** Accent color. Defaults to alternating brand/cyan by lane order. */
+  /** Tone — ink or grey. Defaults to alternating brand/cyan by lane order. */
   tone?: DayScheduleTone
 }
 
 /**
- * `text` is the tone as *text*, which is a different value from the fill: these
- * are the theme's text tokens, so each one clears 4.5:1 on its own theme's
- * surface, where `bg-quebi-brand` — a fill colour, deliberately the same teal in
- * both themes — measures 1.74:1 on the light one.
+ * `text` is the tone as *text*, which is a different value from the fill: the
+ * theme's text tokens, so each one clears 4.5:1 on its own theme's surface.
  *
  * The name carries it because a name no longer always sits on its span's
  * midpoint: `layoutNames` moves it when a neighbour is in the way, and once it
@@ -249,14 +252,14 @@ export interface DaySpan {
  */
 const TONES: Record<DayScheduleTone, { bar: string; node: string; text: string }> = {
   brand: {
-    bar: "bg-quebi-brand shadow-[0_0_12px_rgb(45_212_168/0.35)]",
-    node: "border-quebi-brand-mark",
-    text: "text-quebi-brand-text",
+    bar: "bg-quebi-action",
+    node: "border-quebi-rule",
+    text: "text-quebi-fg",
   },
   cyan: {
-    bar: "bg-cyan-500 shadow-[0_0_12px_rgb(6_182_212/0.35)]",
-    node: "border-cyan-500",
-    text: "text-quebi-info",
+    bar: "bg-quebi-fg-subtle",
+    node: "border-quebi-fg-subtle",
+    text: "text-quebi-fg",
   },
 }
 
@@ -921,7 +924,7 @@ export function DaySchedule({
           {/* Hour axis */}
           <div
             className={cn(
-              "relative flex-none border-quebi-line/10",
+              "relative flex-none border-quebi-hairline",
               isHorizontal ? "border-b" : "w-10 border-r",
             )}
             style={{ height: isHorizontal ? HORIZONTAL_AXIS_HEIGHT : trackHeight }}
@@ -954,7 +957,7 @@ export function DaySchedule({
                 key={minute}
                 aria-hidden="true"
                 className={cn(
-                  "absolute bg-quebi-line/[0.06]",
+                  "absolute bg-quebi-hairline",
                   isHorizontal ? "inset-y-0 w-px" : "inset-x-0 h-px",
                   // Only the last rule moves: a 1px line has no half to centre.
                   minute === DAY_MINUTES &&
@@ -1009,14 +1012,14 @@ export function DaySchedule({
                     onPointerDown={(e) => startDrag(e, index, "body")}
                     onKeyDown={(e) => handleKeyDown(e, index, "body")}
                     className={cn(
-                      "absolute rounded-[3px] outline-hidden",
+                      "absolute outline-hidden",
                       // The bar is 5px thick across its lane and as long as the
                       // span is, whichever way round those two are.
                       isHorizontal ? "h-[5px] -translate-y-1/2" : "w-[5px] -translate-x-1/2",
-                      "touch-none transition-shadow duration-150",
+                      "touch-none",
                       tone.bar,
                       interactive ? "cursor-grab active:cursor-grabbing" : "cursor-default",
-                      "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+                      "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
                     )}
                     style={
                       isHorizontal
@@ -1060,7 +1063,7 @@ export function DaySchedule({
                               isHorizontal ? "cursor-ew-resize" : "cursor-ns-resize",
                             )
                           : "cursor-default",
-                        "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+                        "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
                       )}
                       style={
                         isHorizontal

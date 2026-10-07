@@ -55,7 +55,7 @@ import { cn } from "@/lib/utils"
  *   under the grid keys the five steps.
  * - `count` — a neutral cell with the date and the exact number. For when "was
  *   it 3 or 4" matters more than the shape of the year, and for anyone who
- *   cannot tell five teals apart. No colour scale, so no swatch legend — a
+ *   cannot tell five greys apart. No colour scale, so no swatch legend — a
  *   caption says what the number counts.
  * - `list` — bigger cells that name the day's first few events and fold the
  *   rest into the same "+N more" `MonthView` draws, opening the same panel.
@@ -80,7 +80,7 @@ import { cn } from "@/lib/utils"
  *
  * Four steps above empty, and the rule is written out because the obvious one is
  * wrong. Scaling each count against the year's busiest day makes that day full
- * teal whatever it holds — a year whose busiest day has one event would paint
+ * ink whatever it holds — a year whose busiest day has one event would paint
  * every event day full, which reads as "every day was as busy as it gets". So
  * the scale never runs below four: one step is at least one event, and the full
  * fill is reserved for a day that is busy in absolute terms as well as relative
@@ -136,28 +136,28 @@ export function heatmapLevel(count: number, max: number): number {
 }
 
 /**
- * The five fills, empty first. Brand at an alpha rather than five tokens: a
- * heatmap is one hue getting stronger, and the steps are fills, never marks.
+ * The five fills, empty first. Ink at an alpha rather than five tokens: a
+ * heatmap is one ink getting stronger, and the steps are fills, never marks.
  */
 export const HEATMAP_FILLS = [
-  "bg-quebi-surface/[0.06]",
-  "bg-quebi-brand/25",
-  "bg-quebi-brand/45",
-  "bg-quebi-brand/70",
-  "bg-quebi-brand",
+  "bg-quebi-raised",
+  "bg-quebi-action/25",
+  "bg-quebi-action/45",
+  "bg-quebi-action/70",
+  "bg-quebi-action",
 ] as const
 
 /**
- * The two strongest fills carry the dark ink `on-brand` is; the rest, the
- * page's. Each hover repeats the resting colour because a day is a `Link`, and
- * a link brightens to the brand text on hover — teal on teal.
+ * The two strongest fills carry `on-action` ink; the rest, the page's. Each
+ * hover repeats the resting colour because a day is a `Link`, and a link's own
+ * hover colour would otherwise land on a fill it was not chosen for.
  */
 const HEATMAP_TEXT = [
   "text-quebi-fg-subtle",
   "text-quebi-fg hover:text-quebi-fg",
   "text-quebi-fg hover:text-quebi-fg",
-  "text-quebi-on-brand hover:text-quebi-on-brand",
-  "text-quebi-on-brand hover:text-quebi-on-brand",
+  "text-quebi-on-action hover:text-quebi-on-action",
+  "text-quebi-on-action hover:text-quebi-on-action",
 ] as const
 
 const ALL_MONTHS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const
@@ -481,12 +481,12 @@ function MonthCard({ month, name, weekdays, lead, renderDay, href, onAction }: M
       aria-labelledby={headingId}
       className="h-auto gap-3 p-4"
     >
-      <Heading level={3} id={headingId} className="font-semibold text-quebi-fg-muted text-sm/5 sm:text-sm/5">
+      <Heading level={3} id={headingId} className="font-display font-light text-quebi-fg text-quebi-nav">
         {href || onAction ? (
           <Link
             {...(href ? { href } : {})}
             onPress={onAction}
-            className="text-quebi-fg-muted no-underline hover:text-quebi-fg hover:no-underline"
+            className="text-quebi-fg"
           >
             {name}
           </Link>
@@ -500,7 +500,7 @@ function MonthCard({ month, name, weekdays, lead, renderDay, href, onAction }: M
             // biome-ignore lint/suspicious/noArrayIndexKey: the column *is* the identity — two narrow weekday names are the same letter in most locales
             key={index}
             aria-hidden="true"
-            className="pb-1 text-center text-quebi-fg-subtle text-xs"
+            className="quebi-eyebrow block pb-1 text-center"
           >
             {weekday}
           </span>
@@ -537,17 +537,19 @@ interface DayCellProps<E extends CalendarEvent> {
   onEventClick: ((event: E) => void) | undefined
 }
 
-const TODAY_RING = "ring-1 ring-quebi-fg/60"
+/** Today is an ink outline just outside the cell, so it clears every fill. */
+const TODAY_RING = "outline-1 outline-solid outline-offset-1 outline-quebi-fg"
 
 /**
- * A pressable day grows on hover. The focus ring is `Link`'s own; what is
- * taken away is the underline, which on a cell would underline one digit.
+ * A pressable day takes a rule on hover. The focus ring is `Link`'s own; what
+ * is taken away is the underline, which on a cell would underline one digit.
  *
  * Every `Link` here spreads `href` only when there is one: a press-only link
  * handed `href={undefined}` still ends up with an empty `href` attribute, which
  * React warns about.
  */
-const DAY_LINK = "no-underline hover:no-underline transition-transform duration-150 hover:scale-110"
+const DAY_LINK =
+  "no-underline hover:no-underline hover:outline-1 hover:outline-solid hover:outline-quebi-rule"
 
 function DayCell<E extends CalendarEvent>(props: DayCellProps<E>) {
   if (props.variant === "list") return <ListDayCell {...props} />
@@ -555,8 +557,8 @@ function DayCell<E extends CalendarEvent>(props: DayCellProps<E>) {
   const { day, count, variant, level, isToday, number, countText, label, href, onAction } = props
   const isHeatmap = variant === "heatmap"
   const surface = cn(
-    "flex aspect-square flex-col items-center justify-center gap-0.5 rounded-quebi-xs text-xs tabular-nums",
-    isHeatmap ? cn(HEATMAP_FILLS[level], HEATMAP_TEXT[level]) : "bg-quebi-surface/[0.06]",
+    "flex aspect-square flex-col items-center justify-center gap-0.5 text-xs tabular-nums",
+    isHeatmap ? cn(HEATMAP_FILLS[level], HEATMAP_TEXT[level]) : "bg-quebi-raised",
     isToday && TODAY_RING,
   )
 
@@ -584,7 +586,7 @@ function DayCell<E extends CalendarEvent>(props: DayCellProps<E>) {
       <span aria-hidden="true" className="text-quebi-fg-subtle leading-none">
         {number}
       </span>
-      <span aria-hidden="true" className="font-semibold text-quebi-brand-text leading-none">
+      <span aria-hidden="true" className="font-medium text-quebi-fg leading-none">
         {countText}
       </span>
       <span className="sr-only">{label}</span>
@@ -637,7 +639,7 @@ function ListDayCell<E extends CalendarEvent>({
   onEventClick,
 }: DayCellProps<E>) {
   const surface = cn(
-    "flex min-h-20 min-w-0 flex-col gap-0.5 rounded-quebi-xs bg-quebi-surface/[0.04] p-1 text-xs",
+    "flex min-h-20 min-w-0 flex-col gap-0.5 bg-quebi-raised p-1 text-xs",
     isToday && TODAY_RING,
   )
 
@@ -677,21 +679,21 @@ function ListDayCell<E extends CalendarEvent>({
           {...(href ? { href } : {})}
           onPress={onAction}
           className={cn(
-            "self-start rounded-quebi-xs px-0.5 font-semibold text-quebi-fg tabular-nums hover:text-quebi-fg",
+            "self-start px-0.5 font-medium text-quebi-fg tabular-nums hover:text-quebi-fg",
             DAY_LINK,
           )}
         >
           {dateMark}
         </Link>
       ) : (
-        <span className="px-0.5 font-semibold text-quebi-fg tabular-nums">{dateMark}</span>
+        <span className="px-0.5 font-medium text-quebi-fg tabular-nums">{dateMark}</span>
       )}
       {shown.map((event) => (
         <span
           key={event.id}
           data-slot="year-view-item"
           className={cn(
-            "truncate rounded-quebi-xs px-1 text-quebi-fg leading-4",
+            "truncate px-1 text-quebi-fg leading-4",
             CALENDAR_COLORS[resolveEventColor(event, calendars)].band,
           )}
         >
@@ -737,7 +739,7 @@ function HeatmapLegend({ max, fewer, more, maxText, hasScale }: HeatmapLegendPro
       <span>{fewer}</span>
       <span aria-hidden="true" className="flex items-center gap-1">
         {HEATMAP_FILLS.map((fill) => (
-          <span key={fill} className={cn("size-3 rounded-quebi-xs", fill)} />
+          <span key={fill} className={cn("size-3", fill)} />
         ))}
       </span>
       <span>{more}</span>

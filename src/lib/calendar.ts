@@ -65,16 +65,17 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000
 /**
  * The categorical palette, in slot order.
  *
- * The order is the accessibility mechanism, not a preference: it is the
- * `dataviz` skill's validated categorical ordering, whose adjacent pairs clear
- * the colour-vision-deficiency gate in both themes. Assign in order and never
- * cycle — a ninth calendar wants a "+N others" fold, not a ninth hue that
- * repeats the first. The slot that would be the skill's aqua is quebi's brand
- * teal, which is the one slot the brand can occupy without disturbing the
- * ordering; `brand` is also the default for a view with a single calendar,
+ * The order is the accessibility mechanism, not a preference: adjacent slots
+ * always differ in ground or in edge style (see `CALENDAR_COLORS`), so two
+ * neighbouring calendars never draw alike. Assign in order and never
+ * cycle — a ninth calendar wants a "+N others" fold, not a ninth slot that
+ * repeats the first. `brand` is the default for a view with a single calendar,
  * where there is no adjacency to clear because there is nothing to tell apart.
  *
- * The names are keys, not classes. `CALENDAR_COLORS` in
+ * The names are historical: they were hues, and in the Ink & Paper look every
+ * slot is a treatment of ink (a ground crossed with an edge style) rather than
+ * a colour. They stay because they are stored in consumers' records. The names
+ * are keys, not classes. `CALENDAR_COLORS` in
  * `@/components/calendar-shell` is what turns one into pixels, so this module
  * stays free of styling and a consumer can map them somewhere else.
  */

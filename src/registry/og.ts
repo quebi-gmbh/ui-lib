@@ -103,6 +103,12 @@ import { formattedStorageOgScene } from "./formatted-storage.og"
 import { galleryOgScene } from "./gallery.og"
 import { gridListOgScene } from "./grid-list.og"
 import { headingOgScene } from "./heading.og"
+import { eyebrowOgScene } from "./eyebrow.og"
+import { indexListOgScene } from "./index-list.og"
+import { logoOgScene } from "./logo.og"
+import { lowTitleOgScene } from "./low-title.og"
+import { metaRowOgScene } from "./meta-row.og"
+import { stageOgScene } from "./stage.og"
 import { iconTileOgScene } from "./icon-tile.og"
 import { inputOgScene } from "./input.og"
 import { inputOtpOgScene } from "./input-otp.og"
@@ -277,6 +283,12 @@ export const ogScenes: Record<string, OgScene> = {
   "gallery": galleryOgScene,
   "grid-list": gridListOgScene,
   "heading": headingOgScene,
+  "eyebrow": eyebrowOgScene,
+  "index-list": indexListOgScene,
+  "logo": logoOgScene,
+  "low-title": lowTitleOgScene,
+  "meta-row": metaRowOgScene,
+  "stage": stageOgScene,
   "icon-tile": iconTileOgScene,
   "input": inputOgScene,
   "input-otp": inputOtpOgScene,

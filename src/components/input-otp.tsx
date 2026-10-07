@@ -75,9 +75,9 @@ type InputOTPProps = DistributiveOmit<React.ComponentPropsWithoutRef<typeof OTPI
  * InputOTP — quebi design system
  *
  * One-time-password / verification-code input built on the `input-otp`
- * package. Slots use the quebi input style (translucent field, cyan-tinted
- * border); the active slot lifts its border to brand teal with the quebi
- * teal ring. Invalid uses red; disabled dims the whole control.
+ * package. Each slot is its own underlined cell, drawn like `Input`: the
+ * active slot's line thickens to 2px, no ring. Invalid turns the lines
+ * `danger`; disabled dims the whole control.
  *
  * `size` reaches the slots through `FieldSizeContext` rather than through a
  * prop, because the slots are written by the caller — `<InputOTP><InputOTPSlot
@@ -153,7 +153,7 @@ export function InputOTPGroup({ className, ...props }: React.ComponentProps<"div
   return (
     <div
       data-slot="input-otp-group"
-      className={cn("flex items-center", className)}
+      className={cn("flex items-center gap-2", className)}
       {...props}
     />
   )
@@ -183,12 +183,10 @@ export function InputOTPSlot({
       className={cn(
         "relative flex items-center justify-center text-quebi-fg",
         inputOtpSlotSizeStyles[size],
-        "border border-quebi-line/20 border-l-0 bg-quebi-surface/[0.02] outline-none",
-        "transition-[border-color,box-shadow] duration-200",
-        "first:rounded-s-quebi-sm first:border-l last:rounded-e-quebi-sm",
-        "data-[active=true]:z-10 data-[active=true]:border-quebi-brand-mark",
-        "data-[active=true]:ring-2 data-[active=true]:ring-quebi-brand-mark data-[active=true]:ring-offset-2 data-[active=true]:ring-offset-quebi-bg",
-        "aria-invalid:border-red-500 data-[active=true]:aria-invalid:border-red-500 data-[active=true]:aria-invalid:ring-red-500/50",
+        "quebi-field outline-none",
+        "transition-[border-color,box-shadow] duration-150",
+        "data-[active=true]:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+        "aria-invalid:border-b-quebi-danger data-[active=true]:aria-invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
         className,
       )}
       {...props}
@@ -202,7 +200,7 @@ export function InputOTPSlot({
       )}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-4 w-px animate-caret-blink bg-quebi-brand duration-1000" />
+          <div className="h-4 w-px animate-caret-blink bg-quebi-action duration-1000" />
         </div>
       )}
     </div>

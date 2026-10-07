@@ -60,7 +60,7 @@ import { cn } from "@/lib/utils"
  * ## Colour
  *
  * The bars are `bg-current`, so the strip adopts whatever `text-*` token is on
- * it — `text-quebi-brand-text` while something is running, `text-quebi-fg-muted`
+ * it — `text-quebi-fg` while something is running, `text-quebi-fg-muted`
  * for a background job. There is no `tone` prop and no colour of its own.
  *
  * @example
@@ -258,7 +258,9 @@ export function ActivityPulse({
               data-slot="activity-pulse-bar"
               data-empty={cell === null ? "true" : undefined}
               className={cn(
-                "shrink-0 rounded-full bg-current",
+                // Square bars, as SignalBars; only a dot is round.
+                "shrink-0 bg-current",
+                shape === "dots" && "rounded-full",
                 "transition-[height,opacity] duration-200 motion-reduce:transition-none",
               )}
               style={

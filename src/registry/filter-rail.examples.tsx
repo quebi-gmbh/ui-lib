@@ -123,11 +123,11 @@ function Results({ rows }: { rows: Part[] }) {
       {rows.map((row) => (
         <Card key={row.id}>
           <CardContent className="flex flex-col items-start gap-1.5 p-3">
-            <span className="font-medium text-quebi-fg text-sm">{row.name}</span>
-            <span className="text-quebi-fg-subtle text-xs">
+            <span className="font-medium text-quebi-fg text-quebi-body-s">{row.name}</span>
+            <span className="text-quebi-caption text-quebi-fg-subtle">
               {CATEGORY_LABELS[row.category]} · {row.maker}
             </span>
-            <span className="font-medium text-quebi-fg text-sm tabular-nums">
+            <span className="font-medium text-quebi-fg text-quebi-body-s tabular-nums">
               <FormattedNumber
                 value={row.price}
                 options={{ style: "currency", currency: "EUR", maximumFractionDigits: 0 }}
@@ -140,7 +140,7 @@ function Results({ rows }: { rows: Part[] }) {
         </Card>
       ))}
       {rows.length === 0 && (
-        <Text className="col-span-full py-8 text-center text-quebi-fg-subtle text-sm">
+        <Text className="col-span-full py-8 text-center text-quebi-body-s text-quebi-fg-subtle">
           Nothing matches these filters.
         </Text>
       )}
@@ -195,7 +195,7 @@ export const filterRailExamples: ComponentExample[] = [
           Drag the gallery narrower and nothing jumps: every breakpoint on this surface is a
           container query.
         </Note>
-        <div className="w-full max-w-lg self-center rounded-quebi-md border border-quebi-line/10 p-4">
+        <div className="w-full max-w-lg self-center border border-quebi-hairline p-4">
           <Catalogue initial={{ maker: ["Pulse"] }} />
         </div>
       </div>

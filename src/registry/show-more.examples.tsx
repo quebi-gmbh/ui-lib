@@ -6,7 +6,7 @@ export const showMoreExamples: ComponentExample[] = [
   {
     title: "Default",
     description: "A horizontal hairline with a centered toggle pill.",
-    render: () => <ShowMore>Show more</ShowMore>,
+    render: () => <ShowMore>show more</ShowMore>,
   },
   {
     title: "Controlled selection",
@@ -22,7 +22,7 @@ export const showMoreExamples: ComponentExample[] = [
             </p>
           )}
           <ShowMore isSelected={open} onChange={setOpen}>
-            {open ? "Show less" : "Show more"}
+            {open ? "show less" : "show more"}
           </ShowMore>
         </div>
       )
@@ -30,7 +30,7 @@ export const showMoreExamples: ComponentExample[] = [
   },
   {
     title: "As text",
-    description: "Render a plain muted label instead of an interactive pill.",
+    description: "Render a mono count label instead of an interactive pill.",
     render: () => <ShowMore as="text" text="12 more replies" />,
   },
   {
@@ -41,7 +41,7 @@ export const showMoreExamples: ComponentExample[] = [
         <div className="flex flex-1 items-center justify-center text-quebi-fg-muted text-sm">
           Left
         </div>
-        <ShowMore orientation="vertical">More</ShowMore>
+        <ShowMore orientation="vertical">more</ShowMore>
         <div className="flex flex-1 items-center justify-center text-quebi-fg-muted text-sm">
           Right
         </div>
@@ -50,6 +50,6 @@ export const showMoreExamples: ComponentExample[] = [
   },
   {
     title: "Disabled",
-    render: () => <ShowMore isDisabled>Show more</ShowMore>,
+    render: () => <ShowMore isDisabled>show more</ShowMore>,
   },
 ]

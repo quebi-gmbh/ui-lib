@@ -28,6 +28,7 @@ import {
   type CalendarSource,
 } from "../../src/components/calendar-shell"
 import { DayView } from "../../src/components/day-view"
+import { calendarColorNames } from "../../src/lib/calendar"
 import { MonthView } from "../../src/components/month-view"
 import { WeekView } from "../../src/components/week-view"
 
@@ -65,19 +66,20 @@ const slot = (container: HTMLElement, name: string, id: string) =>
 const blockFor = (container: HTMLElement, id = "one") => slot(container, "calendar-event", id)
 
 /**
- * The wash is a colour, not a transparency (task #165).
+ * Every ground is opaque, and none of it is a hue.
  *
  * A tint written `bg-blue-500/15` leaves the bar 85% transparent, so the hour
  * lines, the sub-slot lines and the column rules the grid draws *underneath* an
- * event stay legible straight through it — which is what was reported. The fix
- * is the same apparent colour composited against the page at token level, so
- * what is pinned is the *shape* of the value: a `color-mix` against
- * `--color-quebi-bg`, and no alpha suffix left in any fill.
+ * event stay legible straight through it. Ink & Paper also drops the hues: each
+ * slot is a ground (paper, tint, raised, pressed, hatched) crossed with an edge
+ * style. What is pinned is the shape: a token ground or a `color-mix` against
+ * `--color-quebi-bg`, never an alpha suffix and never a Tailwind palette scale.
  */
-describe("the calendar palette is opaque", () => {
+describe("the calendar palette is opaque ink", () => {
   const entries = Object.entries(CALENDAR_COLORS)
+  const GROUND = /(?:^|\s)bg-(?:quebi-(?:bg|raised|pressed)|\[color-mix\(in_oklab,[^\s]*var\(--color-quebi-bg\)\)\])(?:\s|$)/
 
-  test("every fill is a color-mix against the page, not an alpha", () => {
+  test("every fill is an opaque ground, not an alpha", () => {
     expect(entries.length).toBeGreaterThan(0)
     for (const [name, palette] of entries) {
       for (const [field, value] of [
@@ -85,25 +87,31 @@ describe("the calendar palette is opaque", () => {
         ["band", palette.band],
       ] as const) {
         const where = `${name}.${field}: ${value}`
-        // `bg-blue-500/15`, `hover:bg-quebi-brand/25` — the reported shape.
         expect(where).not.toMatch(/bg-[\w-]+\/[\d.]+/)
-        expect(where).toContain("color-mix(in_oklab,")
-        expect(where).toContain("var(--color-quebi-bg)")
+        expect([where, GROUND.test(value)]).toEqual([where, true])
       }
     }
   })
 
-  test("the hover tint stays stronger than the resting one, as it was at 15/25", () => {
+  test("no slot is drawn in a hue", () => {
     for (const [name, palette] of entries) {
-      expect([name, palette.block.match(/_(\d+)%,/g)]).toEqual([name, ["_15%,", "_25%,"]])
-      expect([name, palette.band.match(/_(\d+)%,/g)]).toEqual([name, ["_20%,"]])
+      const all = Object.values(palette).join(" ")
+      // `blue-500`, `emerald-500` — a Tailwind palette scale.
+      expect([name, /-[a-z]+-\d{2,3}\b/.test(all)]).toEqual([name, false])
     }
   })
 
-  test("the solid edge and dot keep the raw hue — only the fill composites", () => {
+  test("every block answers hover", () => {
     for (const [name, palette] of entries) {
-      expect([name, palette.edge.includes("color-mix")]).toEqual([name, false])
-      expect([name, palette.dot.includes("color-mix")]).toEqual([name, false])
+      expect([name, palette.block.includes("hover:bg-")]).toEqual([name, true])
+    }
+  })
+
+  test("adjacent slots never draw alike", () => {
+    for (let index = 1; index < calendarColorNames.length; index++) {
+      const a = CALENDAR_COLORS[calendarColorNames[index - 1] as keyof typeof CALENDAR_COLORS]
+      const b = CALENDAR_COLORS[calendarColorNames[index] as keyof typeof CALENDAR_COLORS]
+      expect(`${a.block} ${a.edge}`).not.toBe(`${b.block} ${b.edge}`)
     }
   })
 
@@ -123,40 +131,29 @@ describe("the calendar palette is opaque", () => {
 })
 
 /**
- * Selection is the event's own hue; focus stays the brand's (task #168).
+ * Selection is an ink outline; focus is an inset ring.
  *
- * All three views drew selection as `ring-2 ring-quebi-brand-mark ring-inset` —
- * byte for byte the focus treatment on the line above it. That was three
- * defects in one: teal argued with whatever hue the event was painted in, the
- * *inset* ring landed exactly on the 2px `edge` and erased the only mark of
- * which calendar the event belonged to, and a merely focused event was
- * indistinguishable from a selected one.
- *
- * What is pinned: selection and focus never share a treatment, selection comes
- * from the palette, and the accent survives it.
+ * Selection was once drawn as the focus treatment byte for byte — an *inset*
+ * ring that landed exactly on the 2px `edge` and erased the only mark of which
+ * calendar the event belonged to, and a merely focused event was
+ * indistinguishable from a selected one. What is pinned: selection and focus
+ * never share a treatment, selection comes from the palette, and the accent
+ * survives it.
  */
-describe("selection is drawn in the event's own colour", () => {
+describe("selection is drawn as an outline from the palette", () => {
   const entries = Object.entries(CALENDAR_COLORS)
 
-  test("every palette entry carries a selection colour", () => {
+  test("every palette entry carries an outline selection colour", () => {
     for (const [name, palette] of entries) {
       expect([name, typeof palette.selected]).toEqual([name, "string"])
       expect([name, palette.selected.startsWith("outline-")]).toEqual([name, true])
     }
   })
 
-  test("the selection colour is the entry's own hue, not a second colour system", () => {
+  test("selection is ink, the same for every slot", () => {
     for (const [name, palette] of entries) {
-      const hue = palette.edge.replace("border-l-", "")
-      expect([name, palette.selected]).toEqual([name, `outline-${hue}`])
+      expect([name, palette.selected]).toEqual([name, "outline-quebi-fg"])
     }
-  })
-
-  test("only the brand entry may wear the brand mark", () => {
-    for (const [name, palette] of entries) {
-      expect([name, palette.selected.includes("quebi-brand")]).toEqual([name, name === "brand"])
-    }
-    expect(CALENDAR_COLORS.brand.selected).toBe("outline-quebi-brand-mark")
   })
 
   test("a selected block differs from a focused one, and keeps its accent", () => {
@@ -180,8 +177,8 @@ describe("selection is drawn in the event's own colour", () => {
     expect(className).toContain("outline-solid")
     expect(className).not.toContain("outline-none")
 
-    // Focus is still the brand mark, and still only under focus-visible.
-    expect(className).toContain("focus-visible:ring-quebi-brand-mark")
+    // Focus is still the inset ring, and still only under focus-visible.
+    expect(className).toContain("focus-visible:ring-quebi-focus")
     expect(className.split(" ")).not.toContain("ring-2")
 
     // The left accent is no longer overpainted by an inset ring.
@@ -339,23 +336,19 @@ describe("a selected block outranks the blocks it touches", () => {
 })
 
 /**
- * The accented edge is never rounded (task #176).
+ * The accented edge is a straight line, not a crescent.
  *
- * `--radius-quebi-sm` is 8px and both the month chip and the week all-day band
- * are 20px tall, so two corners consume 16px of the 20 and the 2px `edge` is
- * forced round them — its inner radius is `outer - width`, so the stroke tapers
- * as it turns and the series line reads as a crescent hooked into a pill rather
- * than as a straight bar. `TimedBlock` already rounds only its trailing corners
- * and leaves its accent dead straight; these two were the outliers, and the
- * shortest surfaces, where it showed most.
+ * A radius on a 20px chip bends the 2px `edge` round its corners, so the
+ * accent reads as a crescent hooked into a pill rather than a straight bar.
+ * Ink & Paper is square throughout; pinned here so that no surface carrying an
+ * accent picks a radius back up.
  */
 describe("the colour accent is a straight line, not a crescent", () => {
   const chipFor = (container: HTMLElement, id: string) => slot(container, "calendar-chip", id)
+  const rounded = (className: string) =>
+    className.split(/\s+/).filter((name) => name.startsWith("rounded") && !name.endsWith("-none"))
 
-  // The radius is the row's own shorthand now, and a caller squares a corner
-  // over the top of it — so what a corner ends up as is the shorthand unless a
-  // `rounded-<side>-none` from the call site has displaced it.
-  test("a filled month chip is square on the accented edge and round on the other", () => {
+  test("a filled month chip is square and carries the accent", () => {
     const { container } = render(
       <MonthView
         date={MONDAY}
@@ -367,15 +360,12 @@ describe("the colour accent is a straight line, not a crescent", () => {
       />,
     )
     const className = chipFor(container, "trip")?.className ?? ""
-    expect(className).toContain("rounded-l-none")
-    // The trailing edge keeps the radius: only the accent is straightened.
-    expect(className).toContain("rounded-quebi-sm")
-    // And it is the accent that makes the difference.
+    expect(rounded(className)).toEqual([])
     expect(className).toContain("border-l-2")
     expect(className).toContain(CALENDAR_COLORS.blue.edge)
   })
 
-  test("a timed month chip has no accent, so it keeps both corners", () => {
+  test("a timed month chip has no accent and no radius", () => {
     const { container } = render(
       <MonthView
         date={MONDAY}
@@ -388,12 +378,11 @@ describe("the colour accent is a straight line, not a crescent", () => {
     )
     const className = chipFor(container, "one")?.className ?? ""
     expect(className).not.toContain("border-l-2")
-    expect(className).toContain("rounded-quebi-sm")
-    expect(className).not.toContain("rounded-l-none")
+    expect(rounded(className)).toEqual([])
   })
 
-  test("the week all-day band gets the same treatment", () => {
-    const { container } = render(
+  test("the week all-day band and the timed block are square too", () => {
+    const week = render(
       <WeekView
         date={MONDAY}
         calendars={CALENDARS}
@@ -403,40 +392,9 @@ describe("the colour accent is a straight line, not a crescent", () => {
         now={null}
       />,
     )
-    const className = slot(container, "calendar-band", "trip")?.className ?? ""
-    expect(className).toContain("rounded-l-none")
-    expect(className).not.toContain("rounded-l-quebi-sm")
-    expect(className).toContain("rounded-r-quebi-sm")
-  })
+    expect(rounded(slot(week.container, "calendar-band", "trip")?.className ?? "")).toEqual([])
+    week.unmount()
 
-  test("a band cut at the week boundary still loses its trailing radius", () => {
-    const { container } = render(
-      <WeekView
-        date={MONDAY}
-        calendars={CALENDARS}
-        events={[
-          {
-            id: "over",
-            title: "Offsite",
-            start: at(MONDAY.add({ days: 5 }), 0),
-            end: at(MONDAY.add({ days: 9 }), 0),
-            allDay: true,
-            calendarId: "me",
-          },
-        ]}
-        locale={LOCALE}
-        timeZone={ZONE}
-        now={null}
-      />,
-    )
-    const className = slot(container, "calendar-band", "over")?.className ?? ""
-    // continuesAfter is intact: the two halves must read as one event cut.
-    expect(className).toContain("rounded-r-none")
-    expect(className).not.toContain("rounded-r-quebi-sm")
-    expect(className).toContain("rounded-l-none")
-  })
-
-  test("the timed block these two now match still rounds only its trailing corners", () => {
     const { container } = render(
       <DayView
         date={MONDAY}
@@ -448,10 +406,7 @@ describe("the colour accent is a straight line, not a crescent", () => {
       />,
     )
     const className = blockFor(container)?.className ?? ""
-    expect(className).toContain("rounded-tr-quebi-sm")
-    expect(className).toContain("rounded-br-quebi-sm")
-    expect(className).not.toContain("rounded-tl-quebi-sm")
-    expect(className).not.toContain("rounded-bl-quebi-sm")
+    expect(rounded(className)).toEqual([])
   })
 })
 
@@ -507,7 +462,7 @@ describe("the calendar grid scrolls behind the quebi bar", () => {
     expect(viewport(container)?.className ?? "").toContain("quebi-scrollbar")
   })
 
-  test("the shell above it still clips the bar to its own corner", () => {
+  test("the shell above it still clips the bar", () => {
     const { container } = render(
       <WeekView
         date={MONDAY}
@@ -521,7 +476,6 @@ describe("the calendar grid scrolls behind the quebi bar", () => {
     const shell = container.querySelector<HTMLElement>('[data-slot="calendar-shell"]')
     expect(shell).not.toBeNull()
     expect(shell?.className).toContain("overflow-hidden")
-    expect(shell?.className).toContain("rounded-quebi-md")
     // The clip has to be an ancestor of the bar for it to reach it at all.
     expect(shell?.contains(viewport(container))).toBe(true)
   })
@@ -554,11 +508,10 @@ describe("the legend's overlay variant", () => {
     const { container } = render(<CalendarLegend calendars={CALENDARS} variant="overlay" />)
     const className = legend(container)?.className ?? ""
     expect(className).toContain("bg-quebi-elevated")
-    // A hairline is the token at an alpha, never a raw palette scale.
-    expect(className).toMatch(/border-quebi-line\/\d+/)
-    // Neutral occlusion, not the mint glow — the argument is in popover.tsx.
-    expect(className).toContain("shadow-lg")
-    expect(className).toContain("rounded-quebi-md")
+    expect(className).toContain("border-quebi-hairline")
+    // The one shadow, on a floating surface, with the small floating radius.
+    expect(className).toContain("shadow-quebi-float")
+    expect(className).toContain("rounded-quebi-s")
   })
 
   test("both variants are still the same row of dots", () => {

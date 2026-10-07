@@ -12,7 +12,7 @@ export const alertDialogOgScene: OgScene = {
       isOpen
       title="Delete this plan?"
       description="Kiosks using it fall back to the default price list. This cannot be undone."
-      confirmLabel="Delete plan"
+      confirmLabel="delete plan"
       intent="danger"
     />
   ),

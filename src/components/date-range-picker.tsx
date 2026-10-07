@@ -21,8 +21,7 @@ import { fieldStyles } from "@/components/field"
  * Date Range Picker — quebi design system
  *
  * Two segmented date inputs (start → end) paired with a range-calendar overlay.
- * The trigger uses the quebi input chrome (translucent fill, cyan-tinted border,
- * brand-teal focus ring) with a calendar-icon button on the right; clicking it
+ * The trigger is drawn with `Input`'s underline, with a calendar-icon button on the right; clicking it
  * opens a Popover (or Modal on mobile) holding the RangeCalendar. Composes
  * @/components/{date-picker,date-field,field}. The Conform date-range-picker
  * variant depends on it.
@@ -75,10 +74,9 @@ export function DateRangePicker<T extends DateValue>({
  * DateRangePickerTrigger — quebi design system
  *
  * A start DateInput, a separator dash, and an end DateInput on the left, plus a
- * calendar-icon button on the right, styled as one unified control (shared
- * cyan-tinted border, brand-teal focus ring). The wrapper owns the outer
- * border/ring; the inner DateInputs are rendered `bare` so they drop their own
- * border + ring + rounding.
+ * calendar-icon button on the right, read as one control: one underline under
+ * all of it, owned by the wrapper. The inner DateInputs are rendered `bare`
+ * so they draw no line of their own.
  */
 export function DateRangePickerTrigger({ className, ...props }: GroupProps) {
   return (
@@ -86,37 +84,29 @@ export function DateRangePickerTrigger({ className, ...props }: GroupProps) {
       data-slot="control"
       className={composeRenderProps(className, (resolved) =>
         cn(
-          "group/drpt flex w-full items-stretch overflow-hidden rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
-          "transition-[border-color,box-shadow] duration-200",
-          // Unguarded this *beat* the focus border below: both are (0,2,0) and
-          // Tailwind emits `focus-within` before `hover`, so pointing at a focused
-          // picker dropped the mark-teal border and left the ring floating off it.
-          "not-focus-within:hover:border-quebi-line/40",
-          "focus-within:border-quebi-brand-mark focus-within:ring-2 focus-within:ring-quebi-brand-mark focus-within:ring-offset-2 focus-within:ring-offset-quebi-bg",
+          // `Input`'s underline, under the segments and the calendar button
+          // alike; focus anywhere inside, or the open calendar, thickens it.
+          "group/drpt flex w-full items-stretch overflow-hidden bg-transparent",
+          "quebi-field",
+          "transition-[border-color,box-shadow] duration-150",
+          "focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-focus)] group-open:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+          "data-invalid:border-b-quebi-danger data-invalid:focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
           resolved,
         ),
       )}
       {...props}
     >
       <div className="flex flex-1 items-center">
-        <DateInput slot="start" bare className="w-fit px-3" />
-        <span
-          aria-hidden="true"
-          className="block h-0.5 w-2 shrink-0 rounded-full bg-quebi-fg-muted"
-        />
-        <DateInput slot="end" bare className="w-fit px-3" />
+        <DateInput slot="start" bare className="w-fit pe-2" />
+        <span aria-hidden="true" className="block h-px w-2 shrink-0 bg-quebi-fg-subtle" />
+        <DateInput slot="end" bare className="w-fit px-2" />
       </div>
       <Button
         data-slot="date-picker-trigger"
         className={cn(
-          "inline-flex cursor-pointer items-center border-quebi-line/20 border-l bg-quebi-surface/[0.02] px-3 text-quebi-fg-muted",
-          "transition-[border-color,color] duration-200",
-          // Guarded for the same reason as the wrapper border: this divider and
-          // that border are one edge, so they have to change together or the
-          // control reads as two.
-          "group-not-focus-within/drpt:group-hover/drpt:border-quebi-line/40 hover:text-quebi-fg",
-          "group-focus-within/drpt:border-quebi-brand-mark",
-          "outline-none focus-visible:outline-none",
+          "inline-flex cursor-pointer items-center bg-transparent ps-3 text-quebi-fg-subtle",
+          "transition-colors duration-150 hover:text-quebi-fg",
+          "outline-none focus-visible:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset",
         )}
       >
         <CalendarDays data-slot="icon" className="size-4" />

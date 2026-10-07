@@ -10,13 +10,13 @@ export const typingIndicatorExamples: ComponentExample[] = [
     render: () => (
       <div className="flex w-full max-w-sm flex-col gap-3">
         <div className="flex items-start justify-end gap-2">
-          <div className="rounded-quebi-md bg-quebi-brand px-3 py-2 text-sm text-quebi-on-brand">
+          <div className="bg-quebi-action px-3 py-2 text-sm text-quebi-on-action">
             Can you summarise the last deploy?
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Avatar initials="AI" size="sm" />
-          <div className="rounded-quebi-md border border-quebi-line/10 bg-quebi-elevated px-3 py-2.5">
+          <div className="border border-quebi-hairline px-3 py-2.5">
             <TypingIndicator label="Assistant is replying" className="text-quebi-fg-muted" />
           </div>
         </div>
@@ -26,12 +26,12 @@ export const typingIndicatorExamples: ComponentExample[] = [
   {
     title: "Sizes and colour",
     description:
-      "The dots are `bg-current`, so the indicator adopts whatever text token is on it. Keep it muted where it sits inside a bubble the reader is already looking at, and reserve the brand teal for the cases where the indicator is the only thing on the row.",
+      "The dots are `bg-current`, so the indicator adopts whatever text token is on it. Keep it muted where it sits inside a bubble the reader is already looking at, and give it full ink where the indicator is the only thing on the row.",
     render: () => (
       <div className="flex items-center gap-8">
         <TypingIndicator size="sm" className="text-quebi-fg-subtle" />
         <TypingIndicator size="md" className="text-quebi-fg-muted" />
-        <TypingIndicator size="lg" className="text-quebi-brand-text" />
+        <TypingIndicator size="lg" className="text-quebi-fg" />
       </div>
     ),
   },

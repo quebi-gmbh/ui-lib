@@ -14,7 +14,7 @@ const STEADY = [23, 25, 24, 26, 25, 27, 26, 28, 27, 29, 28, 30]
 export const sparklineOgScene: OgScene = {
   scale: 1.8,
   render: () => (
-    <div className="flex items-center gap-8 text-quebi-brand-text">
+    <div className="flex items-center gap-8 text-quebi-fg">
       <Sparkline data={RISING} width={140} height={36} strokeWidth={2} marker />
       <Sparkline data={PEAKED} variant="area" width={140} height={36} strokeWidth={2} min={0} />
       <Sparkline data={STEADY} variant="bars" width={140} height={36} min={0} />

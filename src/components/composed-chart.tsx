@@ -24,7 +24,7 @@ import {
  *
  * Bars, lines and areas on one pair of axes, built on the quebi `Chart` wrapper.
  * Each entry in `series` names a key in `config` and the mark it is drawn with;
- * colors come from the teal-led quebi palette and can be overridden per key via
+ * colors come from the ink series palette and can be overridden per key via
  * `config`. A series can be measured against a second, right-hand Y axis by
  * setting `yAxisId: "right"` — the axis appears only when something uses it.
  *

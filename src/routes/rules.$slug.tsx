@@ -1,7 +1,5 @@
 import { Link, data, useParams } from "react-router"
-import { Check, ChevronRight, X } from "lucide-react"
 import { Badge } from "@/components/badge"
-import { Card, CardTitle } from "@/components/card"
 import { CodeBlock } from "@/site/code-block"
 import { ProseLink } from "@/site/prose-link"
 import {
@@ -14,7 +12,7 @@ import { Code } from "@/components/text"
 import { seo } from "@/lib/seo"
 import { cn } from "@/lib/utils"
 import { ANCHOR, headingId, OnThisPage, type PageSection } from "@/site/on-this-page"
-import { getRule, getRuleGroup, severityIntent } from "@/registry/rules"
+import { getRule, getRuleGroup, groupRules, severityIntent } from "@/registry/rules"
 import type { RuleMeta } from "@/registry/rules/types"
 import { ruleChecks, ruleExampleHighlights } from "@/registry/rules/highlighted.generated"
 import type { Route } from "./+types/rules.$slug"
@@ -31,11 +29,11 @@ export function loader({ params }: Route.LoaderArgs) {
 function ruleContents(rule: RuleMeta): PageSection[] {
   const checks = ruleChecks[rule.id] ?? []
   return [
-    { id: "catches", title: "What this catches" },
-    { id: "why", title: "Why" },
-    ...(rule.replacements?.length ? [{ id: "instead", title: "Use this instead" }] : []),
-    ...(rule.classPolicy ? [{ id: "class-test", title: "The class test" }] : []),
-    { id: "examples", title: "Wrong / right" },
+    { id: "catches", title: "what this catches" },
+    { id: "why", title: "why" },
+    ...(rule.replacements?.length ? [{ id: "instead", title: "use this instead" }] : []),
+    ...(rule.classPolicy ? [{ id: "class-test", title: "the class test" }] : []),
+    { id: "examples", title: "wrong / right" },
     ...rule.examples.map((example) => ({
       id: headingId("example", example.title),
       title: example.title,
@@ -43,18 +41,26 @@ function ruleContents(rule: RuleMeta): PageSection[] {
     })),
     ...(checks.length > 0
       ? [
-          { id: "checks", title: "How to check this" },
+          { id: "checks", title: "how to check this" },
           ...checks.map((check) => ({ id: headingId("check", check.title), title: check.title, level: 3 })),
         ]
       : []),
-    { id: "exceptions", title: "Exceptions" },
-    { id: "scope", title: "Scope and enforcement" },
+    { id: "exceptions", title: "exceptions" },
+    { id: "scope", title: "scope and enforcement" },
   ]
 }
 
 export function meta({ loaderData: d }: Route.MetaArgs) {
   if (!d) return seo({ title: "Not found", description: "Rule not found.", path: "/rules" })
   return seo({ title: d.title, description: d.summary, path: `/rules/${d.id}` })
+}
+
+/** The rule's number in nav order — group, then tier — as on the index: "03". */
+function ruleNumber(id: string) {
+  const index = groupRules()
+    .flatMap(({ rules }) => rules)
+    .findIndex((r) => r.id === id)
+  return String(index + 1).padStart(2, "0")
 }
 
 /**
@@ -78,61 +84,59 @@ export default function RuleDetail({ loaderData }: Route.ComponentProps) {
   return (
     <OnThisPage contents={loaderData.contents}>
       <nav aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1.5 text-sm text-quebi-fg-subtle">
+        <ol className="flex items-center gap-2 text-quebi-caption text-quebi-fg-subtle">
           <li>
             <Link
               to="/rules"
-              className="text-quebi-fg-muted transition-colors duration-200 hover:text-quebi-fg"
+              className="text-quebi-fg-muted underline-offset-5 transition-colors duration-150 hover:text-quebi-fg hover:underline"
             >
-              Rules
+              rules
             </Link>
           </li>
-          <li aria-hidden className="flex items-center">
-            <ChevronRight className="h-4 w-4" />
-          </li>
-          <li className="font-medium text-quebi-fg" aria-current="page">
-            {rule.title}
+          <li aria-hidden>/</li>
+          <li className="text-quebi-fg" aria-current="page">
+            {rule.navTitle ?? rule.title}
           </li>
         </ol>
       </nav>
 
-      <header className="mt-6">
-        {group ? <span className="quebi-eyebrow">{group.title}</span> : null}
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
-          {rule.title}
-        </h1>
-        <p className="mt-3 max-w-quebi-content text-base leading-relaxed text-quebi-fg-muted">
-          {rule.summary}
+      <header className="mt-quebi-8">
+        <p className="quebi-eyebrow">
+          rule {ruleNumber(rule.id)} — {rule.tier ? `tier ${rule.tier}` : group?.title.toLowerCase()}
         </p>
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          {rule.tier ? <Badge intent="brand">Tier {rule.tier}</Badge> : null}
+        <h1 className="mt-3 font-display text-quebi-display-m text-quebi-fg">{rule.title}</h1>
+        <p className="mt-5 max-w-[60ch] text-quebi-body text-quebi-fg-muted">{rule.summary}</p>
+        <div className="mt-5 flex flex-wrap items-center gap-1.5">
           <Badge intent={severityIntent(rule.severity)}>{rule.severity}</Badge>
-          <Badge intent="outline">{rule.enforcement.kind}</Badge>
-          <Code>{rule.id}</Code>
+          <Badge>{rule.enforcement.kind}</Badge>
+          <Code className="ms-2">{rule.id}</Code>
         </div>
         {group ? (
-          <p className="mt-6 text-lg font-medium text-quebi-brand-text">{group.principle}</p>
+          <div className="mt-quebi-8 max-w-[60ch] border-quebi-rule border-t pt-4">
+            <p className="quebi-eyebrow">{group.title.toLowerCase()}</p>
+            <p className="mt-2 font-display text-quebi-fg text-quebi-title">{group.principle}</p>
+          </div>
         ) : null}
       </header>
 
-      <section className="mt-12">
-        <h2 id="catches" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
-          What this catches
+      <section className="mt-quebi-9">
+        <h2 id="catches" className={cn(ANCHOR, "font-display text-quebi-display-s text-quebi-fg")}>
+          what this catches
         </h2>
         <Note intent="warning" className="mt-3">
           {rule.failureMode}
         </Note>
       </section>
 
-      <section className="mt-12">
-        <h2 id="why" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
-          Why
+      <section className="mt-quebi-9">
+        <h2 id="why" className={cn(ANCHOR, "font-display text-quebi-display-s text-quebi-fg")}>
+          why
         </h2>
         <div className="mt-3 space-y-4">
           {rule.rationale.map((paragraph) => (
             <p
               key={paragraph.slice(0, 48)}
-              className="max-w-quebi-content text-base leading-relaxed text-quebi-fg-muted"
+              className="max-w-[60ch] text-quebi-body text-quebi-fg-muted"
             >
               {paragraph}
             </p>
@@ -141,11 +145,11 @@ export default function RuleDetail({ loaderData }: Route.ComponentProps) {
       </section>
 
       {rule.replacements?.length ? (
-        <section className="mt-12">
-          <h2 id="instead" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
-          Use this instead
+        <section className="mt-quebi-9">
+          <h2 id="instead" className={cn(ANCHOR, "font-display text-quebi-display-s text-quebi-fg")}>
+          use this instead
         </h2>
-          <DescriptionList className="mt-4">
+          <DescriptionList className="mt-5">
             {rule.replacements.map((replacement) => (
               <div key={replacement.element} className="contents">
                 <DescriptionTerm>
@@ -160,7 +164,7 @@ export default function RuleDetail({ loaderData }: Route.ComponentProps) {
                             {target.name}
                           </ProseLink>
                         ) : (
-                          <span className="font-medium text-quebi-fg">{target.name}</span>
+                          <span className="text-quebi-fg">{target.name}</span>
                         )}{" "}
                         <span className="text-quebi-fg-subtle">from {target.from}</span>
                         {target.when ? (
@@ -180,61 +184,55 @@ export default function RuleDetail({ loaderData }: Route.ComponentProps) {
       ) : null}
 
       {rule.classPolicy ? (
-        <section className="mt-12">
-          <h2 id="class-test" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
-          The class test
+        <section className="mt-quebi-9">
+          <h2 id="class-test" className={cn(ANCHOR, "font-display text-quebi-display-s text-quebi-fg")}>
+          the class test
         </h2>
-          <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
-            <Card>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Check className="h-4 w-4 text-quebi-success" aria-hidden />
-                Allowed
-              </CardTitle>
-              <ul className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-5 grid border-quebi-rule border-t sm:grid-cols-2">
+            <div className="py-4 sm:me-5 sm:border-quebi-hairline sm:border-e sm:pe-5">
+              <h3 className="font-mono text-quebi-label text-quebi-success uppercase">allowed</h3>
+              <ul className="mt-3 flex flex-wrap gap-1.5">
                 {rule.classPolicy.allowed.map((prefix) => (
                   <li key={prefix}>
                     <Badge intent="success">{prefix}</Badge>
                   </li>
                 ))}
               </ul>
-            </Card>
-            <Card>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <X className="h-4 w-4 text-quebi-danger" aria-hidden />
-                Violating
-              </CardTitle>
-              <ul className="mt-3 flex flex-wrap gap-2">
+            </div>
+            <div className="border-quebi-hairline border-t py-4 sm:border-t-0">
+              <h3 className="font-mono text-quebi-danger text-quebi-label uppercase">violating</h3>
+              <ul className="mt-3 flex flex-wrap gap-1.5">
                 {rule.classPolicy.violating.map((prefix) => (
                   <li key={prefix}>
                     <Badge intent="danger">{prefix}</Badge>
                   </li>
                 ))}
               </ul>
-            </Card>
+            </div>
           </div>
           {rule.classPolicy.note ? (
-            <p className="mt-4 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
+            <p className="mt-4 max-w-[60ch] text-quebi-body-s text-quebi-fg-muted">
               {rule.classPolicy.note}
             </p>
           ) : null}
         </section>
       ) : null}
 
-      <section className="mt-12">
-        <h2 id="examples" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
-          Wrong / right
+      <section className="mt-quebi-9">
+        <h2 id="examples" className={cn(ANCHOR, "font-display text-quebi-display-s text-quebi-fg")}>
+          wrong / right
         </h2>
-        <div className="mt-4 space-y-10">
+        <div className="mt-6 space-y-quebi-8">
           {rule.examples.map((example, i) => (
             <article key={example.title}>
               <h3
                 id={headingId("example", example.title)}
-                className={cn(ANCHOR, "text-base font-semibold text-quebi-fg")}
+                className={cn(ANCHOR, "min-w-0 wrap-anywhere font-display text-quebi-fg text-quebi-title")}
               >
                 {example.title}
               </h3>
               {example.source ? (
-                <p className="mt-1 text-sm text-quebi-fg-subtle">
+                <p className="mt-1 text-quebi-caption text-quebi-fg-subtle">
                   {example.sourceFixed ? "Was real code in " : "Real code from "}
                   <Code>{example.source}</Code>
                   {example.sourceFixed ? ", until it was fixed" : null}
@@ -242,20 +240,16 @@ export default function RuleDetail({ loaderData }: Route.ComponentProps) {
               ) : null}
               <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <div>
-                  <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-quebi-danger">
-                    <X className="h-3.5 w-3.5" aria-hidden /> Don't
-                  </p>
+                  <p className="mb-2 font-mono text-quebi-danger text-quebi-label uppercase">don't</p>
                   <CodeBlock html={highlights[i]?.wrong ?? ""} code={example.wrong} />
                 </div>
                 <div>
-                  <p className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wider text-quebi-success">
-                    <Check className="h-3.5 w-3.5" aria-hidden /> Do
-                  </p>
+                  <p className="mb-2 font-mono text-quebi-label text-quebi-success uppercase">do</p>
                   <CodeBlock html={highlights[i]?.right ?? ""} code={example.right} />
                 </div>
               </div>
               {example.note ? (
-                <p className="mt-3 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
+                <p className="mt-3 max-w-[60ch] text-quebi-body-s text-quebi-fg-muted">
                   {example.note}
                 </p>
               ) : null}
@@ -265,34 +259,34 @@ export default function RuleDetail({ loaderData }: Route.ComponentProps) {
       </section>
 
       {checks.length > 0 ? (
-        <section className="mt-12">
-          <h2 id="checks" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
-          How to check this
+        <section className="mt-quebi-9">
+          <h2 id="checks" className={cn(ANCHOR, "font-display text-quebi-display-s text-quebi-fg")}>
+          how to check this
         </h2>
-          <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
+          <p className="mt-1 max-w-[60ch] text-quebi-body-s text-quebi-fg-muted">
             Add one of these to your project and the rule holds without anyone having to remember
             it — including the agent writing half the JSX. The exceptions below are already applied,
             so a documented carve-out will not be reported.
           </p>
           {rule.enforcement.note ? (
-            <p className="mt-3 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
+            <p className="mt-3 max-w-[60ch] text-quebi-body-s text-quebi-fg-muted">
               <span className="text-quebi-fg">What it will and will not catch: </span>
               {rule.enforcement.note}
             </p>
           ) : null}
-          <div className="mt-6 space-y-8">
+          <div className="mt-6 space-y-quebi-8">
             {checks.map((check) => (
               <article key={check.title}>
                 <div className="flex flex-wrap items-center gap-2">
                   <h3
                     id={headingId("check", check.title)}
-                    className={cn(ANCHOR, "text-base font-semibold text-quebi-fg")}
+                    className={cn(ANCHOR, "min-w-0 wrap-anywhere font-display text-quebi-fg text-quebi-title")}
                   >
                     {check.title}
                   </h3>
-                  <Badge intent="outline">{check.tool}</Badge>
+                  <Badge>{check.tool}</Badge>
                 </div>
-                <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
+                <p className="mt-1 max-w-[60ch] text-quebi-body-s text-quebi-fg-muted">
                   {check.description}
                 </p>
                 <div className="mt-3">
@@ -301,7 +295,7 @@ export default function RuleDetail({ loaderData }: Route.ComponentProps) {
               </article>
             ))}
           </div>
-          <p className="mt-6 text-sm leading-relaxed text-quebi-fg-muted">
+          <p className="mt-6 text-quebi-body-s text-quebi-fg-muted">
             Enforcing more than this one rule?{" "}
             <ProseLink to="/rules/enforcement">
               Take the whole config
@@ -311,11 +305,11 @@ export default function RuleDetail({ loaderData }: Route.ComponentProps) {
         </section>
       ) : null}
 
-      <section className="mt-12">
-        <h2 id="exceptions" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
-          Exceptions
+      <section className="mt-quebi-9">
+        <h2 id="exceptions" className={cn(ANCHOR, "font-display text-quebi-display-s text-quebi-fg")}>
+          exceptions
         </h2>
-        <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
+        <p className="mt-1 max-w-[60ch] text-quebi-body-s text-quebi-fg-muted">
           Carve-outs are part of the rule, not a way around it. Each one is already an ignore glob
           in the checks above, so the cases listed here need no disable comment — and a case that is
           not listed is one to argue for, not to silence.
@@ -340,11 +334,11 @@ export default function RuleDetail({ loaderData }: Route.ComponentProps) {
         </div>
       </section>
 
-      <section className="mt-12">
-        <h2 id="scope" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
-          Scope and enforcement
+      <section className="mt-quebi-9">
+        <h2 id="scope" className={cn(ANCHOR, "font-display text-quebi-display-s text-quebi-fg")}>
+          scope and enforcement
         </h2>
-        <DescriptionList className="mt-4">
+        <DescriptionList className="mt-5">
           <DescriptionTerm>Applies to</DescriptionTerm>
           <DescriptionDetails>
             <ul className="flex flex-wrap gap-2">

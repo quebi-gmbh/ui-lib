@@ -13,21 +13,23 @@ import { cn } from "@/lib/utils"
 /**
  * The field size scale.
  *
- * A field's height is line-height + padding + the 1px border on each side, so
+ * A field's height is line-height + padding + 1px of border top and bottom, so
  * `xs` (30px) and `sm` (38px) are exactly `Button`'s `xs` and `sm`: put one of
  * each in a row and they share a baseline and a height. `md` is the default
- * and is the size every field in this library has always been — it predates
- * the scale and is deliberately left alone, so it is 42px rather than the
- * 46px of `Button`'s `text-base` `md`.
+ * and is 42px. The top border is transparent — the field is drawn by its
+ * underline alone — but it is kept so the arithmetic, and the row, still hold.
+ *
+ * No horizontal padding: an underlined field's text starts on the same line as
+ * the label above it. `InputGroup` adds the inset an icon or addon needs.
  *
  * Kept as a plain record rather than imported from a sibling: the three field
  * primitives are copied out one at a time, and a shared module would make
  * `Input` a registry dependency of `Select`.
  */
 export const inputSizeStyles = {
-  xs: "text-xs px-2.5 py-1.5",
-  sm: "text-sm px-3 py-2",
-  md: "text-sm px-3 py-2.5",
+  xs: "text-xs px-(--q-field-px) py-1.5",
+  sm: "text-sm px-(--q-field-px) py-2",
+  md: "text-sm px-(--q-field-px) py-2.5",
 } as const
 
 export type InputSize = keyof typeof inputSizeStyles
@@ -35,37 +37,18 @@ export type InputSize = keyof typeof inputSizeStyles
 /**
  * Input — quebi design system
  *
- * Built on react-aria-components. A translucent field with a cyan-tinted
- * border; focus lifts the border to brand teal and adds the quebi teal ring.
- * Invalid uses red; disabled dims and blocks interaction.
+ * Built on react-aria-components. Underline-only: no fill, no side or top
+ * border, a `rule` line under the text. Invalid turns the line `danger`;
+ * disabled dims and blocks interaction.
  *
- * ## The focus treatment, which this component is the canonical copy of
+ * ## Focus, which this component is the canonical copy of
  *
- * `focus:ring-2 focus:ring-quebi-brand-mark focus:ring-offset-2
- * focus:ring-offset-quebi-bg` — **a detached ring, never a flush one.**
- *
- * The reported "glow" (task #110) was a 1px mark-teal border with a 2px
- * mark-teal ring painted straight onto it: 3px of continuous, fully opaque
- * teal with nothing between the two to say where the field stops. The offset
- * puts a 2px band of page colour in that seam, so the same ink reads as a ring
- * around the field instead of a bloom leaking out of it. Nothing about the
- * colour moved: `--q-brand-mark` has 0.45 of headroom over WCAG 1.4.11's 3:1 on
- * the light page (task #96) and none to spend on translucency, so the lever was
- * geometry. Task #150 chose it and applied it everywhere; `tests/focus-treatment.test.ts`
- * holds it.
- *
- * Two forms, and the second is not a second language:
- *
- * - A control that meets the page or a surface gets the offset. That is most of
- *   the library, and `Button`, `Textarea` and `NumberField`'s steppers already
- *   had it — this is the rest of the library coming up to them.
- * - A control with no room outside itself — a cell in a calendar grid, a row in
- *   a table or sidebar, the trigger of a disclosure — draws the same ring
- *   `ring-inset`, taking the offset out of itself rather than out of its
- *   neighbour. An outward ring there would paint over the row above.
- *
- * An indicator *inside* another control's chrome (a tag's ✕, a dialog's close)
- * stays tight to it: there is no page colour at that seam to offset into.
+ * A text field is the one control in the library that draws no ring. Focus
+ * thickens the underline to 2px with an inset shadow on top of the 1px border,
+ * so nothing moves when the caret arrives. Every field-shaped trigger (Select,
+ * ComboBox, the date pickers, NumberField, TagField, …) copies this so a form
+ * reads as one family. Everything else — buttons, boxes, cells — keeps the
+ * outward `ring-2 ring-offset-3` ring, or `ring-inset` where there is no room.
  */
 interface InputProps extends Omit<PrimitiveInputProps, "size"> {
   ref?: React.RefObject<HTMLInputElement>
@@ -88,26 +71,16 @@ export function Input({ className, ref, size: sizeProp, ...props }: InputProps) 
         ref={ref}
         className={composeRenderProps(className, (resolved) =>
           cn(
-            "relative block w-full appearance-none text-quebi-fg placeholder:text-quebi-fg-subtle",
-            "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
+            "relative block w-full appearance-none bg-transparent text-quebi-fg placeholder:text-quebi-fg-subtle",
+            "quebi-field",
             inputSizeStyles[size],
-            "transition-[border-color,box-shadow] duration-200",
-            // `not-focus` is load-bearing. `enabled:hover:` compiles to
-            // `.cls:enabled:hover` — specificity (0,3,0) — and the focus border
-            // below is `.cls:focus` at (0,2,0), so without the guard *hover wins
-            // over focus*: a focused field, once the pointer is over it, drops back
-            // to the grey hairline and keeps only the mark-teal ring. A ring with no
-            // border under it is a halo floating off the field, which is what was
-            // reported as the focus glow being too much. `Textarea` never had this
-            // because it uses a plain `hover:` — (0,2,0), and Tailwind emits `focus`
-            // after `hover`, so focus wins there on order alone.
-            "enabled:not-focus:hover:border-quebi-line/40",
-            "outline-none focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark focus:ring-offset-2 focus:ring-offset-quebi-bg",
-            "invalid:border-red-500 focus:invalid:ring-red-500/50",
+            "transition-[border-color,box-shadow] duration-150",
+            "outline-none focus:outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+            "invalid:border-b-quebi-danger focus:invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
+            "data-invalid:border-b-quebi-danger focus:data-invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
             "[&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden",
             "disabled:cursor-not-allowed disabled:opacity-50",
             "in-disabled:opacity-50",
-            "scheme-dark",
             resolved,
           ),
         )}
@@ -137,18 +110,18 @@ export function InputGroup({ className, ...props }: GroupProps) {
       className={composeRenderProps(className, (resolved) =>
         cn(
           "relative isolate block w-full",
-          // icon / text padding
-          "has-[>[data-slot=icon]:first-child]:[&_input]:ps-10 has-[>[data-slot=icon]:last-child]:[&_input]:pe-10",
-          "has-[>[data-slot=text]:first-child]:[&_input]:ps-10 has-[>[data-slot=text]:last-child]:[&_input]:pe-10",
+          // icon / text padding: the adornment sits on the field's edge, the
+          // text starts 8px past it.
+          "has-[>[data-slot=icon]:first-child]:[&_input]:ps-6 has-[>[data-slot=icon]:last-child]:[&_input]:pe-6",
+          "has-[>[data-slot=text]:first-child]:[&_input]:ps-7 has-[>[data-slot=text]:last-child]:[&_input]:pe-7",
           // icon positioning
           "*:data-[slot=icon]:pointer-events-none *:data-[slot=icon]:absolute *:data-[slot=icon]:top-1/2 *:data-[slot=icon]:z-10 *:data-[slot=icon]:size-4 *:data-[slot=icon]:-translate-y-1/2",
-          "[&>[data-slot=icon]:first-child]:start-3 [&>[data-slot=icon]:last-child]:end-3",
+          "[&>[data-slot=icon]:first-child]:start-0 [&>[data-slot=icon]:last-child]:end-0",
           // text positioning
           "*:data-[slot=text]:pointer-events-none *:data-[slot=text]:absolute *:data-[slot=text]:top-1/2 *:data-[slot=text]:z-10 *:data-[slot=text]:-translate-y-1/2",
-          "[&>[data-slot=text]:first-child]:start-3 [&>[data-slot=text]:last-child]:end-3",
+          "[&>[data-slot=text]:first-child]:start-0 [&>[data-slot=text]:last-child]:end-0",
           // button positioning
-          "has-[>button:first-child]:[&_input]:ps-14 has-[>button:last-child]:[&_input]:pe-14",
-          "[&>button:first-child]:rounded-e-none [&>button:last-child]:rounded-s-none",
+          "has-[>button:first-child]:[&_input]:ps-10 has-[>button:last-child]:[&_input]:pe-10",
           "*:[button]:absolute *:[button]:top-0 *:[button]:z-10 *:[button]:h-full",
           "[&>button:first-child]:start-0 [&>button:last-child]:end-0",
           // default muted color for adornments

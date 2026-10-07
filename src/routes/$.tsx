@@ -1,6 +1,5 @@
-import { Link } from "react-router"
-import { ArrowLeft } from "lucide-react"
 import { seo } from "@/lib/seo"
+import { ProseLink } from "@/site/prose-link"
 
 export function meta() {
   return seo({ title: "Not found", description: "That page doesn't exist.", path: "/404" })
@@ -8,17 +7,17 @@ export function meta() {
 
 export default function NotFound() {
   return (
-    <section className="mx-auto flex min-h-[60vh] w-full max-w-quebi-content flex-col items-center justify-center px-6 py-24 text-center">
-      <span className="quebi-eyebrow">404</span>
-      <h1 className="mt-3 text-5xl font-bold tracking-tight text-quebi-fg sm:text-6xl">Not found</h1>
-      <p className="mt-4 text-base text-quebi-fg-muted">That page doesn't exist.</p>
-      <Link
-        to="/"
-        className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-quebi-brand-text transition-colors duration-200 hover:text-quebi-brand-text-hover"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back home
-      </Link>
+    <section className="quebi-shell flex min-h-[60vh] flex-col justify-end py-quebi-10">
+      <p className="quebi-eyebrow">error 404 — not found</p>
+      <div className="mt-quebi-8">
+        <h1 className="font-display text-quebi-display-xl text-quebi-fg">not found.</h1>
+        <div className="mt-5 flex flex-wrap items-end justify-between gap-4 border-quebi-hairline border-t pt-4">
+          <p className="text-quebi-body-s text-quebi-fg-muted">That page doesn't exist.</p>
+          <ProseLink to="/" className="font-display text-quebi-link">
+            back home →
+          </ProseLink>
+        </div>
+      </div>
     </section>
   )
 }

@@ -14,15 +14,15 @@ export const formattedDateOgScene: OgScene = {
   render: () => (
     <div className="flex w-96 flex-col gap-3 text-quebi-fg">
       <div className="flex items-baseline justify-between">
-        <span className="text-sm text-quebi-fg-muted">long</span>
+        <span className="quebi-eyebrow">long</span>
         <FormattedDate date={WHEN} format="long" locale="de" />
       </div>
       <div className="flex items-baseline justify-between">
-        <span className="text-sm text-quebi-fg-muted">date &amp; time</span>
+        <span className="quebi-eyebrow">date &amp; time</span>
         <DateTime date={WHEN} locale="de" />
       </div>
       <div className="flex items-baseline justify-between">
-        <span className="text-sm text-quebi-fg-muted">relative</span>
+        <span className="quebi-eyebrow">relative</span>
         <RelativeTime date={WHEN} now={NOW} locale="de" />
       </div>
     </div>

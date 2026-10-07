@@ -710,9 +710,9 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
         />
       ) : null}
 
-      <div className="w-full overflow-x-auto rounded-quebi-md border border-quebi-line/10 bg-quebi-bg">
+      <div className="w-full overflow-x-auto border border-quebi-hairline bg-quebi-bg">
         <div style={{ minWidth: nameWidth + gridWidth }}>
-          <div className="border-quebi-line/10 border-b">
+          <div className="border-quebi-hairline border-b">
             <div className="flex">
               <div
                 className="sticky left-0 z-20 shrink-0 bg-quebi-bg"
@@ -723,7 +723,7 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                   <span
                     key={cell.key}
                     data-slot="calendar-day-label"
-                    className="absolute top-2 truncate px-1.5 font-medium text-quebi-fg-muted text-xs"
+                    className="quebi-eyebrow absolute top-2 truncate px-1.5"
                     style={{ left: cell.left, width: dayWidth }}
                   >
                     {cell.label}
@@ -746,7 +746,7 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                   {hourTicks.map((tick) => (
                     <span
                       key={tick.key}
-                      className="absolute top-1 border-quebi-line/10 border-l pl-1.5 text-quebi-fg-subtle text-xs tabular-nums"
+                      className="absolute top-1 border-quebi-hairline border-l pl-1.5 text-quebi-fg-subtle text-xs tabular-nums"
                       style={{ left: tick.left, height: 16 }}
                     >
                       {tick.label}
@@ -764,7 +764,7 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                 if (node) rowRefs.current.set(row.calendar.id, node)
                 else rowRefs.current.delete(row.calendar.id)
               }}
-              className="flex border-quebi-line/10 border-b last:border-b-0"
+              className="flex border-quebi-hairline border-b last:border-b-0"
             >
               <div
                 className="sticky left-0 z-20 flex shrink-0 items-start gap-2 bg-quebi-bg px-3 py-2"
@@ -778,7 +778,7 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                   aria-hidden="true"
                 />
                 <span className="flex min-w-0 flex-col">
-                  <span className="truncate font-semibold text-quebi-fg text-sm">
+                  <span className="truncate font-medium text-quebi-fg text-sm">
                     {row.calendar.name}
                   </span>
                   {row.calendar.description ? (
@@ -797,14 +797,14 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                   {hourTicks.map((tick) => (
                     <div
                       key={tick.key}
-                      className="absolute inset-y-0 border-quebi-line/10 border-l"
+                      className="absolute inset-y-0 border-quebi-hairline border-l"
                       style={{ left: tick.left }}
                     />
                   ))}
                   {dayLines.map((line) => (
                     <div
                       key={line.key}
-                      className="absolute inset-y-0 border-quebi-line/25 border-l"
+                      className="absolute inset-y-0 border-quebi-hairline border-l"
                       style={{ left: line.left }}
                     />
                   ))}
@@ -832,7 +832,6 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                   const editable = editableFor(bar.span)
                   const surface = barSurface(
                     palette,
-                    bar.span,
                     width,
                     selectedEventId === bar.span.event.id,
                     editable,
@@ -917,8 +916,8 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                       data-slot="calendar-bar-preview"
                       aria-hidden="true"
                       className={cn(
-                        "pointer-events-none absolute z-10 rounded-quebi-sm",
-                        "border-2 border-quebi-brand-mark border-dashed bg-quebi-brand/10",
+                        "pointer-events-none absolute z-10",
+                        "border-2 border-quebi-rule border-dashed bg-quebi-raised",
                       )}
                       style={{
                         left: Math.max(0, Math.min(previewLeft, gridWidth - previewWidth)),
@@ -932,8 +931,8 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                       aria-hidden="true"
                       className={cn(
                         "pointer-events-none absolute z-20 flex items-center justify-center",
-                        "truncate rounded-quebi-sm border border-quebi-line/20 bg-quebi-elevated px-1.5",
-                        "text-quebi-fg text-xs tabular-nums shadow-quebi-glow",
+                        "truncate rounded-quebi-s border border-quebi-hairline bg-quebi-elevated px-1.5",
+                        "text-quebi-fg text-xs tabular-nums shadow-quebi-float",
                       )}
                       style={{
                         left: Math.max(0, Math.min(previewLeft, gridWidth - DRAG_LABEL_WIDTH)),
@@ -950,7 +949,7 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                 {showNow && nowPosition ? (
                   <div
                     data-slot="calendar-now-marker"
-                    className="pointer-events-none absolute inset-y-0 z-10 w-px bg-red-500"
+                    className="pointer-events-none absolute inset-y-0 z-10 w-px bg-quebi-fg"
                     style={{ left: toLeft(nowPosition.dayIndex, nowPosition.minutes) }}
                   />
                 ) : null}
@@ -994,7 +993,7 @@ function BarText({ event, allDay, width, locale, timeZone }: BarTextProps) {
 
   return (
     <>
-      <span className="min-w-0 flex-1 truncate font-semibold text-quebi-fg">{event.title}</span>
+      <span className="min-w-0 flex-1 truncate font-medium text-quebi-fg">{event.title}</span>
       {allDay || width < BAR_TIME_WIDTH ? null : (
         <span className="shrink-0 text-quebi-fg-subtle tabular-nums">
           {formatEventTime(event.start, locale, timeZone)}
@@ -1164,10 +1163,10 @@ function EditableTimelineBar<E extends CalendarEvent>({
 
   const handleClass = cn(
     "absolute inset-y-0 z-10 flex cursor-ew-resize touch-none items-center justify-center",
-    "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
+    "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset",
   )
   const gripClass = cn(
-    "h-1/2 w-[3px] rounded-full bg-quebi-fg/60 opacity-0 transition-opacity duration-150",
+    "h-1/2 w-0.75 rounded-full bg-quebi-fg-subtle opacity-0 transition-opacity duration-150",
     "group-hover/edge:opacity-100 group-focus-visible/edge:opacity-100",
   )
 
@@ -1259,12 +1258,11 @@ function EditableTimelineBar<E extends CalendarEvent>({
  * The bar's surface, shared by the two elements that can draw it.
  *
  * A read-only bar is a `Button` and an editable one is a slider, and neither
- * fact is visible: the box, the palette, the cut corners and the selected ring
+ * fact is visible: the box, the palette and the selected outline
  * are the same thing wearing a different element, so they are written once.
  */
-function barSurface<E extends CalendarEvent>(
+function barSurface(
   palette: (typeof CALENDAR_COLORS)[keyof typeof CALENDAR_COLORS],
-  span: TimelineSpan<E>,
   width: number,
   isSelected: boolean,
   isEditable: boolean,
@@ -1274,11 +1272,9 @@ function barSurface<E extends CalendarEvent>(
     isEditable ? "cursor-grab touch-none select-none active:cursor-grabbing" : "cursor-pointer",
     width < BAR_TIME_WIDTH ? "px-1" : "px-2",
     "border-l-2 text-xs transition-colors duration-150",
-    "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
+    "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset",
     palette.block,
     palette.edge,
-    span.continuesBefore ? "rounded-l-none" : "rounded-l-quebi-sm",
-    span.continuesAfter ? "rounded-r-none" : "rounded-r-quebi-sm",
     isSelected && cn("outline-2 outline-solid outline-offset-0", palette.selected),
   )
 }

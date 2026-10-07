@@ -18,10 +18,10 @@ export const popoverExamples: ComponentExample[] = [
     description: "A trigger opens a popover with header, body, and footer.",
     render: () => (
       <Popover>
-        <PopoverTrigger>Open popover</PopoverTrigger>
+        <PopoverTrigger>open popover</PopoverTrigger>
         <PopoverContent>
           <PopoverHeader>
-            <PopoverTitle>Workspace</PopoverTitle>
+            <PopoverTitle>workspace</PopoverTitle>
             <PopoverDescription>Manage members and projects.</PopoverDescription>
           </PopoverHeader>
           <PopoverBody>
@@ -30,8 +30,8 @@ export const popoverExamples: ComponentExample[] = [
             </p>
           </PopoverBody>
           <PopoverFooter>
-            <PopoverClose intent="outline">Close</PopoverClose>
-            <Button intent="primary">Invite</Button>
+            <PopoverClose intent="outline">close</PopoverClose>
+            <Button intent="primary">invite</Button>
           </PopoverFooter>
         </PopoverContent>
       </Popover>
@@ -42,10 +42,10 @@ export const popoverExamples: ComponentExample[] = [
     description: "Set `arrow` to render an anchor arrow pointing at the trigger.",
     render: () => (
       <Popover>
-        <PopoverTrigger intent="outline">Details</PopoverTrigger>
+        <PopoverTrigger intent="outline">details</PopoverTrigger>
         <PopoverContent arrow>
           <PopoverHeader
-            title="Quick details"
+            title="quick details"
             description="This popover points back at its trigger."
           />
           <PopoverBody>
@@ -62,10 +62,10 @@ export const popoverExamples: ComponentExample[] = [
     description: "PopoverContent accepts arbitrary children — no slots required.",
     render: () => (
       <Popover>
-        <PopoverTrigger intent="ghost">Help</PopoverTrigger>
+        <PopoverTrigger intent="ghost">help</PopoverTrigger>
         <PopoverContent className="max-w-sm">
           <div className="p-4">
-            <p className="font-semibold text-sm text-quebi-fg">Need a hand?</p>
+            <p className="font-medium text-sm text-quebi-fg">Need a hand?</p>
             <p className="mt-1 text-sm text-quebi-fg-muted">
               Reach out to support any time and we will get back to you within a day.
             </p>

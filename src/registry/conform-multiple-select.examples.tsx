@@ -47,7 +47,7 @@ const FrameworksForm = () => {
         </MultipleSelectContent>
       </ConformMultipleSelect>
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

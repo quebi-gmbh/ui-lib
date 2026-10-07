@@ -245,7 +245,7 @@ function EnumFacet({
   const hidden = options.length - shown.length
 
   if (options.length === 0) {
-    return <p className="py-1 text-quebi-fg-subtle text-sm">No values</p>
+    return <p className="py-1 text-quebi-body-s text-quebi-fg-subtle">No values</p>
   }
 
   return (
@@ -268,7 +268,7 @@ function EnumFacet({
             <span className="flex items-center justify-between gap-2">
               <span className="truncate">{option.label ?? option.value}</span>
               {option.count != null && (
-                <span className="shrink-0 text-quebi-fg-subtle text-xs tabular-nums">
+                <span className="shrink-0 font-mono text-quebi-caption text-quebi-fg-subtle tabular-nums">
                   <FormattedNumber value={option.count} />
                 </span>
               )}
@@ -344,7 +344,7 @@ function NumberFacet({
             value={bound(side) == null ? Number.NaN : Number(bound(side))}
             onChange={(next) => commit(side, next)}
           >
-            <Label className="text-quebi-fg-subtle text-xs">{side === 0 ? "From" : "To"}</Label>
+            <Label>{side === 0 ? "From" : "To"}</Label>
             <NumberInput hideStepper size="xs" />
           </NumberField>
         ))}
@@ -379,7 +379,7 @@ function NumberFacet({
           (`overflow-y-auto`, which forces `overflow-x` to match), so that
           overhang was not overflow, it was a cut: both dots rendered as flat
           half-circles against the rail's edges and a focused one lost a side of
-          its ring. 14px is `size-5`'s radius (10) plus `ring-offset-2` and
+          its ring. 14px is `size-5`'s radius (10) plus `ring-offset-3` and
           `ring-2` (4) — the rail giving the control the room it needs rather
           than the control shrinking for every other consumer.
 
@@ -400,7 +400,7 @@ function NumberFacet({
           labels: a prerendered page has to format a number through the locale
           the page was rendered in, and `FormattedNumber` is the only thing here
           that reads it from the `I18nProvider`. */}
-      <SliderOutput className="flex justify-between text-quebi-fg-muted text-xs">
+      <SliderOutput className="flex justify-between text-quebi-caption text-quebi-fg-muted tabular-nums">
         <FormattedNumber value={current[0]} />
         <FormattedNumber value={current[1]} />
       </SliderOutput>
@@ -462,7 +462,7 @@ function DateFacet({
           onChange={(date) => edit(side, date ? date.toString() : "")}
           isInvalid={isInverted}
         >
-          <Label className="text-quebi-fg-subtle text-xs">{side === 0 ? "From" : "To"}</Label>
+          <Label>{side === 0 ? "From" : "To"}</Label>
           <DateInput size="xs" />
         </DateField>
       ))}
@@ -592,7 +592,7 @@ export function FilterRail({
       )}
     >
       <div className="flex min-h-8 items-center justify-between gap-2 pb-4">
-        <h2 className="font-medium text-quebi-fg text-sm">{ariaLabel}</h2>
+        <h2 className="font-display text-lg font-light text-quebi-fg">{ariaLabel}</h2>
         {/* A button, not a low-contrast word beside the title. Clearing every
             facet at once is the most destructive thing the rail does and it was
             the only control on it with no affordance at all. */}
@@ -616,10 +616,10 @@ export function FilterRail({
           return (
             <div
               key={field.id}
-              className="flex flex-col gap-2 border-quebi-line/10 border-t py-4"
+              className="flex flex-col gap-2 border-quebi-hairline border-t py-4"
             >
               <div className="flex min-h-8 items-center justify-between gap-2">
-                <h3 id={headingId} className="font-medium text-quebi-fg text-xs uppercase tracking-wide">
+                <h3 id={headingId} className="quebi-eyebrow">
                   {field.label}
                 </h3>
                 {/* Per group, because clearing "Room" by unticking four boxes is
@@ -723,7 +723,7 @@ export function FilterRailSummary({
   return (
     <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-2", className)}>
       {resultCount != null && (
-        <p className="text-quebi-fg-muted text-sm tabular-nums">
+        <p className="text-quebi-body-s text-quebi-fg-muted tabular-nums">
           <FormattedNumber value={resultCount} />
           {totalCount != null && (
             <>

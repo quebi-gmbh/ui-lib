@@ -61,7 +61,7 @@ describe("ColorArea children", () => {
   // replaces. `cn` merges, so a size in `className` has to beat the base
   // `size-6` rather than land beside it and lose to source order.
   test("carry a className that beats the thumb's own defaults", () => {
-    const { container } = render(area(<ColorThumb className="size-8 rounded-quebi-sm" />))
+    const { container } = render(area(<ColorThumb className="size-8 rounded-none" />))
     const thumb = surface(container).children[0] as HTMLElement
 
     expect(thumb.className).toContain("size-8")

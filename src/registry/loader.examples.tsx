@@ -8,7 +8,7 @@ const Row = ({ children }: { children: React.ReactNode }) => (
 export const loaderExamples: ComponentExample[] = [
   {
     title: "Variants",
-    description: "Two glyphs: the segmented spin (default) and a smooth ring. Both pick up the teal brand accent.",
+    description: "Two glyphs: the segmented spin (default) and a smooth ring. Both are ink by default.",
     render: () => (
       <Row>
         <Loader variant="spin" />
@@ -30,13 +30,13 @@ export const loaderExamples: ComponentExample[] = [
   },
   {
     title: "Colors",
-    description: "Inherits currentColor, so any text token recolors it. Teal is the natural default.",
+    description: "Inherits currentColor, so any text token recolors it. Ink is the default.",
     render: () => (
       <Row>
-        <Loader className="size-6 text-quebi-brand-text" />
         <Loader className="size-6 text-quebi-fg" />
         <Loader className="size-6 text-quebi-fg-muted" />
-        <Loader variant="ring" className="size-6 text-purple-500" />
+        <Loader className="size-6 text-quebi-fg-subtle" />
+        <Loader variant="ring" className="size-6 text-quebi-danger" />
       </Row>
     ),
   },

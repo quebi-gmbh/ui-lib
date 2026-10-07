@@ -2,10 +2,10 @@ import { Stepper, type StepItem } from "@/components/stepper"
 import type { ComponentExample } from "./types"
 
 const adminSteps: StepItem[] = [
-  { id: "account", label: "Account", status: "done" },
-  { id: "details", label: "Details", status: "done" },
-  { id: "billing", label: "Billing", status: "active" },
-  { id: "review", label: "Review", status: "upcoming" },
+  { id: "account", label: "account", status: "done" },
+  { id: "details", label: "details", status: "done" },
+  { id: "billing", label: "billing", status: "active" },
+  { id: "review", label: "review", status: "upcoming" },
 ]
 
 const kioskSteps: StepItem[] = [
@@ -20,7 +20,7 @@ export const stepperExamples: ComponentExample[] = [
   {
     title: "Admin",
     description:
-      "Labelled bullets connected by progress lines. Completed steps fill teal; the active step is a teal ring on the page background.",
+      "Labelled bullets joined by rules. The active step is the one solid bullet; done steps are an ink ring with an ink rule after them, upcoming ones a hairline.",
     render: () => <Stepper steps={adminSteps} aria-label="Onboarding progress" />,
   },
   {
@@ -31,19 +31,13 @@ export const stepperExamples: ComponentExample[] = [
     ),
   },
   {
-    title: "Glow",
-    description:
-      "Opt in with `glow` for a kiosk or hero surface where the stepper is the subject. It is off by default: on an admin form, every completed bullet haloed at once reads as noise rather than progress.",
-    render: () => <Stepper glow steps={adminSteps} aria-label="Onboarding progress" />,
-  },
-  {
     title: "First step active",
     render: () => (
       <Stepper
         steps={[
-          { id: "a", label: "Plan", status: "active" },
-          { id: "b", label: "Build", status: "upcoming" },
-          { id: "c", label: "Ship", status: "upcoming" },
+          { id: "a", label: "plan", status: "active" },
+          { id: "b", label: "build", status: "upcoming" },
+          { id: "c", label: "ship", status: "upcoming" },
         ]}
       />
     ),
@@ -53,9 +47,9 @@ export const stepperExamples: ComponentExample[] = [
     render: () => (
       <Stepper
         steps={[
-          { id: "a", label: "Plan", status: "done" },
-          { id: "b", label: "Build", status: "done" },
-          { id: "c", label: "Ship", status: "done" },
+          { id: "a", label: "plan", status: "done" },
+          { id: "b", label: "build", status: "done" },
+          { id: "c", label: "ship", status: "done" },
         ]}
       />
     ),

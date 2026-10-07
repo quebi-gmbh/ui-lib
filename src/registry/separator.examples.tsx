@@ -30,7 +30,7 @@ export const separatorExamples: ComponentExample[] = [
     title: "In a list",
     description: "Hairlines between rows keep dense content legible.",
     render: () => (
-      <div className="w-full max-w-sm rounded-quebi-md border border-quebi-line/10 p-4">
+      <div className="w-full max-w-sm border border-quebi-hairline p-4">
         <div className="flex flex-col gap-3">
           <span className="text-sm text-quebi-fg">First item</span>
           <Separator />

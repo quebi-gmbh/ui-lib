@@ -173,11 +173,11 @@ function EditableOrders() {
               }}
             >
               <Plus data-slot="icon" aria-hidden="true" />
-              Add row
+              add row
             </Button>
             <Button intent="ghost" size="xs" isDisabled={history.length === 0} onPress={undo}>
               <Undo2 data-slot="icon" aria-hidden="true" />
-              Undo ({history.length})
+              undo ({history.length})
             </Button>
           </>
         }
@@ -278,7 +278,7 @@ const VirtualShowcase = () => {
   useEffect(() => setIsMounted(true), [])
   if (!isMounted) {
     return (
-      <div className="flex h-[440px] w-full flex-col gap-2">
+      <div className="flex h-110 w-full flex-col gap-2">
         {["a", "b", "c", "d", "e", "f"].map((row) => (
           <Skeleton key={row} className="h-10 w-full" />
         ))}
@@ -370,7 +370,7 @@ const StatesShowcase = () => {
         "nothing here yet" and "nothing matched" are different problems and only
         one has a next step; an error offers a retry.
       </Note>
-      <div className="flex items-center gap-2 text-quebi-fg-subtle text-xs">
+      <div className="flex items-center gap-2 text-quebi-caption text-quebi-fg-subtle">
         <Skeleton className="h-3 w-24" />
         <span>
           Skeleton rows are the same height as real ones — <FormattedNumber value={44} />

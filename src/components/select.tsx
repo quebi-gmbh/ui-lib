@@ -29,9 +29,10 @@ import { PopoverContent } from "@/components/popover"
  * Select — quebi design system
  *
  * An accessible single/multiple select built on react-aria-components. The
- * trigger reuses the quebi input style (translucent field, cyan hairline,
- * brand-teal focus ring); the chevron is muted; the options reuse the dropdown
- * surface and items. Foundational — Calendar and Conform Select compose this.
+ * trigger is drawn like `Input` — underline only, thickened to 2px while
+ * focused or open, no ring; the chevron is muted; the options reuse the
+ * dropdown surface and items. Foundational — Calendar and Conform Select
+ * compose this.
  */
 
 interface SelectProps<T extends object, M extends "single" | "multiple" = "single">
@@ -93,17 +94,18 @@ const SelectContent = <T extends object>({
 
 /**
  * The trigger's size scale — the same three steps `Input` publishes, and for
- * the same reason: a trigger's height is line-height + padding + the 1px
- * border on each side, so `xs` (30px) and `sm` (38px) line up exactly with
- * `Button`'s `xs` and `sm`. `md` is the default and is unchanged.
+ * the same reason: a trigger's height is line-height + padding + 1px of border
+ * top (transparent) and bottom, so `xs` (30px) and `sm` (38px) line up exactly
+ * with `Button`'s `xs` and `sm`. No horizontal padding: the value starts under
+ * the label.
  *
  * Spelled out here rather than imported so `Select` does not gain `Input` as a
  * registry dependency for three strings.
  */
 const selectTriggerSizeStyles = {
-  xs: "text-xs px-2.5 py-1.5",
-  sm: "text-sm px-3 py-2",
-  md: "text-sm px-3 py-2.5",
+  xs: "text-xs px-(--q-field-px) py-1.5",
+  sm: "text-sm px-(--q-field-px) py-2",
+  md: "text-sm px-(--q-field-px) py-2.5",
 } as const
 
 type SelectTriggerSize = keyof typeof selectTriggerSizeStyles
@@ -125,24 +127,18 @@ const SelectTrigger = ({ children, className, size: sizeProp, ...props }: Select
     <span data-slot="control" className="relative block w-full">
       <Button
         className={cn(
-          // quebi input style — translucent field, cyan hairline, brand-teal focus.
+          // `Input`'s underline: transparent top border so the height is the scale's.
           "group/select-trigger flex w-full min-w-0 cursor-default items-center gap-x-2 text-start text-quebi-fg",
-          "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
+          "quebi-field",
           selectTriggerSizeStyles[size],
-          "transition-[border-color,box-shadow] duration-200",
-          // `not-focus` / `not-group-open` guard against hover *beating* the two
-          // brand states: `enabled:hover:` is (0,3,0) specificity, `focus:` and
-          // `group-open/select:` are both (0,2,0), so unguarded a hovered trigger
-          // that is focused or open loses its mint border and keeps only the ring.
-          "enabled:not-focus:not-group-open/select:hover:border-quebi-line/40",
-          // focus / open → brand-teal border + ring.
-          "outline-none focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark focus:ring-offset-2 focus:ring-offset-quebi-bg",
-          "group-open/select:border-quebi-brand-mark group-open/select:ring-2 group-open/select:ring-quebi-brand-mark group-open/select:ring-offset-2 group-open/select:ring-offset-quebi-bg",
-          // invalid wins via red border + ring.
-          "group-invalid/select:border-red-500 group-invalid/select:focus:ring-red-500/50 group-invalid/select:group-open/select:ring-red-500/50",
+          "transition-[border-color,box-shadow] duration-150",
+          // focus / open → the underline thickens to 2px, inside the box.
+          "outline-none focus:outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+          "group-open/select:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+          "group-invalid/select:border-b-quebi-danger group-invalid/select:focus:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
           // leading icons / loader, muted.
-          "*:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center *:data-[slot=icon]:text-quebi-fg-muted",
-          "*:data-[slot=loader]:size-4 *:data-[slot=loader]:shrink-0 *:data-[slot=loader]:self-center *:data-[slot=loader]:text-quebi-fg-muted",
+          "*:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center *:data-[slot=icon]:text-quebi-fg-subtle",
+          "*:data-[slot=loader]:size-4 *:data-[slot=loader]:shrink-0 *:data-[slot=loader]:self-center *:data-[slot=loader]:text-quebi-fg-subtle",
           "group-disabled/select:cursor-not-allowed group-disabled/select:opacity-50",
           "in-disabled:opacity-50",
           className,
@@ -150,7 +146,7 @@ const SelectTrigger = ({ children, className, size: sizeProp, ...props }: Select
       >
         {(values) => (
           <>
-            {props.prefix && <span className="text-quebi-fg-muted">{props.prefix}</span>}
+            {props.prefix && <span className="text-quebi-fg-subtle">{props.prefix}</span>}
             {typeof children === "function" ? children(values) : children}
 
             {!children && (
@@ -167,7 +163,7 @@ const SelectTrigger = ({ children, className, size: sizeProp, ...props }: Select
                 />
                 <ChevronsUpDown
                   data-slot="chevron"
-                  className="ms-auto -me-1 size-4 shrink-0 text-quebi-fg-muted"
+                  className="ms-auto size-4 shrink-0 text-quebi-fg-subtle"
                 />
               </>
             )}

@@ -26,7 +26,7 @@ export const meterExamples: ComponentExample[] = [
   {
     title: "Thresholds",
     description:
-      "The fill is brand teal below 70%, amber from 70-90%, and red at 90% and above.",
+      "The fill is ink below 70%, the warn token from 70–90%, and the danger token at 90% and above.",
     render: () => (
       <Col>
         <Meter value={45} aria-label="Normal">
@@ -79,7 +79,7 @@ export const meterExamples: ComponentExample[] = [
     description: "Pin an explicit fill color to bypass the threshold logic.",
     render: () => (
       <div className="w-full max-w-sm">
-        <Meter value={88} color="var(--color-quebi-brand)" aria-label="Score">
+        <Meter value={88} color="var(--color-quebi-action)" aria-label="Score">
           <MeterHeader>
             <span>Score</span>
             <MeterValue />

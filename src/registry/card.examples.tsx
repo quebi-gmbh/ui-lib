@@ -71,19 +71,19 @@ export const cardExamples: ComponentExample[] = [
   {
     title: "Default",
     frame: "none",
-    description: "A muted surface with the signature faint cyan border.",
+    description: "Paper with a hairline round it: square, flat, no shadow.",
     render: () => (
       <Card className="max-w-sm">
         <CardHeader
-          title="Storage upgrade"
+          title="storage upgrade"
           description="Expand your workspace with another 500 GB of fast object storage."
         />
-        <CardContent className="text-sm text-quebi-fg-muted">
+        <CardContent className="text-quebi-body-s text-quebi-fg-muted">
           Billed monthly. Cancel anytime — no long-term contract required.
         </CardContent>
         <CardFooter>
-          <span className="font-sans font-bold text-2xl text-quebi-fg tabular-nums">
-            €9<span className="text-base font-medium text-quebi-fg-muted">/mo</span>
+          <span className="font-display font-extralight text-4xl text-quebi-fg tabular-nums">
+            €9<span className="font-sans text-quebi-body-s text-quebi-fg-subtle">/mo</span>
           </span>
         </CardFooter>
       </Card>
@@ -92,19 +92,19 @@ export const cardExamples: ComponentExample[] = [
   {
     title: "Feature",
     frame: "none",
-    description: "The brand-tinted variant with a glow. Reserve it for the hero card.",
+    description: "The raised ground behind a stronger rule. Reserve it for the one card that carries the point.",
     render: () => (
       <Card variant="feature" className="max-w-sm">
         <CardHeader
-          title="Unlimited Pro"
-          description="Everything, everywhere, all at once. Priority support included."
+          title="unlimited pro"
+          description="Every feature with no usage caps. Priority support included."
         />
-        <CardContent className="text-sm text-quebi-fg-muted">
+        <CardContent className="text-quebi-body-s text-quebi-fg-muted">
           The complete quebi platform with no usage caps.
         </CardContent>
         <CardFooter>
-          <span className="font-sans font-bold text-2xl text-quebi-fg tabular-nums">
-            €49<span className="text-base font-medium text-quebi-fg-muted">/mo</span>
+          <span className="font-display font-extralight text-4xl text-quebi-fg tabular-nums">
+            €49<span className="font-sans text-quebi-body-s text-quebi-fg-subtle">/mo</span>
           </span>
         </CardFooter>
       </Card>
@@ -113,11 +113,11 @@ export const cardExamples: ComponentExample[] = [
   {
     title: "Interactive",
     frame: "none",
-    description: "Opt in to the hover lift + glow for link- or button-like cards.",
+    description: "Opt in to the hover ground for link- or button-like cards. It never lifts.",
     render: () => (
       <Card interactive className="max-w-sm cursor-pointer">
         <CardHeader
-          title="Open dashboard"
+          title="open dashboard →"
           description="Jump back into your projects and recent activity."
         />
       </Card>
@@ -129,10 +129,10 @@ export const cardExamples: ComponentExample[] = [
     description: "CardAction pins a control to the top-right of the header.",
     render: () => (
       <Card className="max-w-sm">
-        <CardHeader title="Team members" description="3 people have access to this project.">
+        <CardHeader title="team members" description="3 people have access to this project.">
           <CardAction>
             <Button intent="outline" size="sm">
-              Invite
+              invite
             </Button>
           </CardAction>
         </CardHeader>
@@ -146,10 +146,10 @@ export const cardExamples: ComponentExample[] = [
     render: () => (
       <Card className="max-w-sm">
         <CardHeader>
-          <CardTitle>Custom layout</CardTitle>
+          <CardTitle>custom layout</CardTitle>
           <CardDescription>Compose the pieces yourself when props aren't enough.</CardDescription>
         </CardHeader>
-        <CardContent className="text-sm text-quebi-fg-muted">
+        <CardContent className="text-quebi-body-s text-quebi-fg-muted">
           Every sub-component accepts a className and forwards native div props.
         </CardContent>
       </Card>
@@ -165,28 +165,28 @@ export const cardExamples: ComponentExample[] = [
       "The inner card was separating one part of the outer one from the rest. A heading does that, and a separator draws the line if one is needed.",
     insteadOf: () => (
       <Card className="max-w-sm">
-        <CardHeader title="Project settings" />
+        <CardHeader title="project settings" />
         <CardContent className="flex flex-col gap-3">
           <Card>
-            <CardHeader title="General" description="Name and visibility." />
+            <CardHeader title="general" description="Name and visibility." />
           </Card>
           <Card>
-            <CardHeader title="Danger zone" description="Archive or delete the project." />
+            <CardHeader title="danger zone" description="Archive or delete the project." />
           </Card>
         </CardContent>
       </Card>
     ),
     render: () => (
       <div className="flex max-w-sm flex-col gap-4">
-        <Heading level={3}>Project settings</Heading>
+        <Heading level={3}>project settings</Heading>
         <div>
-          <Heading level={4}>General</Heading>
-          <p className="mt-1 text-sm text-quebi-fg-muted">Name and visibility.</p>
+          <Heading level={4}>general</Heading>
+          <p className="mt-1 text-quebi-body-s text-quebi-fg-muted">Name and visibility.</p>
         </div>
         <Separator />
         <div>
-          <Heading level={4}>Danger zone</Heading>
-          <p className="mt-1 text-sm text-quebi-fg-muted">Archive or delete the project.</p>
+          <Heading level={4}>danger zone</Heading>
+          <p className="mt-1 text-quebi-body-s text-quebi-fg-muted">Archive or delete the project.</p>
         </div>
       </div>
     ),
@@ -279,7 +279,7 @@ export const cardExamples: ComponentExample[] = [
             label={k.label}
             value={k.value}
             delta={<StatDelta value={k.delta} invert={k.fallIsGood} />}
-            trend={<Sparkline data={k.series} className="text-quebi-brand-text" />}
+            trend={<Sparkline data={k.series} className="text-quebi-fg" />}
           />
         ))}
       </StatGroup>
@@ -291,8 +291,8 @@ export const cardExamples: ComponentExample[] = [
       "Terms and values in a card are a description list with a border drawn round it. The list already divides its rows.",
     insteadOf: () => (
       <Card className="max-w-sm">
-        <CardHeader title="Invoice #0042" />
-        <CardContent className="flex flex-col gap-1 text-sm text-quebi-fg-muted">
+        <CardHeader title="invoice #0042" />
+        <CardContent className="flex flex-col gap-1 text-quebi-body-s text-quebi-fg-muted">
           <span>Customer: Nordlicht GmbH</span>
           <span>Status: Paid</span>
           <span>Issued: June 30, 2026</span>
@@ -317,7 +317,7 @@ export const cardExamples: ComponentExample[] = [
     insteadOf: () => (
       <Card className="max-w-sm">
         <CardHeader
-          title="Heads up"
+          title="heads up"
           description="Two devices in this bundle are out of stock."
         />
       </Card>
@@ -335,17 +335,17 @@ export const cardExamples: ComponentExample[] = [
     insteadOf: () => (
       <div className="flex max-w-sm flex-col gap-3">
         <Card interactive>
-          <CardHeader title="Starter" description="For solo projects." />
+          <CardHeader title="starter" description="For solo projects." />
         </Card>
         <Card interactive>
-          <CardHeader title="Pro" description="For growing teams." />
+          <CardHeader title="pro" description="For growing teams." />
         </Card>
       </div>
     ),
     render: () => (
       <ChoiceBox aria-label="Plan" defaultSelectedKeys={["pro"]} className="w-full max-w-sm">
-        <ChoiceBoxItem id="starter" label="Starter" description="For solo projects." />
-        <ChoiceBoxItem id="pro" label="Pro" description="For growing teams." />
+        <ChoiceBoxItem id="starter" label="starter" description="For solo projects." />
+        <ChoiceBoxItem id="pro" label="pro" description="For growing teams." />
       </ChoiceBox>
     ),
   },

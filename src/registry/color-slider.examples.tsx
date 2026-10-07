@@ -60,7 +60,7 @@ export const colorSliderExamples: ComponentExample[] = [
               value={color}
               onChange={setColor}
             />
-            <p className="text-sm text-quebi-fg-muted">{color.toString("hsl")}</p>
+            <p className="font-mono text-quebi-caption text-quebi-fg-subtle">{color.toString("hsl")}</p>
           </div>
         )
       }

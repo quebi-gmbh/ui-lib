@@ -13,10 +13,10 @@ import { cn } from "@/lib/utils"
  * Meter — quebi design system
  *
  * Built on react-aria-components. A labelled progress-style bar for a known
- * range (storage used, quota, score). The fill defaults to brand teal and
- * shifts to amber past a warning threshold and red past a danger threshold,
- * or you can pin an explicit color. Composed from Meter, MeterHeader,
- * MeterValue, and MeterTrack.
+ * range (storage used, quota, score). A thin square track in `raised`; the
+ * fill is ink (`action`) and shifts to the warn token from 70% and the danger
+ * token from 90%, or you can pin an explicit color. Composed from Meter,
+ * MeterHeader, MeterValue, and MeterTrack.
  */
 
 interface MeterRenderProps extends MeterPrimitiveRenderProps {
@@ -74,7 +74,7 @@ export function MeterValue({
   return (
     <span
       data-slot="meter-value"
-      className={cn("text-sm text-quebi-fg-muted tabular-nums", className)}
+      className={cn("font-mono text-quebi-caption text-quebi-fg-subtle tabular-nums", className)}
       {...props}
     >
       {valueText}
@@ -90,14 +90,14 @@ export function MeterTrack({ className, ...props }: React.ComponentProps<"div">)
     <div
       data-slot="meter-track"
       className={cn(
-        "relative h-1.5 w-full overflow-hidden rounded-full border border-quebi-line/10 bg-cyan-500/10",
+        "relative h-1 w-full overflow-hidden bg-quebi-raised",
         className,
       )}
       {...props}
     >
       <div
         data-slot="meter-fill"
-        className="absolute start-0 top-0 h-full rounded-full transition-[width] duration-200 ease-linear will-change-[width] motion-reduce:transition-none forced-colors:bg-[Highlight]"
+        className="absolute start-0 top-0 h-full transition-[width] duration-200 ease-linear will-change-[width] motion-reduce:transition-none forced-colors:bg-[Highlight]"
         style={{ width: `${percentage}%`, backgroundColor: color ?? getMeterColor(percentage) }}
       />
     </div>
@@ -105,7 +105,7 @@ export function MeterTrack({ className, ...props }: React.ComponentProps<"div">)
 }
 
 function getMeterColor(value: number): string {
-  if (value < 70) return "var(--color-quebi-brand)"
-  if (value < 90) return "var(--color-amber-500)"
-  return "var(--color-red-500)"
+  if (value < 70) return "var(--color-quebi-action)"
+  if (value < 90) return "var(--color-quebi-warn)"
+  return "var(--color-quebi-danger)"
 }

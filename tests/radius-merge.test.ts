@@ -2,8 +2,8 @@
  * The radius invariant.
  *
  * `<Button isCircle>` rendered a rounded square for as long as the library
- * shipped: `base` set `rounded-quebi-sm`, the variant set `rounded-full`, and
- * tailwind-merge kept both because `quebi-sm` is not a radius value it knows.
+ * shipped: `base` set a quebi radius token, the variant set `rounded-full`, and
+ * tailwind-merge kept both because the token is not a radius value it knows.
  * The sheet then decided the winner by emission order, and the base won. The
  * prop read as supported, nothing warned, and three call sites in a consuming
  * app worked around it with `rounded-full!` before anyone traced it.
@@ -21,28 +21,34 @@ describe("cn merges the quebi token scales", () => {
   // Each pair is a token the theme adds under a name tailwind-merge has no
   // reason to recognise. The later class must win, as it would for a built-in.
   test.each([
-    ["rounded-quebi-xs rounded-full", "rounded-full"],
-    ["rounded-quebi-sm rounded-full", "rounded-full"],
-    ["rounded-quebi-xs rounded-quebi-sm", "rounded-quebi-sm"],
-    ["rounded-full rounded-quebi-md", "rounded-quebi-md"],
-    ["rounded-t-quebi-md rounded-t-full", "rounded-t-full"],
-    ["shadow-quebi-glow shadow-none", "shadow-none"],
+    ["rounded-quebi-s rounded-full", "rounded-full"],
+    ["rounded-full rounded-quebi-s", "rounded-quebi-s"],
+    ["rounded-quebi-s rounded-quebi-l", "rounded-quebi-l"],
+    ["rounded-quebi-s rounded-none", "rounded-none"],
+    ["rounded-t-quebi-s rounded-t-full", "rounded-t-full"],
+    ["shadow-quebi-float shadow-none", "shadow-none"],
     ["max-w-quebi-content max-w-4xl", "max-w-4xl"],
     ["max-w-quebi-shell max-w-quebi-content", "max-w-quebi-content"],
+    // The type scale is a *size*: a colour beside it must survive, and a
+    // second size must replace it.
+    ["text-quebi-title text-quebi-fg", "text-quebi-title text-quebi-fg"],
+    ["text-quebi-title text-sm", "text-sm"],
+    ["text-sm text-quebi-display-s", "text-quebi-display-s"],
+    ["mt-4 mt-quebi-9", "mt-quebi-9"],
   ])("%s -> %s", (input, expected) => {
     expect(cn(input)).toBe(expected)
   })
 
   test("leaves classes that do not conflict alone", () => {
-    expect(cn("rounded-quebi-sm px-4")).toBe("rounded-quebi-sm px-4")
+    expect(cn("rounded-quebi-s px-4")).toBe("rounded-quebi-s px-4")
   })
 
   /**
    * The list above is hand-written, and so is the one `cn` extends
    * tailwind-merge with — a token added to the theme and not to `utils.ts` is
    * a token `cn` cannot merge, which is the original bug wearing a new name
-   * and which nothing about the new token looks like. Task #199 added
-   * `--radius-quebi-xs` and had to touch both; this makes the next one fail
+   * and which nothing about the new token looks like. Adding a radius
+   * token means touching both; this makes the next one fail
    * loudly instead of silently reintroducing the sheet-order lottery.
    */
   test("cn knows every --radius-quebi-* the theme declares", () => {
@@ -99,7 +105,7 @@ describe("no component splits a radius across base and a variant", () => {
     for (const block of tvBlocks(readFileSync(join(COMPONENTS, file), "utf8"))) {
       const base = baseSections(block)
       const variants = block.slice(block.indexOf("variants:"))
-      if (!base.some((section) => radii(section).length) ) continue
+      if (!base.some((section) => radii(section).length)) continue
       // A radius in `base` and a radius in a variant of the same tv() cannot
       // both apply: one has to override the other, and tailwind-merge can only
       // do that for values it knows. Put the radius on the variant branches.

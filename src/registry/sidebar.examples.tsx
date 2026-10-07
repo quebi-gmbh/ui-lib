@@ -91,7 +91,7 @@ const SettingsIcon = () => (
 // clips the remainder. `h-full` on the provider keeps the row the card's height — the
 // gap spacer is `h-svh`, sized for a viewport-tall shell.
 const Shell = ({ children }: { children: React.ReactNode }) => (
-  <div className="contain-layout h-[28rem] w-full overflow-hidden rounded-quebi-md border border-quebi-line/10">
+  <div className="contain-layout h-112 w-full overflow-hidden border border-quebi-hairline">
     {children}
   </div>
 )
@@ -105,39 +105,39 @@ export const sidebarExamples: ComponentExample[] = [
         <SidebarProvider className="h-full">
           <Sidebar>
             <SidebarHeader>
-              <span className="px-2 font-semibold text-quebi-fg">quebi</span>
+              <span className="px-2 font-display font-light text-quebi-fg text-xl">quebi</span>
             </SidebarHeader>
             <SidebarContent>
-              <SidebarSection label="Overview">
+              <SidebarSection label="overview">
                 <SidebarItem isCurrent href="#dashboard">
                   <HomeIcon />
-                  <SidebarLabel>Dashboard</SidebarLabel>
+                  <SidebarLabel>dashboard</SidebarLabel>
                 </SidebarItem>
                 <SidebarItem href="#roster" badge={12}>
                   <UsersIcon />
-                  <SidebarLabel>Roster</SidebarLabel>
+                  <SidebarLabel>roster</SidebarLabel>
                 </SidebarItem>
                 <SidebarItem href="#reports">
                   <ChartIcon />
-                  <SidebarLabel>Reports</SidebarLabel>
+                  <SidebarLabel>reports</SidebarLabel>
                 </SidebarItem>
               </SidebarSection>
               <SidebarSeparator />
-              <SidebarSection label="System">
+              <SidebarSection label="system">
                 <SidebarItem href="#settings">
                   <SettingsIcon />
-                  <SidebarLabel>Settings</SidebarLabel>
+                  <SidebarLabel>settings</SidebarLabel>
                 </SidebarItem>
               </SidebarSection>
             </SidebarContent>
             <SidebarFooter>
-              <span className="text-sm text-quebi-fg-muted">v1.0.0</span>
+              <span className="font-mono text-quebi-caption text-quebi-fg-subtle">v1.0.0</span>
             </SidebarFooter>
           </Sidebar>
           <SidebarInset>
             <SidebarNav isSticky>
               <SidebarTrigger />
-              <span className="text-sm text-quebi-fg-muted">Dashboard</span>
+              <span className="text-quebi-body-s text-quebi-fg-muted">dashboard</span>
             </SidebarNav>
             <div className="p-6 text-quebi-fg-muted">Main content area.</div>
           </SidebarInset>
@@ -153,21 +153,21 @@ export const sidebarExamples: ComponentExample[] = [
         <SidebarProvider defaultOpen={false} className="h-full">
           <Sidebar collapsible="dock">
             <SidebarHeader>
-              <span className="font-semibold text-quebi-fg">q</span>
+              <span className="font-display font-light text-quebi-fg text-xl">q</span>
             </SidebarHeader>
             <SidebarContent>
-              <SidebarSection label="Overview">
-                <SidebarItem isCurrent href="#dashboard" tooltip="Dashboard">
+              <SidebarSection label="overview">
+                <SidebarItem isCurrent href="#dashboard" tooltip="dashboard">
                   <HomeIcon />
-                  <SidebarLabel>Dashboard</SidebarLabel>
+                  <SidebarLabel>dashboard</SidebarLabel>
                 </SidebarItem>
-                <SidebarItem href="#roster" tooltip="Roster" badge={3}>
+                <SidebarItem href="#roster" tooltip="roster" badge={3}>
                   <UsersIcon />
-                  <SidebarLabel>Roster</SidebarLabel>
+                  <SidebarLabel>roster</SidebarLabel>
                 </SidebarItem>
-                <SidebarItem href="#settings" tooltip="Settings">
+                <SidebarItem href="#settings" tooltip="settings">
                   <SettingsIcon />
-                  <SidebarLabel>Settings</SidebarLabel>
+                  <SidebarLabel>settings</SidebarLabel>
                 </SidebarItem>
               </SidebarSection>
             </SidebarContent>
@@ -175,7 +175,7 @@ export const sidebarExamples: ComponentExample[] = [
           <SidebarInset>
             <SidebarNav isSticky>
               <SidebarTrigger />
-              <span className="text-sm text-quebi-fg-muted">Collapse me</span>
+              <span className="text-quebi-body-s text-quebi-fg-muted">collapse me</span>
             </SidebarNav>
             <div className="p-6 text-quebi-fg-muted">Toggle the rail with the button.</div>
           </SidebarInset>
@@ -191,7 +191,7 @@ export const sidebarExamples: ComponentExample[] = [
         <SidebarProvider className="h-full">
           <Sidebar>
             <SidebarHeader>
-              <span className="px-2 font-semibold text-quebi-fg">quebi</span>
+              <span className="px-2 font-display font-light text-quebi-fg text-xl">quebi</span>
             </SidebarHeader>
             <SidebarContent>
               <SidebarSection>
@@ -199,28 +199,28 @@ export const sidebarExamples: ComponentExample[] = [
                   <SidebarDisclosure id="team">
                     <SidebarDisclosureTrigger>
                       <UsersIcon />
-                      <SidebarLabel>Team</SidebarLabel>
+                      <SidebarLabel>team</SidebarLabel>
                     </SidebarDisclosureTrigger>
                     <SidebarDisclosurePanel>
                       <SidebarItem href="#members">
-                        <SidebarLabel>Members</SidebarLabel>
+                        <SidebarLabel>members</SidebarLabel>
                       </SidebarItem>
                       <SidebarItem isCurrent href="#invites">
-                        <SidebarLabel>Invites</SidebarLabel>
+                        <SidebarLabel>invites</SidebarLabel>
                       </SidebarItem>
                     </SidebarDisclosurePanel>
                   </SidebarDisclosure>
                   <SidebarDisclosure id="reports">
                     <SidebarDisclosureTrigger>
                       <ChartIcon />
-                      <SidebarLabel>Reports</SidebarLabel>
+                      <SidebarLabel>reports</SidebarLabel>
                     </SidebarDisclosureTrigger>
                     <SidebarDisclosurePanel>
                       <SidebarItem href="#weekly">
-                        <SidebarLabel>Weekly</SidebarLabel>
+                        <SidebarLabel>weekly</SidebarLabel>
                       </SidebarItem>
                       <SidebarItem href="#monthly">
-                        <SidebarLabel>Monthly</SidebarLabel>
+                        <SidebarLabel>monthly</SidebarLabel>
                       </SidebarItem>
                     </SidebarDisclosurePanel>
                   </SidebarDisclosure>
@@ -231,7 +231,7 @@ export const sidebarExamples: ComponentExample[] = [
           <SidebarInset>
             <SidebarNav isSticky>
               <SidebarTrigger />
-              <span className="text-sm text-quebi-fg-muted">Team</span>
+              <span className="text-quebi-body-s text-quebi-fg-muted">team</span>
             </SidebarNav>
             <div className="p-6 text-quebi-fg-muted">Expand the groups in the sidebar.</div>
           </SidebarInset>
@@ -241,23 +241,23 @@ export const sidebarExamples: ComponentExample[] = [
   },
   {
     title: "Float intent",
-    description: 'Set intent="float" for a detached, rounded surface with a quebi glow.',
+    description: 'Set intent="float" to detach the sidebar from the page edge into a hairline-ruled box.',
     render: () => (
       <Shell>
         <SidebarProvider className="h-full">
           <Sidebar intent="float">
             <SidebarHeader>
-              <span className="px-2 font-semibold text-quebi-fg">quebi</span>
+              <span className="px-2 font-display font-light text-quebi-fg text-xl">quebi</span>
             </SidebarHeader>
             <SidebarContent>
-              <SidebarSection label="Overview">
+              <SidebarSection label="overview">
                 <SidebarItem isCurrent href="#dashboard">
                   <HomeIcon />
-                  <SidebarLabel>Dashboard</SidebarLabel>
+                  <SidebarLabel>dashboard</SidebarLabel>
                 </SidebarItem>
                 <SidebarItem href="#reports">
                   <ChartIcon />
-                  <SidebarLabel>Reports</SidebarLabel>
+                  <SidebarLabel>reports</SidebarLabel>
                 </SidebarItem>
               </SidebarSection>
             </SidebarContent>
@@ -265,7 +265,7 @@ export const sidebarExamples: ComponentExample[] = [
           <SidebarInset>
             <SidebarNav isSticky>
               <SidebarTrigger />
-              <span className="text-sm text-quebi-fg-muted">Floating</span>
+              <span className="text-quebi-body-s text-quebi-fg-muted">floating</span>
             </SidebarNav>
             <div className="p-6 text-quebi-fg-muted">A floating sidebar surface.</div>
           </SidebarInset>

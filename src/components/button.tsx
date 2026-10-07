@@ -5,51 +5,36 @@ import {
   type ButtonProps as ButtonPrimitiveProps,
   composeRenderProps,
 } from "react-aria-components"
-import { tv, type VariantProps } from "tailwind-variants"
-import { cn } from "@/lib/utils"
+import type { VariantProps } from "tailwind-variants"
+import { cn, tv } from "@/lib/utils"
 
 /**
  * Button — quebi design system
  *
- * Intents: primary (teal CTA), secondary (solid white-on-dark), outline,
- * ghost, accent (purple), danger (red).
+ * Intents: primary (solid ink), secondary (raised ground), outline (ruled),
+ * ghost (no box at rest), danger.
  * Sizes: xs / sm / md (default) / lg / xl, plus square icon-only (sq-*).
  *
- * Depth comes from a token or a neutral rung, never a hand-rolled shadow. Hover lifts
- * with one shadow, the same for every intent; the brand teal is reserved for the
- * primary CTA.
+ * Square, ruled and flat: no radius unless `isCircle`, a 1px border on every
+ * intent (transparent where the intent has no edge, so every intent is the same
+ * height), and no shadow — a button sits in the page flow, and depth there
+ * comes from rules. Hover changes the fill and nothing else.
  */
 export const buttonStyles = tv({
   base: [
     "inline-flex items-center justify-center gap-2",
-    "font-sans font-semibold whitespace-nowrap select-none cursor-pointer",
-    "border border-solid",
-    // Named properties, not `transition-all` (task #178). `all` animates every
-    // animatable property, so a hover fired fill, border, shadow *and* a scale
-    // at once — four changes reading as one smear. These five are what actually
-    // move: the intents' colours, the lift below, and the opacity that
-    // `disabled:`/`pending:` flip.
-    "transition-[background-color,border-color,color,box-shadow,opacity] duration-200 ease-out",
-    // One hover behaviour for the whole intent set, and a control-scale rung of
-    // the neutral ramp rather than the overlay token. `shadow-quebi-glow-strong`
-    // is what a *floating surface* takes — the command palette, the active
-    // Stepper bullet — and on light it is `0 16px 40px`: a cast the size of the
-    // button falling most of a button-height below a 46px control. `modal.tsx`
-    // makes the argument (task #137): a dialog is the tallest overlay there is
-    // and it still takes the top rung of the *neutral* ramp, because the mint
-    // bloom reads as the thing being lit rather than raised. A button is the
-    // shortest thing that lifts at all, so it takes the bottom rung. On dark the
-    // neutral shadow is quiet by design and the fill change carries the hover —
-    // the same trade #137/#141/#142 took for the overlay family.
-    //
-    // This replaces `hover:scale-[1.02]`, which was the other half of the mess:
-    // a control that grows under the pointer pushes its neighbours out of
-    // optical alignment in a `ButtonGroup` or a table toolbar, and scaling the
-    // box resamples the label, so the text softened for the length of the hover.
-    // With the scale gone, `active:scale-100` had nothing left to cancel.
-    "hover:shadow-md",
-    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-    "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none",
+    "font-(family-name:--q-font-control) font-medium whitespace-nowrap select-none cursor-pointer",
+    "border-(length:--q-border-control) border-solid",
+    // Named properties, not `transition-all`: `all` would also animate layout
+    // and the focus ring. These are what the intents and `disabled:`/`pending:`
+    // actually move.
+    // A theme with a hard shadow (`--q-shadow-*`) and a `--q-press` makes the
+    // button travel into its shadow under the pointer; in Ink & Paper both are
+    // zero, so only the colours move.
+    "transition-[background-color,border-color,color,opacity,translate,box-shadow] duration-150 ease-out",
+    "hover:translate-(--q-press) pressed:translate-(--q-press) hover:shadow-none pressed:shadow-none disabled:translate-0",
+    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+    "disabled:opacity-45 disabled:cursor-not-allowed",
     "pending:opacity-70 pending:cursor-wait",
     // react-aria slot conventions — icons & loaders inherit current color
     "*:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center",
@@ -57,60 +42,51 @@ export const buttonStyles = tv({
   ],
   variants: {
     intent: {
-      // The mint fill's edge is drawn in the *mark* token, not the fill token
-      // (task #145): mint on the light page is 1.74:1, so `border-quebi-brand`
-      // gave the pill no boundary against the page at all, and the hover border
-      // made it fainter still. `--q-brand-mark` is teal-600 on light (3.45:1,
-      // WCAG 1.4.11) and identical to `--q-brand` on dark, so the dark theme is
-      // byte-for-byte unchanged. It does not move on hover — a boundary that
-      // weakens when you point at it is the bug below, again.
+      // The design's solid button. Hover steps the ink toward the body colour
+      // (gray-800 on Daylight, gray-300 on Cinematic); the label stays above
+      // 4.5:1 at both ends.
       primary:
-        "bg-quebi-brand border-quebi-brand-mark text-quebi-on-brand hover:bg-quebi-brand-hover",
+        "bg-quebi-action border-quebi-action text-quebi-on-action shadow-(--q-shadow-action) hover:bg-quebi-action-hover hover:border-quebi-action-hover",
       secondary:
-        "bg-quebi-inverse-bg border-quebi-inverse-bg text-quebi-inverse-fg hover:bg-quebi-fg-muted hover:border-quebi-fg-muted",
+        "bg-quebi-raised border-transparent text-quebi-fg shadow-(--q-shadow-control) hover:bg-quebi-pressed",
+      // The design's outline button: transparent, drawn by a line-strong rule.
       outline:
-        "bg-transparent border-quebi-line/20 text-quebi-fg hover:border-quebi-brand-mark hover:text-quebi-brand-text",
-      // The one intent that opts out of the base hover shadow, and not as a
-      // special case: ghost has no box at rest — no fill, no border — and its
-      // hover fill is ink at 4%. A cast shadow there would be stronger than the
-      // surface casting it, drawing an edge the button does not have.
+        // The control ground: transparent while fields are underlines, the card
+        // ground once a theme boxes them — an outline button is a box too.
+        "bg-(--q-field-bg) border-quebi-rule text-quebi-fg shadow-(--q-shadow-control) hover:bg-quebi-raised",
       ghost:
-        "bg-transparent border-transparent text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg hover:shadow-none",
-      // 600-level fills, darkening on hover. At 500 the white label was 3.96:1
-      // (accent) and 3.76:1 (danger) — under 1.4.3's 4.5:1, which `xs` (12px)
-      // and `sm` (14px) are squarely subject to — and both intents *lightened*
-      // on hover, to 2.64:1 and 2.77:1, so the label faded out exactly when the
-      // pointer was on it (task #144). Now 5.38 → 6.98 and 4.83 → 6.47: every
-      // size clears 4.5:1, and hover improves it, as `primary` already did.
-      accent:
-        "bg-purple-600 border-purple-600 text-white hover:bg-purple-700 hover:border-purple-700",
+        "bg-transparent border-transparent text-quebi-fg-muted hover:bg-quebi-raised hover:text-quebi-fg",
+      // The label is the page ground, not white: `--q-danger` is red-700 on
+      // Daylight and red-400 on Cinematic, and only the ground flips with it —
+      // white on red-400 is 2.8:1, ink on it is 7:1. Hover fades rather than
+      // shifting hue, so there is no second red to keep in contrast.
       danger:
-        "bg-red-600 border-red-600 text-white hover:bg-red-700 hover:border-red-700",
+        "bg-quebi-danger border-quebi-danger text-quebi-bg shadow-(--q-shadow-action) hover:opacity-90",
     },
     size: {
       xs: ["text-xs px-2.5 py-1.5", "*:data-[slot=icon]:size-3 *:data-[slot=loader]:size-3"],
-      sm: ["text-sm px-3 py-2", "*:data-[slot=icon]:size-3.5 *:data-[slot=loader]:size-3.5"],
-      md: ["text-base px-5 py-2.5", "*:data-[slot=icon]:size-4 *:data-[slot=loader]:size-4"],
-      lg: ["text-lg px-6 py-3", "*:data-[slot=icon]:size-5 *:data-[slot=loader]:size-5"],
-      xl: ["text-xl px-8 py-4", "*:data-[slot=icon]:size-6 *:data-[slot=loader]:size-6"],
+      sm: ["text-sm px-3.5 py-2", "*:data-[slot=icon]:size-3.5 *:data-[slot=loader]:size-3.5"],
+      // The design's button: 14px Inter 500, 20px sides. Its 13px vertical
+      // padding is on a line-height of 1; here the line box is 20px, so 12px
+      // padding gives the same optical weight with room for descenders.
+      md: ["text-sm px-5 py-3", "*:data-[slot=icon]:size-4 *:data-[slot=loader]:size-4"],
+      lg: ["text-base px-6 py-3.5", "*:data-[slot=icon]:size-5 *:data-[slot=loader]:size-5"],
+      xl: ["text-lg px-8 py-4", "*:data-[slot=icon]:size-6 *:data-[slot=loader]:size-6"],
       // Square / icon-only. `size-*` is border-box, so a square matches its
       // text-sized sibling only if the number includes the 1px border on each
-      // side: xs is line-height 16 + py-1.5 12 + 2 = 30px, and so on. They used
-      // to be 2px short of the text sizes, which is why an icon-only button
-      // never quite lined up with the button beside it.
+      // side: xs is line-height 16 + py-1.5 12 + 2 = 30px, sm 20 + 16 + 2 = 38,
+      // md 20 + 24 + 2 = 46, lg 24 + 28 + 2 = 54.
       "sq-xs": "size-7.5 p-0 *:data-[slot=icon]:size-3.5",
       "sq-sm": "size-9.5 p-0 *:data-[slot=icon]:size-4",
       "sq-md": "size-11.5 p-0 *:data-[slot=icon]:size-5",
       "sq-lg": "size-13.5 p-0 *:data-[slot=icon]:size-6",
     },
-    // The radius lives here, not in `base`: `rounded-quebi-sm` and
-    // `rounded-full` are not one group to tailwind-merge (it cannot know
-    // `quebi-sm` is a radius token), so a base radius survives the merge and
-    // wins on sheet order — `isCircle` silently does nothing. Mutually
-    // exclusive branches never rely on the merge at all.
+    // The radius lives here, not in `base`, so `rounded-full` never has to win
+    // a tailwind-merge against a base radius: mutually exclusive branches never
+    // rely on the merge at all.
     isCircle: {
       true: "rounded-full",
-      false: "rounded-quebi-sm",
+      false: "rounded-(--q-radius-control)",
     },
   },
   defaultVariants: {

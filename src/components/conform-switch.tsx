@@ -3,8 +3,8 @@
 import type { FieldMetadata } from "@conform-to/react"
 import type { SwitchProps } from "react-aria-components"
 import { cn } from "@/lib/utils"
-import { describedBy, Description, Field, FieldError, Label } from "@/components/field"
-import { Switch } from "@/components/switch"
+import { describedBy, Description, Field, FieldError } from "@/components/field"
+import { Switch, SwitchLabel } from "@/components/switch"
 
 export interface ConformSwitchProps
   extends Omit<SwitchProps, "name" | "value" | "form" | "defaultSelected" | "isSelected"> {
@@ -66,10 +66,10 @@ export function ConformSwitch({
         )}
       >
         {label && (
-          <Label elementType="span" className={cn(hasErrors && "text-red-500")}>
+          <SwitchLabel className={cn(hasErrors && "text-quebi-danger")}>
             {label}
-            {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
-          </Label>
+            {isRequired && <span className="ml-1 text-quebi-fg">*</span>}
+          </SwitchLabel>
         )}
       </Switch>
       {/* These ids are ours to set: the control above is not a react-aria

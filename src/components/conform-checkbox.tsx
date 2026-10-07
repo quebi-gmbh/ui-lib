@@ -65,7 +65,7 @@ export function ConformCheckbox({
         )}
       >
         {label}
-        {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
+        {isRequired && <span className="ml-1 text-quebi-fg">*</span>}
       </Checkbox>
       {/* These ids are ours to set: a bare Checkbox is not a react-aria field
           (unlike CheckboxGroup, which supplies a FieldErrorContext), so nothing

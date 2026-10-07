@@ -9,7 +9,7 @@ import {
 } from "@/components/navbar"
 import type { OgScene } from "./types"
 
-/** The bar at the width a bar wants, with the teal current-page indicator. */
+/** The bar at the width a bar wants, with the current page underlined. */
 export const navbarOgScene: OgScene = {
   scale: 1.4,
   render: () => (
@@ -17,13 +17,13 @@ export const navbarOgScene: OgScene = {
       <div className="w-144">
         <Navbar>
           <NavbarStart>
-            <span className="font-semibold text-quebi-fg">quebi</span>
+            <span className="font-display font-light text-quebi-fg text-xl">quebi</span>
           </NavbarStart>
           <NavbarGap />
           <NavbarSection>
-            <NavbarItem isCurrent>Dashboard</NavbarItem>
-            <NavbarItem>Sessions</NavbarItem>
-            <NavbarItem>Pricing</NavbarItem>
+            <NavbarItem isCurrent>dashboard</NavbarItem>
+            <NavbarItem>sessions</NavbarItem>
+            <NavbarItem>pricing</NavbarItem>
           </NavbarSection>
           <NavbarSpacer />
         </Navbar>

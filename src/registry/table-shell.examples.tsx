@@ -178,7 +178,7 @@ const OwnState = () => {
         hasQuery={status.length > 0}
         striped
       />
-      <div className="flex flex-wrap items-center gap-2 text-quebi-fg-muted text-sm">
+      <div className="flex flex-wrap items-center gap-2 text-quebi-body-s text-quebi-fg-muted">
         <span>
           sorting = <code>{JSON.stringify(sorting)}</code>
         </span>
@@ -186,7 +186,7 @@ const OwnState = () => {
           selected = <code>{count ?? 0}</code>
         </span>
         <Button intent="ghost" size="xs" onPress={() => setSelection(emptySelection)}>
-          Clear selection
+          clear selection
         </Button>
       </div>
       <Note intent="info">

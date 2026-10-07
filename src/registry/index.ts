@@ -94,6 +94,12 @@ import { formattedStorageExamples } from "./formatted-storage.examples"
 import { galleryExamples } from "./gallery.examples"
 import { gridListExamples } from "./grid-list.examples"
 import { headingExamples } from "./heading.examples"
+import { eyebrowExamples } from "./eyebrow.examples"
+import { indexListExamples } from "./index-list.examples"
+import { logoExamples } from "./logo.examples"
+import { lowTitleExamples } from "./low-title.examples"
+import { metaRowExamples } from "./meta-row.examples"
+import { stageExamples } from "./stage.examples"
 import { iconTileExamples } from "./icon-tile.examples"
 import { inputExamples } from "./input.examples"
 import { inputOtpExamples } from "./input-otp.examples"
@@ -269,6 +275,12 @@ const examplesBySlug: Record<string, ComponentEntry["examples"]> = {
   "gallery": galleryExamples,
   "grid-list": gridListExamples,
   "heading": headingExamples,
+  "eyebrow": eyebrowExamples,
+  "index-list": indexListExamples,
+  "logo": logoExamples,
+  "low-title": lowTitleExamples,
+  "meta-row": metaRowExamples,
+  "stage": stageExamples,
   "icon-tile": iconTileExamples,
   "input": inputExamples,
   "input-otp": inputOtpExamples,

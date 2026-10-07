@@ -34,7 +34,7 @@ const TermsForm = () => {
     >
       <ConformCheckbox field={fields.terms} label="I accept the terms and conditions" />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

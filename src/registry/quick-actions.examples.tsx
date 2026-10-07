@@ -30,19 +30,19 @@ function HeaderDemo() {
   const [last, setLast] = useState("Nothing picked yet.")
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex items-center justify-between border-quebi-line/20 border-b pb-3">
-        <span className="font-semibold text-quebi-fg">Q3 roadmap</span>
+      <div className="flex items-center justify-between border-quebi-hairline border-b pb-3">
+        <span className="font-medium text-quebi-fg">Q3 roadmap</span>
         <QuickActions>
-          <QuickActionsTrigger size="sm">Actions</QuickActionsTrigger>
+          <QuickActionsTrigger size="sm">actions</QuickActionsTrigger>
           <QuickActionsContent onAction={(key) => setLast(`Picked: ${key}`)}>
             <QuickActionsItem id="edit" icon={Pencil} shortcut="E">
-              Edit
+              edit
             </QuickActionsItem>
             <QuickActionsItem id="duplicate" icon={Copy} shortcut="⌘D">
-              Duplicate
+              duplicate
             </QuickActionsItem>
             <QuickActionsItem id="share" icon={Share2} description="Anyone with the link can view">
-              Share
+              share
             </QuickActionsItem>
           </QuickActionsContent>
         </QuickActions>
@@ -57,20 +57,20 @@ function FabDemo() {
   return (
     // A phone-width frame. The FAB is `fixed` to the viewport by default; here
     // it is pinned to the frame instead so the example stays inside its card.
-    <div className="relative h-96 w-full max-w-xs overflow-hidden rounded-quebi-md border border-quebi-line/20 bg-quebi-bg p-4">
-      <p className="font-semibold text-quebi-fg">Inbox</p>
+    <div className="relative h-96 w-full max-w-xs overflow-hidden border border-quebi-hairline bg-quebi-bg p-4">
+      <p className="font-medium text-quebi-fg">Inbox</p>
       <Answer>{last}</Answer>
       <QuickActions>
         <QuickActionsFab aria-label="Quick actions" className="absolute" />
         <QuickActionsContent side="bottom" onAction={(key) => setLast(`Picked: ${key}`)}>
           <QuickActionsItem id="compose" icon={Pencil}>
-            Compose
+            compose
           </QuickActionsItem>
           <QuickActionsItem id="invite" icon={UserPlus}>
-            Invite someone
+            invite someone
           </QuickActionsItem>
           <QuickActionsItem id="upload" icon={Upload}>
-            Upload a file
+            upload a file
           </QuickActionsItem>
         </QuickActionsContent>
       </QuickActions>
@@ -83,22 +83,22 @@ function GroupedDemo() {
   return (
     <div className="flex flex-col items-start gap-3">
       <QuickActions>
-        <QuickActionsTrigger>Project actions</QuickActionsTrigger>
+        <QuickActionsTrigger>project actions</QuickActionsTrigger>
         <QuickActionsContent title="Project actions" onAction={(key) => setLast(`Picked: ${key}`)}>
           <QuickActionsSection label="Create">
             <QuickActionsItem id="new-doc" icon={FilePlus} shortcut="⌘N">
-              New document
+              new document
             </QuickActionsItem>
             <QuickActionsItem id="upload" icon={Upload}>
-              Upload
+              upload
             </QuickActionsItem>
           </QuickActionsSection>
           <QuickActionsSection label="Team">
             <QuickActionsItem id="invite" icon={UserPlus} description="By email or link">
-              Invite members
+              invite members
             </QuickActionsItem>
             <QuickActionsItem id="share" icon={Share2} isDisabled>
-              Share publicly
+              share publicly
             </QuickActionsItem>
           </QuickActionsSection>
         </QuickActionsContent>
@@ -127,14 +127,14 @@ function DestructiveDemo() {
   return (
     <div className="flex flex-col items-start gap-3">
       <QuickActions>
-        <QuickActionsTrigger>Actions</QuickActionsTrigger>
+        <QuickActionsTrigger>actions</QuickActionsTrigger>
         <QuickActionsContent>
           <QuickActionsItem id="archive" icon={Archive} onAction={() => setStatus("Archived.")}>
-            Archive
+            archive
           </QuickActionsItem>
           <QuickActionsSeparator />
           <QuickActionsItem id="delete" icon={Trash2} intent="danger" onAction={onDelete}>
-            Delete project
+            delete project
           </QuickActionsItem>
         </QuickActionsContent>
       </QuickActions>
@@ -178,7 +178,7 @@ export const quickActionsExamples: ComponentExample[] = [
       "An item with `href` is a link: it navigates, and closes the panel like any other action.",
     render: () => (
       <QuickActions>
-        <QuickActionsTrigger>Help</QuickActionsTrigger>
+        <QuickActionsTrigger>help</QuickActionsTrigger>
         <QuickActionsContent title="Help">
           <QuickActionsItem
             id="docs"
@@ -186,7 +186,7 @@ export const quickActionsExamples: ComponentExample[] = [
             href="/components/command-menu"
             description="When the list needs a search field"
           >
-            Read about Command Menu
+            read about command menu
           </QuickActionsItem>
         </QuickActionsContent>
       </QuickActions>

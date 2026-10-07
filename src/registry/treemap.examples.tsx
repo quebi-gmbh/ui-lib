@@ -64,7 +64,7 @@ export const treemapExamples: ComponentExample[] = [
   {
     title: "Flat",
     description:
-      "A single level of leaves, each taking the next hue from the palette. Area is the value.",
+      "A single level of leaves, each taking the next step of the ink palette. Area is the value.",
     render: () => (
       <Treemap config={emptyConfig} data={flat} dataKey="size" containerHeight={300} />
     ),
@@ -72,7 +72,7 @@ export const treemapExamples: ComponentExample[] = [
   {
     title: "Nested",
     description:
-      "A node with `children` is a branch: it is drawn as a frame around its leaves, and every leaf inherits the branch's hue, so colour says which branch and nesting says how deep.",
+      "A node with `children` is a branch: it is drawn as a frame around its leaves, and every leaf inherits the branch's shade, so shade says which branch and nesting says how deep.",
     render: () => (
       <Treemap
         config={emptyConfig}
@@ -87,7 +87,7 @@ export const treemapExamples: ComponentExample[] = [
   {
     title: "Values and branch colours",
     description:
-      "`showValues` labels each leaf with its value through `valueFormatter` — a string context, so `formatNumber(value, locale)` rather than a bare `toLocaleString()`. A `config` entry named after a branch overrides that branch's hue.",
+      "`showValues` labels each leaf with its value through `valueFormatter` — a string context, so `formatNumber(value, locale)` rather than a bare `toLocaleString()`. A `config` entry named after a branch overrides that branch's colour.",
     render: () => (
       <Treemap
         config={brandedConfig}

@@ -107,9 +107,9 @@ export function ConformColorPicker({
       />
 
       {label && (
-        <Label className={cn(hasErrors && "text-red-500")}>
+        <Label className={cn(hasErrors && "text-quebi-danger")}>
           {label}
-          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
+          {isRequired && <span className="ml-1 text-quebi-fg">*</span>}
         </Label>
       )}
 
@@ -128,7 +128,7 @@ export function ConformColorPicker({
                 description && field.descriptionId,
               )}
             >
-              <ColorSwatch color={displayColor} className="size-5 shrink-0 rounded-quebi-sm" />
+              <ColorSwatch color={displayColor} className="size-5 shrink-0" />
               <span className={isEmpty ? "text-quebi-fg-subtle" : undefined}>
                 {isEmpty ? (placeholder ?? "Select color") : hexValue}
               </span>

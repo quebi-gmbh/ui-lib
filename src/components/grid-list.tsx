@@ -17,18 +17,20 @@ import { cn } from "@/lib/utils"
  * GridList — quebi design system
  *
  * Built on react-aria-components. A keyboard-navigable, selectable list with
- * optional drag handles and per-row checkboxes. Rows carry the signature
- * cyan-tinted border; selected/hovered/focused rows fill with brand teal at
- * 10% and lift their ring to the brand color.
+ * optional drag handles and per-row checkboxes, drawn as the index list: a
+ * strong rule on top, a hairline under every row, no boxes. A hovered row is
+ * raised, a selected one pressed; a row with an `href` also shifts right on
+ * hover. Focus is an inset ring, since the rows have no room around them.
  */
 const GridList = <T extends object>({ className, ...props }: GridListProps<T>) => (
   <GridListPrimitive
     data-slot="grid-list"
     className={composeRenderProps(className, (resolved) =>
       cn(
-        "relative flex flex-col gap-y-1 sm:text-sm/6",
-        "*:data-[drop-target]:border *:data-[drop-target]:border-quebi-brand-mark",
-        "has-data-[slot=grid-list-section]:gap-y-6",
+        "relative flex flex-col sm:text-sm/6",
+        "border-t border-quebi-rule has-data-[slot=grid-list-section]:border-t-0",
+        "*:data-[drop-target]:border *:data-[drop-target]:border-quebi-rule",
+        "has-data-[slot=grid-list-section]:gap-y-8",
         resolved,
       ),
     )}
@@ -43,7 +45,7 @@ const GridListSection = <T extends object>({
   return (
     <GridListSectionPrimitive
       data-slot="grid-list-section"
-      className={cn("space-y-1", className)}
+      className={cn("flex flex-col", className)}
       {...props}
     />
   )
@@ -56,7 +58,7 @@ const GridListHeader = ({
   return (
     <GridListHeaderPrimitive
       data-slot="grid-list-header"
-      className={cn("mb-2 font-semibold text-sm/6 text-quebi-fg-muted", className)}
+      className={cn("quebi-eyebrow border-b border-quebi-rule pb-2", className)}
       {...props}
     />
   )
@@ -73,17 +75,17 @@ const GridListItem = ({ className, children, ...props }: GridListItemProps) => {
         (className, { isHovered, isFocusVisible, isSelected, isDisabled }) =>
           cn(
             "group relative min-w-0 outline-hidden",
-            "rounded-quebi-sm border border-quebi-line/10 px-3 py-2.5",
+            "border-b border-quebi-hairline px-1 py-3.5",
             "flex min-w-0 cursor-default items-center gap-2 sm:gap-2.5",
-            "text-quebi-fg transition-colors duration-150",
+            "text-quebi-fg transition-[padding,background-color] duration-300",
             "data-[dragging]:cursor-grab data-[dragging]:opacity-70",
             "**:data-[slot=icon]:size-5 **:data-[slot=icon]:shrink-0 **:data-[slot=icon]:text-quebi-fg-muted sm:**:data-[slot=icon]:size-4",
-            (isSelected || isHovered || isFocusVisible) &&
-              "border-quebi-line/20 bg-quebi-brand/10",
-            isFocusVisible &&
-              "ring-2 ring-quebi-brand-mark ring-offset-2 ring-offset-quebi-bg",
+            (isHovered || isFocusVisible) && "bg-quebi-raised",
+            isSelected && "bg-quebi-pressed",
+            isFocusVisible && "ring-2 ring-inset ring-quebi-focus",
             isDisabled && "opacity-50",
             "href" in props && "cursor-pointer",
+            "href" in props && isHovered && "pl-3",
             className,
           ),
       )}
@@ -161,14 +163,18 @@ interface GridListTextProps extends TextProps {
 }
 
 const GridListLabel = ({ className, ref, ...props }: GridListTextProps) => (
-  <Text ref={ref} className={cn("font-medium text-quebi-fg", className)} {...props} />
+  <Text
+    ref={ref}
+    className={cn("font-display text-lg/6 font-light tracking-wide text-quebi-fg", className)}
+    {...props}
+  />
 )
 
 const GridListDescription = ({ className, ref, ...props }: GridListTextProps) => (
   <Text
     slot="description"
     ref={ref}
-    className={cn("font-normal text-quebi-fg-muted text-sm", className)}
+    className={cn("text-quebi-body-s text-quebi-fg-muted", className)}
     {...props}
   />
 )

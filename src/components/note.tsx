@@ -1,5 +1,4 @@
-import { tv } from "tailwind-variants"
-import { cn } from "@/lib/utils"
+import { cn, tv } from "@/lib/utils"
 
 type IconProps = React.SVGProps<SVGSVGElement>
 
@@ -56,11 +55,11 @@ const XCircleIcon = (props: IconProps) => (
 /**
  * Note — quebi design system
  *
- * An inline callout / alert for contextual feedback. Five intents:
- * default (neutral surface), info (cyan), success (emerald), warning
- * (amber), danger (red). Borders use the signature translucent rings;
- * each intent tints its surface, its leading status icon *and* its title to
- * match — a callout does not opt its own heading out of its own intent.
+ * An inline callout / alert for contextual feedback: a square, hairline-ruled
+ * box in the page flow, words in ink. Five intents. `default` is the bare box;
+ * the others thicken the leading edge to a 2px rule and add a status icon —
+ * `info` in ink, `success`, `warning` and `danger` in their state tokens. The
+ * hue goes on the rule and the icon only; the surface is never filled.
  */
 export interface NoteProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
   intent?: "default" | "info" | "warning" | "danger" | "success"
@@ -72,17 +71,17 @@ export interface NoteProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "t
 
 const noteStyles = tv({
   base: [
-    "flex w-full gap-3 rounded-quebi-md border p-4 text-sm/5 text-pretty",
-    "*:[a]:font-medium *:[a]:underline *:[a]:hover:no-underline",
-    "**:[strong]:font-medium **:[.text-muted-fg]:text-quebi-fg-muted",
+    "flex w-full gap-3 border border-quebi-hairline p-4 text-sm/5 text-pretty text-quebi-fg-muted",
+    "**:[a]:text-quebi-fg **:[a]:underline **:[a]:decoration-1 **:[a]:underline-offset-5 **:[a]:transition-[text-underline-offset] **:[a]:duration-150 **:[a]:hover:underline-offset-8",
+    "**:[strong]:font-medium **:[strong]:text-quebi-fg **:[.text-muted-fg]:text-quebi-fg-subtle",
   ],
   variants: {
     intent: {
-      default: "border-quebi-line/10 bg-quebi-surface/[0.03] text-quebi-fg-muted",
-      info: "border-quebi-line/20 bg-cyan-500/10 text-quebi-info",
-      success: "border-emerald-500/20 bg-emerald-500/10 text-quebi-success",
-      warning: "border-amber-500/20 bg-amber-500/10 text-quebi-warn",
-      danger: "border-red-500/20 bg-red-500/10 text-quebi-danger",
+      default: "",
+      info: "border-l-2 border-l-quebi-rule *:data-[slot=note-icon]:text-quebi-fg",
+      success: "border-l-2 border-l-quebi-success *:data-[slot=note-icon]:text-quebi-success",
+      warning: "border-l-2 border-l-quebi-warn *:data-[slot=note-icon]:text-quebi-warn",
+      danger: "border-l-2 border-l-quebi-danger *:data-[slot=note-icon]:text-quebi-danger",
     },
   },
   defaultVariants: { intent: "default" },
@@ -108,20 +107,13 @@ export function Note({
 
   return (
     <div data-slot="note" className={cn(noteStyles({ intent }), className)} {...props}>
-      {Icon && indicator && <Icon aria-hidden="true" className="mt-px size-5 shrink-0" />}
+      {Icon && indicator && (
+        <Icon aria-hidden="true" data-slot="note-icon" className="mt-px size-5 shrink-0" />
+      )}
       <div className="min-w-0 flex-1">
-        {/* The title inherits the intent colour and carries its emphasis by
-            weight alone. It used to force `text-quebi-fg`, which was a
-            mechanical swap of the dark-only `text-white` it started as — on
-            light that painted a near-black heading over a red or amber surface
-            (task #136). Only `default` still names a colour, because that
-            intent's root is `text-quebi-fg-muted` and the heading would
-            otherwise lose its step up in the hierarchy. */}
-        {title && (
-          <div className={cn("font-semibold", intent === "default" && "text-quebi-fg")}>
-            {title}
-          </div>
-        )}
+        {/* Title in ink, body in running-text muted, on every intent: the
+            hue belongs to the rule and the icon, not the sentence. */}
+        {title && <div className="font-medium text-quebi-fg">{title}</div>}
         <div className={title ? "mt-1" : undefined}>{children}</div>
       </div>
     </div>

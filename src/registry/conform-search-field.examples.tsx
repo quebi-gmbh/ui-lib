@@ -31,7 +31,7 @@ const SearchForm = () => {
         description="Part of a submitted form — a filter box would be component state instead."
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

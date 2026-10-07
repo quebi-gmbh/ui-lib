@@ -320,10 +320,11 @@ describe("CalendarTimeline over a span", () => {
     // they are not on the axis, so the seam is the day boundary itself.
     expect(bars[0]?.style.left).toBe("480px")
     expect(bars[0]?.style.width).toBe("118px")
-    expect(pressable(bars[0])?.className).toContain("rounded-r-none")
+    // Bars are square, so a cut edge needs no corner of its own to read as cut.
+    expect(pressable(bars[0])?.className).not.toMatch(/(^|\s)rounded-(?!none)/)
     expect(bars[1]?.style.left).toBe("600px")
     expect(bars[1]?.style.width).toBe("58px")
-    expect(pressable(bars[1])?.className).toContain("rounded-l-none")
+    expect(pressable(bars[1])?.className).not.toMatch(/(^|\s)rounded-(?!none)/)
   })
 
   test("no hour tick is drawn without room before the next one or the day's edge", () => {

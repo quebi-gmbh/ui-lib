@@ -48,7 +48,7 @@ export const colorSwatchPickerExamples: ComponentExample[] = [
                 </ColorSwatchPickerItem>
               ))}
             </ColorSwatchPicker>
-            <span className="text-sm text-quebi-fg-muted">{color.toString("hex")}</span>
+            <span className="font-mono text-quebi-caption text-quebi-fg-subtle">{color.toString("hex")}</span>
           </div>
         )
       }

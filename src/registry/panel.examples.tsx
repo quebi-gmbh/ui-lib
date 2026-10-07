@@ -14,12 +14,12 @@ export const panelExamples: ComponentExample[] = [
     title: "Default",
     frame: "none",
     description:
-      "A muted band between two stretches of page. No edge and no corner: the tint is the whole separation.",
+      "A raised band between two stretches of page. No edge and no corner: the ground is the whole separation.",
     render: () => (
       <div className="flex flex-col gap-6">
-        <Text>The page runs on untinted, under its own headings.</Text>
+        <Text>The page runs on the paper, under its own headings.</Text>
         <Panel>
-          <Heading level={3}>Frequently asked</Heading>
+          <Heading level={3}>frequently asked</Heading>
           <Text className="mt-2">
             A region the reader should see as one piece, set apart without drawing a box round it.
           </Text>
@@ -31,14 +31,14 @@ export const panelExamples: ComponentExample[] = [
   {
     title: "Brand tone",
     frame: "none",
-    description: "The mint tint, for the one band on the page that is asking for something.",
+    description: "One step deeper, for the one band on the page that is asking for something.",
     render: () => (
       <Panel tone="brand" className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <Heading level={3}>Move your team to Pro</Heading>
+          <Heading level={3}>move your team to pro.</Heading>
           <Text className="mt-1">Unlimited projects, audit log and SSO.</Text>
         </div>
-        <Button intent="primary">Upgrade</Button>
+        <Button intent="primary">upgrade →</Button>
       </Panel>
     ),
   },
@@ -50,12 +50,12 @@ export const panelExamples: ComponentExample[] = [
     render: () => (
       <Panel as="section" aria-labelledby="panel-settings-heading">
         <Heading id="panel-settings-heading" level={3}>
-          Workspace
+          workspace
         </Heading>
         <div className="mt-4 flex flex-col gap-4">
           <div className="grid gap-3 sm:grid-cols-[1fr_2fr]">
             <div>
-              <Heading level={4}>Name</Heading>
+              <Heading level={4}>name</Heading>
               <Text className="mt-1">Shown in the sidebar and in invitations.</Text>
             </div>
             <TextField aria-label="Workspace name" defaultValue="Nordlicht">
@@ -65,7 +65,7 @@ export const panelExamples: ComponentExample[] = [
           <Separator />
           <div className="grid gap-3 sm:grid-cols-[1fr_2fr]">
             <div>
-              <Heading level={4}>Public profile</Heading>
+              <Heading level={4}>public profile</Heading>
               <Text className="mt-1">Anyone with the link can see the workspace's projects.</Text>
             </div>
             <Switch defaultSelected>Visible to everyone</Switch>
@@ -96,7 +96,7 @@ export const panelExamples: ComponentExample[] = [
     render: () => (
       <Panel className="px-0">
         <Container>
-          <Heading level={3}>Release notes</Heading>
+          <Heading level={3}>release notes</Heading>
           <Text className="mt-2">The content sits in the column; only the fill is full width.</Text>
         </Container>
       </Panel>

@@ -67,9 +67,9 @@ describe("ToolbarButton", () => {
     for (const name of ["Bold", "Save"]) {
       const control = screen.getByRole("button", { name })
       expect(control).toHaveClass("text-sm")
-      expect(control).toHaveClass("px-3")
+      expect(control).toHaveClass("px-3.5")
       expect(control).toHaveClass("py-2")
-      expect(control).toHaveClass("rounded-quebi-sm")
+      expect(control).toHaveClass("rounded-(--q-radius-control)")
     }
   })
 

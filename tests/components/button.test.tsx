@@ -3,7 +3,7 @@
  *
  * Mostly a smoke test — Button is a thin wrapper over React Aria's — with one
  * assertion that is a regression guard: `isCircle` used to be a no-op, because
- * `rounded-quebi-sm` in the base and `rounded-full` in the variant are not one
+ * a radius token in the base and `rounded-full` in the variant were not one
  * group to tailwind-merge, so the base radius survived the merge and won on
  * sheet order. The fix was to make the two radii mutually exclusive branches of
  * the same variant (task #49); this pins it.
@@ -52,13 +52,13 @@ describe("Button", () => {
 
     const button = screen.getByRole("button", { name: "+" })
     expect(button).toHaveClass("rounded-full")
-    expect(button).not.toHaveClass("rounded-quebi-sm")
+    expect(button).not.toHaveClass("rounded-none")
   })
 
-  test("defaults to the quebi radius", () => {
+  test("defaults to the theme's control radius, which is square in Ink & Paper", () => {
     render(<Button>Save</Button>)
 
-    expect(screen.getByRole("button", { name: "Save" })).toHaveClass("rounded-quebi-sm")
+    expect(screen.getByRole("button", { name: "Save" })).toHaveClass("rounded-(--q-radius-control)")
   })
 })
 
@@ -66,17 +66,11 @@ describe("Button", () => {
  * Every intent's label against its own fill, at rest and on hover, in both
  * themes.
  *
- * `accent` and `danger` put `text-white` on a stock Tailwind 500 — 3.96:1 and
- * 3.76:1, under 1.4.3's 4.5:1, which `xs` (12px) and `sm` (14px) are squarely
- * subject to. Worse, both *lightened* on hover, to 2.64:1 and 2.77:1: the label
- * faded out exactly when the pointer was on it (task #144).
- *
- * `tests/badge-contrast.test.ts` could not catch it. It walks `badgeIntents`,
- * and Button has its own intent map, its own foreground convention (`text-white`
- * rather than a `--q-*` token) and a hover state no contrast test in the repo
- * read. So this is that file's method pointed at Button: resolve what the
- * rendered class list actually asks for, composite it, and recompute — no ratio
- * is written down here, and both themes are read out of `src/quebi-theme.css`.
+ * `tests/badge-contrast.test.ts` walks `badgeIntents`; Button has its own
+ * intent map and a hover state, so this is that file's method pointed at
+ * Button: resolve what the rendered class list actually asks for, composite
+ * it, and recompute — no ratio is written down here, and both themes are read
+ * out of `src/quebi-theme.css`.
  *
  * It walks the *output* of `buttonStyles`, not the source of the variant map,
  * so an intent whose fill is overridden elsewhere in the recipe is measured as
@@ -96,30 +90,16 @@ describe("Button intents: the label on its own fill", () => {
   }
 
   const THEMES = [
-    { name: "dark", values: themeValues(":root,\n.dark {") },
-    { name: "light", values: themeValues(".light {") },
+    { name: "light", values: themeValues(":root,\n.light {") },
+    { name: "dark", values: themeValues(".dark {") },
   ] as const
 
   /**
-   * The stock hues the two non-token intents are painted in. Written down here
-   * because they are Tailwind's values and not ours; the guard against this map
-   * falling behind the component is below — a fill that is neither a `--q-*`
-   * token nor a key here fails rather than being skipped.
+   * Stock Tailwind hues. Every intent is painted in tokens now, so this is
+   * empty on purpose: a raw palette fill fails below on not being known rather
+   * than being skipped.
    */
-  const TAILWIND: Record<string, string> = {
-    white: "#ffffff",
-    // The two steps the fix moved off are kept in the map on purpose: putting a
-    // 500 back must fail on its *ratio*, with the number in the message, rather
-    // than on this map not knowing the colour.
-    "purple-400": "#c084fc",
-    "purple-500": "#a855f7",
-    "purple-600": "#9333ea",
-    "purple-700": "#7e22ce",
-    "red-400": "#f87171",
-    "red-500": "#ef4444",
-    "red-600": "#dc2626",
-    "red-700": "#b91c1c",
-  }
+  const TAILWIND: Record<string, string> = {}
 
   const rgb = (hex: string) =>
     [0, 2, 4].map((i) => Number.parseInt(hex.replace("#", "").slice(i, i + 2), 16))
@@ -150,7 +130,7 @@ describe("Button intents: the label on its own fill", () => {
       .join("")}`
   }
 
-  /** `quebi-brand/20` → `["quebi-brand", 0.2]`; `/[0.04]` too; bare → alpha 1. */
+  /** `quebi-fg/20` → `["quebi-fg", 0.2]`; `/[0.04]` too; bare → alpha 1. */
   function split(value: string): [string, number] {
     const [name, alpha] = value.split("/")
     if (alpha === undefined) return [name, 1]
@@ -165,6 +145,9 @@ describe("Button intents: the label on its own fill", () => {
   function resolve(value: string, values: Map<string, string>, behind: string) {
     const [name, alpha] = split(value)
     if (name === "transparent" || name === "current") return behind
+    // A theme variable for a ground, measured at its Ink & Paper default: the
+    // control ground is transparent while fields are underlines.
+    if (name === "(--q-field-bg)") return behind
     const hex = name.startsWith("quebi-")
       ? values.get(`q-${name.slice("quebi-".length)}`)
       : TAILWIND[name]
@@ -188,7 +171,7 @@ describe("Button intents: the label on its own fill", () => {
     return hit
   }
 
-  const INTENTS = ["primary", "secondary", "outline", "ghost", "accent", "danger"] as const
+  const INTENTS = ["primary", "secondary", "outline", "ghost", "danger"] as const
 
   const pairs = INTENTS.flatMap((intent) => {
     const classes = buttonStyles({ intent }).split(/\s+/)
@@ -230,99 +213,44 @@ describe("Button intents: the label on its own fill", () => {
     })
   }
 
-  test("hover never makes a white label harder to read than at rest", () => {
-    // The half of #144 that a floor alone would not have caught: `accent` and
-    // `danger` used to lighten their fill under a white label, so the button
-    // was least legible under the pointer. Every other intent's label is a dark
-    // token, where lightening the fill is the right direction — this is scoped
-    // to the two that are white on a saturated fill.
-    const white = pairs.filter(({ fg }) => fg === "white")
-    expect(white.map(({ intent }) => intent)).toEqual(["accent", "accent", "danger", "danger"])
-
-    for (const { name: theme, values } of THEMES) {
-      const page = values.get("q-bg") as string
-      const ratio = (bg: string, fg: string) => {
-        const fill = resolve(bg, values, page)
-        return contrast(resolve(fg, values, fill), fill)
-      }
-      for (const intent of ["accent", "danger"] as const) {
-        const rest = white.find((p) => p.intent === intent && p.state === "rest")
-        const hover = white.find((p) => p.intent === intent && p.state === "hover")
-        expect(
-          ratio(hover?.bg as string, "white"),
-          `${theme}: ${intent} loses contrast on hover`,
-        ).toBeGreaterThanOrEqual(ratio(rest?.bg as string, "white"))
-      }
+  test("every label is a token, so it flips with the theme its fill flips with", () => {
+    // `danger` used to put `text-white` on its red. `--q-danger` is red-700 on
+    // Daylight and red-400 on Cinematic, and white on red-400 is under 3:1 —
+    // the label has to be the ground, which flips with it.
+    for (const { intent, fg } of pairs) {
+      expect(fg.startsWith("quebi-"), `${intent} paints its label in "${fg}"`).toBe(true)
     }
   })
 })
 
 /**
- * Hover: one behaviour across the intent set, at control scale (task #178).
+ * Hover: a change of fill, never a shadow or a transform.
  *
- * The report was a default `<Button>` under the pointer — "too messy hover
- * effect, too much shadow etc." — and it was four changes at once. `primary`
- * alone carried `hover:shadow-quebi-glow-strong`, the theme's *overlay* rung:
- * `0 16px 40px` on light, under a 46px control, so the cast was about the size
- * of the button and landed most of a button-height below it — heavier than a
- * dialog's at rest. On dark the same token is the mint bloom that #137/#141/
- * #142 took off the whole overlay family. Meanwhile `base` scaled the box by 2%
- * and ran the lot through `transition-all`.
- *
- * What is pinned here is the shape of the fix rather than the exact rung: that
- * no intent reaches for the overlay token, that the lift is declared once and
- * so reads the same on every intent, that `ghost` — which has no box at rest to
- * cast one — actually wins the merge against the base, and that nothing grows
- * under the pointer. It reads the *output* of `buttonStyles`, like the contrast
- * scan above, so an override anywhere in the recipe is measured as it renders.
+ * A button sits in the page flow, and nothing in the page flow casts a shadow
+ * — `shadow-quebi-float` belongs to menus, popovers and toasts. A control that
+ * grows under the pointer nudges its neighbours out of alignment in a
+ * `ButtonGroup` and resamples its own label for as long as it is hovered. It
+ * reads the *output* of `buttonStyles`, like the contrast scan above, so an
+ * override anywhere in the recipe is measured as it renders.
  */
-describe("Button hover: one lift, at control scale", () => {
-  const INTENTS = ["primary", "secondary", "outline", "ghost", "accent", "danger"] as const
+describe("Button hover: fill only", () => {
+  const INTENTS = ["primary", "secondary", "outline", "ghost", "danger"] as const
 
   /** The classes `buttonStyles` actually emits for one intent, post-merge. */
   const classesFor = (intent: (typeof INTENTS)[number]) => buttonStyles({ intent }).split(/\s+/)
 
-  test("no intent lifts on the overlay token any more", () => {
-    // `shadow-quebi-glow-strong` is not retired — the command palette and the
-    // active Stepper bullet still take it, and `tests/elevation.test.ts` guards
-    // the token itself. The point is that an inline control is not a floating
-    // surface.
+  test("no intent casts a shadow of its own — only the theme's, which Ink & Paper sets to none", () => {
+    // A theme may give controls a hard shadow (`--q-shadow-control`,
+    // `--q-shadow-action`) and drop it on press; a literal shadow utility would
+    // be one the theme cannot take back.
+    const themed = /(^|:)shadow-(?:\(--q-shadow-(?:control|action)\)|none)$/
     for (const intent of INTENTS) {
-      expect(classesFor(intent), `${intent} is back on the overlay rung`).not.toContain(
-        "hover:shadow-quebi-glow-strong",
-      )
+      const shadows = classesFor(intent).filter((c) => /(^|:)shadow-/.test(c) && !themed.test(c))
+      expect(shadows, `${intent} casts a shadow`).toEqual([])
     }
   })
 
-  test("every intent with a box at rest lifts, and lifts identically", () => {
-    // Declared once in `base`, so "the same rung" is structural rather than six
-    // copies that have to be kept in step.
-    const withBox = INTENTS.filter((intent) => intent !== "ghost")
-    const rungs = new Set(
-      withBox.map((intent) =>
-        classesFor(intent)
-          .filter((c) => c.startsWith("hover:shadow-"))
-          .join(" "),
-      ),
-    )
-    expect(rungs.size, `hover shadows differ across intents: ${JSON.stringify([...rungs])}`).toBe(1)
-    expect([...rungs][0]).toBe("hover:shadow-md")
-  })
-
-  test("ghost opts out, and the merge lets it", () => {
-    // A base utility and a variant utility in the same tailwind-merge group:
-    // the variant has to win, or `ghost` silently keeps the base shadow. That
-    // is the `isCircle` failure mode (task #49) in a different group.
-    const ghost = classesFor("ghost")
-    expect(ghost).toContain("hover:shadow-none")
-    expect(ghost).not.toContain("hover:shadow-md")
-  })
-
   test("nothing grows under the pointer", () => {
-    // A button that scales nudges its neighbours' optical alignment in a
-    // ButtonGroup or a table toolbar, and resamples its own label for as long
-    // as it is hovered. With the scale gone, `active:scale-100` had nothing
-    // left to cancel.
     for (const intent of INTENTS) {
       const scales = classesFor(intent).filter((c) => /(^|:)scale-/.test(c))
       expect(scales, `${intent} still transforms on a state`).toEqual([])
@@ -339,10 +267,9 @@ describe("Button hover: one lift, at control scale", () => {
     // Every property the recipe actually moves has to be in the list, or
     // narrowing the transition silently snaps that change instead of easing it.
     const animated = (transition as string).slice("transition-[".length, -1).split(",")
-    expect(animated).toContain("box-shadow") // the lift above
     expect(animated).toContain("background-color") // every intent's fill
-    expect(animated).toContain("border-color") // secondary / outline / accent / danger
-    expect(animated).toContain("color") // outline / ghost labels
-    expect(animated).toContain("opacity") // disabled: and pending:
+    expect(animated).toContain("border-color") // primary's hover edge
+    expect(animated).toContain("color") // ghost's label
+    expect(animated).toContain("opacity") // danger's hover, disabled: and pending:
   })
 })

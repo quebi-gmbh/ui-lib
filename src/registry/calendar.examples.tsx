@@ -6,7 +6,7 @@ export const calendarExamples: ComponentExample[] = [
   {
     title: "Default",
     description:
-      "A month calendar. The header names the month it is showing and opens the Month Picker grid; today is ringed in brand teal.",
+      "A month calendar. The header names the month it is showing and opens the Month Picker grid; today is underlined.",
     render: () => <Calendar aria-label="Event date" />,
   },
   {
@@ -17,7 +17,7 @@ export const calendarExamples: ComponentExample[] = [
   },
   {
     title: "Preselected date",
-    description: "Set the selected day with defaultValue — it fills with brand teal.",
+    description: "Set the selected day with defaultValue — it fills with ink.",
     render: () => (
       <Calendar aria-label="Appointment" defaultValue={today(getLocalTimeZone())} />
     ),

@@ -40,7 +40,7 @@ describe("Tab, vertically", () => {
     render(<Strip orientation="vertical" />)
 
     const selected = tab("Account")
-    expect(selected).toHaveClass("after:inset-y-0", "after:-start-px", "after:w-[2px]")
+    expect(selected).toHaveClass("after:inset-y-0", "after:-start-px", "after:w-0.5")
     expect(selected.className).not.toContain("after:-bottom-px")
   })
 
@@ -56,7 +56,7 @@ describe("Tab, horizontally", () => {
     render(<Strip />)
 
     const selected = tab("Account")
-    expect(selected).toHaveClass("after:inset-x-0", "after:-bottom-px", "after:h-[2px]")
+    expect(selected).toHaveClass("after:inset-x-0", "after:-bottom-px", "after:h-0.5")
     expect(selected.className).not.toContain("ps-4")
     expect(selected.className).not.toContain("after:-start-px")
   })

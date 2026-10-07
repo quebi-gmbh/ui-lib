@@ -48,7 +48,7 @@
      label-driven variants can move it without the other thirty-one changing
      height. Every tile is the same height as a result. */
   padding-top: 1.25rem;
-  --quebi-focus-accent: var(--q-brand-mark);
+  --quebi-focus-accent: var(--q-focus);
   --quebi-focus-backdrop: var(--q-bg);
 }
 
@@ -96,7 +96,7 @@
   outline: none;
   box-shadow: none;
   transform: none;
-  border-color: color-mix(in oklab, var(--q-line) 20%, transparent);
+  border-color: var(--q-hairline);
   background-color: color-mix(in oklab, var(--q-surface) 2%, transparent);
 }
 
@@ -402,7 +402,7 @@
 
 .quebi-focus-demo[data-focus-variant="elevation"] .quebi-focus-field.quebi-focus-lit {
   border-color: var(--quebi-focus-accent);
-  box-shadow: var(--q-glow-strong);
+  box-shadow: var(--q-shadow-float);
 }
 
 .quebi-focus-demo[data-focus-variant="scale"] .quebi-focus-field.quebi-focus-lit {

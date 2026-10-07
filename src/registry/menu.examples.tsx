@@ -22,13 +22,13 @@ export const menuExamples: ComponentExample[] = [
     render: () => (
       <Menu>
         <Button intent="outline" size="sm">
-          Actions
+          actions
         </Button>
         <MenuContent placement="bottom start">
-          <MenuItem>Duplicate</MenuItem>
-          <MenuItem>Archive</MenuItem>
+          <MenuItem>duplicate</MenuItem>
+          <MenuItem>archive</MenuItem>
           <MenuSeparator />
-          <MenuItem intent="danger">Delete</MenuItem>
+          <MenuItem intent="danger">delete</MenuItem>
         </MenuContent>
       </Menu>
     ),
@@ -39,19 +39,19 @@ export const menuExamples: ComponentExample[] = [
     render: () => (
       <Menu>
         <Button intent="outline" size="sm">
-          Filter by status
+          filter by status
         </Button>
         <MenuContent placement="bottom start" selectionMode="single">
           <MenuSection label="Plans">
-            <MenuItem id="live">Live</MenuItem>
-            <MenuItem id="draft">Draft</MenuItem>
-            <MenuItem id="archived">Archived</MenuItem>
+            <MenuItem id="live">live</MenuItem>
+            <MenuItem id="draft">draft</MenuItem>
+            <MenuItem id="archived">archived</MenuItem>
           </MenuSection>
           <MenuSeparator />
           <MenuSection label="Devices">
-            <MenuItem id="in-stock">In stock</MenuItem>
-            <MenuItem id="low-stock">Low stock</MenuItem>
-            <MenuItem id="out-of-stock">Out of stock</MenuItem>
+            <MenuItem id="in-stock">in stock</MenuItem>
+            <MenuItem id="low-stock">low stock</MenuItem>
+            <MenuItem id="out-of-stock">out of stock</MenuItem>
           </MenuSection>
         </MenuContent>
       </Menu>
@@ -63,27 +63,27 @@ export const menuExamples: ComponentExample[] = [
     render: () => (
       <Menu>
         <Button intent="outline" size="sm">
-          Share
+          share
         </Button>
         <MenuContent placement="bottom start" className="min-w-52">
           <MenuItem>
             <Copy data-slot="icon" />
-            <MenuLabel>Copy link</MenuLabel>
+            <MenuLabel>copy link</MenuLabel>
             <MenuShortcut>⌘C</MenuShortcut>
           </MenuItem>
           <MenuItem>
             <Share2 data-slot="icon" />
-            <MenuLabel>Share</MenuLabel>
+            <MenuLabel>share</MenuLabel>
             <MenuShortcut>⌘S</MenuShortcut>
           </MenuItem>
           <MenuItem>
             <UserPlus data-slot="icon" />
-            <MenuLabel>Add people</MenuLabel>
+            <MenuLabel>add people</MenuLabel>
           </MenuItem>
           <MenuSeparator />
           <MenuItem intent="danger">
             <Trash2 data-slot="icon" />
-            <MenuLabel>Delete</MenuLabel>
+            <MenuLabel>delete</MenuLabel>
             <MenuShortcut>⌫</MenuShortcut>
           </MenuItem>
         </MenuContent>
@@ -96,19 +96,19 @@ export const menuExamples: ComponentExample[] = [
     render: () => (
       <Menu>
         <Button intent="outline" size="sm">
-          Account
+          account
         </Button>
         <MenuContent placement="bottom start" className="min-w-64">
           <MenuHeader separator>Signed in as Max</MenuHeader>
           <MenuItem>
             <Settings data-slot="icon" />
-            <MenuLabel>Settings</MenuLabel>
+            <MenuLabel>settings</MenuLabel>
             <MenuDescription>Manage your profile and preferences</MenuDescription>
           </MenuItem>
           <MenuSeparator />
           <MenuItem intent="danger">
             <LogOut data-slot="icon" />
-            <MenuLabel>Sign out</MenuLabel>
+            <MenuLabel>sign out</MenuLabel>
           </MenuItem>
         </MenuContent>
       </Menu>
@@ -120,21 +120,21 @@ export const menuExamples: ComponentExample[] = [
       "Use `MenuTrigger` for an unstyled inline trigger, and `MenuSubMenu` to nest a submenu.",
     render: () => (
       <Menu>
-        <MenuTrigger className="rounded-quebi-sm border border-quebi-line/20 px-3 py-1.5 text-sm text-quebi-fg">
-          More
+        <MenuTrigger className="border border-quebi-rule px-3 py-1.5 font-medium text-quebi-fg text-sm transition-colors duration-150 hover:bg-quebi-raised">
+          more
         </MenuTrigger>
         <MenuContent placement="bottom start" className="min-w-48">
-          <MenuItem>Edit</MenuItem>
+          <MenuItem>edit</MenuItem>
           <MenuSubMenu>
-            <MenuItem>Move to…</MenuItem>
+            <MenuItem>move to…</MenuItem>
             <MenuContent>
-              <MenuItem>Inbox</MenuItem>
-              <MenuItem>Projects</MenuItem>
-              <MenuItem>Archive</MenuItem>
+              <MenuItem>inbox</MenuItem>
+              <MenuItem>projects</MenuItem>
+              <MenuItem>archive</MenuItem>
             </MenuContent>
           </MenuSubMenu>
           <MenuSeparator />
-          <MenuItem intent="danger">Delete</MenuItem>
+          <MenuItem intent="danger">delete</MenuItem>
         </MenuContent>
       </Menu>
     ),

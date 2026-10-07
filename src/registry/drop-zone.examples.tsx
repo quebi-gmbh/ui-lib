@@ -30,7 +30,7 @@ export const dropZoneExamples: ComponentExample[] = [
             <span>{fileName ? `Selected: ${fileName}` : "Drag a file here, or"}</span>
             {/* FileTrigger renders its own Button (intent="outline"), so pass the
                 label as children — a <Button> child would nest a button inside a
-                button and inherit the primary intent's hover glow. */}
+                button. */}
             <FileTrigger size="sm" onSelect={(files) => setFileName(files?.[0]?.name ?? null)}>
               Browse
             </FileTrigger>

@@ -201,7 +201,7 @@ const Panels = () => {
           <Text className="font-medium text-quebi-fg text-sm">
             <code>apply="submit"</code>
           </Text>
-          <div className="rounded-quebi-md border border-quebi-line/10">
+          <div className="border border-quebi-hairline">
             <FilterPanel
               fieldId="status"
               label="Status"
@@ -220,7 +220,7 @@ const Panels = () => {
           <Text className="font-medium text-quebi-fg text-sm">
             <code>apply="live"</code>
           </Text>
-          <div className="rounded-quebi-md border border-quebi-line/10">
+          <div className="border border-quebi-hairline">
             <FilterPanel
               fieldId="price"
               label="Price"

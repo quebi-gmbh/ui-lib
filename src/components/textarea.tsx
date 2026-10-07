@@ -22,9 +22,9 @@ import { cn } from "@/lib/utils"
  * dependency of this file.
  */
 const textareaSizeStyles = {
-  xs: "text-xs px-2.5 py-1.5 min-h-16",
-  sm: "text-sm px-3 py-2 min-h-18",
-  md: "text-sm px-3 py-2.5 min-h-20",
+  xs: "text-xs px-(--q-field-px) py-1.5 min-h-16",
+  sm: "text-sm px-(--q-field-px) py-2 min-h-18",
+  md: "text-sm px-(--q-field-px) py-2.5 min-h-20",
 } as const
 
 type TextareaSize = keyof typeof textareaSizeStyles
@@ -32,9 +32,9 @@ type TextareaSize = keyof typeof textareaSizeStyles
 /**
  * Textarea — quebi design system
  *
- * Built on react-aria-components. A multi-line text input with a cyan-tinted
- * border that auto-grows with its content (field-sizing). Hover deepens the
- * border, focus shows the quebi teal ring, and invalid switches to red.
+ * Built on react-aria-components. A multi-line text input that auto-grows with
+ * its content (field-sizing), drawn like `Input`: underline only, focus
+ * thickens the line to 2px without moving anything, invalid turns it `danger`.
  */
 interface TextareaComponentProps extends TextAreaProps {
   /**
@@ -53,18 +53,14 @@ export function Textarea({ className, size: sizeProp, ...props }: TextareaCompon
         {...props}
         className={composeRenderProps(className, (resolved) =>
           cn(
-            "field-sizing-content block w-full appearance-none resize-y rounded-quebi-sm",
+            "field-sizing-content block w-full appearance-none resize-y",
             textareaSizeStyles[size],
-            "bg-quebi-bg text-quebi-fg placeholder:text-quebi-fg-subtle",
-            "border border-quebi-line/20",
-            "transition-colors duration-150",
-            // `not-focus` pins what today only holds by luck: `hover:` and `focus:` are
-            // both (0,2,0), so the winner is Tailwind's emission order (focus last).
-            // The guard says the intent instead of relying on it.
-            "not-focus:hover:border-quebi-line/40",
-            "focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark focus:ring-offset-2 focus:ring-offset-quebi-bg",
-            "invalid:border-red-500 focus:invalid:border-red-500 focus:invalid:ring-red-500/50",
-            "aria-invalid:border-red-500 focus:aria-invalid:ring-red-500/50",
+            "bg-transparent text-quebi-fg placeholder:text-quebi-fg-subtle",
+            "quebi-field",
+            "transition-[border-color,box-shadow] duration-150",
+            "focus:outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+            "invalid:border-b-quebi-danger focus:invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
+            "aria-invalid:border-b-quebi-danger focus:aria-invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
             "disabled:opacity-50 disabled:cursor-not-allowed",
             resolved,
           ),

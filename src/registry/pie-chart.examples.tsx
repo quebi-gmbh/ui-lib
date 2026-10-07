@@ -23,7 +23,7 @@ const config: ChartConfig = {
 export const pieChartExamples: ComponentExample[] = [
   {
     title: "Pie",
-    description: "A pie chart with five segments colored from the teal-led quebi palette.",
+    description: "A pie chart with five segments shaded from the ink palette.",
     render: () => (
       <PieChart
         config={config}

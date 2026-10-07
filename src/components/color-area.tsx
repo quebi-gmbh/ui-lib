@@ -13,19 +13,17 @@ import { cn } from "@/lib/utils"
  *
  * A two-dimensional gradient surface for picking two color channels at once
  * (e.g. saturation/brightness). Built on react-aria-components. The gradient is
- * the picked color (user data) and is left untouched; only the hairline and
- * rounding use quebi tokens. The draggable handle is the quebi ColorThumb, and
+ * the picked color (user data) and is left untouched; the chrome is a square
+ * field with a hairline edge. The draggable handle is the quebi ColorThumb, and
  * `children` replace it when you want to supply your own.
  *
  * The hairline is an *inset ring*, not a border, and that is the fix for a real
  * bug rather than a preference. react-aria writes the gradient onto the inline
  * `background` shorthand, which resets `background-clip` to `border-box` and
  * outranks any class — so a border is painted over the element's own gradient
- * instead of against the page. At the rounded corners the gradient reaches its
- * extremes (pure black, pure white) exactly where the arc's antialiasing
- * thins a 10%-alpha stroke, and the line disappeared there (task #127). A ring
- * is a `box-shadow`: it paints above the background, follows `border-radius`
- * exactly, and steals no pixels from the gradient.
+ * instead of against the page, and at the corners — where the gradient reaches
+ * pure black and pure white — the line disappeared. A ring is a `box-shadow`:
+ * it paints above the background and steals no pixels from the gradient.
  *
  * Disabled keeps the gradient and mutes it with `opacity-50`: a color surface
  * with the color taken out is an empty box, not a state. react-aria puts the
@@ -40,7 +38,7 @@ export function ColorArea({ className, children, ...props }: ColorAreaProps) {
       data-slot="color-area"
       className={composeRenderProps(className, (resolved) =>
         cn(
-          "size-56 shrink-0 rounded-quebi-md inset-ring-1 inset-ring-quebi-line/10",
+          "size-56 shrink-0 inset-ring-1 inset-ring-quebi-hairline",
           "disabled:opacity-50 disabled:forced-colors:bg-[GrayText]",
           resolved,
         ),

@@ -21,16 +21,17 @@ import { cn } from "@/lib/utils"
  * Tree — quebi design system
  *
  * Built on react-aria-components. A collapsible, optionally multi-selectable
- * tree view. Rows hover with a faint white wash and select with a brand-teal
- * tint; expand chevrons are muted and rotate on open. Supports checkbox
- * selection via the Checkbox sibling.
+ * tree view of flat, square rows: a hovered row is raised, a selected one
+ * pressed, and focus is an inset ring because the rows touch. Expand chevrons
+ * are muted and rotate on open. Supports checkbox selection via the Checkbox
+ * sibling.
  */
 const Tree = <T extends object>({ className, ...props }: TreeProps<T>) => {
   return (
     <TreePrimitive
       className={composeRenderProps(className, (resolved) =>
         cn(
-          "flex cursor-default flex-col gap-y-1 overflow-auto outline-hidden forced-color-adjust-none",
+          "flex cursor-default flex-col overflow-auto outline-hidden forced-color-adjust-none",
           resolved,
         ),
       )}
@@ -44,12 +45,12 @@ const TreeItem = <T extends object>({ className, ...props }: TreeItemProps<T>) =
     <TreeItemPrimitive
       className={composeRenderProps(className, (resolved) =>
         cn(
-          "group/tree-item relative flex shrink-0 select-none rounded-quebi-sm px-2 py-1.5",
+          "group/tree-item relative flex shrink-0 select-none px-2 py-1.5",
           "text-sm/6 text-quebi-fg transition-colors duration-150 focus:outline-hidden",
-          "hover:bg-quebi-surface/[0.02]",
-          "selected:bg-quebi-brand/10",
-          "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-          "**:data-[slot=icon]:me-1 **:data-[slot=icon]:size-5 **:data-[slot=icon]:shrink-0 sm:**:data-[slot=icon]:size-4",
+          "hover:bg-quebi-raised",
+          "selected:bg-quebi-pressed selected:hover:bg-quebi-pressed",
+          "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-quebi-focus",
+          "**:data-[slot=icon]:me-1 **:data-[slot=icon]:size-4 **:data-[slot=icon]:shrink-0 **:data-[slot=icon]:text-quebi-fg-muted",
           "disabled:opacity-50",
           "href" in props ? "cursor-pointer" : "cursor-default",
           resolved,

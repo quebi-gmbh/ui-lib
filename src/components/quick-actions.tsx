@@ -106,13 +106,13 @@ const QuickActionsFab = ({
     isCircle
     className={composeRenderProps(className, (resolved) =>
       cn(
-        "fixed right-[calc(--spacing(4)+env(safe-area-inset-right))] bottom-[calc(--spacing(4)+env(safe-area-inset-bottom))] z-40 shadow-quebi-glow",
+        "fixed right-[calc(--spacing(4)+env(safe-area-inset-right))] bottom-[calc(--spacing(4)+env(safe-area-inset-bottom))] z-40",
         resolved,
       ),
     )}
     {...props}
   >
-    {children ?? <Zap data-slot="icon" aria-hidden />}
+    {children ?? <Zap data-slot="icon" strokeWidth={1.5} aria-hidden />}
   </Button>
 )
 

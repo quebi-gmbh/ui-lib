@@ -4,7 +4,7 @@ export const headingMeta: ComponentMeta = {
   slug: "heading",
   name: "Heading",
   description:
-    "Semantic h1–h4 heading with a quebi-tuned type scale. White, font-semibold with tight tracking.",
+    "Semantic h1–h4 heading on the quebi display scale: Outfit at light weights, in ink. Write headlines lowercase.",
   category: "Display",
   tags: ["typography", "heading", "title", "text", "display"],
 }

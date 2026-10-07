@@ -20,14 +20,14 @@ export const statOgScene: OgScene = {
         label="Signups"
         value={1284}
         delta={<StatDelta value={0.12} />}
-        trend={<Sparkline data={SIGNUPS} width={80} height={20} className="text-quebi-brand-text" />}
+        trend={<Sparkline data={SIGNUPS} width={80} height={20} className="text-quebi-fg" />}
       />
       <Stat
         size="lg"
         label="Checkout errors"
         value={17}
         delta={<StatDelta value={-0.4} invert />}
-        trend={<Sparkline data={ERRORS} width={80} height={20} className="text-quebi-brand-text" />}
+        trend={<Sparkline data={ERRORS} width={80} height={20} className="text-quebi-fg" />}
       />
     </StatGroup>
   ),

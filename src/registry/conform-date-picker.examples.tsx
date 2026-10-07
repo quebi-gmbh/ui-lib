@@ -34,7 +34,7 @@ const EventForm = () => {
     >
       <ConformDatePicker field={fields.eventDate} label="Event date" />
       <Button type="submit" size="sm">
-        Schedule
+        schedule
       </Button>
     </form>
   )

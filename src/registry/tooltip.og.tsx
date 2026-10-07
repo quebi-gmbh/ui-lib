@@ -7,7 +7,7 @@ export const tooltipOgScene: OgScene = {
   scale: 1.6,
   render: () => (
     <Tooltip isOpen>
-      <Button intent="outline">Sync roster</Button>
+      <Button intent="outline">sync roster</Button>
       <TooltipContent>Quebi keeps your roster in sync.</TooltipContent>
     </Tooltip>
   ),

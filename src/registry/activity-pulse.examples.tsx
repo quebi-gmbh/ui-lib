@@ -77,7 +77,7 @@ function AgentStatusBar() {
 
   return (
     <div className="flex w-full max-w-md flex-col gap-3">
-      <div className="flex items-center gap-3 rounded-quebi-md border border-quebi-line/10 bg-quebi-bg px-3 py-2">
+      <div className="flex items-center gap-3 border border-quebi-hairline px-3 py-2">
         <span className="min-w-0 flex-1 truncate text-sm text-quebi-fg">
           {isRunning ? "Running Bash — bun run test" : "Idle"}
         </span>
@@ -85,7 +85,7 @@ function AgentStatusBar() {
           samples={samples}
           isActive={isRunning}
           label={isRunning ? "Running Bash" : "Idle"}
-          className={isRunning ? "text-quebi-brand-text" : "text-quebi-fg-subtle"}
+          className={isRunning ? "text-quebi-fg" : "text-quebi-fg-subtle"}
         />
         {startedAt === null ? (
           <span className="w-12 text-right text-sm text-quebi-fg-subtle tabular-nums">—</span>
@@ -113,7 +113,7 @@ function Shapes() {
   const samples = useScriptedPulse(BUSY_LOOP)
 
   return (
-    <div className="flex flex-col gap-3 text-quebi-brand-text">
+    <div className="flex flex-col gap-3 text-quebi-fg">
       {(["bars", "dots", "wave", "line"] as const).map((shape) => (
         <div key={shape} className="flex items-center gap-3">
           <span className="w-12 text-xs text-quebi-fg-subtle">{shape}</span>
@@ -129,7 +129,7 @@ function IdleVersusQuiet() {
   const quiet = useScriptedPulse(TRICKLE_LOOP)
 
   return (
-    <div className="flex flex-col gap-3 text-quebi-brand-text">
+    <div className="flex flex-col gap-3 text-quebi-fg">
       <div className="flex items-center gap-3">
         <span className="w-24 text-xs text-quebi-fg-subtle">busy</span>
         <ActivityPulse samples={busy} />
@@ -153,12 +153,12 @@ function Scales() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-6 text-quebi-brand-text">
+      <div className="flex items-center gap-6 text-quebi-fg">
         <span className="w-24 text-xs text-quebi-fg-subtle">rolling</span>
         <ActivityPulse samples={trickle} />
         <ActivityPulse samples={busy} />
       </div>
-      <div className="flex items-center gap-6 text-quebi-brand-text">
+      <div className="flex items-center gap-6 text-quebi-fg">
         <span className="w-24 text-xs text-quebi-fg-subtle">max 900</span>
         <ActivityPulse samples={trickle} scale={{ max: 900 }} />
         <ActivityPulse samples={busy} scale={{ max: 900 }} />
@@ -171,7 +171,7 @@ function SizesAndDirection() {
   const samples = useScriptedPulse(BUSY_LOOP)
 
   return (
-    <div className="flex flex-col gap-3 text-quebi-brand-text">
+    <div className="flex flex-col gap-3 text-quebi-fg">
       <div className="flex items-center gap-4">
         <ActivityPulse samples={samples} size="sm" />
         <ActivityPulse samples={samples} size="md" />
@@ -191,7 +191,7 @@ function FillStrips() {
   const samples = useScriptedPulse(BUSY_LOOP)
 
   return (
-    <div className="flex flex-col gap-3 text-quebi-brand-text">
+    <div className="flex flex-col gap-3 text-quebi-fg">
       <div className="flex items-center gap-3">
         <span className="w-16 text-xs text-quebi-fg-subtle">right</span>
         <ActivityPulse samples={samples} />

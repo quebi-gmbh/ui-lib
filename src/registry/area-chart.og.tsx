@@ -5,7 +5,7 @@ import type { OgScene } from "./types"
 
 const config: ChartConfig = TWO_SERIES
 
-/** Six months, two series, gradient fills. */
+/** Six months, two series, flat fills. */
 export const areaChartOgScene: OgScene = {
   scale: 1.5,
   render: () => (

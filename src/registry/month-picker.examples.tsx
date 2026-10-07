@@ -22,7 +22,7 @@ export const monthPickerExamples: ComponentExample[] = [
   {
     title: "Default",
     description:
-      "Twelve locale-formatted month names and a year stepper. The current month is ringed in brand teal.",
+      "Twelve locale-formatted month names and a year stepper. The current month is ringed in ink.",
     render: () => <MonthPicker aria-label="Month" />,
   },
   {

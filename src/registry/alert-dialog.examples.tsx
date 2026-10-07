@@ -21,7 +21,7 @@ function DestructiveDemo() {
     const confirmed = await confirm({
       title: "Delete this project?",
       description: "This permanently removes the project and all of its data.",
-      confirmLabel: "Delete project",
+      confirmLabel: "delete project",
       intent: "danger",
     })
     if (!confirmed) {
@@ -34,7 +34,7 @@ function DestructiveDemo() {
   return (
     <Col>
       <Button intent="danger" onPress={onDelete}>
-        Delete project
+        delete project
       </Button>
       <Answer>{status}</Answer>
     </Col>
@@ -71,9 +71,9 @@ function QueueDemo() {
     }
     const notify = await confirm({
       title: "Email every subscriber?",
-      confirmLabel: "Send",
-      cancelLabel: "Skip",
-      intent: "accent",
+      confirmLabel: "send",
+      cancelLabel: "skip",
+      intent: "primary",
     })
     setStatus(notify ? "Published, and subscribers emailed." : "Published quietly.")
   }
@@ -81,7 +81,7 @@ function QueueDemo() {
   return (
     <Col>
       <Button intent="primary" onPress={onPublish}>
-        Publish
+        publish
       </Button>
       <Answer>{status}</Answer>
     </Col>
@@ -104,7 +104,7 @@ function ControlledDemo() {
         onCancel={() => setStatus("Cancelled.")}
         title="Revoke this API key?"
         description="Anything still using it will start failing immediately."
-        confirmLabel="Revoke"
+        confirmLabel="revoke"
         intent="danger"
       />
       <Answer>{status}</Answer>

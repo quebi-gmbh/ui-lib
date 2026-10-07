@@ -213,7 +213,7 @@ export const dayViewExamples: ComponentExample[] = [
   {
     title: "All-day and overnight",
     description:
-      "An all-day event sits in the band above the grid. An overnight shift stays on the grid and is cut at midnight — its block loses the rounded edge where it continues.",
+      "An all-day event sits in the band above the grid. An overnight shift stays on the grid and is cut at midnight — its block is cut square where it continues.",
     render: () => <AllDayAndOvernight />,
   },
   {

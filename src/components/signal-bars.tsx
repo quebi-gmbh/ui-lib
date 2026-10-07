@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils"
 export type SignalBarsSize = "sm" | "md" | "lg"
 
 /**
- * `brand` inherits `currentColor` — the caller decides, which is right when the
+ * `brand` inherits `currentColor` (ink by default) — the caller decides, which is right when the
  * level means "how much" rather than "how bad". `level` maps the fraction onto
  * the quebi status tokens, for the cases where a low value genuinely is a
  * problem (a dying connection, a struggling worker).
@@ -119,7 +119,7 @@ export function SignalBars({
             data-slot="signal-bars-step"
             data-filled={index < filled ? "true" : undefined}
             className={cn(
-              "shrink-0 rounded-full bg-current transition-opacity duration-200 motion-reduce:transition-none",
+              "shrink-0 bg-current transition-opacity duration-200 motion-reduce:transition-none",
               index < filled ? "opacity-100" : "opacity-20",
             )}
             style={{

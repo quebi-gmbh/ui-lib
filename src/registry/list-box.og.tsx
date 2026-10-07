@@ -1,7 +1,7 @@
 import { ListBox, ListBoxItem } from "@/components/list-box"
 import type { OgScene } from "./types"
 
-/** Four rows, one selected — teal fill and a check. */
+/** Four rows, one selected — marked with an ink check. */
 export const listBoxOgScene: OgScene = {
   scale: 1.8,
   render: () => (
@@ -11,10 +11,10 @@ export const listBoxOgScene: OgScene = {
       defaultSelectedKeys={["board"]}
       className="w-64"
     >
-      <ListBoxItem id="list">List</ListBoxItem>
-      <ListBoxItem id="board">Board</ListBoxItem>
-      <ListBoxItem id="calendar">Calendar</ListBoxItem>
-      <ListBoxItem id="timeline">Timeline</ListBoxItem>
+      <ListBoxItem id="list">list</ListBoxItem>
+      <ListBoxItem id="board">board</ListBoxItem>
+      <ListBoxItem id="calendar">calendar</ListBoxItem>
+      <ListBoxItem id="timeline">timeline</ListBoxItem>
     </ListBox>
   ),
 }

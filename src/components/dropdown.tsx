@@ -16,9 +16,8 @@ import {
   Separator,
   Text,
 } from "react-aria-components"
-import { tv } from "tailwind-variants"
 import { Keyboard } from "@/components/keyboard"
-import { cn } from "@/lib/utils"
+import { cn, tv } from "@/lib/utils"
 
 /**
  * Dropdown — quebi design system
@@ -26,15 +25,16 @@ import { cn } from "@/lib/utils"
  * Foundational building blocks shared by Menu, Select, Combo Box, and List Box.
  * These are not a standalone overlay; they render the surface, sections, items,
  * labels, descriptions, separators, and keyboard hints inside any
- * react-aria `ListBox`/`Menu` collection. Styled with the quebi dark surface,
- * cyan hairlines, and brand-teal selection/focus.
+ * react-aria `ListBox`/`Menu` collection. Rows are square; hover and focus
+ * lay `bg-quebi-raised` under them; the selected row is marked by an ink check,
+ * not a fill; section headers are eyebrows and separators hairlines.
  */
 
 const dropdownSectionStyles = tv({
   slots: {
     section: "col-span-full grid grid-cols-[auto_1fr]",
     header:
-      "col-span-full px-3 py-2 font-medium text-quebi-fg-muted text-sm/6 sm:px-2.5 sm:py-1.5 sm:text-xs/3",
+      "col-span-full px-3 pt-3 pb-1.5 quebi-eyebrow sm:px-2.5",
   },
 })
 
@@ -62,9 +62,9 @@ const dropdownItemStyles = tv({
     "min-w-0 [--me-icon:--spacing(2.5)] sm:[--me-icon:--spacing(2)]",
     "col-span-full grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] px-3 py-2 supports-[grid-template-columns:subgrid]:grid-cols-subgrid sm:px-2.5 sm:py-1.5",
     "not-has-[[slot=description]]:items-center",
-    "group relative cursor-default select-none rounded-quebi-sm outline-0",
-    // text — quebi body (14/20), white.
-    "text-[14px] leading-[20px] text-quebi-fg forced-colors:text-[CanvasText]",
+    "group relative cursor-default select-none rounded-none outline-0",
+    // text — 14/20 Inter in ink.
+    "text-sm/5 text-quebi-fg forced-colors:text-[CanvasText]",
     // avatar
     "*:data-[slot=avatar]:*:me-(--me-icon) *:data-[slot=avatar]:me-(--me-icon) has-[[slot=description]]:*:data-[slot=avatar]:row-span-2 *:data-[slot=avatar]:[--avatar-size:--spacing(5)] sm:*:data-[slot=avatar]:[--avatar-size:--spacing(4)]",
     // icon
@@ -85,13 +85,13 @@ const dropdownItemStyles = tv({
       danger: [
         "text-quebi-danger focus:text-quebi-danger [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-danger/70",
         "*:[[slot=description]]:text-quebi-danger/80 focus:*:[[slot=description]]:text-quebi-danger focus:*:[[slot=label]]:text-quebi-danger",
-        "focus:bg-red-500/10 focus:text-quebi-danger forced-colors:focus:text-[Mark] focus:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-danger",
+        "focus:bg-quebi-danger/10 focus:text-quebi-danger forced-colors:focus:text-[Mark] focus:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-danger",
         "*:data-[slot=keyboard]:text-quebi-danger/70 focus:*:data-[slot=keyboard]:text-quebi-danger",
       ],
       warning: [
         "text-quebi-warn focus:text-quebi-warn [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-warn/70",
         "*:[[slot=description]]:text-quebi-warn/80 focus:*:[[slot=description]]:text-quebi-warn focus:*:[[slot=label]]:text-quebi-warn",
-        "focus:bg-amber-500/10 focus:text-quebi-warn focus:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-warn",
+        "focus:bg-quebi-warn/10 focus:text-quebi-warn focus:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-warn",
         "*:data-[slot=keyboard]:text-quebi-warn/70 focus:*:data-[slot=keyboard]:text-quebi-warn",
       ],
     },
@@ -99,21 +99,22 @@ const dropdownItemStyles = tv({
       true: "opacity-50 forced-colors:text-[GrayText]",
     },
     isSelected: {
-      // Selected → brand-teal fill so it reads as the chosen value.
-      true: "bg-quebi-brand/15 font-semibold text-quebi-brand-text [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-brand-text",
+      // Selected → the ink check mark (rendered by the item) and a heavier
+      // label. No fill: a fill would read as focus.
+      true: "font-medium text-quebi-fg [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
     },
     isFocused: {
-      // Keyboard-focused → subtle white wash so nav reads cleanly on the dark surface.
+      // Keyboard-focused → the same `raised` ground as hover.
       true: [
         "*:data-[slot=keyboard]:text-quebi-fg [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
-        "bg-quebi-surface/[0.04] text-quebi-fg forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]",
+        "bg-quebi-raised text-quebi-fg forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]",
         "*:[[slot=description]]:text-quebi-fg *:[[slot=label]]:text-quebi-fg",
       ],
     },
     isHovered: {
       true: [
         "*:data-[slot=keyboard]:text-quebi-fg [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
-        "bg-quebi-surface/[0.04] text-quebi-fg forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]",
+        "bg-quebi-raised text-quebi-fg forced-colors:bg-[Highlight] forced-colors:text-[HighlightText]",
         "*:[[slot=description]]:text-quebi-fg *:[[slot=label]]:text-quebi-fg",
       ],
     },
@@ -172,7 +173,7 @@ const DropdownDescription = ({ className, ...props }: TextProps) => (
 const DropdownSeparator = ({ className, ...props }: Omit<SeparatorProps, "orientation">) => (
   <Separator
     orientation="horizontal"
-    className={cn("col-span-full -mx-1 h-px bg-quebi-line/20", className)}
+    className={cn("col-span-full -mx-1 my-1 h-px bg-quebi-hairline", className)}
     {...props}
   />
 )

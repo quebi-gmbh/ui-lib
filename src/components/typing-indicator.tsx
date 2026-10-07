@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils"
  *
  * @example
  * <TypingIndicator label="Claude is replying" />
- * <TypingIndicator size="lg" className="text-quebi-brand-text" />
+ * <TypingIndicator size="lg" className="text-quebi-fg" />
  */
 
 export type TypingIndicatorSize = "sm" | "md" | "lg"

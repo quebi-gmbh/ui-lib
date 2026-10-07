@@ -19,12 +19,12 @@ export const modalExamples: ComponentExample[] = [
     description: "A trigger opens a modal with header, body, and footer.",
     render: () => (
       <Modal>
-        <ModalTrigger>Open modal</ModalTrigger>
+        <ModalTrigger>open modal</ModalTrigger>
         <ModalContent>
           {({ close }) => (
             <>
               <ModalHeader>
-                <ModalTitle>Invite your team</ModalTitle>
+                <ModalTitle>invite your team</ModalTitle>
                 <ModalDescription>
                   Send an invitation to collaborate on this workspace.
                 </ModalDescription>
@@ -37,10 +37,10 @@ export const modalExamples: ComponentExample[] = [
               </ModalBody>
               <ModalFooter>
                 <ModalClose intent="outline" onPress={close}>
-                  Cancel
+                  cancel
                 </ModalClose>
                 <Button intent="primary" onPress={close}>
-                  Send invite
+                  send invite
                 </Button>
               </ModalFooter>
             </>
@@ -54,17 +54,17 @@ export const modalExamples: ComponentExample[] = [
     description: "ModalHeader accepts `title` and `description` props directly.",
     render: () => (
       <Modal>
-        <ModalTrigger intent="outline">Quick note</ModalTrigger>
+        <ModalTrigger intent="outline">quick note</ModalTrigger>
         <ModalContent size="sm">
           {({ close }) => (
             <>
               <ModalHeader
-                title="Heads up"
+                title="heads up"
                 description="This action is reversible from your account settings."
               />
               <ModalFooter>
                 <ModalClose intent="ghost" onPress={close}>
-                  Got it
+                  got it
                 </ModalClose>
               </ModalFooter>
             </>
@@ -78,7 +78,7 @@ export const modalExamples: ComponentExample[] = [
     description: "An alert dialog (role=\"alertdialog\") with a danger action, not dismissable by click-outside.",
     render: () => (
       <Modal>
-        <ModalTrigger intent="danger">Delete project</ModalTrigger>
+        <ModalTrigger intent="danger">delete project</ModalTrigger>
         <ModalContent role="alertdialog" size="sm">
           {({ close }) => (
             <>
@@ -91,10 +91,10 @@ export const modalExamples: ComponentExample[] = [
               </ModalHeader>
               <ModalFooter>
                 <ModalClose intent="outline" onPress={close}>
-                  Cancel
+                  cancel
                 </ModalClose>
                 <Button intent="danger" onPress={close}>
-                  Delete
+                  delete
                 </Button>
               </ModalFooter>
             </>
@@ -108,12 +108,12 @@ export const modalExamples: ComponentExample[] = [
     description: "Size variants run from 2xs to 5xl (plus fullscreen).",
     render: () => (
       <Modal>
-        <ModalTrigger intent="outline">Open large modal</ModalTrigger>
+        <ModalTrigger intent="outline">open large modal</ModalTrigger>
         <ModalContent size="2xl">
           {({ close }) => (
             <>
               <ModalHeader>
-                <ModalTitle>Release notes</ModalTitle>
+                <ModalTitle>release notes</ModalTitle>
                 <ModalDescription>Everything new in this version.</ModalDescription>
               </ModalHeader>
               <ModalBody>
@@ -124,7 +124,7 @@ export const modalExamples: ComponentExample[] = [
               </ModalBody>
               <ModalFooter>
                 <Button intent="primary" onPress={close}>
-                  Done
+                  done
                 </Button>
               </ModalFooter>
             </>
@@ -146,7 +146,7 @@ export const modalExamples: ComponentExample[] = [
           </Button>
           <ModalContent isOpen={isOpen} onOpenChange={setIsOpen} role="alertdialog" size="sm">
             <ModalHeader>
-              <ModalTitle>Delete project</ModalTitle>
+              <ModalTitle>delete project</ModalTitle>
               <ModalDescription>This cannot be undone.</ModalDescription>
             </ModalHeader>
             <ModalFooter>

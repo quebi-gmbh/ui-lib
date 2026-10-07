@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils"
  *
  * A segmented control rendered as a row of anchor links inside a tablist.
  * Use it for view switches that are real navigations (each option has an
- * href) — e.g. day/week/month, or list/board. The active segment lifts onto
- * a teal-tinted surface with a quebi glow; the brand accent marks selection.
+ * href) — e.g. day/week/month, or list/board. The current segment is an ink
+ * fill, the same selected state as ToggleGroup.
  *
  * Self-contained: only `@/lib/utils` and React. No sibling component deps.
  */
@@ -38,7 +38,7 @@ export function LinkToggleGroup<T extends string = string>({
       role="tablist"
       aria-label={ariaLabel}
       className={cn(
-        "inline-flex items-center gap-1 rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02] p-[3px]",
+        "inline-flex items-center gap-0.5 border border-quebi-rule p-0.5",
         className,
       )}
     >
@@ -52,12 +52,12 @@ export function LinkToggleGroup<T extends string = string>({
             aria-selected={isActive}
             href={opt.href}
             className={cn(
-              "rounded-quebi-sm px-2.5 py-1.5 text-[13px] font-semibold",
-              "outline-none transition-colors duration-200",
-              "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+              "px-3 py-1.5 text-sm font-medium",
+              "outline-none transition-colors duration-150",
+              "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
               isActive
-                ? "bg-quebi-brand/15 text-quebi-brand-text shadow-quebi-glow"
-                : "text-quebi-fg-muted hover:text-quebi-fg",
+                ? "bg-quebi-action text-quebi-on-action hover:bg-quebi-action-hover"
+                : "text-quebi-fg-muted hover:bg-quebi-raised hover:text-quebi-fg",
             )}
           >
             {opt.label}

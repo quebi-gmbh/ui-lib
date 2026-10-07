@@ -25,11 +25,11 @@ function LevelOrRhythm() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
-        <SignalBars value={3} className="text-quebi-brand-text" label="Connection: 3 of 4" />
+        <SignalBars value={3} className="text-quebi-fg" label="Connection: 3 of 4" />
         <span className="text-sm text-quebi-fg-muted">SignalBars — a level, out of four</span>
       </div>
       <div className="flex items-center gap-3">
-        <ActivityPulse samples={samples} className="text-quebi-brand-text" />
+        <ActivityPulse samples={samples} className="text-quebi-fg" />
         <span className="text-sm text-quebi-fg-muted">ActivityPulse — a rhythm, out of nothing</span>
       </div>
     </div>
@@ -67,7 +67,7 @@ export const signalBarsExamples: ComponentExample[] = [
     description:
       "With no children the graphic keeps a generated `role=\"img\"` label (\"3 of 4\"), so it still has a text equivalent. Pass `label` to say what the level is *of* — nothing else on the page may be saying it.",
     render: () => (
-      <div className="flex items-center gap-6 text-quebi-brand-text">
+      <div className="flex items-center gap-6 text-quebi-fg">
         <SignalBars value={1} label="Connection: 1 of 4" />
         <SignalBars value={2} label="Connection: 2 of 4" />
         <SignalBars value={3} label="Connection: 3 of 4" />
@@ -80,7 +80,7 @@ export const signalBarsExamples: ComponentExample[] = [
     description:
       "`steps` is the scale, not a style: five is common for a confidence score. The three sizes move height, bar width and gap together.",
     render: () => (
-      <div className="flex flex-col gap-4 text-quebi-brand-text">
+      <div className="flex flex-col gap-4 text-quebi-fg">
         <div className="flex items-center gap-6">
           {[1, 2, 3, 4, 5].map((value) => (
             <SignalBars key={value} value={value} steps={5} label={`Confidence: ${value} of 5`} />

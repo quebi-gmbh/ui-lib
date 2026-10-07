@@ -40,7 +40,7 @@ const ChannelsForm = () => {
         <Checkbox value="push">Push</Checkbox>
       </ConformCheckboxGroup>
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

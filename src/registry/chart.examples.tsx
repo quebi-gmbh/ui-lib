@@ -58,7 +58,7 @@ function StaticLegend({ payload }: { payload?: ReadonlyArray<LegendPayload> }) {
 export const chartExamples: ComponentExample[] = [
   {
     title: "Line",
-    description: "A line chart with two teal-led series, an interactive legend, and a tooltip.",
+    description: "A line chart with two ink series, an interactive legend, and a tooltip.",
     render: () => (
       <Chart config={config} data={data} dataKey="month" containerHeight={280}>
         <LineChart data={data} accessibilityLayer>
@@ -91,7 +91,7 @@ export const chartExamples: ComponentExample[] = [
   },
   {
     title: "Area",
-    description: "A filled area chart using the brand teal as the primary series.",
+    description: "A filled area chart with the ink as the primary series.",
     render: () => (
       <Chart config={config} data={data} dataKey="month" containerHeight={280}>
         <AreaChart data={data} accessibilityLayer>

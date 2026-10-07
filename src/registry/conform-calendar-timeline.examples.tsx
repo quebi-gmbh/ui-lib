@@ -96,7 +96,7 @@ const RoomPlanForm = () => {
         endHour={18}
       />
       <Button type="submit" size="sm" className="self-start">
-        Save the plan
+        save the plan
       </Button>
     </form>
   )
@@ -125,7 +125,7 @@ const LockedRowForm = () => {
         isEventEditable={(event) => event.id !== "b3"}
       />
       <Button type="submit" size="sm" className="self-start">
-        Save the plan
+        save the plan
       </Button>
     </form>
   )

@@ -1,13 +1,13 @@
 import { Link as RouterLink } from "react-router"
-import { ArrowRight, Bot, Boxes, Copy } from "lucide-react"
 import { metaRegistry } from "@/registry/meta"
 import { seo } from "@/lib/seo"
-import { buttonStyles } from "@/components/button"
-import { Card, CardDescription, CardTitle } from "@/components/card"
 import { CodeBlock } from "@/site/code-block"
+import { Eyebrow } from "@/components/eyebrow"
+import { IndexList } from "@/components/index-list"
 import { Link } from "@/components/link"
-import { LinkButton } from "@/components/link-button"
+import { LowTitle } from "@/components/low-title"
 import { Snippet } from "@/components/snippet"
+import { Stage } from "@/components/stage"
 import { skillHighlighted, skillSource } from "@/registry/skill.generated"
 
 export function meta() {
@@ -19,204 +19,149 @@ export function meta() {
   })
 }
 
+/** The design's text-link CTA, on the router's Link so internal routes stay client-side. */
+const CTA =
+  "font-display text-quebi-link text-quebi-fg underline decoration-1 underline-offset-5 transition-[text-underline-offset] duration-150 hover:underline-offset-8"
+
 function Hero() {
   return (
-    <header className="relative overflow-hidden bg-quebi-bg">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-40 left-1/2 z-[1] size-100 -translate-x-1/2 rounded-full bg-quebi-brand/40 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 right-0 z-[1] size-75 rounded-full bg-quebi-accent/20 blur-3xl"
-      />
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 bg-quebi-grid" />
-
-      <div className="relative z-10 mx-auto flex min-h-[80vh] max-w-quebi-content flex-col items-center justify-center px-6 py-32 text-center">
-        <span className="quebi-eyebrow mb-4">React component library</span>
-        <h1 className="text-5xl font-bold tracking-tight text-quebi-fg sm:text-6xl md:text-7xl lg:text-8xl">
-          ui-lib
-        </h1>
-        <p className="mt-6 max-w-xl text-lg text-quebi-fg-muted">
-          A React component library. Copy-paste the source, no install required. Built for humans and
-          for AI agents.
-        </p>
-        <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
-          {/* Internal route, so it stays on the router's Link for client-side
-              navigation — the appearance comes from buttonStyles rather than
-              from a hand-written copy of it. See /rules/no-raw-interactive-elements. */}
-          <RouterLink
-            to="/components"
-            className={buttonStyles({ intent: "primary", size: "lg", className: "text-base" })}
-          >
-            Browse components
-            <ArrowRight data-slot="icon" aria-hidden />
+    <Stage variant="cinematic" className="md:min-h-[calc(100svh-4rem)]">
+      <Eyebrow>react component library — {metaRegistry.length} components</Eyebrow>
+      <LowTitle
+        as="h1"
+        title="components for quebi apps."
+        action={
+          <RouterLink to="/components" className={CTA}>
+            browse components →
           </RouterLink>
-          <LinkButton
-            href="https://github.com/quebi-gmbh"
-            target="_blank"
-            rel="noreferrer"
-            intent="outline"
-            size="lg"
-            className="text-base font-normal"
-          >
-            GitHub
-          </LinkButton>
-        </div>
-      </div>
-    </header>
+        }
+      >
+        Accessible React components in the quebi design system. Copy the source into your project,
+        no install required — written to be read by people and pulled by agents.
+      </LowTitle>
+    </Stage>
   )
 }
 
 /**
- * A landing-page section.
- *
- * Deliberately narrower than the app shell (`quebi-shell`, 90rem — see
- * quebi-theme.css): the gallery wants every pixel for code blocks and props
- * tables, but centred marketing copy set that wide reads badly, and the headings
- * inside each section are narrower still (`max-w-quebi-content`). So the home
- * page opts out of the shell on purpose rather than by omission — this is the
- * one place that decides how wide it is.
+ * A landing-page section: the design's `.qb-section` — a display-s heading on
+ * the left, a mono count on the right, then the content. Sections sit in the
+ * same shell as the header and step down the page at the 120px rhythm.
  */
-function HomeSection({ children }: { children: React.ReactNode }) {
-  return <section className="mx-auto w-full max-w-5xl px-6 py-24">{children}</section>
+function HomeSection({
+  title,
+  count,
+  children,
+}: {
+  title: string
+  count: string
+  children: React.ReactNode
+}) {
+  return (
+    <section className="quebi-shell pt-quebi-10">
+      <div className="mb-5 flex items-end justify-between gap-4">
+        <h2 className="font-display text-quebi-display-s text-quebi-fg">{title}</h2>
+        <Eyebrow as="span">{count}</Eyebrow>
+      </div>
+      {children}
+    </section>
+  )
 }
 
 const features = [
   {
-    icon: Copy,
-    eyebrow: "Copy-paste",
-    title: "Own your components",
-    body: "Every component ships as plain source you drop into your project. No black-box dependency — read it, edit it, keep it.",
+    label: "a",
+    title: "own your components",
+    body: "Every component ships as plain source you drop into your project. Read it, edit it, keep it.",
   },
   {
-    icon: Bot,
-    eyebrow: "AI-ready",
-    title: "Discoverable by agents",
-    body: "A static JSON index and per-component source endpoints let coding agents search and pull components programmatically.",
+    label: "b",
+    title: "discoverable by agents",
+    body: "A static JSON index and per-component source endpoints let coding agents search and pull components.",
   },
   {
-    icon: Boxes,
-    eyebrow: `${metaRegistry.length} components`,
-    title: "Batteries included",
-    body: "Charts, forms, overlays, navigation, data display — plus Conform-bound variants for every form element.",
+    label: "c",
+    title: "forms to charts",
+    body: "Charts, forms, overlays, navigation and data display, with a Conform-bound variant of every form element.",
   },
 ]
 
 function Features() {
   return (
-    <HomeSection>
-      <div className="mx-auto max-w-quebi-content text-center">
-        <span className="quebi-eyebrow">What you get</span>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
-          Components that solve real problems
-        </h2>
-      </div>
-      <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3">
-        {features.map(({ icon: Icon, eyebrow, title, body }) => (
-          <Card key={title} interactive>
-            <Icon data-slot="icon" className="h-6 w-6 text-quebi-brand-text" strokeWidth={1.75} />
-            <span className="quebi-eyebrow mt-4">{eyebrow}</span>
-            <CardTitle className="mt-2">{title}</CardTitle>
-            <CardDescription className="mt-3">{body}</CardDescription>
-          </Card>
+    <HomeSection title="what you get" count="01">
+      <div className="grid grid-cols-1 border-t border-quebi-rule md:grid-cols-3">
+        {features.map(({ label, title, body }) => (
+          <div
+            key={title}
+            className="border-b border-quebi-hairline py-4 md:mr-5 md:border-r md:border-b-0 md:pr-5 md:last:mr-0 md:last:border-r-0"
+          >
+            <Eyebrow as="span">{label}</Eyebrow>
+            <h3 className="mt-2 mb-2 font-display text-quebi-title text-quebi-fg">{title}</h3>
+            <p className="max-w-[40ch] text-quebi-body-s text-quebi-fg-muted">{body}</p>
+          </div>
         ))}
       </div>
     </HomeSection>
   )
 }
 
+const endpoints = [
+  { url: "/llms.txt", desc: "agent entry point" },
+  { url: "/api/index.json", desc: "every component, metadata, dependencies" },
+  { url: "/api/components/<name>.json", desc: "one component: metadata and source" },
+  { url: "/r/<name>.json", desc: "shadcn registry item" },
+]
+
 function ForAgents() {
-  const endpoints = [
-    { url: "/llms.txt", desc: "Agent entry point — how to discover and pull components" },
-    { url: "/api/index.json", desc: "Full catalog: every component, metadata, dependencies" },
-    { url: "/api/components/<name>.json", desc: "One component: metadata + raw source" },
-    { url: "/r/<name>.json", desc: "shadcn-compatible registry item" },
-  ]
   return (
-    <HomeSection>
-      <div className="mx-auto max-w-quebi-content text-center">
-        <span className="quebi-eyebrow">For AI agents</span>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
-          Built to be pulled by agents
-        </h2>
-        <p className="mt-4 text-base leading-relaxed text-quebi-fg-muted">
-          Every component is published as a static, fetchable API. Point your coding agent at the
-          endpoints below — no scraping, no auth.
-        </p>
-      </div>
-
-      <div className="mx-auto mt-10 max-w-2xl">
-        <p className="quebi-eyebrow mb-2">Add a component with the shadcn CLI</p>
-        <Snippet symbol="" text="npx shadcn@latest add https://ui-lib.quebi.de/r/button.json" />
-
-        <p className="quebi-eyebrow mt-8 mb-3">Or fetch the API directly</p>
-        <Card className="overflow-hidden p-0">
-          <ul className="divide-y divide-quebi-line/10">
-            {endpoints.map((e) => (
-              <li
-                key={e.url}
-                className="flex flex-col gap-1 p-4 sm:flex-row sm:items-center sm:gap-4"
-              >
-                <Link
-                  href={e.url.includes("<") ? "/api/index.json" : e.url}
-                  className="shrink-0 font-mono text-sm"
-                >
-                  {e.url}
-                </Link>
-                <span className="text-sm text-quebi-fg-muted">{e.desc}</span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-        <p className="mt-4 text-center text-sm text-quebi-fg-subtle">
-          Start with{" "}
-          <Link href="/llms.txt">llms.txt</Link>{" "}
-          — it documents the whole workflow for agents.
-        </p>
-      </div>
+    <HomeSection title="for agents" count={`${String(endpoints.length).padStart(2, "0")} endpoints`}>
+      <p className="mb-6 max-w-[60ch] text-quebi-body text-quebi-fg-muted">
+        Every component is published as a static, fetchable API. Point your coding agent at the
+        endpoints below — no scraping, no auth. Start with{" "}
+        <Link href="/llms.txt">llms.txt</Link>, which documents the whole workflow.
+      </p>
+      <IndexList
+        items={endpoints.map((e) => ({
+          id: e.url,
+          title: <span className="font-mono text-quebi-code">{e.url}</span>,
+          meta: e.desc,
+          href: e.url.includes("<") ? "/api/index.json" : e.url,
+        }))}
+      />
+      <Eyebrow className="mt-quebi-8 mb-2">add a component with the shadcn cli</Eyebrow>
+      <Snippet symbol="" text="npx shadcn@latest add https://ui-lib.quebi.de/r/button.json" />
     </HomeSection>
   )
 }
 
 function ClaudeSkill() {
   return (
-    <HomeSection>
-      <div className="mx-auto max-w-quebi-content text-center">
-        <span className="quebi-eyebrow">Claude skill</span>
-        <h2 className="mt-3 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
-          Teach Claude to use ui-lib
-        </h2>
-        <p className="mt-4 text-base leading-relaxed text-quebi-fg-muted">
-          Drop this skill into Claude Code and it will pull components from the live registry
-          instead of writing them from scratch — for any React project, not just this one.
-        </p>
-      </div>
-
-      <div className="mx-auto mt-10 max-w-3xl">
-        <p className="quebi-eyebrow mb-2">Set it up</p>
-        <ol className="mb-8 space-y-2 text-sm leading-relaxed text-quebi-fg-muted">
-          <li>
-            <span className="text-quebi-fg">1.</span> Save the skill below to{" "}
-            <code className="text-quebi-fg-subtle">.claude/skills/quebi-ui-lib/SKILL.md</code> in
-            your project (or <code className="text-quebi-fg-subtle">~/.claude/skills/</code> to make
-            it available everywhere).
-          </li>
-          <li>
-            <span className="text-quebi-fg">2.</span> Or download it directly:{" "}
-            <Link href="/skills/quebi-ui-lib/SKILL.md" download>
-              SKILL.md
-            </Link>
-            .
-          </li>
-          <li>
-            <span className="text-quebi-fg">3.</span> Start a Claude Code session in your project — the
-            skill activates when you ask for a React component.
-          </li>
-        </ol>
-
-        <CodeBlock html={skillHighlighted} code={skillSource} />
-      </div>
+    <HomeSection title="claude skill" count="03 steps">
+      <p className="mb-6 max-w-[60ch] text-quebi-body text-quebi-fg-muted">
+        Drop this skill into Claude Code and it will pull components from the live registry instead
+        of writing them from scratch — for any React project, not just this one.
+      </p>
+      <IndexList
+        className="mb-8"
+        items={[
+          {
+            id: "save",
+            title: "save the skill",
+            meta: ".claude/skills/quebi-ui-lib/SKILL.md",
+          },
+          {
+            id: "download",
+            title: "or download it",
+            meta: <Link href="/skills/quebi-ui-lib/SKILL.md">SKILL.md</Link>,
+          },
+          {
+            id: "run",
+            title: "ask for a component",
+            meta: "the skill activates in Claude Code",
+          },
+        ]}
+      />
+      <CodeBlock html={skillHighlighted} code={skillSource} />
     </HomeSection>
   )
 }

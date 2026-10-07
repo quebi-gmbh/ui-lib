@@ -8,7 +8,7 @@ export const colorPickerOgScene: OgScene = {
   scale: 1.8,
   render: () => (
     <ColorPicker defaultValue="#14b8a6">
-      <ColorSwatch className="size-9.5 rounded-quebi-sm" />
+      <ColorSwatch className="size-9.5" />
       <ColorField aria-label="Hex color" className="w-40" />
     </ColorPicker>
   ),

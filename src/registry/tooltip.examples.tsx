@@ -2,7 +2,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/tooltip"
 import type { ComponentExample } from "./types"
 
 const TriggerButton = ({ children }: { children: React.ReactNode }) => (
-  <TooltipTrigger className="cursor-pointer rounded-quebi-sm border border-quebi-line/20 bg-transparent px-4 py-2 text-sm font-semibold text-quebi-fg outline-none transition-colors duration-150 hover:border-quebi-brand-mark hover:text-quebi-brand-text focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg">
+  <TooltipTrigger className="cursor-pointer border border-quebi-rule bg-transparent px-4 py-2 font-medium text-quebi-fg text-sm outline-none transition-colors duration-150 hover:bg-quebi-raised focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg">
     {children}
   </TooltipTrigger>
 )
@@ -13,7 +13,7 @@ export const tooltipExamples: ComponentExample[] = [
     description: "Hover or focus the trigger to reveal the tooltip.",
     render: () => (
       <Tooltip>
-        <TriggerButton>Hover me</TriggerButton>
+        <TriggerButton>hover me</TriggerButton>
         <TooltipContent>Quebi keeps your roster in sync.</TooltipContent>
       </Tooltip>
     ),
@@ -24,19 +24,19 @@ export const tooltipExamples: ComponentExample[] = [
     render: () => (
       <div className="flex flex-wrap items-center gap-3">
         <Tooltip>
-          <TriggerButton>Top</TriggerButton>
+          <TriggerButton>top</TriggerButton>
           <TooltipContent placement="top">Above the trigger</TooltipContent>
         </Tooltip>
         <Tooltip>
-          <TriggerButton>Right</TriggerButton>
+          <TriggerButton>right</TriggerButton>
           <TooltipContent placement="right">Right of the trigger</TooltipContent>
         </Tooltip>
         <Tooltip>
-          <TriggerButton>Bottom</TriggerButton>
+          <TriggerButton>bottom</TriggerButton>
           <TooltipContent placement="bottom">Below the trigger</TooltipContent>
         </Tooltip>
         <Tooltip>
-          <TriggerButton>Left</TriggerButton>
+          <TriggerButton>left</TriggerButton>
           <TooltipContent placement="left">Left of the trigger</TooltipContent>
         </Tooltip>
       </div>
@@ -47,8 +47,8 @@ export const tooltipExamples: ComponentExample[] = [
     description: "Pass arrow={false} for a plain panel.",
     render: () => (
       <Tooltip>
-        <TriggerButton>No arrow</TriggerButton>
-        <TooltipContent arrow={false}>Clean, arrowless surface.</TooltipContent>
+        <TriggerButton>no arrow</TriggerButton>
+        <TooltipContent arrow={false}>A plain panel, no arrow.</TooltipContent>
       </Tooltip>
     ),
   },
@@ -57,7 +57,7 @@ export const tooltipExamples: ComponentExample[] = [
     description: "Tooltips accept arbitrary markup, not just plain strings.",
     render: () => (
       <Tooltip>
-        <TriggerButton>Details</TriggerButton>
+        <TriggerButton>details</TriggerButton>
         <TooltipContent>
           <strong>Last synced</strong>
           <div className="text-muted">2 minutes ago</div>

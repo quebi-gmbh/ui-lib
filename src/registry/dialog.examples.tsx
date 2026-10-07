@@ -34,7 +34,7 @@ export const dialogExamples: ComponentExample[] = [
     description: "A trigger opens a modal dialog with header, body, and footer.",
     render: () => (
       <AriaDialogTrigger>
-        <Button>Open dialog</Button>
+        <Button>open dialog</Button>
         <ModalOverlay className={overlayClassName} isDismissable>
           <Modal className={modalClassName}>
             <Dialog>
@@ -42,7 +42,7 @@ export const dialogExamples: ComponentExample[] = [
                 <>
                   <DialogCloseIcon isDismissable />
                   <DialogHeader>
-                    <DialogTitle>Invite your team</DialogTitle>
+                    <DialogTitle>invite your team</DialogTitle>
                     <DialogDescription>
                       Send an invitation to collaborate on this workspace.
                     </DialogDescription>
@@ -55,10 +55,10 @@ export const dialogExamples: ComponentExample[] = [
                   </DialogBody>
                   <DialogFooter>
                     <DialogClose intent="outline" onPress={close}>
-                      Cancel
+                      cancel
                     </DialogClose>
                     <Button intent="primary" onPress={close}>
-                      Send invite
+                      send invite
                     </Button>
                   </DialogFooter>
                 </>
@@ -74,17 +74,17 @@ export const dialogExamples: ComponentExample[] = [
     description: "DialogHeader accepts `title` and `description` props directly.",
     render: () => (
       <AriaDialogTrigger>
-        <Button intent="outline">Quick note</Button>
+        <Button intent="outline">quick note</Button>
         <ModalOverlay className={overlayClassName} isDismissable>
           <Modal className={modalClassName}>
             <Dialog>
               <DialogHeader
-                title="Heads up"
+                title="heads up"
                 description="This action is reversible from your account settings."
               />
               <DialogFooter>
                 <DialogClose slot="close" intent="ghost">
-                  Got it
+                  got it
                 </DialogClose>
               </DialogFooter>
             </Dialog>
@@ -98,7 +98,7 @@ export const dialogExamples: ComponentExample[] = [
     description: "A confirmation dialog with a danger action.",
     render: () => (
       <AriaDialogTrigger>
-        <Button intent="danger">Delete project</Button>
+        <Button intent="danger">delete project</Button>
         <ModalOverlay className={overlayClassName} isDismissable>
           <Modal className={modalClassName}>
             <Dialog role="alertdialog">
@@ -113,10 +113,10 @@ export const dialogExamples: ComponentExample[] = [
                   </DialogHeader>
                   <DialogFooter>
                     <DialogClose intent="outline" onPress={close}>
-                      Cancel
+                      cancel
                     </DialogClose>
                     <Button intent="danger" onPress={close}>
-                      Delete
+                      delete
                     </Button>
                   </DialogFooter>
                 </>

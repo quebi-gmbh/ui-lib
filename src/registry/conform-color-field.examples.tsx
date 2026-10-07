@@ -35,7 +35,7 @@ const AccentForm = () => {
         description="A hex value; the visible input is the form control."
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

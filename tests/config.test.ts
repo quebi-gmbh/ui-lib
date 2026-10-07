@@ -82,7 +82,7 @@ describe("documented exceptions reach Biome", () => {
 
   test("vendored library source is exempt from the plugin rules (via the override)", () => {
     const surface = component(
-      `    <div className="rounded-quebi-md border border-quebi-line/10 p-6">{props.children}</div>`,
+      `    <div className="rounded-none border border-quebi-hairline p-6">{props.children}</div>`,
     )
     expect(rulesFiredOn(surface, "src/routes/page.tsx")).toContain(
       "no-appearance-classes-on-layout-elements",
@@ -251,7 +251,7 @@ describe("a plugin fires only where its record says it applies", () => {
     // from the rules that carve that directory out.
     expect(rulesFiredOn(VIOLATION, "src/routes/page.tsx")).toContain("no-raw-interactive-elements")
     const surface = component(
-      `    <div className="rounded-quebi-md border border-quebi-line/10 p-6">{props.children}</div>`,
+      `    <div className="rounded-none border border-quebi-hairline p-6">{props.children}</div>`,
     )
     expect(rulesFiredOn(surface, "src/routes/page.tsx")).toContain(
       "no-appearance-classes-on-layout-elements",

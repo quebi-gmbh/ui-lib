@@ -7,10 +7,9 @@ import { cn } from "@/lib/utils"
 /**
  * DropZone — quebi design system
  *
- * Built on react-aria-components. A dashed, cyan-tinted drop surface for drag
- * and drop. The resting border is dashed cyan-500/20; when a draggable item
- * hovers over it (drop target), the border turns solid brand teal with a soft
- * teal wash and the signature quebi glow.
+ * Built on react-aria-components. A square drop surface edged in a dashed
+ * hairline. While a draggable item is over it (drop target) the edge turns a
+ * solid `rule` and the ground lifts to `raised` — no hue, no glow.
  */
 export function DropZone({ className, ...props }: DropZoneProps) {
   return (
@@ -18,11 +17,11 @@ export function DropZone({ className, ...props }: DropZoneProps) {
       data-slot="control"
       className={composeRenderProps(className, (className, { isDropTarget }) =>
         cn(
-          "group/drop-zone relative z-10 flex max-h-56 items-center justify-center overflow-hidden rounded-quebi-md border border-dashed border-quebi-line/20 p-6 text-center text-sm text-quebi-fg-muted",
+          "group/drop-zone relative z-10 flex max-h-56 items-center justify-center overflow-hidden border border-dashed border-quebi-hairline p-6 text-center text-sm text-quebi-fg-muted",
           "transition-colors duration-150",
-          "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
+          "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-3 data-[focus-visible]:ring-offset-quebi-bg",
           isDropTarget &&
-            "border-solid border-quebi-brand-mark bg-quebi-brand/10 text-quebi-fg shadow-quebi-glow",
+            "border-solid border-quebi-rule bg-quebi-raised text-quebi-fg",
           className,
         ),
       )}

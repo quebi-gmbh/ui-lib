@@ -9,9 +9,9 @@ export const linkToggleGroupOgScene: OgScene = {
       ariaLabel="Calendar range"
       current="week"
       options={[
-        { value: "day", label: "Day", href: "#day" },
-        { value: "week", label: "Week", href: "#week" },
-        { value: "month", label: "Month", href: "#month" },
+        { value: "day", label: "day", href: "#day" },
+        { value: "week", label: "week", href: "#week" },
+        { value: "month", label: "month", href: "#month" },
       ]}
     />
   ),

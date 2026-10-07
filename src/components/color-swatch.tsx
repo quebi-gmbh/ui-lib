@@ -8,9 +8,8 @@ import { cn } from "@/lib/utils"
  * ColorSwatch — quebi design system
  *
  * Built on react-aria-components. Renders a fixed-size square filled with the
- * given color value (the user's color is preserved verbatim). A subtle inset
- * hairline in the quebi line token keeps it against the quebi surface, using a
- * quebi radius.
+ * given color value (the user's color is preserved verbatim). A square with an
+ * inset hairline, so a swatch near the page's own colour still has an edge.
  *
  * The size is one `size-*` utility and the responsive step is on the variable
  * behind it — 40px, 36px from `sm` up. That is what makes a consumer's
@@ -26,7 +25,7 @@ export function ColorSwatch({ className, ...props }: ColorSwatchProps) {
       data-slot="color-swatch"
       className={composeRenderProps(className, (resolved) =>
         cn(
-          "inset-ring-1 inset-ring-quebi-line/20 size-(--color-swatch-size) shrink-0 rounded-quebi-md [--color-swatch-size:--spacing(10)] sm:[--color-swatch-size:--spacing(9)]",
+          "inset-ring-1 inset-ring-quebi-hairline size-(--color-swatch-size) shrink-0 [--color-swatch-size:--spacing(10)] sm:[--color-swatch-size:--spacing(9)]",
           resolved,
         ),
       )}

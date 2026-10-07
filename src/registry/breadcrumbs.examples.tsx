@@ -7,8 +7,8 @@ export const breadcrumbsExamples: ComponentExample[] = [
     description: "Chevron-separated trail. The last crumb is the current page.",
     render: () => (
       <Breadcrumbs>
-        <BreadcrumbsItem href="/">Catalog</BreadcrumbsItem>
-        <BreadcrumbsItem href="/devices">Devices</BreadcrumbsItem>
+        <BreadcrumbsItem href="/">catalog</BreadcrumbsItem>
+        <BreadcrumbsItem href="/devices">devices</BreadcrumbsItem>
         <BreadcrumbsItem>iPhone 15 Pro Max</BreadcrumbsItem>
       </Breadcrumbs>
     ),
@@ -18,9 +18,9 @@ export const breadcrumbsExamples: ComponentExample[] = [
     description: "Use separator=\"slash\" for narrower trails or beside a page title.",
     render: () => (
       <Breadcrumbs separator="slash">
-        <BreadcrumbsItem href="/">Plans</BreadcrumbsItem>
-        <BreadcrumbsItem href="/plans/flex-50">Flex 50</BreadcrumbsItem>
-        <BreadcrumbsItem>Pricing</BreadcrumbsItem>
+        <BreadcrumbsItem href="/">plans</BreadcrumbsItem>
+        <BreadcrumbsItem href="/plans/flex-50">flex 50</BreadcrumbsItem>
+        <BreadcrumbsItem>pricing</BreadcrumbsItem>
       </Breadcrumbs>
     ),
   },
@@ -32,17 +32,22 @@ export const breadcrumbsExamples: ComponentExample[] = [
         <BreadcrumbsItem href="/">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 20 20"
-            fill="currentColor"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
             aria-hidden="true"
             data-slot="icon"
           >
-            <path d="M9.293 2.293a1 1 0 0 1 1.414 0l7 7A1 1 0 0 1 17 11h-1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-3H9v3a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-6H4a1 1 0 0 1-.707-1.707l7-7Z" />
+            <path d="M3 10.5 12 3l9 7.5" />
+            <path d="M5 9.5V21h14V9.5" />
           </svg>
-          Home
+          home
         </BreadcrumbsItem>
-        <BreadcrumbsItem href="/settings">Settings</BreadcrumbsItem>
-        <BreadcrumbsItem>Profile</BreadcrumbsItem>
+        <BreadcrumbsItem href="/settings">settings</BreadcrumbsItem>
+        <BreadcrumbsItem>profile</BreadcrumbsItem>
       </Breadcrumbs>
     ),
   },
@@ -51,8 +56,8 @@ export const breadcrumbsExamples: ComponentExample[] = [
     description: "A short trail with a single parent.",
     render: () => (
       <Breadcrumbs>
-        <BreadcrumbsItem href="/">Dashboard</BreadcrumbsItem>
-        <BreadcrumbsItem>Billing</BreadcrumbsItem>
+        <BreadcrumbsItem href="/">dashboard</BreadcrumbsItem>
+        <BreadcrumbsItem>billing</BreadcrumbsItem>
       </Breadcrumbs>
     ),
   },

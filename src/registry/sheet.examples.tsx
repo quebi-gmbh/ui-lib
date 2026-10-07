@@ -17,10 +17,10 @@ export const sheetExamples: ComponentExample[] = [
     description: "A panel that slides in from the right edge — good for detail editing.",
     render: () => (
       <Sheet>
-        <Button intent="outline">Edit pricing</Button>
+        <Button intent="outline">edit pricing</Button>
         <SheetContent side="right">
           <SheetHeader>
-            <SheetTitle>Edit pricing — Essentials 20</SheetTitle>
+            <SheetTitle>edit pricing — Essentials 20</SheetTitle>
             <SheetDescription>
               Changes autosave. Customers see the updated price on their next session.
             </SheetDescription>
@@ -29,7 +29,7 @@ export const sheetExamples: ComponentExample[] = [
             <p className="text-sm text-quebi-fg-muted">Pricing fields go here.</p>
           </SheetBody>
           <SheetFooter>
-            <SheetClose intent="outline">Close</SheetClose>
+            <SheetClose intent="outline">close</SheetClose>
           </SheetFooter>
         </SheetContent>
       </Sheet>
@@ -40,17 +40,17 @@ export const sheetExamples: ComponentExample[] = [
     description: "A panel that slides up from the bottom edge — good for filters on mobile.",
     render: () => (
       <Sheet>
-        <Button intent="outline">Filter devices</Button>
+        <Button intent="outline">filter devices</Button>
         <SheetContent side="bottom">
           <SheetHeader>
-            <SheetTitle>Filter devices</SheetTitle>
+            <SheetTitle>filter devices</SheetTitle>
           </SheetHeader>
           <SheetBody>
             <p className="text-sm text-quebi-fg-muted">Filter controls go here.</p>
           </SheetBody>
           <SheetFooter>
-            <SheetClose intent="outline">Cancel</SheetClose>
-            <Button intent="primary">Apply filters</Button>
+            <SheetClose intent="outline">cancel</SheetClose>
+            <Button intent="primary">apply filters</Button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
@@ -61,18 +61,18 @@ export const sheetExamples: ComponentExample[] = [
     description: "A navigation drawer sliding in from the left edge.",
     render: () => (
       <Sheet>
-        <Button intent="outline">Open menu</Button>
+        <Button intent="outline">open menu</Button>
         <SheetContent side="left">
           <SheetHeader>
-            <SheetTitle>Navigation</SheetTitle>
+            <SheetTitle>navigation</SheetTitle>
             <SheetDescription>Jump to any section of the workspace.</SheetDescription>
           </SheetHeader>
           <SheetBody>
             <nav className="flex flex-col gap-2 text-sm text-quebi-fg-muted">
-              <span>Dashboard</span>
-              <span>Devices</span>
-              <span>Billing</span>
-              <span>Settings</span>
+              <span>dashboard</span>
+              <span>devices</span>
+              <span>billing</span>
+              <span>settings</span>
             </nav>
           </SheetBody>
         </SheetContent>

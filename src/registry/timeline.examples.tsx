@@ -27,7 +27,7 @@ const RELEASES: TimelineItemData[] = [
     date: "2026-09-14",
     title: "2.0 — Timeline, Year View",
     href: "#v2-0",
-    badges: <Badge intent="brand">Major</Badge>,
+    badges: <Badge>major</Badge>,
     description: "Two new date components and a rewritten prerender.",
   },
   {
@@ -35,7 +35,7 @@ const RELEASES: TimelineItemData[] = [
     date: "2026-08-02",
     title: "1.9 — Quick Actions",
     href: "#v1-9",
-    badges: <Badge>Minor</Badge>,
+    badges: <Badge intent="outline">minor</Badge>,
     description: "A sheet of this screen's actions, from the header or a floating trigger.",
   },
   {
@@ -43,7 +43,7 @@ const RELEASES: TimelineItemData[] = [
     date: "2026-07-21",
     title: "1.8.1",
     href: "#v1-8-1",
-    badges: <Badge intent="warning">Fix</Badge>,
+    badges: <Badge intent="warning">fix</Badge>,
     description: "Plugin rules read tests/ again.",
   },
   {
@@ -51,11 +51,11 @@ const RELEASES: TimelineItemData[] = [
     date: "2026-07-03",
     title: "1.8 — Table of Contents",
     href: "#v1-8",
-    badges: <Badge>Minor</Badge>,
+    badges: <Badge intent="outline">minor</Badge>,
   },
-  { id: "1.7", date: "2026-05-30", title: "1.7 — Tracker", href: "#v1-7", badges: <Badge>Minor</Badge> },
-  { id: "1.6", date: "2026-04-11", title: "1.6 — Filter Rail", href: "#v1-6", badges: <Badge>Minor</Badge> },
-  { id: "1.0", date: "2026-01-15", title: "1.0", href: "#v1-0", badges: <Badge intent="brand">Major</Badge> },
+  { id: "1.7", date: "2026-05-30", title: "1.7 — Tracker", href: "#v1-7", badges: <Badge intent="outline">minor</Badge> },
+  { id: "1.6", date: "2026-04-11", title: "1.6 — Filter Rail", href: "#v1-6", badges: <Badge intent="outline">minor</Badge> },
+  { id: "1.0", date: "2026-01-15", title: "1.0", href: "#v1-0", badges: <Badge>major</Badge> },
 ]
 
 const HISTORY: TimelineItemData[] = [
@@ -265,7 +265,7 @@ export const timelineExamples: ComponentExample[] = [
         <TimelineItem start="2018-09" end="2021-02" tone="brand">
           <TimelineTitle>Scheduling</TimelineTitle>
         </TimelineItem>
-        <TimelineItem start="2020-01" end="2022-10" tone="success">
+        <TimelineItem start="2020-01" end="2022-10">
           <TimelineTitle>Billing</TimelineTitle>
         </TimelineItem>
         <TimelineItem date="2020-06">
@@ -274,7 +274,7 @@ export const timelineExamples: ComponentExample[] = [
         <TimelineItem start="2022-04" end="present" tone="brand" isCurrent>
           <TimelineTitle>Design system</TimelineTitle>
         </TimelineItem>
-        <TimelineItem start="2024-02" end="2025-01" tone="warning">
+        <TimelineItem start="2024-02" end="2025-01" tone="muted">
           <TimelineTitle>Migration</TimelineTitle>
         </TimelineItem>
       </Timeline>
@@ -286,7 +286,7 @@ export const timelineExamples: ComponentExample[] = [
       "`density=\"compact\"` in a narrow Card. The card is around the timeline; the items inside it are not cards.",
     render: () => (
       <Card className="w-72">
-        <CardHeader title="Recent" />
+        <CardHeader title="recent" />
         <CardContent>
           <Timeline aria-label="Recent" density="compact" relative now={NOW} locale="en-GB">
             <TimelineItem date="2026-09-28T09:50" tone="brand">
@@ -309,7 +309,7 @@ export const timelineExamples: ComponentExample[] = [
   {
     title: "Markers and tones",
     description:
-      "Dot in three sizes, ring, icon, avatar, number and a custom node; neutral, brand, success, warning, danger and muted. Markers are decoration — the words carry the state.",
+      "Dot in three sizes, ring, icon, avatar, number and a custom node. Neutral is ink, brand the action fill, muted the subtle grey; success, warning and danger are for a state that is the point. Markers are decoration — the words carry the state.",
     render: () => (
       <Timeline aria-label="Markers" locale="en-GB" className="w-full max-w-sm">
         <TimelineItem marker={<TimelineMarker size="sm" />}>

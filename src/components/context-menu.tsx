@@ -18,11 +18,9 @@ import { cn } from "@/lib/utils"
  * ContextMenu — quebi design system
  *
  * A right-click (context) menu built on the shared Menu overlay. The trigger
- * captures the pointer position on `contextmenu` and anchors the popover there,
- * reusing the dark quebi-bg surface, cyan hairlines, and dropdown item styling.
- *
- * Restyled from the original onto quebi tokens — only the trigger's own classes
- * changed; all menu styling is inherited from `@/components/menu`.
+ * captures the pointer position on `contextmenu` and anchors the popover there.
+ * All surface and item styling is inherited from `@/components/menu`; only the
+ * trigger's own classes live here.
  */
 
 interface ContextMenuTriggerContextType {
@@ -82,7 +80,7 @@ const ContextMenuTrigger = ({ className, ...props }: ContextMenuTriggerProps) =>
     <button
       className={cn(
         "cursor-default outline-hidden disabled:opacity-60 disabled:forced-colors:disabled:text-[GrayText]",
-        "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+        "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
         className,
       )}
       ref={buttonRef}

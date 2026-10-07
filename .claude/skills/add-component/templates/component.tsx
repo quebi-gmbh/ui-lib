@@ -6,27 +6,27 @@
 import {
   /* SomethingPrimitive, type SomethingProps as SomethingPrimitiveProps */
 } from "react-aria-components"
-import { tv, type VariantProps } from "tailwind-variants"
-import { cn } from "@/lib/utils"
+import type { VariantProps } from "tailwind-variants"
+import { cn, tv } from "@/lib/utils"
 
 /**
  * <Thing> — quebi design system
  *
- * One-line summary of intents/sizes/states. Teal is the accent (primary/active
- * only). Depth from shadow-quebi-glow, never a hand-rolled shadow-lg.
+ * One-line summary of intents/sizes/states. Ink & Paper: square, ruled, no hue;
+ * the solid intent is action ink. No shadow unless the thing floats.
  */
 export const thingStyles = tv({
   base: [
-    "transition-colors duration-200",
-    "rounded-quebi-sm border border-cyan-500/20",
-    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-    "disabled:opacity-50 disabled:cursor-not-allowed",
+    "transition-colors duration-150",
+    "border",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+    "disabled:opacity-45 disabled:cursor-not-allowed",
   ],
   variants: {
     intent: {
-      primary: "bg-quebi-brand border-quebi-brand text-quebi-bg hover:bg-quebi-brand-hover",
-      outline:
-        "bg-transparent text-white hover:border-quebi-brand-mark hover:text-quebi-brand-text",
+      primary:
+        "bg-quebi-action border-quebi-action text-quebi-on-action hover:bg-quebi-action-hover hover:border-quebi-action-hover",
+      outline: "bg-transparent border-quebi-rule text-quebi-fg hover:bg-quebi-raised",
     },
     size: {
       sm: "px-3 py-1.5 text-sm",

@@ -41,7 +41,7 @@ describe("the size scale", () => {
       </TimeField>,
     )
     expect(wrapperOf(md.container).className).toContain("text-sm")
-    expect(wrapperOf(md.container).className).toContain("px-3 py-2.5")
+    expect(wrapperOf(md.container).className).toContain("px-(--q-field-px) py-2.5")
   })
 
   test("xs is 12px type and the xs padding", () => {
@@ -53,7 +53,7 @@ describe("the size scale", () => {
     const className = wrapperOf(xs.container).className
     expect(className).toContain("text-xs")
     expect(className).not.toContain("text-sm")
-    expect(className).toContain("px-2.5 py-1.5")
+    expect(className).toContain("px-(--q-field-px) py-1.5")
   })
 
   test("follows the surrounding surface when given no prop of its own", () => {

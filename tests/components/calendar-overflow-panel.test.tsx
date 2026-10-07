@@ -191,10 +191,7 @@ describe("the all-day band's overflow", () => {
     const className = row?.className ?? ""
 
     expect(className).toContain("border-l-2")
-    expect(className).toContain("rounded-l-none")
-    // The radius is the row's own, so there is nothing here to get wrong — and
-    // the trailing corners keep it.
-    expect(className).toContain("rounded-quebi-sm")
-    expect(className).not.toContain("rounded-l-quebi-sm")
+    // Square throughout: no radius to bend the accent round a corner.
+    expect(className).not.toMatch(/(^|\s)rounded-(?!none)/)
   })
 })

@@ -8,27 +8,27 @@ const Stack = ({ children }: { children: React.ReactNode }) => (
 export const headingExamples: ComponentExample[] = [
   {
     title: "Levels",
-    description: "Four semantic levels (h1–h4), each with its own size step.",
+    description: "Four semantic levels (h1–h4) on the display scale: display-l, display-s, title, and a light 18px.",
     render: () => (
       <Stack>
-        <Heading level={1}>Match candidates in seconds</Heading>
-        <Heading level={2}>Match candidates in seconds</Heading>
-        <Heading level={3}>Match candidates in seconds</Heading>
-        <Heading level={4}>Match candidates in seconds</Heading>
+        <Heading level={1}>match candidates in seconds.</Heading>
+        <Heading level={2}>match candidates in seconds.</Heading>
+        <Heading level={3}>match candidates in seconds.</Heading>
+        <Heading level={4}>match candidates in seconds.</Heading>
       </Stack>
     ),
   },
   {
     title: "Default",
     description: "Without a level, renders an h1.",
-    render: () => <Heading>Welcome back</Heading>,
+    render: () => <Heading>welcome back.</Heading>,
   },
   {
     title: "Custom className",
-    description: "Override the color or weight via className.",
+    description: "Override the size or weight via className.",
     render: () => (
-      <Heading level={2} className="text-quebi-brand-text">
-        Highlighted heading
+      <Heading level={2} className="font-thin">
+        a thinner section head.
       </Heading>
     ),
   },

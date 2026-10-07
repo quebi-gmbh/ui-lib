@@ -11,7 +11,7 @@ const StarIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -23,15 +23,15 @@ const StarIcon = () => (
 export const buttonExamples: ComponentExample[] = [
   {
     title: "Intents",
-    description: "Six intents. Teal primary is the single hero CTA; reach for the others to deprioritize.",
+    description:
+      "Five intents. The solid primary is the one call to action on a surface; the others step down from it.",
     render: () => (
       <Row>
-        <Button intent="primary">Get started</Button>
-        <Button intent="secondary">Preview</Button>
-        <Button intent="outline">Cancel</Button>
-        <Button intent="ghost">Dismiss</Button>
-        <Button intent="accent">Highlight</Button>
-        <Button intent="danger">Delete</Button>
+        <Button intent="primary">get started →</Button>
+        <Button intent="secondary">preview</Button>
+        <Button intent="outline">cancel</Button>
+        <Button intent="ghost">dismiss</Button>
+        <Button intent="danger">delete</Button>
       </Row>
     ),
   },
@@ -39,11 +39,11 @@ export const buttonExamples: ComponentExample[] = [
     title: "Sizes",
     render: () => (
       <Row>
-        <Button size="xs">Extra small</Button>
-        <Button size="sm">Small</Button>
-        <Button size="md">Default</Button>
-        <Button size="lg">Large</Button>
-        <Button size="xl">Extra large</Button>
+        <Button size="xs">extra small</Button>
+        <Button size="sm">small</Button>
+        <Button size="md">default</Button>
+        <Button size="lg">large</Button>
+        <Button size="xl">extra large</Button>
       </Row>
     ),
   },
@@ -53,11 +53,11 @@ export const buttonExamples: ComponentExample[] = [
       <Row>
         <Button intent="primary">
           <StarIcon />
-          Run match
+          run match
         </Button>
         <Button intent="outline">
           <StarIcon />
-          Favorite
+          favourite
         </Button>
       </Row>
     ),
@@ -67,10 +67,10 @@ export const buttonExamples: ComponentExample[] = [
     render: () => (
       <Row>
         <Button intent="primary" isDisabled>
-          Disabled
+          disabled
         </Button>
         <Button intent="outline" isDisabled>
-          Disabled
+          disabled
         </Button>
       </Row>
     ),

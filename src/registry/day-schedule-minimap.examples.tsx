@@ -25,8 +25,8 @@ const BesideASchedule = () => {
   return (
     <div className="w-full max-w-md">
       <div className="mb-5 flex items-baseline justify-between">
-        <div className="font-bold text-quebi-fg tracking-tight">wed 20 aug</div>
-        <span className="text-[10.5px] text-quebi-fg-subtle">3× zoom — drag the map to scroll</span>
+        <div className="font-medium text-quebi-fg tracking-tight">wed 20 aug</div>
+        <span className="text-quebi-caption text-quebi-fg-subtle">3× zoom — drag the map to scroll</span>
       </div>
       <DaySchedule
         spans={spans}
@@ -42,7 +42,7 @@ const BesideASchedule = () => {
 
 const BusyDay = () => (
   <div className="w-full max-w-md">
-    <div className="mb-5 text-[10.5px] text-quebi-fg-subtle">
+    <div className="mb-5 text-quebi-caption text-quebi-fg-subtle">
       Twenty spans in 34px: the lines keep their thickness and the grid rides instead, so the ones
       that do not fit park on an edge with their minute still true.
     </div>
@@ -71,14 +71,14 @@ const WiredByHand = () => {
       <div className="flex gap-2">
         <div
           ref={viewportRef}
-          className="min-w-0 flex-1 overflow-y-auto rounded-quebi-sm border border-quebi-line/10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="quebi-scrollbar-none min-w-0 flex-1 overflow-y-auto border border-quebi-hairline"
           style={{ height: 260 }}
         >
           <div className="relative" style={{ height: 260 * scale }}>
             {WORKDAY.map((span) => (
               <div
                 key={span.id}
-                className="absolute inset-x-2 flex items-start rounded-quebi-sm bg-quebi-brand/10 px-2 py-1 text-quebi-fg text-xs"
+                className="absolute inset-x-2 flex items-start border-quebi-fg border-l-2 bg-quebi-raised px-2 py-1 text-quebi-fg text-xs"
                 style={{
                   top: `${(span.start / 1440) * 100}%`,
                   height: `${((span.end - span.start) / 1440) * 100}%`,

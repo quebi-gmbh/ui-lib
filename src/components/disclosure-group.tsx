@@ -20,12 +20,13 @@ import { cn } from "@/lib/utils"
  * DisclosureGroup — quebi design system
  *
  * Accordion-style stack of expandable sections built on react-aria-components.
- * Each item is bordered with the signature cyan tint; headers read in white and
- * the active item lifts with a subtle teal-tinted surface and glow. Pass
- * `allowsMultipleExpanded` to keep several sections open at once.
+ * Structure comes from rules, not boxes: each item is a row with a hairline
+ * under it (and over the first), its title in Outfit, hovered rows on
+ * `bg-quebi-raised`. Opening a row changes nothing but the indicator and the
+ * panel. Pass `allowsMultipleExpanded` to keep several sections open at once.
  *
- * `<Disclosure variant="plain">` drops the surface entirely — no border, no
- * tint, no glow, tight padding and an eyebrow-style header — for the case where
+ * `<Disclosure variant="plain">` drops the rules — no hairlines, tight padding
+ * and a mono eyebrow header — for the case where
  * the disclosure *is* the chrome rather than sitting inside it, such as the
  * collapsible category groups in a long nav. The variant is set on the
  * Disclosure and the trigger, indicator and panel follow it, so a call site
@@ -46,14 +47,14 @@ export function DisclosureGroup({ className, ...props }: DisclosureGroupProps) {
   return (
     <PrimitiveDisclosureGroup
       data-slot="disclosure-group"
-      className={composeRenderProps(className, (resolved) => cn("flex flex-col gap-2", resolved))}
+      className={composeRenderProps(className, (resolved) => cn("flex flex-col", resolved))}
       {...props}
     />
   )
 }
 
 export interface DisclosureProps extends PrimitiveDisclosureProps {
-  /** `card` (default) is the bordered accordion surface; `plain` is bare nav chrome. */
+  /** `card` (default) is the hairline-ruled accordion row; `plain` is bare nav chrome. */
   variant?: "card" | "plain"
 }
 
@@ -63,15 +64,10 @@ export function Disclosure({ className, variant = "card", ...props }: Disclosure
       <PrimitiveDisclosure
         data-slot="disclosure"
         data-variant={variant}
-        className={composeRenderProps(className, (className, { isExpanded, isFocusVisibleWithin }) =>
+        className={composeRenderProps(className, (className) =>
           cn(
-            "group/disclosure w-full overflow-hidden transition-colors duration-200",
-            variant === "card" && [
-              "rounded-quebi-md border border-quebi-line/10 bg-quebi-bg",
-              "data-[hovered]:border-quebi-line/20",
-              (isExpanded || isFocusVisibleWithin) &&
-                "border-quebi-line/20 bg-quebi-brand/5 shadow-quebi-glow",
-            ],
+            "group/disclosure w-full overflow-hidden",
+            variant === "card" && "border-quebi-hairline border-b first:border-t",
             className,
           ),
         )}
@@ -103,16 +99,17 @@ export function DisclosureTrigger({
         slot="trigger"
         className={composeRenderProps(className, (className) =>
           cn(
-            "flex w-full cursor-pointer items-center justify-between gap-3 text-start font-medium outline-hidden",
+            "flex w-full cursor-pointer items-center justify-between gap-3 text-start outline-hidden",
             "transition-colors duration-150",
-            "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark data-[focus-visible]:ring-inset",
+            "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-inset",
             "disabled:opacity-50 disabled:cursor-not-allowed",
             "[&_[data-slot=icon]]:size-4 [&_[data-slot=icon]]:shrink-0",
-            variant === "card" && "px-4 py-3 text-sm text-quebi-fg data-[hovered]:text-quebi-fg",
-            variant === "plain" && [
-              "rounded-quebi-sm px-3 py-1.5 text-xs uppercase tracking-wider",
-              "text-quebi-fg-muted data-[hovered]:text-quebi-fg",
-            ],
+            variant === "card" &&
+              "px-1 py-3.5 font-display text-quebi-fg text-quebi-link data-[hovered]:bg-quebi-raised",
+            // The eyebrow, spelled out: `quebi-eyebrow` sets `display`, which
+            // would fight the trigger's `flex`.
+            variant === "plain" &&
+              "px-3 py-1.5 font-mono text-quebi-fg-subtle text-quebi-label uppercase data-[hovered]:text-quebi-fg",
             className,
           ),
         )}
@@ -135,15 +132,17 @@ export function DisclosureIndicator({ className, ...props }: React.ComponentProp
       data-slot="disclosure-indicator"
       aria-hidden="true"
       className={cn(
-        "pointer-events-none relative flex size-5 shrink-0 items-center justify-center text-quebi-fg-muted [--width:--spacing(2.5)]",
-        "group-data-[hovered]/disclosure:text-quebi-fg",
-        variant === "plain" && "size-4 [--width:--spacing(2)]",
+        "pointer-events-none relative flex size-5 shrink-0 items-center justify-center [--width:--spacing(2.5)]",
+        // Ink on a ruled row; on the plain eyebrow it follows the trigger's
+        // subtle-to-ink hover rather than sitting darker than its own label.
+        variant === "card" && "text-quebi-fg",
+        variant === "plain" && "size-4 text-current [--width:--spacing(2)]",
         className,
       )}
       {...props}
     >
-      <span className="absolute h-[1.5px] w-(--width) origin-center rotate-90 bg-current transition-transform duration-300 group-data-[expanded]/disclosure:rotate-0" />
-      <span className="absolute h-[1.5px] w-(--width) origin-center bg-current" />
+      <span className="absolute h-px w-(--width) origin-center rotate-90 bg-current transition-transform duration-300 group-data-[expanded]/disclosure:rotate-0" />
+      <span className="absolute h-px w-(--width) origin-center bg-current" />
     </span>
   )
 }
@@ -155,7 +154,7 @@ export function DisclosurePanel({ className, children, ...props }: DisclosurePan
       data-slot="disclosure-panel"
       className={composeRenderProps(className, (resolved) =>
         cn(
-          "overflow-hidden text-sm text-quebi-fg-muted transition-[height] duration-200",
+          "overflow-hidden text-quebi-fg-muted transition-[height] duration-200",
           resolved,
         ),
       )}
@@ -164,8 +163,8 @@ export function DisclosurePanel({ className, children, ...props }: DisclosurePan
       <div
         data-slot="disclosure-panel-content"
         className={cn(
-          variant === "card" && "px-4 pb-4 text-pretty leading-relaxed",
-          variant === "plain" && "pt-1 pb-2",
+          variant === "card" && "px-1 pb-5 text-pretty text-quebi-body",
+          variant === "plain" && "pt-1 pb-2 text-sm",
         )}
       >
         {children}

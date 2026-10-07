@@ -79,7 +79,8 @@ function useFakeLayout() {
 const fillsOf = (container: HTMLElement, selector: string) =>
   Array.from(container.querySelectorAll(selector)).map((node) => node.getAttribute("fill"))
 
-const TEAL = "var(--color-quebi-brand)"
+// The first palette slot: the ink itself.
+const CHART_1 = "var(--q-chart-1)"
 
 describe("charts", () => {
   useFakeLayout()
@@ -103,8 +104,8 @@ describe("charts", () => {
 
       const polygons = container.querySelectorAll(".recharts-radar-polygon path")
       expect(polygons).toHaveLength(2)
-      expect(polygons[0]?.getAttribute("stroke")).toBe(TEAL)
-      expect(polygons[1]?.getAttribute("stroke")).not.toBe(TEAL)
+      expect(polygons[0]?.getAttribute("stroke")).toBe(CHART_1)
+      expect(polygons[1]?.getAttribute("stroke")).not.toBe(CHART_1)
     })
 
     test("a config colour overrides the palette slot", () => {
@@ -119,7 +120,7 @@ describe("charts", () => {
 
       expect(
         container.querySelector(".recharts-radar-polygon path")?.getAttribute("stroke"),
-      ).not.toBe(TEAL)
+      ).not.toBe(CHART_1)
     })
   })
 
@@ -193,7 +194,7 @@ describe("charts", () => {
       // Two branches, two hues — every rectangle of a branch, frame and leaves
       // alike, carries the branch's own colour.
       expect(hues.size).toBe(2)
-      expect(hues).toContain(TEAL)
+      expect(hues).toContain(CHART_1)
     })
 
     test("a config entry named after a branch repaints that branch", () => {
@@ -209,7 +210,7 @@ describe("charts", () => {
       // The overridden branch is no longer the first palette slot; the branch
       // that was not named still is.
       const fills = new Set(fillsOf(container, "rect"))
-      expect(fills.has(TEAL)).toBe(false)
+      expect(fills.has(CHART_1)).toBe(false)
     })
 
     test("showValues labels the leaves through valueFormatter", () => {
@@ -246,9 +247,9 @@ describe("charts", () => {
       const fills = fillsOf(container, "path")
       // Direct and its child ring are one hue; Search is the next one.
       expect(fills).toHaveLength(3)
-      expect(fills[0]).toBe(TEAL)
-      expect(fills[1]).toBe(TEAL)
-      expect(fills[2]).not.toBe(TEAL)
+      expect(fills[0]).toBe(CHART_1)
+      expect(fills[1]).toBe(CHART_1)
+      expect(fills[2]).not.toBe(CHART_1)
     })
 
     test("hideValues drops the numbers recharts prints inside each segment", () => {

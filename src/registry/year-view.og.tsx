@@ -27,7 +27,7 @@ const EVENTS: CalendarEvent[] = Array.from({ length: 92 }, (_, offset) =>
 /**
  * A quarter, not the year: twelve cards at thumbnail size are twelve grey
  * squares, and three are enough to show what the thing is — month cards whose
- * days step through the teal scale, with the legend saying what the steps mean.
+ * days step through the ink scale, with the legend saying what the steps mean.
  */
 export const yearViewOgScene: OgScene = {
   // The largest scale at which the three cards and the legend clear the stage.

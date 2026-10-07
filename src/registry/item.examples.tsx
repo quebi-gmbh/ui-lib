@@ -49,7 +49,7 @@ export const itemExamples: ComponentExample[] = [
             <ItemMeta>{m.role}</ItemMeta>
             <ItemActions>
               <Button intent="outline" size="xs">
-                Manage
+                manage
               </Button>
             </ItemActions>
           </Item>
@@ -106,7 +106,7 @@ export const itemExamples: ComponentExample[] = [
             <ItemTitle>Production</ItemTitle>
           </ItemContent>
           <ItemMeta>
-            <Badge intent="success">Healthy</Badge>
+            <Badge intent="success">healthy</Badge>
           </ItemMeta>
         </Item>
         <Item>
@@ -114,7 +114,7 @@ export const itemExamples: ComponentExample[] = [
             <ItemTitle>Staging</ItemTitle>
           </ItemContent>
           <ItemMeta>
-            <Badge intent="warning">Degraded</Badge>
+            <Badge intent="warning">degraded</Badge>
           </ItemMeta>
         </Item>
         <Item>
@@ -133,7 +133,7 @@ export const itemExamples: ComponentExample[] = [
     frame: "none",
     render: () => (
       <Card className="max-w-md">
-        <CardHeader title="Team" description="Three members with access to this project." />
+        <CardHeader title="team" description="Three members with access to this project." />
         <CardContent>
           <ItemGroup>
             {MEMBERS.map((m) => (

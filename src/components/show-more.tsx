@@ -1,9 +1,8 @@
 "use client"
 
 import { composeRenderProps, ToggleButton } from "react-aria-components"
-import { tv } from "tailwind-variants"
 import { buttonStyles } from "@/components/button"
-import { cn } from "@/lib/utils"
+import { tv } from "@/lib/utils"
 
 /**
  * ShowMore — quebi design system
@@ -12,16 +11,12 @@ import { cn } from "@/lib/utils"
  * plain label) centered on a hairline rule. Use it to gate collapsed content
  * (long threads, extra results) behind a single inline control.
  *
- * The rule is a cyan/10 hairline. The pill's appearance is `buttonStyles` —
- * not a copy of it (task #185). It used to carry its own transcription of the
- * pre-#178 Button hover: `transition-all`, `hover:scale-[1.02]` and, on the
- * selected chip, `hover:shadow-quebi-glow-strong`. #178 removed all three from
- * `Button`, and this file did not follow, so a row of chips hovered with a
- * grow-and-glow beside Buttons that lift by one neutral rung — on the same
- * gallery page.
+ * The rule is a hairline. The pill's appearance is `buttonStyles` — not a
+ * copy of it (task #185): a hand transcription of an older Button hover once
+ * left a row of chips growing and glowing beside Buttons that did neither.
  */
 const showMoreStyles = tv({
-  base: "text-sm leading-6 before:border-quebi-line/10 after:border-quebi-line/10",
+  base: "text-sm leading-6 before:border-quebi-hairline after:border-quebi-hairline",
   variants: {
     orientation: {
       vertical: "mx-1 h-auto self-stretch",
@@ -48,21 +43,14 @@ const showMoreStyles = tv({
 /**
  * The pill, as a Button intent chosen by the toggle state.
  *
- * The two states were already *written* as button intents — the resting chip
- * transcribed `outline` token for token (`bg-transparent`,
- * `border-quebi-line/20`, `text-quebi-fg`, `hover:border-quebi-brand-mark`,
- * `hover:text-quebi-brand-text`) and the `selected:` block transcribed
- * `primary` (`bg-quebi-brand`, `border-quebi-brand-mark`, `text-quebi-on-brand`,
- * `hover:bg-quebi-brand-hover`). Naming the intents instead of the classes
- * keeps the chip tracking the recipe: the hover lift, the focus ring, the
- * disabled treatment and the transition property list are now whatever
- * `Button` says they are, and the mark-token edge from task #145 comes along
- * for free.
+ * Resting is `outline`, selected is `primary` — the ink fill every selected
+ * state in the library takes. Naming the intents instead of the classes keeps
+ * the chip tracking the recipe: hover, focus ring, disabled treatment and
+ * transition are whatever `Button` says they are.
  *
- * `size: "sm"` is `text-sm px-3 py-2`, which is the pill's existing box to the
- * pixel, and `isCircle` is the pill shape — the one thing a chip does not take
- * from the default. Nothing here is a hand-rolled appearance class, which is
- * the point: there is no copy left to drift.
+ * `size: "sm"` is the 38px control, and `isCircle` is the pill shape — the one
+ * thing a chip does not take from the default. Nothing here is a hand-rolled
+ * appearance class, which is the point: there is no copy left to drift.
  */
 const showMorePillStyles = (isSelected: boolean) =>
   buttonStyles({ intent: isSelected ? "primary" : "outline", size: "sm", isCircle: true })
@@ -88,7 +76,7 @@ const ShowMore = ({
           {composeRenderProps(props.children, (children) => children)}
         </ToggleButton>
       ) : (
-        <span className={cn("text-quebi-fg-muted")}>{text}</span>
+        <span className="quebi-eyebrow">{text}</span>
       )}
     </div>
   )

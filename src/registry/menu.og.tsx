@@ -9,13 +9,13 @@ export const menuOgScene: OgScene = {
   render: () => (
     <Menu defaultOpen>
       <Button intent="outline" size="sm">
-        Actions
+        actions
       </Button>
       <MenuContent placement="bottom start">
-        <MenuItem>Duplicate</MenuItem>
-        <MenuItem>Archive</MenuItem>
+        <MenuItem>duplicate</MenuItem>
+        <MenuItem>archive</MenuItem>
         <MenuSeparator />
-        <MenuItem intent="danger">Delete</MenuItem>
+        <MenuItem intent="danger">delete</MenuItem>
       </MenuContent>
     </Menu>
   ),

@@ -11,9 +11,10 @@ import { Link } from "@/components/link"
  *
  * The "on this page" rail: a `<nav>` of links to the headings of the document
  * it sits beside, nested by heading level, with the heading you are reading
- * marked current. It looks like the sidebar nav on purpose — same row, same
- * current treatment — because it is the same kind of thing, one level down:
- * the sidebar moves between pages, this moves within one.
+ * marked current. The list hangs off a hairline rail under a mono label; the
+ * current row turns ink and lays a 1px ink rule over the rail — the sidebar's
+ * current mark, on purpose, because it is the same kind of thing one level
+ * down: the sidebar moves between pages, this moves within one.
  *
  * **The items are data.** `items` is `{ id, title, level, children? }[]` and is
  * rendered on the first pass, so a prerendered page ships the whole list in its
@@ -100,11 +101,13 @@ export interface TableOfContentsProps
   onExpandedChange?: (isExpanded: boolean) => void
 }
 
+// `-ms-px border-s` lays each row's own start border over its list's rail, so
+// the current row's ink rule replaces a stretch of hairline rather than sitting
+// beside it.
 const ROW =
-  "block min-w-0 rounded-quebi-sm px-3 py-1.5 text-sm/5 wrap-break-word no-underline transition-colors duration-150 hover:no-underline"
-const RESTING =
-  "font-normal text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg"
-const CURRENT = "bg-quebi-brand/10 font-medium text-quebi-brand-text hover:text-quebi-brand-text"
+  "-ms-px block min-w-0 border-s px-3 py-1.5 text-sm/5 wrap-break-word no-underline transition-colors duration-150 hover:no-underline"
+const RESTING = "border-transparent font-normal text-quebi-fg-muted hover:text-quebi-fg"
+const CURRENT = "border-quebi-fg font-medium text-quebi-fg"
 
 export function TableOfContents({
   items,
@@ -212,9 +215,11 @@ export function TableOfContents({
           onPress={toggle}
           className={({ isFocusVisible }) =>
             cn(
-              "flex w-full cursor-pointer items-center justify-between gap-2 rounded-quebi-sm px-3 text-start font-medium text-quebi-fg-muted text-xs/6 outline-hidden",
-              "transition-colors duration-150 hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
-              isFocusVisible && "ring-2 ring-quebi-brand-mark ring-inset",
+              // The eyebrow, spelled out: `quebi-eyebrow` sets `display`, which
+              // would fight the button's `flex`.
+              "flex w-full cursor-pointer items-center justify-between gap-2 px-3 py-1 text-start font-mono text-quebi-fg-subtle text-quebi-label uppercase outline-hidden",
+              "transition-colors duration-150 hover:bg-quebi-raised hover:text-quebi-fg",
+              isFocusVisible && "ring-2 ring-quebi-focus ring-inset",
             )
           }
         >
@@ -231,7 +236,7 @@ export function TableOfContents({
         </Button>
       ) : (
         hasLabel && (
-          <div id={labelId} className="px-3 font-medium text-quebi-fg-muted text-xs/6">
+          <div id={labelId} className="quebi-eyebrow px-3 py-1">
             {label}
           </div>
         )
@@ -271,7 +276,8 @@ function TocList({
       className={cn(
         // `flex` would beat the `hidden` attribute's display: none.
         hidden ? "hidden" : "flex min-w-0 flex-col gap-y-0.5",
-        depth > 0 && "ms-3 mt-0.5 border-quebi-line/10 border-s ps-2",
+        "border-quebi-hairline border-s",
+        depth > 0 && "ms-3 mt-0.5",
       )}
     >
       {items.map((item) => {
@@ -287,7 +293,7 @@ function TocList({
                 cn(
                   ROW,
                   isCurrent ? CURRENT : RESTING,
-                  isFocusVisible && "outline-hidden ring-2 ring-quebi-brand-mark ring-inset",
+                  isFocusVisible && "outline-hidden ring-2 ring-quebi-focus ring-inset",
                 )
               }
             >

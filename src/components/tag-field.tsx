@@ -25,9 +25,8 @@ import { cn } from "@/lib/utils"
  *
  * Built on react-aria-components. A text field that turns typed entries into
  * removable chips: press Enter, comma, or semicolon to commit the current
- * input. The field uses the quebi translucent-input styling (cyan-tinted
- * border, teal focus ring); committed tags render as hairline chips with a
- * remove button. Casing-insensitive de-duplication, optional split pattern,
+ * input. The input is drawn like `Input` — underline only, thickened on
+ * focus; committed tags render as pills with a remove button. Casing-insensitive de-duplication, optional split pattern,
  * and a hidden mirror input so the comma-joined value submits with a form.
  */
 
@@ -41,9 +40,9 @@ import { cn } from "@/lib/utils"
  * dependency of this file.
  */
 const tagFieldSizeStyles = {
-  xs: "text-xs px-2.5 py-1.5",
-  sm: "text-sm px-3 py-2",
-  md: "text-sm px-3 py-2.5",
+  xs: "text-xs px-(--q-field-px) py-1.5",
+  sm: "text-sm px-(--q-field-px) py-2",
+  md: "text-sm px-(--q-field-px) py-2.5",
 } as const
 
 type TagFieldSize = keyof typeof tagFieldSizeStyles
@@ -204,7 +203,7 @@ export function TagField({
         className="group flex w-full flex-col gap-y-1.5"
       >
         {label != null && (
-          <Label className="select-none font-semibold text-[13px] text-quebi-fg group-disabled:opacity-50">
+          <Label className="quebi-eyebrow block select-none group-disabled:opacity-50">
             {label}
           </Label>
         )}
@@ -212,28 +211,24 @@ export function TagField({
           <Input
             placeholder={placeholder}
             className={cn(
-              "relative block w-full appearance-none text-quebi-fg placeholder:text-quebi-fg-subtle",
-              "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02]",
+              "relative block w-full appearance-none bg-transparent text-quebi-fg placeholder:text-quebi-fg-subtle",
+              "quebi-field",
               tagFieldSizeStyles[size],
-              "transition-[border-color,box-shadow] duration-200",
-              // `not-focus` guards against hover *beating* focus: `enabled:hover:` is
-              // (0,3,0) specificity and `focus:` is (0,2,0), so unguarded a hovered,
-              // focused field loses its mint border and keeps only the ring — a halo.
-              "enabled:not-focus:hover:border-quebi-line/40",
-              "outline-none focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark focus:ring-offset-2 focus:ring-offset-quebi-bg",
-              isInvalid && "border-red-500 focus:ring-red-500/50",
+              "transition-[border-color,box-shadow] duration-150",
+              "outline-none focus:outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+              isInvalid &&
+                "border-b-quebi-danger focus:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
               "disabled:cursor-not-allowed disabled:opacity-50",
-              "scheme-dark",
             )}
           />
         </span>
         {description != null && (
-          <Text slot="description" className="block text-[12px] text-quebi-fg-muted">
+          <Text slot="description" className="block text-quebi-caption text-quebi-fg-subtle">
             {description}
           </Text>
         )}
         {isInvalidProp === undefined && (
-          <FieldError className="block text-[12px] text-red-500">
+          <FieldError className="block text-quebi-caption text-quebi-danger">
             {isInvalid ? errorText : undefined}
           </FieldError>
         )}
@@ -255,12 +250,12 @@ export function TagField({
                 className={composeRenderProps("", (_, { allowsRemoving }) =>
                   cn(
                     "group inline-flex items-center gap-1 whitespace-nowrap",
-                    "rounded-full border px-2.5 py-1 text-xs font-semibold leading-none",
-                    "border-quebi-line/20 bg-quebi-surface/[0.06] text-quebi-fg-muted",
+                    "rounded-full px-2.5 py-1 text-quebi-tag leading-none",
+                    "bg-quebi-raised text-quebi-fg-muted",
                     "transition-colors duration-150",
-                    allowsRemoving && "hover:border-quebi-line/40 hover:text-quebi-fg",
-                    "data-[selected]:border-quebi-brand/40 data-[selected]:bg-quebi-brand/10 data-[selected]:text-quebi-brand-text",
-                    "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
+                    allowsRemoving && "hover:text-quebi-fg",
+                    "data-[selected]:bg-quebi-pressed data-[selected]:text-quebi-fg",
+                    "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-3 data-[focus-visible]:ring-offset-quebi-bg",
                     "data-[disabled]:opacity-50",
                     "outline-none",
                   ),
@@ -276,8 +271,8 @@ export function TagField({
                         className={cn(
                           "-mr-1 flex size-4 shrink-0 items-center justify-center rounded-full",
                           "text-quebi-fg-subtle transition-colors duration-150",
-                          "hover:bg-quebi-surface/10 hover:text-quebi-fg",
-                          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark",
+                          "hover:bg-quebi-pressed hover:text-quebi-fg",
+                          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-0",
                           "cursor-pointer",
                         )}
                       >

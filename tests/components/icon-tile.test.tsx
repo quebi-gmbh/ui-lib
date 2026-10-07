@@ -2,9 +2,9 @@
  * IconTile's two borrowed scales, and the one thing it renders.
  *
  * The component is a span with a class list, so its behaviour is entirely in
- * what those classes are — and both halves of the class list are copies of
- * another component's: the tints are Badge's and the box sizes are Button's
- * square scale. A copy that nothing checks is a copy that drifts, which is the
+ * what those classes are — and both halves of the class list borrow from
+ * another component: the intents are Badge's (names, and the state tints) and
+ * the box sizes are Button's square scale. A copy that nothing checks is a copy that drifts, which is the
  * failure this component was published to stop happening in consumer code; it
  * would be a poor trade to reintroduce it one layer down. So the copies are
  * pinned here rather than merely commented.
@@ -17,12 +17,20 @@ import { IconTile, iconTileIntents, iconTileStyles } from "../../src/components/
 
 const tile = () => document.querySelector('[data-slot="icon-tile"]') as HTMLElement
 
-describe("IconTile's tints", () => {
-  test("are Badge's, value for value", () => {
-    // Not "look similar" — equal. Either component may grow a new intent, but
-    // a tint that means `warning` has to be the same tint in both places.
-    expect(iconTileIntents).toEqual(badgeIntents)
+describe("IconTile's intents", () => {
+  test("are Badge's names", () => {
+    // An intent handed to a Badge has to be valid on the tile beside it.
+    expect(Object.keys(iconTileIntents).sort()).toEqual(Object.keys(badgeIntents).sort())
   })
+
+  test.each(["success", "warning", "danger"] as const)(
+    "%s is Badge's state tint, value for value",
+    (intent) => {
+      // The ink intents differ on purpose (a glyph takes full ink, a label the
+      // muted one); a tint that means a state has to be the same in both.
+      expect(iconTileIntents[intent]).toBe(badgeIntents[intent])
+    },
+  )
 })
 
 describe("IconTile's box", () => {
@@ -93,19 +101,19 @@ describe("IconTile", () => {
     )
 
     expect(tile()).toHaveClass("rounded-full")
-    expect(tile()).not.toHaveClass("rounded-quebi-sm")
+    expect(tile()).not.toHaveClass("rounded-none")
   })
 
   test("a className wins over the intent's own fill", () => {
     // How the table's sort affordance tints itself on column hover: the tile is
     // not interactive, so the hover state belongs to the caller.
     render(
-      <IconTile className="bg-quebi-surface/[0.08]">
+      <IconTile className="bg-quebi-pressed">
         <svg data-slot="icon" aria-hidden="true" />
       </IconTile>,
     )
 
-    expect(tile()).toHaveClass("bg-quebi-surface/[0.08]")
-    expect(tile()).not.toHaveClass("bg-quebi-surface/[0.06]")
+    expect(tile()).toHaveClass("bg-quebi-pressed")
+    expect(tile()).not.toHaveClass("bg-quebi-raised")
   })
 })

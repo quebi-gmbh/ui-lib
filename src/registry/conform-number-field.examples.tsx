@@ -35,7 +35,7 @@ const QuantityForm = () => {
         description="How many units to order (1–99)."
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

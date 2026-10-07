@@ -1,9 +1,7 @@
 import { Fragment, Suspense, lazy, type ComponentType } from "react"
 import { Link, data, useParams } from "react-router"
-import { ChevronRight } from "lucide-react"
 import { Badge } from "@/components/badge"
 import { Card } from "@/components/card"
-import { Link as UiLink } from "@/components/link"
 import { Code } from "@/components/text"
 import {
   DescriptionDetails,
@@ -14,6 +12,7 @@ import { metaRegistry } from "@/registry/meta"
 import { loadExamples } from "@/registry/examples-lazy"
 import { loadSource } from "@/registry/sources-lazy"
 import { CodeBlock } from "@/site/code-block"
+import { ProseLink } from "@/site/prose-link"
 import {
   AlternativesSkeleton,
   CodeBlockSkeleton,
@@ -65,23 +64,23 @@ function componentContents(
 ): PageSection[] {
   const items: PageSection[] = []
   if (component.usage) {
-    items.push({ id: "when", title: usageHeading(component.name) }, { id: "when-not", title: "Don't" })
+    items.push({ id: "when", title: usageHeading(component.name) }, { id: "when-not", title: "don't" })
   }
   for (const example of examples.filter((e) => !isAlternative(e))) {
     items.push({ id: headingId("example", example.title), title: example.title })
   }
   if (component.usage) {
-    items.push({ id: "instead", title: "What to use instead" })
+    items.push({ id: "instead", title: "what to use instead" })
     for (const example of examples.filter(isAlternative)) {
       items.push({ id: headingId("instead", example.title), title: example.title, level: 3 })
     }
   }
-  items.push({ id: "source", title: "Source" })
+  items.push({ id: "source", title: "source" })
   return items
 }
 
 function usageHeading(name: string) {
-  return `Use a ${name.toLowerCase()} when`
+  return `use a ${name.toLowerCase()} when`
 }
 
 function isAlternative(example: ComponentExample) {
@@ -207,12 +206,12 @@ function ExampleList({ examples }: { examples: ComponentExample[] }) {
         <div key={example.title}>
           <h2
             id={headingId("example", example.title)}
-            className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}
+            className={cn(ANCHOR, "font-display text-quebi-fg text-quebi-title")}
           >
             {example.title}
           </h2>
           {example.description && (
-            <p className="mt-1 text-sm leading-relaxed text-quebi-fg-muted">
+            <p className="mt-2 max-w-[60ch] text-quebi-body-s text-quebi-fg-muted">
               {example.description}
             </p>
           )}
@@ -256,12 +255,12 @@ function AlternativeList({ examples }: { examples: ComponentExample[] }) {
         <div key={example.title}>
           <h3
             id={headingId("instead", example.title)}
-            className={cn(ANCHOR, "text-base font-semibold text-quebi-fg")}
+            className={cn(ANCHOR, "font-display text-quebi-fg text-quebi-title")}
           >
             {example.title}
           </h3>
           {example.description && (
-            <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
+            <p className="mt-2 max-w-[60ch] text-quebi-body-s text-quebi-fg-muted">
               {example.description}
             </p>
           )}
@@ -269,7 +268,7 @@ function AlternativeList({ examples }: { examples: ComponentExample[] }) {
               table in one half would push the page sideways on a phone. */}
           <div className="mt-4 grid gap-6 md:grid-cols-2">
             <div className="min-w-0">
-              <span className="quebi-eyebrow">Instead of</span>
+              <span className="quebi-eyebrow">instead of</span>
               <div className="mt-3 opacity-70">
                 <Suspense fallback={<ExampleBodySkeleton index={index} />}>
                   {example.insteadOf?.()}
@@ -277,7 +276,7 @@ function AlternativeList({ examples }: { examples: ComponentExample[] }) {
               </div>
             </div>
             <div className="min-w-0">
-              <span className="quebi-eyebrow">Use</span>
+              <span className="quebi-eyebrow">use</span>
               <div className="mt-3">
                 <Suspense fallback={<ExampleBodySkeleton index={index} />}>
                   {example.render()}
@@ -307,42 +306,46 @@ function WithCode({ text }: { text: string }) {
   )
 }
 
-/** When to use, when not to — straight from the metadata, so part of the frame. */
+/**
+ * When to use, when not to — straight from the metadata, so part of the frame.
+ * Two ruled columns, the design's `.qb-cols`: a strong rule across the top, a
+ * hairline between them.
+ */
 function UsageGuidance({ name, usage }: { name: string; usage: ComponentUsage }) {
   return (
-    <div className="mt-12 grid gap-8 md:grid-cols-2">
-      <div>
-        <h2 id="when" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
+    <div className="mt-quebi-9 grid border-quebi-rule border-t md:grid-cols-2">
+      <div className="py-4 md:me-5 md:border-quebi-hairline md:border-e md:pe-5">
+        <h2 id="when" className={cn(ANCHOR, "font-display text-quebi-fg text-quebi-title")}>
           {usageHeading(name)}
         </h2>
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-quebi-fg-muted">
-          {usage.when.map((line) => (
-            <li key={line}>
-              <WithCode text={line} />
-            </li>
-          ))}
-        </ul>
+        <UsageLines lines={usage.when} />
       </div>
-      <div>
-        <h2 id="when-not" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
-          Don't
+      <div className="border-quebi-hairline border-t py-4 md:border-t-0">
+        <h2 id="when-not" className={cn(ANCHOR, "font-display text-quebi-fg text-quebi-title")}>
+          don't
         </h2>
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-quebi-fg-muted">
-          {usage.whenNot.map((line) => (
-            <li key={line}>
-              <WithCode text={line} />
-            </li>
-          ))}
-        </ul>
+        <UsageLines lines={usage.whenNot} />
       </div>
     </div>
+  )
+}
+
+function UsageLines({ lines }: { lines: string[] }) {
+  return (
+    <ul className="mt-3 list-disc space-y-2 ps-5 text-quebi-body-s text-quebi-fg-muted marker:text-quebi-fg-subtle">
+      {lines.map((line) => (
+        <li key={line} className="max-w-[60ch]">
+          <WithCode text={line} />
+        </li>
+      ))}
+    </ul>
   )
 }
 
 /** The alternatives by job, as a table of links. Also from the metadata. */
 function AlternativeTable({ usage }: { usage: ComponentUsage }) {
   return (
-    <DescriptionList className="mt-4 max-w-quebi-content">
+    <DescriptionList className="mt-5 max-w-quebi-content">
       {usage.instead.map((group) => (
         <Fragment key={group.job}>
           <DescriptionTerm>{group.job}</DescriptionTerm>
@@ -351,11 +354,9 @@ function AlternativeTable({ usage }: { usage: ComponentUsage }) {
               {group.use.map((alt) => (
                 <li key={alt.name}>
                   {alt.slug ? (
-                    <UiLink href={`/components/${alt.slug}`} className="font-medium">
-                      {alt.name}
-                    </UiLink>
+                    <ProseLink to={`/components/${alt.slug}`}>{alt.name}</ProseLink>
                   ) : (
-                    <span className="font-medium text-quebi-fg">{alt.name}</span>
+                    <span className="text-quebi-fg">{alt.name}</span>
                   )}
                   {alt.when && <span className="text-quebi-fg-muted"> — {alt.when}</span>}
                 </li>
@@ -381,81 +382,87 @@ export default function ComponentDetail({ loaderData }: Route.ComponentProps) {
   return (
     <OnThisPage contents={loaderData.contents}>
       <nav aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1.5 text-sm text-quebi-fg-subtle">
+        <ol className="flex items-center gap-2 text-quebi-caption text-quebi-fg-subtle">
           <li>
             <Link
               to="/components"
-              className="text-quebi-fg-muted transition-colors duration-200 hover:text-quebi-fg"
+              className="text-quebi-fg-muted underline-offset-5 transition-colors duration-150 hover:text-quebi-fg hover:underline"
             >
-              Components
+              components
             </Link>
           </li>
-          <li aria-hidden className="flex items-center">
-            <ChevronRight className="h-4 w-4" />
-          </li>
-          <li className="font-medium text-quebi-fg" aria-current="page">
+          <li aria-hidden>/</li>
+          <li className="text-quebi-fg" aria-current="page">
             {component.name}
           </li>
         </ol>
       </nav>
 
-      <div className="mt-6">
-        <span className="quebi-eyebrow">{component.category}</span>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
-          {component.name}
-        </h1>
-        <p className="mt-3 max-w-quebi-content text-base leading-relaxed text-quebi-fg-muted">
+      <header className="mt-quebi-8">
+        <p className="quebi-eyebrow">component — {component.category.toLowerCase()}</p>
+        <h1 className="mt-3 font-display text-quebi-display-l text-quebi-fg">{component.name}</h1>
+        <p className="mt-5 max-w-[60ch] text-quebi-body text-quebi-fg-muted">
           {component.description}
         </p>
-        <div className="mt-4 flex flex-wrap gap-2">
+        <ul className="mt-5 flex flex-wrap gap-1.5">
           {component.tags.map((tag) => (
-            <Badge key={tag} intent="outline">
-              {tag}
-            </Badge>
+            <li key={tag}>
+              <Badge>{tag}</Badge>
+            </li>
           ))}
-        </div>
-      </div>
+        </ul>
+      </header>
 
       {component.usage && <UsageGuidance name={component.name} usage={component.usage} />}
 
-      <div className="mt-12 space-y-10">
+      {/* The count is the loader's, so it is frame, not chunk. */}
+      <p className="mt-quebi-9 quebi-eyebrow">
+        {String(loaderData.exampleCount).padStart(2, "0")} example
+        {loaderData.exampleCount === 1 ? "" : "s"}
+      </p>
+      <div className="mt-5 space-y-quebi-8">
         <Suspense fallback={<GallerySkeleton count={loaderData.exampleCount} frames={loaderData.exampleFrames} />}>
           <Gallery />
         </Suspense>
       </div>
 
       {component.usage && (
-        <div className="mt-16">
-          <h2 id="instead" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
-            What to use instead
-          </h2>
-          <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
+        <section className="mt-quebi-10">
+          <div className="flex items-end justify-between gap-4">
+            <h2 id="instead" className={cn(ANCHOR, "font-display text-quebi-display-s text-quebi-fg")}>
+              what to use instead
+            </h2>
+            <span className="quebi-eyebrow">by job</span>
+          </div>
+          <p className="mt-3 max-w-[60ch] text-quebi-body-s text-quebi-fg-muted">
             By what the {component.name.toLowerCase()} was doing.
           </p>
           <AlternativeTable usage={component.usage} />
-          <div className="mt-10 space-y-12">
+          <div className="mt-quebi-8 space-y-quebi-8">
             <Suspense fallback={<AlternativesSkeleton count={loaderData.alternativeCount} />}>
               <Alternatives />
             </Suspense>
           </div>
-        </div>
+        </section>
       )}
 
-      <div className="mt-16">
-        <h2 id="source" className={cn(ANCHOR, "text-lg font-semibold text-quebi-fg")}>
-          Source
-        </h2>
-        <p className="mt-1 text-sm leading-relaxed text-quebi-fg-muted">
+      <section className="mt-quebi-10">
+        <div className="flex items-end justify-between gap-4">
+          <h2 id="source" className={cn(ANCHOR, "font-display text-quebi-display-s text-quebi-fg")}>
+            source
+          </h2>
+          <span className="quebi-eyebrow">{component.slug}.tsx</span>
+        </div>
+        <p className="mt-3 max-w-[60ch] text-quebi-body-s text-quebi-fg-muted">
           Copy this into your project. Resolve its dependencies from the{" "}
-          <code className="text-quebi-fg-subtle">registryDependencies</code> in the component's API
-          entry.
+          <Code>registryDependencies</Code> in the component's API entry.
         </p>
-        <div className="mt-4">
+        <div className="mt-5">
           <Suspense fallback={<CodeBlockSkeleton />}>
             <Source />
           </Suspense>
         </div>
-      </div>
+      </section>
     </OnThisPage>
   )
 }

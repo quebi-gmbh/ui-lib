@@ -139,7 +139,7 @@ describe("table chrome", () => {
     const user = userEvent.setup()
     await user.clear(jump)
     await user.type(jump, "3")
-    await user.click(screen.getByRole("button", { name: "Go" }))
+    await user.click(screen.getByRole("button", { name: /^go$/i }))
     expect(screen.getByText(/Showing/).textContent).toContain("21")
   })
 
@@ -300,7 +300,7 @@ describe("table chrome", () => {
     const jump = screen.getByRole("textbox", { name: "Go to page" })
     await user.clear(jump)
     await user.type(jump, "3")
-    await user.click(screen.getByRole("button", { name: "Go" }))
+    await user.click(screen.getByRole("button", { name: /^go$/i }))
 
     expect(screen.getByText(/Showing/).textContent).toContain("21")
     // The user's own jump is not an external change: remounting here would
@@ -337,7 +337,7 @@ describe("table chrome", () => {
     // One page: "Enter a page between 1 and 1" is the only thing the field
     // could ever say, so it is not there to say it.
     expect(screen.queryByRole("textbox", { name: "Go to page" })).toBeNull()
-    expect(screen.queryByRole("button", { name: "Go" })).toBeNull()
+    expect(screen.queryByRole("button", { name: /^go$/i })).toBeNull()
   })
 
   test("a page size outside the offered list is still offered, so Go works", async () => {
@@ -359,7 +359,7 @@ describe("table chrome", () => {
     const jump = screen.getByRole("textbox", { name: "Go to page" })
     await user.clear(jump)
     await user.type(jump, "2")
-    await user.click(screen.getByRole("button", { name: "Go" }))
+    await user.click(screen.getByRole("button", { name: /^go$/i }))
     expect(screen.getByText(/Showing/).textContent).toContain("9")
     expect(document.body.textContent).not.toContain("Invalid type")
   })

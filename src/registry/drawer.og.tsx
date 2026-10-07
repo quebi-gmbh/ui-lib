@@ -20,10 +20,10 @@ import type { OgScene } from "./types"
 export const drawerOgScene: OgScene = {
   render: () => (
     <Drawer defaultOpen>
-      <DrawerTrigger>Open drawer</DrawerTrigger>
+      <DrawerTrigger>open drawer</DrawerTrigger>
       <DrawerContent side="bottom" aria-label="Mobile menu">
         <DrawerHeader>
-          <DrawerTitle>Mobile menu</DrawerTitle>
+          <DrawerTitle>mobile menu</DrawerTitle>
           <DrawerDescription>Drag down or tap a button to dismiss.</DrawerDescription>
         </DrawerHeader>
         <DrawerBody>
@@ -32,8 +32,8 @@ export const drawerOgScene: OgScene = {
           </p>
         </DrawerBody>
         <DrawerFooter>
-          <Button intent="outline">Cancel</Button>
-          <Button intent="primary">Continue</Button>
+          <Button intent="outline">cancel</Button>
+          <Button intent="primary">continue</Button>
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

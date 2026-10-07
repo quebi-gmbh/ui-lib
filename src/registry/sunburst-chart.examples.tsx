@@ -49,7 +49,7 @@ export const sunburstChartExamples: ComponentExample[] = [
   {
     title: "Default",
     description:
-      "The inner ring is the top-level branches; each ring outwards is one level deeper, in the branch's own hue.",
+      "The inner ring is the top-level branches; each ring outwards is one level deeper, in the branch's own shade.",
     render: () => (
       <SunburstChart config={emptyConfig} data={traffic} containerHeight={320} />
     ),
@@ -57,7 +57,7 @@ export const sunburstChartExamples: ComponentExample[] = [
   {
     title: "Branch colours from the config",
     description:
-      "A `config` entry named after a branch sets that branch's hue, and its descendants inherit it.",
+      "A `config` entry named after a branch sets that branch's colour, and its descendants inherit it.",
     render: () => (
       <SunburstChart config={brandedConfig} data={traffic} containerHeight={320} />
     ),

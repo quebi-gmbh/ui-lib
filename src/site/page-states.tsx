@@ -73,7 +73,7 @@ export function ExampleCardSkeleton({
 }) {
   return (
     <div>
-      <Skeleton className={cn("h-6", cycle(TITLE_WIDTHS, index))} />
+      <Skeleton className={cn("h-7", cycle(TITLE_WIDTHS, index))} />
       <Skeleton soft className={cn("mt-2 h-4", cycle(DESCRIPTION_WIDTHS, index))} />
       {/* The same frame the real example is rendered into, so the outline does
           not appear, vanish or move when the content lands. */}
@@ -101,7 +101,7 @@ export function ExampleCardSkeleton({
  * promising one card that will never arrive.
  *
  * A fragment, not a wrapper: the units are direct children of the route's
- * `space-y-10` stack, exactly like the real cards, so the two states space
+ * `space-y-quebi-8` stack, exactly like the real cards, so the two states space
  * themselves identically.
  */
 export function GallerySkeleton({
@@ -134,20 +134,20 @@ export function AlternativesSkeleton({ count }: { count: number }) {
       {Array.from({ length: count }, (_, index) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: n indistinguishable placeholders; nothing reorders them.
         <div key={index}>
-          <Skeleton className={cn("h-5", cycle(TITLE_WIDTHS, index))} />
+          <Skeleton className={cn("h-7", cycle(TITLE_WIDTHS, index))} />
           <Skeleton soft className={cn("mt-2 h-4", cycle(DESCRIPTION_WIDTHS, index))} />
           {/* The two eyebrows are static words, so they are real text here too. */}
           {/* min-w-0: a grid item defaults to its content's min width, so a
               table in one half would push the page sideways on a phone. */}
           <div className="mt-4 grid gap-6 md:grid-cols-2">
             <div className="min-w-0">
-              <span className="quebi-eyebrow">Instead of</span>
+              <span className="quebi-eyebrow">instead of</span>
               <div className="mt-3">
                 <ExampleBodySkeleton index={index} />
               </div>
             </div>
             <div className="min-w-0">
-              <span className="quebi-eyebrow">Use</span>
+              <span className="quebi-eyebrow">use</span>
               <div className="mt-3">
                 <ExampleBodySkeleton index={index + 1} />
               </div>
@@ -165,12 +165,12 @@ const CODE_INDENTS = ["", "ml-4", "ml-4", "ml-8", "ml-4", ""] as const
 /**
  * The baked-source block's waiting state: the code surface with lines in it.
  *
- * The Card and its `bg-quebi-bg` are `CodeBlock`'s, so the dark code surface is
+ * The raised ground and the slot are `CodeBlock`'s, so the code surface is
  * there from the first frame and only the source arrives late.
  */
 export function CodeBlockSkeleton({ lines = 12 }: { lines?: number }) {
   return (
-    <Card className="gap-2.5 bg-quebi-bg p-5">
+    <div data-slot="code-block" className="flex flex-col gap-2.5 bg-quebi-raised p-4">
       {Array.from({ length: lines }, (_, index) => (
         <Skeleton
           soft
@@ -179,7 +179,7 @@ export function CodeBlockSkeleton({ lines = 12 }: { lines?: number }) {
           className={cn("h-3.5", cycle(CODE_INDENTS, index), cycle(CODE_LINE_WIDTHS, index))}
         />
       ))}
-    </Card>
+    </div>
   )
 }
 
@@ -197,7 +197,7 @@ export function SourceUnavailable({ slug }: { slug: string }) {
       <p>
         The build did not bake a source module for <strong>{slug}</strong>. Nothing is loading —
         this is the whole answer. The raw file is still served at{" "}
-        <code className="text-quebi-fg-subtle">/api/components/{slug}.tsx</code>.
+        <code className="font-mono text-quebi-code text-quebi-fg">/api/components/{slug}.tsx</code>.
       </p>
     </Note>
   )

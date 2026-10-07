@@ -11,15 +11,15 @@ export const formattedNumberOgScene: OgScene = {
   render: () => (
     <div className="flex w-96 flex-col gap-3 text-quebi-fg tabular-nums">
       <div className="flex items-baseline justify-between">
-        <span className="text-sm text-quebi-fg-muted">de-DE</span>
+        <span className="quebi-eyebrow">de-DE</span>
         <FormattedNumber value={1234567.89} locale="de-DE" />
       </div>
       <div className="flex items-baseline justify-between">
-        <span className="text-sm text-quebi-fg-muted">EUR</span>
+        <span className="quebi-eyebrow">EUR</span>
         <FormattedCurrency value={1499.5} locale="de-DE" />
       </div>
       <div className="flex items-baseline justify-between">
-        <span className="text-sm text-quebi-fg-muted">percent</span>
+        <span className="quebi-eyebrow">percent</span>
         <FormattedPercentage value={0.1234} locale="de-DE" />
       </div>
     </div>

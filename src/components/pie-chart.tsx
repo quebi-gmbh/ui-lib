@@ -16,7 +16,7 @@ import {
  * PieChart — quebi design system
  *
  * A pie / donut chart built on the quebi `Chart` wrapper and recharts. Segment
- * colors come from the teal-led quebi palette (teal, violet, sky, amber, pink)
+ * colors come from the ink series palette (five rungs of the gray ramp)
  * and can be overridden per-segment via the `config` prop. Supports an optional
  * centered total label in the `donut` variant.
  *
@@ -105,7 +105,7 @@ const PieChart = <TValue extends ValueType, TName extends NameType>({
         >
           {showLabel && variant === "donut" && (
             <text
-              className="fill-white font-semibold"
+              className="fill-quebi-fg font-display font-extralight text-quebi-display-s"
               x="50%"
               data-slot="label"
               y="50%"

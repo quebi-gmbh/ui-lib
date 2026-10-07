@@ -79,7 +79,7 @@ const EyeDropper = ({ size = "sq-sm", className }: EyeDropperProps) => {
 
   if (typeof window !== "undefined" && !window.EyeDropper) {
     return (
-      <span className="text-[12px] text-quebi-fg-muted">
+      <span className="text-quebi-caption text-quebi-fg-muted">
         EyeDropper is not supported in your browser.
       </span>
     )

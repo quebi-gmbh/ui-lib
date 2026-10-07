@@ -163,9 +163,9 @@ export function ConformCalendarTimeline({
       />
 
       {label && (
-        <Label className={cn("text-sm", hasErrors && "text-red-500")}>
+        <Label className={cn(hasErrors && "text-quebi-danger")}>
           {label}
-          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
+          {isRequired && <span className="ml-1 text-quebi-fg">*</span>}
         </Label>
       )}
 
@@ -180,8 +180,8 @@ export function ConformCalendarTimeline({
           description && field.descriptionId,
         )}
         className={cn(
-          "rounded-quebi-md border p-2 transition-colors duration-150",
-          hasErrors ? "border-red-500" : "border-quebi-line/10",
+          "border p-2 transition-colors duration-150",
+          hasErrors ? "border-quebi-danger" : "border-quebi-hairline",
         )}
       >
         <CalendarTimeline

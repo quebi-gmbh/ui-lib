@@ -55,12 +55,12 @@ const UnderlineIcon = () => (
 export const toggleGroupExamples: ComponentExample[] = [
   {
     title: "Single selection",
-    description: "Exactly one item active at a time — items float with a small gutter.",
+    description: "Exactly one item active at a time — items sit apart with a small gutter.",
     render: () => (
       <ToggleGroup selectionMode="single" defaultSelectedKeys={["list"]}>
-        <ToggleGroupItem id="list">List</ToggleGroupItem>
-        <ToggleGroupItem id="board">Board</ToggleGroupItem>
-        <ToggleGroupItem id="calendar">Calendar</ToggleGroupItem>
+        <ToggleGroupItem id="list">list</ToggleGroupItem>
+        <ToggleGroupItem id="board">board</ToggleGroupItem>
+        <ToggleGroupItem id="calendar">calendar</ToggleGroupItem>
       </ToggleGroup>
     ),
   },
@@ -86,20 +86,20 @@ export const toggleGroupExamples: ComponentExample[] = [
     render: () => (
       <div className="flex flex-col items-start gap-3">
         <ToggleGroup size="xs" defaultSelectedKeys={["a"]}>
-          <ToggleGroupItem id="a">Extra small</ToggleGroupItem>
-          <ToggleGroupItem id="b">Option</ToggleGroupItem>
+          <ToggleGroupItem id="a">extra small</ToggleGroupItem>
+          <ToggleGroupItem id="b">option</ToggleGroupItem>
         </ToggleGroup>
         <ToggleGroup size="sm" defaultSelectedKeys={["a"]}>
-          <ToggleGroupItem id="a">Small</ToggleGroupItem>
-          <ToggleGroupItem id="b">Option</ToggleGroupItem>
+          <ToggleGroupItem id="a">small</ToggleGroupItem>
+          <ToggleGroupItem id="b">option</ToggleGroupItem>
         </ToggleGroup>
         <ToggleGroup size="md" defaultSelectedKeys={["a"]}>
-          <ToggleGroupItem id="a">Default</ToggleGroupItem>
-          <ToggleGroupItem id="b">Option</ToggleGroupItem>
+          <ToggleGroupItem id="a">default</ToggleGroupItem>
+          <ToggleGroupItem id="b">option</ToggleGroupItem>
         </ToggleGroup>
         <ToggleGroup size="lg" defaultSelectedKeys={["a"]}>
-          <ToggleGroupItem id="a">Large</ToggleGroupItem>
-          <ToggleGroupItem id="b">Option</ToggleGroupItem>
+          <ToggleGroupItem id="a">large</ToggleGroupItem>
+          <ToggleGroupItem id="b">option</ToggleGroupItem>
         </ToggleGroup>
       </div>
     ),
@@ -109,20 +109,20 @@ export const toggleGroupExamples: ComponentExample[] = [
     description: "Stack the group along the vertical axis.",
     render: () => (
       <ToggleGroup orientation="vertical" selectionMode="single" defaultSelectedKeys={["day"]}>
-        <ToggleGroupItem id="day">Day</ToggleGroupItem>
-        <ToggleGroupItem id="week">Week</ToggleGroupItem>
-        <ToggleGroupItem id="month">Month</ToggleGroupItem>
+        <ToggleGroupItem id="day">day</ToggleGroupItem>
+        <ToggleGroupItem id="week">week</ToggleGroupItem>
+        <ToggleGroupItem id="month">month</ToggleGroupItem>
       </ToggleGroup>
     ),
   },
   {
     title: "Pill",
-    description: "Fully rounded with isCircle for a softer, segmented pill.",
+    description: "isCircle rounds the shell and the items at its ends into a pill.",
     render: () => (
       <ToggleGroup selectionMode="multiple" isCircle defaultSelectedKeys={["wifi"]}>
         <ToggleGroupItem id="wifi">Wi-Fi</ToggleGroupItem>
-        <ToggleGroupItem id="bt">Bluetooth</ToggleGroupItem>
-        <ToggleGroupItem id="air">Airplane</ToggleGroupItem>
+        <ToggleGroupItem id="bt">bluetooth</ToggleGroupItem>
+        <ToggleGroupItem id="air">airplane</ToggleGroupItem>
       </ToggleGroup>
     ),
   },
@@ -137,9 +137,9 @@ export const toggleGroupExamples: ComponentExample[] = [
             selectedKeys={selected}
             onSelectionChange={setSelected}
           >
-            <ToggleGroupItem id="grid">Grid</ToggleGroupItem>
-            <ToggleGroupItem id="rows">Rows</ToggleGroupItem>
-            <ToggleGroupItem id="gallery">Gallery</ToggleGroupItem>
+            <ToggleGroupItem id="grid">grid</ToggleGroupItem>
+            <ToggleGroupItem id="rows">rows</ToggleGroupItem>
+            <ToggleGroupItem id="gallery">gallery</ToggleGroupItem>
           </ToggleGroup>
           <p className="text-sm text-quebi-fg-subtle">
             View: {[...selected][0] ?? "none"}
@@ -152,9 +152,9 @@ export const toggleGroupExamples: ComponentExample[] = [
     title: "Disabled",
     render: () => (
       <ToggleGroup selectionMode="single" defaultSelectedKeys={["one"]} isDisabled>
-        <ToggleGroupItem id="one">One</ToggleGroupItem>
-        <ToggleGroupItem id="two">Two</ToggleGroupItem>
-        <ToggleGroupItem id="three">Three</ToggleGroupItem>
+        <ToggleGroupItem id="one">one</ToggleGroupItem>
+        <ToggleGroupItem id="two">two</ToggleGroupItem>
+        <ToggleGroupItem id="three">three</ToggleGroupItem>
       </ToggleGroup>
     ),
   },

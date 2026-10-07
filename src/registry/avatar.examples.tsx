@@ -22,7 +22,7 @@ export const avatarExamples: ComponentExample[] = [
   },
   {
     title: "Initials fallback",
-    description: "With no image, initials render on a subtle dark surface — ideal for missing photos.",
+    description: "With no image, initials render in the muted ink on the raised ground.",
     render: () => (
       <Row>
         <Avatar initials="AL" alt="Ada Lovelace" size="lg" />
@@ -33,7 +33,7 @@ export const avatarExamples: ComponentExample[] = [
   },
   {
     title: "Square",
-    description: "Rounded-square variant via isSquare, for product or org logos.",
+    description: "Square variant via isSquare, for product or org logos.",
     render: () => (
       <Row>
         <Avatar src={PHOTO} alt="Ada Lovelace" size="xl" isSquare />

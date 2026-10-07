@@ -42,9 +42,9 @@ export function ConformInputOTP({
   return (
     <Field className={cn(className)}>
       {label && (
-        <Label htmlFor={field.id} className={cn(hasErrors && "text-red-500")}>
+        <Label htmlFor={field.id} className={cn(hasErrors && "text-quebi-danger")}>
           {label}
-          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
+          {isRequired && <span className="ml-1 text-quebi-fg">*</span>}
         </Label>
       )}
       {/* `InputOTP` renders the `input-otp` package's own container, which

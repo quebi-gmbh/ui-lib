@@ -13,8 +13,8 @@ import { buttonStyles } from "@/components/button"
  *
  * A semantic anchor (react-aria Link) styled exactly like a Button. Use it for
  * navigation that should look like a button — it inherits the full intent/size/
- * isCircle variant API from `buttonStyles`, so quebi tokens, glows, and the
- * hover lift all carry over.
+ * isCircle variant API from `buttonStyles`, so the intents, sizes and focus
+ * ring carry over.
  */
 interface LinkButtonProps extends LinkPrimitiveProps, VariantProps<typeof buttonStyles> {
   ref?: React.Ref<HTMLAnchorElement>

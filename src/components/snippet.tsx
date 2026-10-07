@@ -19,8 +19,8 @@ export interface SnippetProps extends Omit<React.ComponentProps<"div">, "childre
  * Snippet — quebi design system
  *
  * A single-line inline code surface (typically a shell command) with a
- * copy-to-clipboard button. Dark code surface, cyan hairline border, and the
- * quebi copy-button styling shared with CodeBlock.
+ * copy-to-clipboard button. An inset area — the raised ground, square, no
+ * border — with the command in mono and a quiet copy button at the end.
  */
 export function Snippet({
   text,
@@ -40,14 +40,14 @@ export function Snippet({
   return (
     <div
       className={cn(
-        "group flex w-full items-center gap-3 overflow-hidden rounded-quebi-md border border-quebi-line/10 bg-quebi-bg px-4 py-2.5",
+        "group flex w-full items-center gap-3 overflow-hidden bg-quebi-raised py-2 ps-4 pe-2",
         className,
       )}
       {...props}
     >
       <pre className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto font-mono text-sm leading-relaxed text-quebi-fg [scrollbar-width:none]">
         {symbol ? (
-          <span aria-hidden="true" className="shrink-0 select-none text-quebi-brand-text">
+          <span aria-hidden="true" className="shrink-0 select-none text-quebi-fg-subtle">
             {symbol}
           </span>
         ) : null}
@@ -57,14 +57,18 @@ export function Snippet({
         <Button
           onPress={copy}
           aria-label={copied ? "Copied" : "Copy command"}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-quebi-sm border border-quebi-line/20 bg-quebi-bg/80 px-2.5 py-1.5 text-xs font-medium text-quebi-fg-muted backdrop-blur transition-colors duration-200 hover:border-quebi-brand-mark hover:text-quebi-brand-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg"
+          className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-quebi-fg-subtle outline-none transition-colors duration-150 hover:bg-quebi-pressed hover:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset"
         >
-          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+          {copied ? (
+            <Check className="size-3.5" strokeWidth={1.5} />
+          ) : (
+            <Copy className="size-3.5" strokeWidth={1.5} />
+          )}
           {/* Both words are known, so the button is the width of the longer of
               them from the first frame. A control that grows on the press is a
               control that moves out from under the pointer that pressed it —
               and this one shrinks back two seconds later, unprompted. */}
-          <SteadyWidth candidates={["Copy", "Copied"]}>{copied ? "Copied" : "Copy"}</SteadyWidth>
+          <SteadyWidth candidates={["copy", "copied"]}>{copied ? "copied" : "copy"}</SteadyWidth>
         </Button>
       )}
     </div>

@@ -35,7 +35,7 @@ const traffic: SunburstDatum = {
 
 const config: ChartConfig = {}
 
-/** Two rings: top-level branches inside, their children outside in the same hue. */
+/** Two rings: top-level branches inside, their children outside in the same shade. */
 export const sunburstChartOgScene: OgScene = {
   scale: 1.5,
   render: () => (

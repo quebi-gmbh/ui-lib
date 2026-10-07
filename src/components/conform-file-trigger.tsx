@@ -93,9 +93,9 @@ export function ConformFileTrigger({
       />
 
       {label && (
-        <Label className={cn(hasErrors && "text-red-500")}>
+        <Label className={cn(hasErrors && "text-quebi-danger")}>
           {label}
-          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
+          {isRequired && <span className="ml-1 text-quebi-fg">*</span>}
         </Label>
       )}
 
@@ -115,7 +115,7 @@ export function ConformFileTrigger({
                 control.change(props.allowsMultiple ? [...files, ...dropped] : [dropped[0]])
               }
             }}
-            className={cn("flex-col gap-3", hasErrors && "border-red-500")}
+            className={cn("flex-col gap-3", hasErrors && "border-quebi-danger")}
           >
             <span>{dropZoneLabel}</span>
             <FileTrigger {...props} onSelect={select} />
@@ -125,7 +125,7 @@ export function ConformFileTrigger({
         )}
 
         {files.length > 0 && (
-          <ul className="flex flex-col gap-1 text-[12px] text-quebi-fg-muted">
+          <ul className="flex flex-col gap-1 text-quebi-caption text-quebi-fg-muted">
             {files.map((file) => (
               <li key={`${file.name}-${file.size}-${file.lastModified}`}>{file.name}</li>
             ))}

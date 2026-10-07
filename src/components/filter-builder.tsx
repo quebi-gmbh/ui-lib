@@ -139,8 +139,8 @@ export function FilterBuilder({
          * it landed flush against the left margin with nothing tying it to the
          * row it belonged to. Sharing the tracks is what makes the alignment a
          * property instead — every row's Field cell is the same Field column,
-         * whatever is in it — and below `@2xl` each row becomes its own bordered
-         * card, which is the same tie stated a different way.
+         * whatever is in it — and below `@2xl` each row opens on its own
+         * hairline, which is the same tie stated a different way.
          */
         <ul
           aria-label={ariaLabel}
@@ -154,9 +154,9 @@ export function FilterBuilder({
             return (
               <li
                 key={condition.id}
-                className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-quebi-md border border-quebi-line/10 p-3 @2xl:col-span-full @2xl:grid-cols-subgrid @2xl:border-0 @2xl:p-0"
+                className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 border-t border-quebi-hairline pt-3 @2xl:col-span-full @2xl:grid-cols-subgrid @2xl:border-0 @2xl:pt-0"
               >
-                <span className="col-start-1 row-start-1 text-quebi-fg-subtle text-sm @2xl:justify-self-end">
+                <span className="quebi-eyebrow col-start-1 row-start-1 @2xl:justify-self-end">
                   {index === 0 ? "Where" : "and"}
                 </span>
 
@@ -200,11 +200,14 @@ export function FilterBuilder({
                     aria-describedby={isSet ? undefined : hintId}
                     className={cn(
                       "col-span-3 col-start-1 row-start-3 w-full justify-start font-normal @2xl:col-span-1 @2xl:col-start-4 @2xl:row-start-1",
+                      // Field-shaped, so drawn like the Selects beside it: an
+                      // underline on no ground, not a button's frame.
+                      "border-x-0 border-t-0 px-0 hover:bg-transparent",
                       // An unfinished condition is inert — it lets every row
                       // through — and the sketch drew its `Select…` in the same
                       // ink as a chosen value, so a row that was doing nothing
                       // looked exactly like the one beside it that was. Muted
-                      // ink and a dashed edge are the two cheapest ways to say
+                      // ink and a dashed underline are the two cheapest ways to say
                       // "there is nothing here yet"; the line below says why it
                       // matters.
                       !isSet && "border-dashed text-quebi-fg-subtle",
@@ -247,9 +250,9 @@ export function FilterBuilder({
                   </PopoverContent>
                 </Popover>
 
-                {/* Boxed, like the three controls beside it. An unbordered ×
-                    at the end of a row of bordered fields reads as decoration
-                    rather than as the control that deletes the row. */}
+                {/* Framed, as an outline button. A bare × at the end of a row
+                    of fields reads as decoration rather than as the control
+                    that deletes the row. */}
                 <Button
                   intent="outline"
                   size="sq-sm"
@@ -265,7 +268,7 @@ export function FilterBuilder({
                 {!isSet && (
                   <p
                     id={hintId}
-                    className="col-span-3 col-start-1 row-start-4 text-quebi-fg-subtle text-xs @2xl:col-span-2 @2xl:col-start-4 @2xl:row-start-2"
+                    className="col-span-3 col-start-1 row-start-4 text-quebi-caption text-quebi-fg-subtle @2xl:col-span-2 @2xl:col-start-4 @2xl:row-start-2"
                   >
                     No value yet — this condition is not narrowing anything.
                   </p>
@@ -286,7 +289,7 @@ export function FilterBuilder({
             than `n` because a builder's usual failure is a condition that
             matches nothing, which reads as a broken page without the total. */}
         {resultCount != null && conditions.length > 0 && (
-          <span className="text-quebi-fg-muted text-sm">
+          <span className="text-quebi-body-s text-quebi-fg-muted tabular-nums">
             <FormattedNumber value={resultCount} />
             {resultCount === 1 ? " result" : " results"}
             {incomplete > 0 && (

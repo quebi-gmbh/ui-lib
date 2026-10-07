@@ -324,10 +324,10 @@ describe("a copy button does not resize on the press", () => {
 
     const button = screen.getByRole("button", { name: "Copy command" })
     const sizers = Array.from(button.querySelectorAll("[data-slot=steady-width] > *"))
-    expect(sizers.map((sizer) => sizer.textContent)).toEqual(["Copy", "Copied", "Copy"])
+    expect(sizers.map((sizer) => sizer.textContent)).toEqual(["copy", "copied", "copy"])
 
     await user.click(button)
     const after = Array.from(button.querySelectorAll("[data-slot=steady-width] > *"))
-    expect(after.map((sizer) => sizer.textContent)).toEqual(["Copy", "Copied", "Copied"])
+    expect(after.map((sizer) => sizer.textContent)).toEqual(["copy", "copied", "copied"])
   })
 })

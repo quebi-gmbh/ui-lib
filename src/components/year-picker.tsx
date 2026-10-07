@@ -10,6 +10,7 @@ import {
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { useState } from "react"
 import {
+  Button as FieldTrigger,
   ListBoxItem as ListBoxItemPrimitive,
   ListBox as ListBoxPrimitive,
   useLocale,
@@ -33,7 +34,7 @@ import { cn } from "@/lib/utils"
  * a grid that reads left-to-right is a *vertical* one as far as react-aria's
  * keyboard delegate is concerned. It is the primitive rather than
  * `@/components/list-box` on purpose: that wrapper is the dropdown surface (its
- * own border, glow and a check icon per item), and a calendar cell is not a
+ * own border and a check icon per item), and a calendar cell is not a
  * menu item.
  *
  * The value is a `CalendarDate` on January 1 of the chosen year — clamped into
@@ -179,13 +180,13 @@ export function YearPicker({
               textValue={formatter.format(yearStart(year).toDate("UTC"))}
               className={({ isSelected, isDisabled: isItemDisabled, isFocusVisible }) =>
                 cn(
-                  "flex h-10 w-20 cursor-default items-center justify-center rounded-quebi-sm text-sm text-quebi-fg tabular-nums outline-hidden transition-colors duration-150 hover:bg-quebi-surface/[0.04]",
+                  "flex h-10 w-20 cursor-default items-center justify-center text-sm text-quebi-fg tabular-nums outline-hidden transition-colors duration-150 hover:bg-quebi-raised",
                   isOutsideDecade && "text-quebi-fg-subtle",
-                  year === now.year && !isSelected && "ring-1 ring-inset ring-quebi-brand-mark",
-                  isSelected && "bg-quebi-brand text-quebi-on-brand hover:bg-quebi-brand-hover",
+                  year === now.year && !isSelected && "ring-1 ring-inset ring-quebi-focus",
+                  isSelected && "bg-quebi-action text-quebi-on-action hover:bg-quebi-action-hover",
                   isItemDisabled && "text-quebi-fg-subtle hover:bg-transparent",
                   isFocusVisible &&
-                    "ring-2 ring-quebi-brand-mark ring-offset-2 ring-offset-quebi-bg",
+                    "ring-2 ring-quebi-focus ring-offset-3 ring-offset-quebi-bg",
                 )
               }
             >
@@ -204,6 +205,19 @@ export interface YearPickerFieldProps extends Omit<YearPickerProps, "autoFocus">
   /** Where the popover opens; `bottom start` by default. */
   placement?: "bottom" | "bottom start" | "bottom end" | "top" | "top start" | "top end"
 }
+
+/**
+ * The trigger is field-shaped, so it is drawn like `SelectTrigger`: `Input`'s
+ * underline at `sm` (38px), thickened to 2px while focused or open, no ring.
+ */
+const fieldTriggerStyles = cn(
+  "inline-flex cursor-default items-center justify-between gap-x-2 bg-transparent py-2 text-sm text-quebi-fg tabular-nums",
+  "quebi-field",
+  "transition-[border-color,box-shadow] duration-150",
+  "outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)] aria-expanded:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+  "disabled:cursor-not-allowed disabled:opacity-50",
+  "*:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0",
+)
 
 /**
  * YearPickerField — the Year Picker behind a trigger.
@@ -231,18 +245,16 @@ export function YearPickerField({
 
   return (
     <Popover isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Button
+      <FieldTrigger
         aria-label={ariaLabel ?? "Year"}
-        intent="outline"
-        size="sm"
         isDisabled={isDisabled}
-        className={cn("w-40 justify-between font-normal tabular-nums", className)}
+        className={cn(fieldTriggerStyles, "w-40", className)}
       >
-        <span className={cn(!selected && "text-quebi-fg-muted")}>
+        <span className={cn(!selected && "text-quebi-fg-subtle")}>
           {selected ? formatter.format(selected.toDate("UTC")) : placeholder}
         </span>
-        <ChevronDown data-slot="icon" className="text-quebi-fg-muted" />
-      </Button>
+        <ChevronDown data-slot="icon" className="text-quebi-fg-subtle" />
+      </FieldTrigger>
       <PopoverContent placement={placement} className="w-auto max-w-none p-3">
         <YearPicker
           {...props}
@@ -294,7 +306,7 @@ function PagerHeader({
       data-slot="picker-header"
       className="flex w-full items-center justify-between gap-1.5 ps-1.5 pe-1 pt-1 pb-4"
     >
-      <span aria-live="polite" className="font-semibold text-quebi-fg text-sm tabular-nums">
+      <span aria-live="polite" className="font-medium text-quebi-fg text-sm tabular-nums">
         {label}
       </span>
       <div className="flex items-center gap-1">

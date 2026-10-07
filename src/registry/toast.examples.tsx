@@ -65,7 +65,7 @@ function PersistentDemo() {
   return (
     <Row>
       <Button
-        intent="accent"
+        intent="outline"
         onPress={() =>
           toast.warning("Sync paused — reconnect to resume", { duration: 0 })
         }

@@ -35,7 +35,7 @@ const AvatarForm = () => {
         acceptedFileTypes={["image/png", "image/jpeg"]}
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )
@@ -68,7 +68,7 @@ const GalleryForm = () => {
         allowsMultiple
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

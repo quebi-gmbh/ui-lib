@@ -21,14 +21,14 @@ export const sheetOgScene: OgScene = {
       className="pt-28"
     >
       <SheetHeader>
-        <SheetTitle>Edit pricing — Essentials 20</SheetTitle>
+        <SheetTitle>edit pricing — Essentials 20</SheetTitle>
         <SheetDescription>Changes autosave.</SheetDescription>
       </SheetHeader>
       <SheetBody>
         <p className="text-sm text-quebi-fg-muted">Pricing fields go here.</p>
       </SheetBody>
       <SheetFooter>
-        <Button intent="outline">Close</Button>
+        <Button intent="outline">close</Button>
       </SheetFooter>
     </SheetContent>
   ),

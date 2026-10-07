@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react"
 import { NavLink, useMatch } from "react-router"
-import { Focus, LayoutGrid } from "lucide-react"
 import {
   Disclosure,
   DisclosureGroup,
@@ -14,9 +13,24 @@ import { filterComponents, groupByCategory } from "@/registry/grouping"
 import { NAV_PENDING } from "@/site/navigation-status"
 import { ScrollSurface } from "@/site/scroll-surface"
 
-const LINK = "block rounded-quebi-sm px-3 py-1.5 text-sm transition-colors duration-150"
-const RESTING = "text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg"
-const CURRENT = "bg-quebi-brand/10 font-medium text-quebi-brand-text"
+/**
+ * A component link sits on the group's hairline track (the `border-s` on its
+ * list) and draws its own 1px edge over it with `-ms-px`: transparent at rest,
+ * ink when it is the page you are on. No fill, no box — the mark and the ink
+ * are the whole current state.
+ */
+const LINK = "-ms-px block border-s py-1 ps-3 text-sm transition-colors duration-150"
+const RESTING = "border-transparent text-quebi-fg-muted hover:text-quebi-fg"
+const CURRENT = "border-quebi-fg text-quebi-fg"
+
+/** The section's own pages above the groups: the design's nav role, underlined when current. */
+const PAGE_LINK =
+  "block px-3 py-1 font-display text-quebi-nav underline-offset-5 decoration-1 transition-colors duration-150 hover:underline"
+const PAGE_RESTING = "text-quebi-fg-muted hover:text-quebi-fg"
+const PAGE_CURRENT = "text-quebi-fg underline"
+
+const pageLinkClasses = ({ isActive, isPending }: { isActive: boolean; isPending: boolean }) =>
+  cn(PAGE_LINK, isActive ? PAGE_CURRENT : isPending ? NAV_PENDING : PAGE_RESTING)
 
 /**
  * Three states, in the order they win: the page you are on, the page you are
@@ -25,7 +39,7 @@ const CURRENT = "bg-quebi-brand/10 font-medium text-quebi-brand-text"
  * nav says which link is loading without anything here tracking it.
  */
 const linkClasses = ({ isActive, isPending }: { isActive: boolean; isPending: boolean }) =>
-  cn(LINK, isActive ? CURRENT : isPending ? NAV_PENDING : RESTING)
+  cn(LINK, isActive ? CURRENT : isPending ? cn("border-transparent", NAV_PENDING) : RESTING)
 
 /**
  * Nav for the component catalog: a search box, a home link, and one collapsible
@@ -85,62 +99,42 @@ export function ComponentSidebar({ onNavigate }: { onNavigate?: () => void }) {
         <SearchInput placeholder="Search components" />
       </SearchField>
 
-      {/* All components — home base for the catalog */}
-      <NavLink
-        to="/components"
-        end
-        onClick={onNavigate}
-        className={({ isActive, isPending }) =>
-          cn(
-            "mt-4 flex items-center gap-2 rounded-quebi-sm px-3 py-1.5 text-sm transition-colors duration-150",
-            isActive ? CURRENT : isPending ? NAV_PENDING : RESTING,
-          )
-        }
-      >
-        <LayoutGrid className="h-4 w-4" />
-        All components
-      </NavLink>
-
-      {/* The written pages in this section. Not registry slugs, so they cannot
-          arrive through the grouped nav below — which is built from
-          metaRegistry and has no entry to put them in. */}
-      <NavLink
-        to="/components/focus"
-        onClick={onNavigate}
-        className={({ isActive, isPending }) =>
-          cn(
-            "mt-1 flex items-center gap-2 rounded-quebi-sm px-3 py-1.5 text-sm transition-colors duration-150",
-            isActive ? CURRENT : isPending ? NAV_PENDING : RESTING,
-          )
-        }
-      >
-        <Focus className="h-4 w-4" />
-        Focus indicators
-      </NavLink>
+      {/* All components — home base for the catalog — then the written pages
+          in this section. Those are not registry slugs, so they cannot arrive
+          through the grouped nav below — which is built from metaRegistry and
+          has no entry to put them in. */}
+      <div className="mt-6 flex flex-col">
+        <NavLink to="/components" end onClick={onNavigate} className={pageLinkClasses}>
+          all components
+        </NavLink>
+        <NavLink to="/components/focus" onClick={onNavigate} className={pageLinkClasses}>
+          focus indicators
+        </NavLink>
+      </div>
 
       {/* Grouped nav */}
       <ScrollSurface element="nav" className="mt-6 flex-1 pb-6">
         {groups.length === 0 ? (
-          <p className="text-sm text-quebi-fg-subtle">No components match “{query}”.</p>
+          <p className="px-3 text-quebi-body-s text-quebi-fg-muted">No components match “{query}”.</p>
         ) : (
           <DisclosureGroup
             allowsMultipleExpanded
             expandedKeys={expandedKeys}
             onExpandedChange={(keys) => setExpandedKeys(new Set([...keys].map(String)))}
-            className="gap-0.5"
+            className="gap-1"
           >
             {groups.map((group) => (
               <Disclosure key={group.category} id={group.category} variant="plain">
                 <DisclosureTrigger>
                   <span className="flex min-w-0 items-baseline gap-2">
                     <span className="truncate">{group.category}</span>
-                    <span className="text-quebi-fg-subtle tabular-nums">
+                    <span className="tabular-nums">
                       {group.components.length}
                     </span>
                   </span>
                 </DisclosureTrigger>
                 <DisclosurePanel>
-                  <ul className="space-y-0.5">
+                  <ul className="ms-3 border-quebi-hairline border-s">
                     {group.components.map((c) => (
                       <li key={c.slug}>
                         <NavLink
@@ -160,8 +154,10 @@ export function ComponentSidebar({ onNavigate }: { onNavigate?: () => void }) {
         )}
       </ScrollSurface>
 
-      <p className="border-quebi-line/10 border-t pt-4 text-xs text-quebi-fg-subtle">
-        {matches.length} component{matches.length === 1 ? "" : "s"}
+      <p className="border-quebi-hairline border-t px-3 pt-4">
+        <span className="quebi-eyebrow">
+          {matches.length} component{matches.length === 1 ? "" : "s"}
+        </span>
       </p>
     </div>
   )

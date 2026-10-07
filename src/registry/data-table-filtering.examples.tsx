@@ -96,7 +96,7 @@ const OperatorShowcase = () => {
         enableColumnChooser={false}
         caption="Open Customer or Status: the select above the value is the question. Priority has none — its Yes / No / Any already says what “is not” would."
       />
-      <p className="text-quebi-fg-muted text-sm">
+      <p className="text-quebi-body-s text-quebi-fg-muted">
         {filters.length === 0
           ? "No conditions yet."
           : filters
@@ -259,7 +259,7 @@ const SearchShowcase = () => {
         enableColumnChooser={false}
         enableDensityToggle={false}
       />
-      <p className="text-quebi-fg-muted text-sm">
+      <p className="text-quebi-body-s text-quebi-fg-muted">
         Queries run: {applied}. The field updates on every keystroke; the query
         is lifted 250&nbsp;ms after the last one — which server-side is the
         difference between one round-trip and one per character.

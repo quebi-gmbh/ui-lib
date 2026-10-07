@@ -7,7 +7,7 @@ export const fileTriggerOgScene: OgScene = {
   render: () => (
     <div className="flex items-center gap-4">
       <FileTrigger />
-      <FileTrigger intent="primary">Upload invoice</FileTrigger>
+      <FileTrigger intent="primary">upload invoice</FileTrigger>
     </div>
   ),
 }

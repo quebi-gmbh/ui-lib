@@ -8,16 +8,16 @@ import {
   type ToggleButtonGroupProps,
   type ToggleButtonProps,
 } from "react-aria-components"
-import { tv, type VariantProps } from "tailwind-variants"
-import { cn } from "@/lib/utils"
+import type { VariantProps } from "tailwind-variants"
+import { cn, tv } from "@/lib/utils"
 
 /**
  * ToggleGroup — quebi design system
  *
  * A set of two-state pressable buttons that act as one control (think a view
- * switcher or a text-alignment toolbar). Selected items light up with brand
- * teal; in single-selection mode items float with a small gutter, in multiple
- * mode they butt together into a segmented bar. Self-contained — the item
+ * switcher or a text-alignment toolbar). The selected item is an ink fill; in
+ * single-selection mode items sit with a small gutter, in multiple mode they
+ * butt together into a segmented bar. Self-contained — the item
  * styles live here rather than reaching for a sibling Toggle.
  *
  * ## A group is not as tall as a button of the same name
@@ -66,6 +66,7 @@ interface ToggleGroupContextValue
   extends Pick<ToggleButtonGroupProps, "selectionMode" | "orientation"> {
   size?: ToggleGroupSize
   height?: ToggleGroupHeight
+  isCircle?: boolean
 }
 
 const ToggleGroupContext = createContext<ToggleGroupContextValue>({
@@ -97,7 +98,13 @@ export function ToggleGroup({
 
   return (
     <ToggleGroupContext.Provider
-      value={{ size, height: isFixedHeight ? "control" : "natural", selectionMode, orientation }}
+      value={{
+        size,
+        height: isFixedHeight ? "control" : "natural",
+        selectionMode,
+        orientation,
+        isCircle,
+      }}
     >
       <ToggleButtonGroup
         data-slot="control"
@@ -106,10 +113,10 @@ export function ToggleGroup({
         className={composeRenderProps(className, (resolved) =>
           cn(
             "inline-flex p-0.5",
-            "border border-solid border-quebi-line/10 bg-quebi-bg/40",
+            "border border-solid border-quebi-rule",
             orientation === "horizontal" ? "flex-row" : "flex-col",
             selectionMode === "single" ? "gap-0.5" : "gap-0",
-            isCircle ? "rounded-full" : "rounded-quebi-md",
+            isCircle ? "rounded-full" : "rounded-(--q-radius-control)",
             isFixedHeight && CONTROL_HEIGHTS[size],
             resolved,
           ),
@@ -123,17 +130,14 @@ export function ToggleGroup({
 export const toggleGroupItemStyles = tv({
   base: [
     "inline-flex items-center justify-center gap-2",
-    "font-sans font-semibold whitespace-nowrap select-none cursor-pointer",
+    "font-sans font-medium whitespace-nowrap select-none cursor-pointer",
     "border border-solid border-transparent text-quebi-fg-muted",
-    "transition-all duration-200 ease-out",
-    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg focus-visible:z-10",
-    "hover:not-selected:bg-quebi-surface/[0.04] hover:not-selected:text-quebi-fg",
-    // The selected item's mint fill is edged in `--q-brand-mark` (teal-600 on
-    // light, 3.45:1 against the page; identical to the fill token on dark), and
-    // the edge holds on hover. Mint edged in mint was 1.74:1 — no boundary at
-    // all on the light page. See button.tsx and task #145.
-    "selected:bg-quebi-brand selected:border-quebi-brand-mark selected:text-quebi-on-brand selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover",
-    "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent",
+    "transition-[background-color,border-color,color,opacity] duration-150 ease-out",
+    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg focus-visible:z-10",
+    "hover:not-selected:bg-quebi-raised hover:not-selected:text-quebi-fg",
+    "selected:bg-quebi-action selected:border-quebi-action selected:text-quebi-on-action",
+    "selected:hover:bg-quebi-action-hover selected:hover:border-quebi-action-hover",
+    "disabled:opacity-45 disabled:cursor-not-allowed disabled:hover:bg-transparent",
     "*:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center",
   ],
   variants: {
@@ -142,19 +146,18 @@ export const toggleGroupItemStyles = tv({
       vertical: "justify-start",
     },
     selectionMode: {
-      single: "rounded-quebi-sm",
-      multiple: "rounded-none",
+      single: "",
+      multiple: "",
     },
     size: {
       xs: ["text-xs px-2.5 py-1.5", "*:data-[slot=icon]:size-3.5"],
-      sm: ["text-sm px-3 py-2", "*:data-[slot=icon]:size-4"],
-      md: ["text-base px-5 py-2.5", "*:data-[slot=icon]:size-5"],
-      lg: ["text-lg px-6 py-3", "*:data-[slot=icon]:size-5"],
+      sm: ["text-sm px-3.5 py-2", "*:data-[slot=icon]:size-4"],
+      md: ["text-sm px-5 py-3", "*:data-[slot=icon]:size-4"],
+      lg: ["text-base px-6 py-3.5", "*:data-[slot=icon]:size-5"],
       // Square / icon-only. `size-*` is border-box, so a square matches its
       // text-sized sibling only if the number includes the 1px border on each
-      // side: xs is line-height 16 + py-1.5 12 + 2 = 30px, and so on. They used
-      // to be 2px short of the text sizes, which is why an icon-only button
-      // never quite lined up with the button beside it.
+      // side: xs is line-height 16 + py-1.5 12 + 2 = 30px, and so on — the
+      // same scale as button.tsx.
       "sq-xs": "size-7.5 p-0 *:data-[slot=icon]:size-3.5",
       "sq-sm": "size-9.5 p-0 *:data-[slot=icon]:size-4",
       "sq-md": "size-11.5 p-0 *:data-[slot=icon]:size-5",
@@ -170,12 +173,12 @@ export const toggleGroupItemStyles = tv({
     {
       selectionMode: "multiple",
       orientation: "horizontal",
-      className: "not-first:-ms-px first:rounded-s-quebi-sm last:rounded-e-quebi-sm",
+      className: "not-first:-ms-px",
     },
     {
       selectionMode: "multiple",
       orientation: "vertical",
-      className: "not-first:-mt-px first:rounded-t-quebi-sm last:rounded-b-quebi-sm",
+      className: "not-first:-mt-px",
     },
   ],
 })
@@ -185,7 +188,7 @@ export interface ToggleGroupItemProps
     Pick<VariantProps<typeof toggleGroupItemStyles>, "size"> {}
 
 export function ToggleGroupItem({ className, size: sizeProp, ...props }: ToggleGroupItemProps) {
-  const { size, height, selectionMode, orientation } = useToggleGroupContext()
+  const { size, height, selectionMode, orientation, isCircle } = useToggleGroupContext()
   const resolvedSize = sizeProp ?? size
 
   // The shell is stretching this item to a height it chose, so the item's own
@@ -207,6 +210,14 @@ export function ToggleGroupItem({ className, size: sizeProp, ...props }: ToggleG
             selectionMode,
           }),
           fitsShell,
+          // A pill shell rounds what touches its ends: every item when they
+          // stand apart, only the outer two when they butt into one bar.
+          isCircle &&
+            (selectionMode !== "multiple"
+              ? "rounded-full"
+              : orientation === "vertical"
+                ? "first:rounded-t-full last:rounded-b-full"
+                : "first:rounded-s-full last:rounded-e-full"),
           className,
         ),
       )}

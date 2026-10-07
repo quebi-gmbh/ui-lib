@@ -19,10 +19,10 @@ import { cn } from "@/lib/utils"
 /**
  * List Box — quebi design system
  *
- * A selectable list rendered on the quebi overlay surface
- * (`bg-quebi-elevated`, never the page's `bg-quebi-bg` — it floats above it)
- * with cyan hairlines and brand-teal selection. Foundational: Multiple Select
- * builds on top of it.
+ * A selectable list rendered on the overlay surface (`bg-quebi-elevated`,
+ * never the page's `bg-quebi-bg` — it floats above it) with a hairline edge,
+ * the small floating radius and an ink check for selection. Foundational:
+ * Multiple Select builds on top of it.
  * Reuses the shared dropdown item styling so items match menus and selects.
  */
 
@@ -32,7 +32,7 @@ const ListBox = <T extends object>({ className, ...props }: ListBoxProps<T>) => 
     data-slot="list-box"
     className={composeRenderProps(className, (resolved) =>
       cn(
-        "quebi-scrollbar grid max-h-96 w-full min-w-56 scroll-py-1 grid-cols-[auto_1fr] flex-col gap-y-1 overflow-y-auto overscroll-contain rounded-quebi-md border border-quebi-line/10 bg-quebi-elevated p-1 shadow-quebi-glow outline-hidden has-data-[slot=drag-icon]:grid-cols-[auto_auto_1fr] *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
+        "quebi-scrollbar grid max-h-96 w-full min-w-56 scroll-py-1 grid-cols-[auto_1fr] flex-col overflow-y-auto overscroll-contain rounded-quebi-s border border-quebi-hairline bg-quebi-elevated p-1 shadow-quebi-float outline-hidden has-data-[slot=drag-icon]:grid-cols-[auto_auto_1fr] *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
         resolved,
       ),
     )}
@@ -122,7 +122,7 @@ const ListBoxItem = <T extends object>({ children, className, ...props }: ListBo
 const ListBoxSection = <T extends object>({ className, ...props }: DropdownSectionProps<T>) => {
   return (
     <DropdownSection
-      className={cn("gap-y-1 *:data-[slot=list-box-item]:last:-mb-1.5", className)}
+      className={cn("*:data-[slot=list-box-item]:last:-mb-1.5", className)}
       {...props}
     />
   )

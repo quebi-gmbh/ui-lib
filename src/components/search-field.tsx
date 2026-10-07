@@ -17,8 +17,7 @@ import { fieldStyles } from "@/components/field"
  * A search input built on react-aria-components, composed from the quebi
  * Input + InputGroup. A leading magnifying-glass icon and a trailing clear
  * button that appears only while the field has a value (Escape / clicking it
- * clears the field). Inherits the quebi field styling: a translucent surface
- * with a cyan-tinted border that lifts to brand teal on focus.
+ * clears the field). Inherits `Input`'s underline, which thickens on focus.
  */
 export interface SearchFieldProps extends PrimitiveSearchFieldProps {
   ref?: React.RefObject<HTMLDivElement>
@@ -46,7 +45,7 @@ export function SearchInput(props: React.ComponentProps<typeof Input>) {
       <Input placeholder="Search" {...props} />
       <Button
         className={cn(
-          "grid place-content-center px-3 text-quebi-fg-subtle outline-none",
+          "flex items-center justify-end ps-3 text-quebi-fg-subtle outline-none",
           "transition-colors duration-150 hover:text-quebi-fg pressed:text-quebi-fg",
           "group-empty/search-field:invisible",
           "focus-visible:text-quebi-fg",

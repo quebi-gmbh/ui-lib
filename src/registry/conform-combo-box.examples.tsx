@@ -44,7 +44,7 @@ const CountryForm = () => {
         </ComboBoxContent>
       </ConformComboBox>
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

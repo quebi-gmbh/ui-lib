@@ -10,13 +10,14 @@ import { cn } from "@/lib/utils"
  *
  * A horizontal strip of thin cells for visualizing a series of states over
  * time (uptime, incident history, activity heatmaps). Each cell can carry a
- * semantic status color and an optional tooltip. Empty/default cells use the
- * quebi cyan hairline tint; status cells keep their semantic meaning
- * (success / warning / error).
+ * status color and an optional tooltip. Empty cells are the raised ground, so
+ * the strip reads as one ruled band; a status cell uses a state token
+ * (`bg-quebi-success` / `-warn` / `-danger`) when its state is semantic, and
+ * ink (`bg-quebi-action`) when it only marks that something happened.
  */
 interface TrackerBlockProps {
   key?: string | number
-  /** Tailwind background class for the cell, e.g. `bg-green-500`. */
+  /** Tailwind background class for the cell, e.g. `bg-quebi-success`. */
   color?: string
   tooltip?: string
   /** Background class used when `color` is omitted. */
@@ -28,15 +29,15 @@ const Block = ({
   color,
   tooltip,
   disabledTooltip,
-  defaultBackgroundColor = "bg-cyan-500/10",
+  defaultBackgroundColor = "bg-quebi-raised",
 }: TrackerBlockProps) => {
   const [open, setOpen] = useState(false)
 
   const cell = (
-    <div className="size-full overflow-hidden px-[0.5px] transition first:rounded-s-quebi-sm first:ps-0 last:rounded-e-quebi-sm last:pe-0 sm:px-px">
+    <div className="size-full overflow-hidden px-px first:ps-0 last:pe-0">
       <div
         className={cn(
-          "size-full rounded-[1px] transition-opacity",
+          "size-full transition-opacity duration-150",
           color || defaultBackgroundColor,
           "hover:opacity-60",
         )}

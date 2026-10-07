@@ -30,7 +30,7 @@ export function ItemGroup({ className, ref, ...props }: React.ComponentProps<"ul
       // biome-ignore lint/a11y/noRedundantRoles: restores list semantics that WebKit drops for an unstyled <ul>
       role="list"
       className={cn(
-        "flex flex-col divide-y divide-quebi-line/20 forced-colors:divide-[ButtonBorder]",
+        "flex flex-col divide-y divide-quebi-hairline forced-colors:divide-[ButtonBorder]",
         className,
       )}
       {...props}
@@ -78,7 +78,7 @@ export function ItemTitle({ className, ref, ...props }: React.ComponentProps<"di
     <div
       ref={ref}
       data-slot="item-title"
-      className={cn("truncate text-sm/6 font-medium text-quebi-fg", className)}
+      className={cn("truncate font-display text-lg/6 font-light tracking-wide text-quebi-fg", className)}
       {...props}
     />
   )
@@ -90,7 +90,7 @@ export function ItemDescription({ className, ref, ...props }: React.ComponentPro
     <p
       ref={ref}
       data-slot="item-description"
-      className={cn("truncate text-sm/5 text-quebi-fg-muted", className)}
+      className={cn("truncate text-quebi-body-s text-quebi-fg-muted", className)}
       {...props}
     />
   )
@@ -106,7 +106,7 @@ export function ItemMeta({ className, ref, ...props }: React.ComponentProps<"div
       ref={ref}
       data-slot="item-meta"
       className={cn(
-        "flex shrink-0 items-center gap-2 text-sm text-quebi-fg-subtle tabular-nums",
+        "flex shrink-0 items-center gap-2 text-quebi-caption text-quebi-fg-subtle tabular-nums",
         className,
       )}
       {...props}

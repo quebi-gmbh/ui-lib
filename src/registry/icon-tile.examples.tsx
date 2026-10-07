@@ -25,7 +25,7 @@ export const iconTileExamples: ComponentExample[] = [
   {
     title: "Intents",
     description:
-      "The tint scale is Badge's, value for value — brand teal flags a feature, and the ai gradient stays on AI surfaces.",
+      "Badge's intents, in ink. Only the three states take a colour; ai is the action-ink fill and outline a ruled frame.",
     render: () => (
       <Row>
         <IconTile intent="neutral">
@@ -120,7 +120,7 @@ export const iconTileExamples: ComponentExample[] = [
   {
     title: "Leading a feature row",
     description:
-      "The tile owns the box and the tint; the row around it is plain layout, which stays yours.",
+      "The tile owns the box and the ground; the row around it is plain layout, which stays yours.",
     render: () => (
       <div className="flex max-w-md flex-col gap-4">
         <div className="flex items-start gap-4">
@@ -128,7 +128,7 @@ export const iconTileExamples: ComponentExample[] = [
             <Rocket data-slot="icon" />
           </IconTile>
           <div className="flex flex-col gap-1">
-            <Heading level={3}>Instant deploys</Heading>
+            <Heading level={3}>instant deploys.</Heading>
             <Text>Push to main and the kiosk fleet updates within the minute.</Text>
           </div>
         </div>
@@ -137,7 +137,7 @@ export const iconTileExamples: ComponentExample[] = [
             <Database data-slot="icon" />
           </IconTile>
           <div className="flex flex-col gap-1">
-            <Heading level={3}>Every revision kept</Heading>
+            <Heading level={3}>every revision kept.</Heading>
             <Text>Roll back to any published version without leaving the dashboard.</Text>
           </div>
         </div>

@@ -34,10 +34,11 @@ import { cn } from "@/lib/utils"
  * Sidebar — quebi design system
  *
  * A full-featured, collapsible navigation surface built on
- * react-aria-components. A docked sidebar is flush with the page and sits on
- * `bg-quebi-bg`; the ones that float above it — the mobile modal, the `float`
- * intent, the `inset` content panel — sit on `bg-quebi-elevated`. Either way
- * the signature cyan hairline border, and the brand teal on the active item.
+ * react-aria-components. Flat: the sidebar sits on `bg-quebi-bg` and is told
+ * apart from the page by a hairline edge, not a surface or a shadow — only the
+ * mobile modal, which really does float, is `bg-quebi-elevated`. A hovered
+ * item takes `bg-quebi-raised`; the current one is ink at medium weight with a
+ * 1px rule at its start. Section labels are mono eyebrows.
  *
  * Compose a `SidebarProvider` around a `Sidebar` (containing `SidebarHeader`,
  * `SidebarContent` with `SidebarSection`/`SidebarItem`, and `SidebarFooter`)
@@ -200,7 +201,7 @@ const SidebarProvider = ({
         className={cn(
           "@container **:data-[slot=icon]:shrink-0",
           "flex w-full text-quebi-fg",
-          "group/sidebar-root peer/sidebar-root has-data-[intent=inset]:bg-quebi-bg",
+          "group/sidebar-root peer/sidebar-root has-data-[intent=inset]:bg-quebi-raised",
           className,
         )}
         ref={ref}
@@ -231,8 +232,8 @@ const SidebarMobile = ({ side = "left", className, children, ...props }: Sidebar
         aria-label="Sidebar"
         className={composeRenderProps(className, (resolved) =>
           cn(
-            "fixed inset-y-0 z-50 flex w-(--sidebar-width) flex-col bg-quebi-elevated text-quebi-fg [--sidebar-width:18rem]",
-            "border-quebi-line/10 transition will-change-transform",
+            "fixed inset-y-0 z-50 flex w-(--sidebar-width) flex-col bg-quebi-elevated text-quebi-fg shadow-quebi-float [--sidebar-width:18rem]",
+            "border-quebi-hairline transition will-change-transform",
             side === "left" &&
               "left-0 border-r entering:slide-in-from-left exiting:slide-out-to-left",
             side === "right" &&
@@ -272,7 +273,8 @@ const Sidebar = ({
         data-collapsible="none"
         data-slot="sidebar"
         className={cn(
-          "flex h-full w-(--sidebar-width) flex-col bg-quebi-bg text-quebi-fg",
+          "flex h-full w-(--sidebar-width) flex-col border-quebi-hairline bg-quebi-bg text-quebi-fg",
+          side === "right" ? "border-s" : "border-e",
           className,
         )}
         {...props}
@@ -326,13 +328,14 @@ const Sidebar = ({
             "left-0 group-data-[collapsible=hidden]:left-[calc(var(--sidebar-width)*-1)]",
           side === "right" &&
             "right-0 group-data-[collapsible=hidden]:right-[calc(var(--sidebar-width)*-1)]",
-          intent === "float" &&
-            "bg-quebi-bg p-2 group-data-[collapsible=dock]:w-[calc(--spacing(4)+2px)]",
-          intent === "inset" &&
+          intent === "float" && "p-2 group-data-[collapsible=dock]:w-[calc(--spacing(4)+2px)]",
+          intent === "inset" && [
+            "bg-transparent",
             "group-data-[collapsible=dock]:w-[calc(var(--sidebar-width-dock)+--spacing(2)+2px)]",
+          ],
           intent === "default" && [
             "group-data-[collapsible=dock]:w-(--sidebar-width-dock)",
-            "border-quebi-line/10 group-data-[side=left]:border-r group-data-[side=right]:border-l",
+            "border-quebi-hairline group-data-[side=left]:border-r group-data-[side=right]:border-l",
           ],
           className,
         )}
@@ -343,7 +346,7 @@ const Sidebar = ({
           data-slot="sidebar-inner"
           className={cn(
             "flex h-full w-full flex-col text-quebi-fg",
-            "group-data-[intent=float]:rounded-quebi-md group-data-[intent=float]:border group-data-[intent=float]:border-quebi-line/10 group-data-[intent=float]:bg-quebi-elevated group-data-[intent=float]:shadow-quebi-glow",
+            "group-data-[intent=float]:border group-data-[intent=float]:border-quebi-hairline",
           )}
         >
           {children}
@@ -360,7 +363,7 @@ const SidebarHeader = ({ className, ref, ...props }: React.ComponentProps<"div">
       ref={ref}
       data-slot="sidebar-header"
       className={cn(
-        "flex flex-col gap-2 p-2.5 [.border-b]:border-quebi-line/10",
+        "flex flex-col gap-2 p-2.5 [.border-b]:border-quebi-hairline",
         "in-data-[intent=inset]:p-4",
         state === "collapsed" ? "items-center p-2.5" : "p-4",
         className,
@@ -434,7 +437,7 @@ const SidebarSection = ({ className, ...props }: SidebarSectionProps) => {
       {...props}
     >
       {state !== "collapsed" && "label" in props && (
-        <Header className="mb-1 flex shrink-0 items-center rounded-quebi-sm px-2 text-quebi-fg-muted text-xs/6 outline-none ring-quebi-brand-mark transition-[margin,opa] duration-200 ease-linear *:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0 group-data-[collapsible=dock]:-mt-8 group-data-[collapsible=dock]:opacity-0">
+        <Header className="quebi-eyebrow mt-2 mb-2 shrink-0 px-2 outline-none transition-[margin,opacity] duration-200 ease-linear group-data-[collapsible=dock]:-mt-8 group-data-[collapsible=dock]:opacity-0">
           {props.label}
         </Header>
       )}
@@ -480,7 +483,7 @@ const SidebarItem = ({
         (className, { isPressed, isFocusVisible, isHovered, isDisabled }) =>
           cn([
             "href" in props ? "cursor-pointer" : "cursor-default",
-            "w-full min-w-0 items-center rounded-quebi-sm text-start font-medium text-base/6 text-quebi-fg no-underline hover:no-underline",
+            "w-full min-w-0 items-center text-start text-base/6 text-quebi-fg-muted no-underline transition-colors duration-150 hover:no-underline",
             "group/sidebar-item relative col-span-full overflow-hidden focus-visible:outline-hidden",
             "grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] **:last:data-[slot=icon]:ms-auto supports-[grid-template-columns:subgrid]:grid-cols-subgrid sm:text-sm/5",
             "p-2 has-[a]:p-0",
@@ -492,12 +495,13 @@ const SidebarItem = ({
             // avatar
             "**:data-[slot=avatar]:[--avatar-size:--spacing(5)]",
             "[&:has([data-slot=avatar]+[data-slot=sidebar-label])_[data-slot=avatar]:has(+[data-slot=sidebar-label])]:me-2",
+            // Current: ink at medium weight, and a 1px rule at the start edge.
             isCurrent &&
-              "font-medium bg-quebi-brand/10 text-quebi-brand-text hover:bg-quebi-brand/10 hover:text-quebi-brand-text [&_.text-muted-fg]:text-quebi-brand-text/80 [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-brand-text hover:[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-brand-text",
+              "font-medium text-quebi-fg before:absolute before:inset-y-1.5 before:start-0 before:w-px before:bg-quebi-fg [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
             isFocusVisible &&
-              "outline-hidden ring-2 ring-quebi-brand-mark ring-inset",
+              "outline-hidden ring-2 ring-quebi-focus ring-inset",
             (isPressed || isHovered) &&
-              "bg-quebi-surface/[0.04] text-quebi-fg [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
+              "bg-quebi-raised text-quebi-fg [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
             isDisabled && "opacity-50",
             className,
           ]),
@@ -512,14 +516,14 @@ const SidebarItem = ({
             (state !== "collapsed" ? (
               <span
                 data-slot="sidebar-badge"
-                className="absolute inset-ring-1 inset-ring-quebi-line/10 inset-y-1/2 end-1.5 h-5.5 w-auto -translate-y-1/2 rounded-full bg-quebi-surface/5 px-2 text-[10px]/5.5 group-hover/sidebar-item:inset-ring-quebi-fg-muted/30 group-current:inset-ring-transparent"
+                className="absolute inset-y-1/2 end-1.5 h-5.5 w-auto -translate-y-1/2 rounded-full bg-quebi-raised px-2 font-mono text-quebi-label/5.5 text-quebi-fg-muted group-hover/sidebar-item:bg-quebi-pressed"
               >
                 {badge}
               </span>
             ) : (
               <div
                 aria-hidden
-                className="absolute end-1 top-1 size-1.5 rounded-full bg-quebi-brand"
+                className="absolute end-1 top-1 size-1.5 rounded-full bg-quebi-action"
               />
             ))}
         </>
@@ -573,11 +577,10 @@ const SidebarInset = ({ className, ref, ...props }: React.ComponentProps<"main">
       ref={ref}
       className={cn(
         "relative flex w-full flex-1 flex-col bg-quebi-bg lg:min-w-0",
-        "group-has-data-[intent=inset]/sidebar-root:border group-has-data-[intent=inset]/sidebar-root:border-quebi-line/10 group-has-data-[intent=inset]/sidebar-root:bg-quebi-elevated",
+        "group-has-data-[intent=inset]/sidebar-root:border group-has-data-[intent=inset]/sidebar-root:border-quebi-hairline",
         "md:group-has-data-[intent=inset]/sidebar-root:m-2",
         "md:group-has-data-[side=left]:group-has-data-[intent=inset]/sidebar-root:ms-0",
         "md:group-has-data-[side=right]:group-has-data-[intent=inset]/sidebar-root:me-0",
-        "md:group-has-data-[intent=inset]/sidebar-root:rounded-quebi-lg",
         "md:group-has-data-[intent=inset]/sidebar-root:peer-data-[state=collapsed]:ms-2",
         className,
       )}
@@ -644,7 +647,7 @@ const SidebarDisclosureTrigger = ({
           className,
           (className, { isPressed, isFocusVisible, isHovered, isDisabled }) =>
             cn(
-              "flex w-full min-w-0 items-center rounded-quebi-sm text-start font-medium text-base/6 text-quebi-fg",
+              "flex w-full min-w-0 items-center text-start font-medium text-base/6 text-quebi-fg transition-colors duration-150",
               "group/sidebar-disclosure-trigger relative col-span-full overflow-hidden focus-visible:outline-hidden",
               "**:data-[slot=icon]:size-5 **:data-[slot=icon]:shrink-0 **:data-[slot=icon]:text-quebi-fg-muted sm:**:data-[slot=icon]:size-4",
               "**:last:data-[slot=icon]:size-5 sm:**:last:data-[slot=icon]:size-4",
@@ -652,9 +655,9 @@ const SidebarDisclosureTrigger = ({
               "col-span-full gap-3 p-2 **:data-[slot=chevron]:text-quebi-fg-muted **:last:data-[slot=icon]:ms-auto sm:gap-2 sm:text-sm/5",
               isCollapsed && "justify-center",
 
-              isFocusVisible && "outline-hidden ring-2 ring-quebi-brand-mark ring-inset",
+              isFocusVisible && "outline-hidden ring-2 ring-quebi-focus ring-inset",
               (isPressed || isHovered) &&
-                "bg-quebi-surface/[0.04] text-quebi-fg **:data-[slot=chevron]:text-quebi-fg **:data-[slot=icon]:text-quebi-fg **:last:data-[slot=icon]:text-quebi-fg",
+                "bg-quebi-raised text-quebi-fg **:data-[slot=chevron]:text-quebi-fg **:data-[slot=icon]:text-quebi-fg **:last:data-[slot=icon]:text-quebi-fg",
               isDisabled && "opacity-50",
               className,
             ),
@@ -728,7 +731,7 @@ const SidebarSeparator = ({ className, ...props }: SidebarSeparatorProps) => {
       data-slot="sidebar-separator"
       orientation="horizontal"
       className={cn(
-        "mx-auto h-px w-[calc(var(--sidebar-width)---spacing(10))] border-0 bg-quebi-line/20 forced-colors:bg-[ButtonBorder]",
+        "mx-auto h-px w-[calc(var(--sidebar-width)---spacing(10))] border-0 bg-quebi-hairline forced-colors:bg-[ButtonBorder]",
         className,
       )}
       {...props}
@@ -796,7 +799,7 @@ const SidebarRail = ({ className, ref, ...props }: ButtonProps & { ref?: React.R
           "absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 outline-hidden transition-all ease-linear after:absolute after:inset-y-0 after:left-1/2 after:w-0.5 hover:after:bg-transparent group-data-[side=left]:-right-4 group-data-[side=right]:left-0 sm:flex",
           "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
           "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
-          "group-data-[collapsible=hidden]:translate-x-0 group-data-[collapsible=hidden]:hover:bg-quebi-surface/[0.04] group-data-[collapsible=hidden]:after:left-full",
+          "group-data-[collapsible=hidden]:translate-x-0 group-data-[collapsible=hidden]:hover:bg-quebi-raised group-data-[collapsible=hidden]:after:left-full",
           "[[data-side=left][data-collapsible=hidden]_&]:-right-2 [[data-side=right][data-collapsible=hidden]_&]:-left-2",
           resolved,
         ),

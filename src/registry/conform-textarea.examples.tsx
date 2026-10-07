@@ -36,7 +36,7 @@ const BioForm = () => {
         rows={4}
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

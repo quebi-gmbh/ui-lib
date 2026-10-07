@@ -7,12 +7,12 @@ export const tabsOgScene: OgScene = {
   render: () => (
     <Tabs defaultSelectedKey="pricing" className="w-96">
       <TabList aria-label="Plan editor sections">
-        <Tab id="pricing">Pricing</Tab>
-        <Tab id="inclusions">Inclusions</Tab>
-        <Tab id="visibility">Visibility</Tab>
+        <Tab id="pricing">pricing</Tab>
+        <Tab id="inclusions">inclusions</Tab>
+        <Tab id="visibility">visibility</Tab>
       </TabList>
       <TabPanels>
-        <TabPanel id="pricing" className="mt-4 text-sm text-quebi-fg-muted">
+        <TabPanel id="pricing" className="mt-4">
           €9 per month, billed to the workspace.
         </TabPanel>
       </TabPanels>

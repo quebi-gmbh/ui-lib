@@ -31,7 +31,7 @@ const VisitForm = () => {
         description="An always-visible calendar; reach for conform-date-picker otherwise."
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

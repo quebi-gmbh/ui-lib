@@ -4,17 +4,18 @@ import { Children, createContext, isValidElement, type ReactNode, use } from "re
 import type { GridListItemProps, GridListProps, TextProps } from "react-aria-components"
 import { composeRenderProps, GridList, GridListItem, Text } from "react-aria-components"
 import type { VariantProps } from "tailwind-variants"
-import { tv } from "tailwind-variants"
 import { Checkbox } from "@/components/checkbox"
-import { cn } from "@/lib/utils"
+import { cn, tv } from "@/lib/utils"
 
 /**
  * ChoiceBox — quebi design system
  *
  * Selectable cards built on react-aria-components' GridList. Single or multiple
  * selection, 1–6 column layouts, optional label/description/icon/avatar slots.
- * Selected cards take the brand teal border with a faint teal wash; focus uses
- * the quebi teal ring; invalid uses red.
+ * Square, hairline-edged tiles. Hover lifts a tile onto `raised`; a selected
+ * tile is edged in `rule` and sits on `pressed`, the library's selected-row
+ * ground (and in multiple mode its checkbox fills with ink). Focus is the
+ * outward ring; invalid edges the tile in `danger`.
  */
 
 /**
@@ -78,7 +79,7 @@ const choiceBoxStyles = tv({
       gap: 0,
       columns: 1,
       className:
-        "rounded-quebi-md *:data-[slot=choice-box-item]:-mt-px *:data-[slot=choice-box-item]:rounded-none *:data-[slot=choice-box-item]:last:rounded-b-quebi-md *:data-[slot=choice-box-item]:first:rounded-t-quebi-md",
+        "*:data-[slot=choice-box-item]:-mt-px",
     },
   ],
 })
@@ -125,7 +126,7 @@ const ChoiceBox = <T extends object>({
 const choiceBoxItemStyles = tv({
   base: [
     "group outline-hidden",
-    "rounded-quebi-md border border-quebi-line/20 bg-quebi-bg p-(--gutter) **:data-[slot=label]:font-medium",
+    "border border-quebi-hairline bg-quebi-bg p-(--gutter) **:data-[slot=label]:font-medium",
     "transition-colors duration-150",
     "**:data-[slot=avatar]:row-span-2 **:data-[slot=avatar]:mt-0.5 **:data-[slot=avatar]:shrink-0",
     "**:data-[slot=icon]:row-span-2 **:data-[slot=icon]:mt-0.5 **:data-[slot=icon]:shrink-0",
@@ -139,20 +140,20 @@ const choiceBoxItemStyles = tv({
       false: "cursor-default",
     },
     isHovered: {
-      true: "not-data-readonly:not-data-focus-visible:not-selected:border-quebi-line/40",
+      true: "not-data-readonly:not-selected:bg-quebi-raised",
     },
     isFocused: {
-      true: "ring-2 ring-quebi-brand-mark ring-offset-2 ring-offset-quebi-bg invalid:ring-red-500/50",
+      true: "ring-2 ring-quebi-focus ring-offset-3 ring-offset-quebi-bg invalid:ring-quebi-danger/50",
     },
-    isInvalid: { true: "border-red-500 ring-2 ring-red-500/40" },
+    isInvalid: { true: "border-quebi-danger" },
     isOneColumn: {
       true: "col-span-full",
     },
     isActive: {
-      true: ["border-quebi-brand-mark bg-quebi-brand/5"],
+      true: ["border-quebi-rule bg-quebi-pressed"],
     },
     isDisabled: {
-      true: "opacity-50 **:data-[slot=label]:text-quebi-fg-muted forced-colors:text-[GrayText] **:[[slot=description]]:text-quebi-fg-muted/70",
+      true: "opacity-50 **:data-[slot=label]:text-quebi-fg-muted forced-colors:text-[GrayText] **:[[slot=description]]:text-quebi-fg-subtle",
     },
     /**
      * Which layer of the stack the card is painted on.
@@ -173,7 +174,7 @@ const choiceBoxItemStyles = tv({
     elevation: {
       /** A ring, drawn outside the border: has to clear a *selected* neighbour. */
       ring: "z-30",
-      /** A brand border on all four edges: has to clear a plain neighbour. */
+      /** A `rule` border on all four edges: has to clear a plain neighbour. */
       selected: "z-20",
       /** Faded, but still its own edges rather than the next card's. */
       disabled: "z-10",

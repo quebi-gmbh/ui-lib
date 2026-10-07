@@ -8,7 +8,7 @@ import type { ComponentExample } from "./types"
 export const descriptionListExamples: ComponentExample[] = [
   {
     title: "Default",
-    description: "Terms in muted foreground, descriptions in white, with subtle row dividers.",
+    description: "Terms in the subtle ink, descriptions in full ink, a hairline between rows.",
     render: () => (
       <DescriptionList>
         <DescriptionTerm>Name</DescriptionTerm>
@@ -29,7 +29,7 @@ export const descriptionListExamples: ComponentExample[] = [
         <DescriptionDetails>#QB-2026-0042</DescriptionDetails>
         <DescriptionTerm>Status</DescriptionTerm>
         <DescriptionDetails>
-          <span className="text-quebi-brand-text">Paid</span>
+          <span className="text-quebi-fg">Paid</span>
         </DescriptionDetails>
         <DescriptionTerm>Amount</DescriptionTerm>
         <DescriptionDetails>€1,280.00</DescriptionDetails>

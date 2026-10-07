@@ -22,13 +22,13 @@ const BANDS = ["A", "B", "C", "D", "E", "F", "G"] as const
 
 /** The fixed foreground each band pins — dark ends white, bright middle black. */
 const TEXT_CLASS: Record<(typeof BANDS)[number], string> = {
-  A: "text-quebi-fg",
+  A: "text-white",
   B: "text-black",
   C: "text-black",
   D: "text-black",
   E: "text-black",
   F: "text-black",
-  G: "text-quebi-fg",
+  G: "text-white",
 }
 
 /** Renders one badge and returns it, scoped to its own container so a test may

@@ -22,7 +22,7 @@ export const modalOgScene: OgScene = {
   render: () => (
     <ModalContent defaultOpen size="md" aria-label="Invite your team">
       <ModalHeader>
-        <ModalTitle>Invite your team</ModalTitle>
+        <ModalTitle>invite your team</ModalTitle>
         <ModalDescription>Send an invitation to collaborate on this workspace.</ModalDescription>
       </ModalHeader>
       <ModalBody>
@@ -31,8 +31,8 @@ export const modalOgScene: OgScene = {
         </p>
       </ModalBody>
       <ModalFooter>
-        <Button intent="outline">Cancel</Button>
-        <Button intent="primary">Send invite</Button>
+        <Button intent="outline">cancel</Button>
+        <Button intent="primary">send invite</Button>
       </ModalFooter>
     </ModalContent>
   ),

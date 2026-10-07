@@ -64,7 +64,7 @@ const AssigneeForm = () => {
         load={loadPeople}
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

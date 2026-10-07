@@ -14,7 +14,7 @@ const BoldIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -30,7 +30,7 @@ const ItalicIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -47,7 +47,7 @@ const UnderlineIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -63,7 +63,7 @@ const AlignLeftIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -81,7 +81,7 @@ const AlignCenterIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -99,7 +99,7 @@ const AlignRightIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -117,7 +117,7 @@ const UndoIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -133,7 +133,7 @@ const TrashIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -195,10 +195,10 @@ export const toolbarExamples: ComponentExample[] = [
           <ToolbarButton size="sq-sm" aria-label="Undo">
             <UndoIcon />
           </ToolbarButton>
-          <ToolbarButton>Save</ToolbarButton>
+          <ToolbarButton>save</ToolbarButton>
           <ToolbarButton intent="danger">
             <TrashIcon />
-            Delete
+            delete
           </ToolbarButton>
         </ToolbarGroup>
       </Toolbar>
@@ -211,15 +211,15 @@ export const toolbarExamples: ComponentExample[] = [
       <Toolbar aria-label="Text formatting">
         <ToolbarItem aria-label="Bold">
           <BoldIcon />
-          Bold
+          bold
         </ToolbarItem>
         <ToolbarItem aria-label="Italic">
           <ItalicIcon />
-          Italic
+          italic
         </ToolbarItem>
         <ToolbarItem aria-label="Underline">
           <UnderlineIcon />
-          Underline
+          underline
         </ToolbarItem>
       </Toolbar>
     ),

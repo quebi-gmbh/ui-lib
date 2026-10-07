@@ -25,7 +25,7 @@ export const activityPulseOgScene: OgScene = {
     <Card className="w-96 p-3">
       <div className="flex items-center gap-3">
         <span className="min-w-0 flex-1 truncate text-sm text-quebi-fg">Running Bash</span>
-        <ActivityPulse samples={SAMPLES} className="text-quebi-brand-text" />
+        <ActivityPulse samples={SAMPLES} className="text-quebi-fg" />
         <ElapsedTime
           start={STARTED_AT}
           now={FINISHED_AT}

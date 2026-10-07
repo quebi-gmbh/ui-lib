@@ -94,11 +94,11 @@ export const formattedNumberExamples: ComponentExample[] = [
   },
   {
     title: "Children render prop",
-    description: "Wrap the formatted string to apply quebi tokens such as the brand teal.",
+    description: "Wrap the formatted string to apply quebi tokens, such as the display face for a figure.",
     render: () => (
       <FormattedCurrency value={24990} locale="de-DE">
         {(formatted) => (
-          <span className="text-2xl font-semibold text-quebi-brand-text tabular-nums">{formatted}</span>
+          <span className="font-display text-4xl font-extralight text-quebi-fg tabular-nums">{formatted}</span>
         )}
       </FormattedCurrency>
     ),

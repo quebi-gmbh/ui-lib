@@ -63,13 +63,13 @@ Always start from **${BASE_URL}/llms.txt**, which documents the workflow and lis
 - Form components have **Conform-bound variants** named \`conform-*\` (e.g. \`conform-checkbox\`,
   \`conform-select\`, \`conform-date-picker\`). Use these when building forms with the Conform library;
   they bind name/validity/errors from field metadata.
-- The library assumes Tailwind v4 and the quebi tokens (\`quebi-brand\`, \`quebi-bg\`, \`quebi-fg-muted\`,
-  \`rounded-quebi-*\`, etc.). If the target project lacks them, bring in the quebi theme too.
-- Brand mint is two tokens, because one value cannot do both jobs: \`quebi-brand\` is the **fill**
-  (\`bg-\`, \`border-\`, \`ring-\`, \`stroke-\`) and stays mint in both themes, with \`quebi-on-brand\` for
-  anything drawn on top of it; \`quebi-brand-text\` is the same brand as **text or a glyph**
-  (\`text-\`, \`decoration-\`) and darkens in light mode, where mint on the light surface is 1.74:1.
-  The semantic \`quebi-danger/warn/success/info/accent\` are text values on the same footing.
+- The library assumes Tailwind v4 and the quebi Ink & Paper theme (\`quebi-bg\`, \`quebi-fg\`,
+  \`quebi-hairline\`, \`quebi-action\`, \`text-quebi-display-*\`, …). If the target project lacks them,
+  bring in the quebi theme too.
+- Ink and paper, no hue: \`quebi-action\` (with \`quebi-on-action\` on top) fills the one solid button
+  per view and every checked or selected control; \`quebi-hairline\` separates, \`quebi-rule\` carries
+  structure; \`quebi-danger/warn/success\` are text values reserved for state. Controls are square,
+  only floating surfaces take \`shadow-quebi-float\` and \`rounded-quebi-s\`.
 
 ## Rules — how to write JSX against this library
 

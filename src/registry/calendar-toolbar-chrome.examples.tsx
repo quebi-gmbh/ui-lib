@@ -260,7 +260,7 @@ const OnAPhone = () => {
 
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      <div className="w-full max-w-88 rounded-quebi-md border border-quebi-line/10 p-3">
+      <div className="w-full max-w-88 border border-quebi-hairline p-3">
         <CalendarToolbar
           {...DE}
           label={calendarRangeLabel(week(anchor), { locale: LOCALE, timeZone: TIME_ZONE })}

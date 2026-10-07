@@ -9,19 +9,19 @@ export const toolbarOgScene: OgScene = {
     <Toolbar aria-label="Text formatting">
       <ToolbarGroup aria-label="Style">
         <ToolbarItem size="sq-sm" aria-label="Bold">
-          <Bold data-slot="icon" aria-hidden="true" />
+          <Bold data-slot="icon" strokeWidth={1.5} aria-hidden="true" />
         </ToolbarItem>
         <ToolbarItem size="sq-sm" aria-label="Italic">
-          <Italic data-slot="icon" aria-hidden="true" />
+          <Italic data-slot="icon" strokeWidth={1.5} aria-hidden="true" />
         </ToolbarItem>
         <ToolbarItem size="sq-sm" aria-label="Underline">
-          <Underline data-slot="icon" aria-hidden="true" />
+          <Underline data-slot="icon" strokeWidth={1.5} aria-hidden="true" />
         </ToolbarItem>
       </ToolbarGroup>
       <ToolbarSeparator />
       <ToolbarGroup aria-label="Alignment">
         <ToolbarItem size="sq-sm" aria-label="Align left">
-          <AlignLeft data-slot="icon" aria-hidden="true" />
+          <AlignLeft data-slot="icon" strokeWidth={1.5} aria-hidden="true" />
         </ToolbarItem>
       </ToolbarGroup>
     </Toolbar>

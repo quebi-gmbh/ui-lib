@@ -11,12 +11,12 @@ export const toggleOgScene: OgScene = {
   render: () => (
     <div className="flex items-center gap-3">
       <Toggle intent="outline" defaultSelected>
-        <Bold data-slot="icon" aria-hidden="true" />
-        Bold
+        <Bold data-slot="icon" strokeWidth={1.5} aria-hidden="true" />
+        bold
       </Toggle>
       <Toggle intent="outline">
-        <Italic data-slot="icon" aria-hidden="true" />
-        Italic
+        <Italic data-slot="icon" strokeWidth={1.5} aria-hidden="true" />
+        italic
       </Toggle>
     </div>
   ),

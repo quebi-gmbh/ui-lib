@@ -62,7 +62,7 @@ export const noAppearanceClassesOnLayoutElementsRule: RuleMeta = {
       "text-{color}",
       "font-{thin,light,normal,medium,semibold,bold}",
     ],
-    note: "text-* splits across both lists: alignment (text-left/center/right) is layout; size and colour are appearance. Responsive and state prefixes do not change the verdict — sm:rounded-quebi-md and hover:bg-quebi-surface are appearance too.",
+    note: "text-* splits across both lists: alignment (text-left/center/right) is layout; size and colour are appearance. Responsive and state prefixes do not change the verdict — sm:rounded-none and hover:bg-quebi-surface are appearance too.",
   },
   examples: [
     {
@@ -71,20 +71,20 @@ export const noAppearanceClassesOnLayoutElementsRule: RuleMeta = {
       sourceFixed: true,
       wrong: `<article
   key={title}
-  className="group relative rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02] p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-quebi-brand/30 hover:shadow-quebi-glow"
+  className="group relative rounded-none border border-quebi-hairline bg-transparent p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-quebi-action/30"
 >
-  <Icon className="h-6 w-6 text-quebi-brand-text" strokeWidth={1.75} />
-  <h3 className="mt-2 text-xl font-semibold text-quebi-fg">{title}</h3>
+  <Icon className="h-6 w-6 text-quebi-fg" strokeWidth={1.75} />
+  <h3 className="mt-2 text-xl font-medium text-quebi-fg">{title}</h3>
   <p className="mt-3 text-sm leading-relaxed text-quebi-fg-muted">{body}</p>
 </article>`,
       right: `import { Card, CardDescription, CardTitle } from "@/components/card"
 
 <Card key={title} interactive>
-  <Icon data-slot="icon" className="h-6 w-6 text-quebi-brand-text" strokeWidth={1.75} />
+  <Icon data-slot="icon" className="h-6 w-6 text-quebi-fg" strokeWidth={1.75} />
   <CardTitle className="mt-2">{title}</CardTitle>
   <CardDescription className="mt-3">{body}</CardDescription>
 </Card>`,
-      note: "rounded-quebi-md + border + bg-quebi-surface/[0.02] + the hover lift is Card's default variant, character for character, and `interactive` is the hover treatment. The mt-* spacing is layout and stays.",
+      note: "rounded-none + border + bg-transparent + the hover lift is Card's default variant, character for character, and `interactive` is the hover treatment. The mt-* spacing is layout and stays.",
     },
     {
       title: "The same surface, hand-built inside a link",
@@ -92,9 +92,9 @@ export const noAppearanceClassesOnLayoutElementsRule: RuleMeta = {
       sourceFixed: true,
       wrong: `<Link
   to={\`/components/\${c.slug}\`}
-  className="group relative rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02] p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-quebi-brand/30 hover:shadow-quebi-glow"
+  className="group relative rounded-none border border-quebi-hairline bg-transparent p-6 transition-all duration-300 hover:-translate-y-0.5 hover:border-quebi-action/30"
 >
-  <h3 className="text-xl font-semibold text-quebi-fg">{c.name}</h3>
+  <h3 className="text-xl font-medium text-quebi-fg">{c.name}</h3>
 </Link>`,
       right: `import { Card, CardTitle } from "@/components/card"
 
@@ -111,7 +111,7 @@ export const noAppearanceClassesOnLayoutElementsRule: RuleMeta = {
       sourceFixed: true,
       wrong: `<Link
   to="/components"
-  className="inline-flex items-center gap-2 rounded-quebi-sm bg-quebi-brand px-6 py-3 font-semibold text-quebi-on-brand transition-all duration-200 hover:scale-[1.02] hover:bg-quebi-brand-hover hover:shadow-quebi-glow-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand/50"
+  className="inline-flex items-center gap-2 rounded-none bg-quebi-action px-6 py-3 font-medium text-quebi-on-action transition-all duration-200 hover:scale-[1.02] hover:bg-quebi-action-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-action/50"
 >
   Browse components
 </Link>`,

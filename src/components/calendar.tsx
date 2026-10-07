@@ -42,8 +42,9 @@ import { cn } from "@/lib/utils"
  * @internationalized/date, with a choice of header: `variant="select"` (the
  * default) swaps the Month Picker grid into the calendar body from one control
  * naming the visible month, `variant="stepper"` walks them with a chevron on
- * each side. Restyled to quebi tokens: the selected day fills with brand teal,
- * today is ringed in brand teal, and days hover with a faint white wash.
+ * each side. Square cells: the selected day is filled with ink, today is
+ * underlined, a hovered day takes the raised ground, and an unavailable day is
+ * struck through.
  * Foundational — Range Calendar and Date Picker compose this.
  */
 
@@ -98,15 +99,18 @@ const Calendar = <T extends DateValue>({ className, variant, ...props }: Calenda
                   date={date}
                   className={composeRenderProps(
                     className,
-                    (className, { isSelected, isDisabled }) =>
+                    (className, { isSelected, isDisabled, isUnavailable, isFocusVisible }) =>
                       cn(
-                        "relative flex h-9 w-9 cursor-default items-center justify-center rounded-quebi-sm text-sm text-quebi-fg tabular-nums outline-hidden transition-colors hover:bg-quebi-surface/[0.04]",
+                        "relative flex h-9 w-9 cursor-default items-center justify-center text-sm text-quebi-fg tabular-nums outline-hidden transition-colors duration-150 hover:bg-quebi-raised",
                         isSelected &&
-                          "bg-quebi-brand text-quebi-on-brand hover:bg-quebi-brand-hover",
-                        isDisabled && "text-quebi-fg-subtle",
+                          "bg-quebi-action text-quebi-on-action hover:bg-quebi-action-hover",
+                        isDisabled && "text-quebi-fg-subtle hover:bg-transparent",
+                        isUnavailable && "text-quebi-fg-subtle line-through",
+                        // Today is an underline, so it survives being selected
+                        // (in the on-action ink) and never reads as selection.
                         date.compare(now) === 0 &&
-                          !isSelected &&
-                          "ring-1 ring-inset ring-quebi-brand-mark",
+                          "font-medium underline decoration-1 underline-offset-4",
+                        isFocusVisible && "ring-2 ring-quebi-focus ring-inset",
                         className,
                       ),
                   )}
@@ -159,7 +163,6 @@ const CalendarHeader = ({ className, variant = "select", ...props }: CalendarHea
               <Button
                 size="sq-sm"
                 className="size-8 sm:size-7 **:data-[slot=icon]:text-quebi-fg-muted"
-                isCircle
                 intent="ghost"
                 slot="previous"
               >
@@ -172,7 +175,6 @@ const CalendarHeader = ({ className, variant = "select", ...props }: CalendarHea
               <Button
                 size="sq-sm"
                 className="size-8 sm:size-7 **:data-[slot=icon]:text-quebi-fg-muted"
-                isCircle
                 intent="ghost"
                 slot="next"
               >
@@ -721,7 +723,6 @@ const CalendarStepper = ({ unit, label, labelClassName }: CalendarStepperProps) 
       <Button
         size="sq-sm"
         className={buttonClassName}
-        isCircle
         intent="ghost"
         slot={null}
         aria-label={`Previous ${unit}`}
@@ -745,7 +746,6 @@ const CalendarStepper = ({ unit, label, labelClassName }: CalendarStepperProps) 
       <Button
         size="sq-sm"
         className={buttonClassName}
-        isCircle
         intent="ghost"
         slot={null}
         aria-label={`Next ${unit}`}
@@ -800,7 +800,7 @@ const CalendarGridHeader = () => {
   return (
     <CalendarGridHeaderPrimitive>
       {(day) => (
-        <CalendarHeaderCell className="w-9 pb-2 text-center font-semibold text-[11px] text-quebi-fg-muted uppercase tracking-[0.08em]">
+        <CalendarHeaderCell className="quebi-eyebrow w-9 pb-2 text-center">
           {day}
         </CalendarHeaderCell>
       )}

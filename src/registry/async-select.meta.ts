@@ -4,7 +4,7 @@ export const asyncSelectMeta: ComponentMeta = {
   slug: "async-select",
   name: "Async Select",
   description:
-    "A single-value combobox whose options are loaded from a remote source: an inline search input opens the dropdown on focus, typing re-queries the source live, and scrolling loads more. Picking an option shows its label and closes the menu; a trailing ✕ clears it. Styled with the quebi dark surface and brand-teal selection.",
+    "A single-value combobox whose options are loaded from a remote source: an inline search input opens the dropdown on focus, typing re-queries the source live, and scrolling loads more. Picking an option shows its label and closes the menu; a trailing ✕ clears it. Underlined like every quebi field; the list is the shared dropdown surface.",
   category: "Selection",
   tags: [
     "select",

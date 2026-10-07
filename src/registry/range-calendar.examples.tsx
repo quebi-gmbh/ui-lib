@@ -5,13 +5,13 @@ import type { ComponentExample } from "./types"
 export const rangeCalendarExamples: ComponentExample[] = [
   {
     title: "Default",
-    description: "Pick a start and end date; the endpoints fill with brand teal.",
+    description: "Pick a start and end date; the endpoints fill with ink.",
     render: () => <RangeCalendar aria-label="Trip dates" />,
   },
   {
     title: "Preselected range",
     description:
-      "Set the range with defaultValue — the days in-between get a faint brand wash.",
+      "Set the range with defaultValue — the days in-between take the raised ground.",
     render: () => {
       const start = today(getLocalTimeZone())
       return (

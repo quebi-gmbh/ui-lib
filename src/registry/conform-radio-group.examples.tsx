@@ -35,7 +35,7 @@ const PlanForm = () => {
         <Radio value="team">Team</Radio>
       </ConformRadioGroup>
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

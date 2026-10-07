@@ -44,10 +44,10 @@ import { cn } from "@/lib/utils"
  * Command Menu — quebi design system
  *
  * A ⌘K command palette built on react-aria-components' Autocomplete + Modal.
- * Renders a dark quebi surface inside a dimmed overlay, with a quebi-styled
- * search field, sectioned results, keyboard shortcut hints, and a footer.
- * Selected/focused items reuse the shared Menu/Dropdown styling (brand-teal
- * selection, subtle white hover wash on the dark surface).
+ * Renders the elevated floating surface (hairline edge, small radius, float
+ * shadow) inside a dimmed overlay, with a search row, sectioned results under
+ * eyebrow headers, keyboard shortcut hints, and a footer. Items reuse the
+ * shared Menu/Dropdown styling (square rows, `raised` on hover and focus).
  */
 
 interface CommandMenuProviderProps {
@@ -129,9 +129,9 @@ const CommandMenu = ({
         >
           <Modal
             className={cn(
-              "row-start-2 bg-quebi-elevated text-start text-quebi-fg shadow-quebi-glow-strong outline-none ring-1 ring-quebi-line/10 md:row-start-1",
+              "row-start-2 overflow-hidden border border-quebi-hairline bg-quebi-elevated text-start text-quebi-fg shadow-quebi-float outline-none md:row-start-1",
               "max-h-[calc(var(--visual-viewport-height)*0.8)] w-full sm:fixed sm:top-[10%] sm:left-1/2 sm:-translate-x-1/2",
-              "rounded-t-quebi-md md:rounded-quebi-md",
+              "sm:rounded-quebi-s",
               sizes[size],
               "entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-300 entering:ease-out",
               "exiting:slide-out-to-bottom sm:exiting:zoom-out-95 sm:exiting:slide-out-to-bottom-0 exiting:animate-out exiting:ease-in",
@@ -176,15 +176,15 @@ const CommandMenuSearch = ({ className, placeholder, ...props }: CommandMenuSear
         />
       )}
       <Input
-        placeholder={placeholder ?? "Search..."}
+        placeholder={placeholder ?? "Search…"}
         className="w-full min-w-0 bg-transparent px-2.5 py-2 text-base text-quebi-fg placeholder-quebi-fg-subtle outline-hidden focus:outline-hidden sm:px-2 sm:py-1.5 sm:text-sm [&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden"
       />
       {escapeButton && (
         <Button
           onPress={() => state?.close()}
-          className="hidden cursor-default rounded-quebi-sm border border-quebi-line/20 text-quebi-fg-muted hover:bg-quebi-surface/[0.04] hover:text-quebi-fg lg:inline lg:px-1.5 lg:py-0.5 lg:text-xs"
+          className="hidden cursor-default border border-quebi-hairline font-mono text-quebi-fg-subtle transition-colors duration-150 hover:bg-quebi-raised hover:text-quebi-fg lg:inline lg:px-1.5 lg:py-0.5 lg:text-xs"
         >
-          Esc
+          esc
         </Button>
       )}
     </SearchField>
@@ -197,7 +197,7 @@ const CommandMenuList = <T extends object>({ className, ...props }: MenuProps<T>
       <MenuPrimitive
         className={composeRenderProps(className, (resolved) =>
           cn(
-            "quebi-scrollbar grid max-h-full flex-1 grid-cols-[auto_1fr] content-start overflow-y-auto border-quebi-line/10 border-t p-2 sm:max-h-110 *:[[role=group]]:mb-6 *:[[role=group]]:last:mb-0",
+            "quebi-scrollbar grid max-h-full flex-1 grid-cols-[auto_1fr] content-start overflow-y-auto border-quebi-hairline border-t p-2 sm:max-h-110 *:[[role=group]]:mb-6 *:[[role=group]]:last:mb-0",
             resolved,
           ),
         )}
@@ -215,11 +215,11 @@ const CommandMenuSection = <T extends object>({
   return (
     <MenuSection
       ref={ref}
-      className={cn("col-span-full grid grid-cols-[auto_1fr] content-start gap-y-0.25", className)}
+      className={cn("col-span-full grid grid-cols-[auto_1fr] content-start", className)}
       {...props}
     >
       {"label" in props && (
-        <Header className="col-span-full mb-1 block min-w-(--trigger-width) truncate px-2.5 text-quebi-fg-muted text-xs">
+        <Header className="col-span-full mb-1 min-w-(--trigger-width) truncate px-2.5 quebi-eyebrow">
           {props.label}
         </Header>
       )}
@@ -291,7 +291,7 @@ const CommandMenuFooter = ({ className, ...props }: React.ComponentProps<"div">)
   return (
     <div
       className={cn(
-        "flex-none border-quebi-line/10 border-t px-4.5 py-2 text-quebi-fg-muted text-sm",
+        "flex-none border-quebi-hairline border-t px-4.5 py-2 text-quebi-fg-muted text-sm",
         className,
       )}
       {...props}
@@ -306,7 +306,7 @@ const CommandMenuShortcut = ({
 }: React.ComponentProps<typeof DropdownKeyboard>) => (
   <DropdownKeyboard
     className={cn(
-      "gap-0.5 font-sans text-[10.5px] uppercase *:inset-ring *:inset-ring-quebi-surface/20 *:grid *:size-5.5 *:place-content-center *:rounded-quebi-sm *:bg-quebi-bg",
+      "gap-0.5 font-mono text-quebi-label uppercase *:inset-ring *:inset-ring-quebi-hairline *:grid *:size-5.5 *:place-content-center *:bg-quebi-bg",
       className,
     )}
     {...props}

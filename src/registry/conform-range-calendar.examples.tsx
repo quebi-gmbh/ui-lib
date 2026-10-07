@@ -33,7 +33,7 @@ const TripForm = () => {
         description="Submitted as trip.start and trip.end."
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

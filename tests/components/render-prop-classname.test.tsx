@@ -57,7 +57,7 @@ test("Button's own variant classes lose to the ones a render prop returns", () =
   // the caller's class at all.
   const classes = classesOf(screen.getByRole("button", { name: "Go" }))
   expect(classes).toContain("rounded-full")
-  expect(classes).not.toContain("rounded-quebi-sm")
+  expect(classes).not.toContain("rounded-none")
 })
 
 test("Button hands react-aria's render state to a render-prop className", () => {
