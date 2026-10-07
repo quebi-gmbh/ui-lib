@@ -42,9 +42,9 @@ import { cn } from "@/lib/utils"
  * @internationalized/date, with a choice of header: `variant="select"` (the
  * default) swaps the Month Picker grid into the calendar body from one control
  * naming the visible month, `variant="stepper"` walks them with a chevron on
- * each side. Square cells: the selected day is filled with ink, today is
- * underlined, a hovered day takes the raised ground, and an unavailable day is
- * struck through.
+ * each side. Control-radius cells: the selected day takes the signal fill,
+ * today is underlined, a hovered day takes the raised ground, and an
+ * unavailable day is struck through.
  * Foundational — Range Calendar and Date Picker compose this.
  */
 
@@ -101,13 +101,12 @@ const Calendar = <T extends DateValue>({ className, variant, ...props }: Calenda
                     className,
                     (className, { isSelected, isDisabled, isUnavailable, isFocusVisible }) =>
                       cn(
-                        "relative flex h-9 w-9 cursor-default items-center justify-center text-sm text-quebi-fg tabular-nums outline-hidden transition-colors duration-150 hover:bg-quebi-raised",
-                        isSelected &&
-                          "bg-quebi-action text-quebi-on-action hover:bg-quebi-action-hover",
+                        "relative flex h-9 w-9 cursor-default items-center justify-center rounded-(--q-radius-control) text-sm text-quebi-fg tabular-nums outline-hidden transition-colors duration-150 hover:bg-quebi-raised",
+                        isSelected && "bg-quebi-signal text-quebi-on-signal hover:bg-quebi-signal",
                         isDisabled && "text-quebi-fg-subtle hover:bg-transparent",
                         isUnavailable && "text-quebi-fg-subtle line-through",
                         // Today is an underline, so it survives being selected
-                        // (in the on-action ink) and never reads as selection.
+                        // (in the on-signal ink) and never reads as selection.
                         date.compare(now) === 0 &&
                           "font-medium underline decoration-1 underline-offset-4",
                         isFocusVisible && "ring-2 ring-quebi-focus ring-inset",

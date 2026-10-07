@@ -18,8 +18,9 @@ import { cn } from "@/lib/utils"
 /**
  * Slider — quebi design system
  *
- * Built on react-aria-components. A 2px `hairline` track, an `action` ink fill
- * and a round ink thumb — no shadow, no border. Supports single and range
+ * Built on react-aria-components. A 2px `hairline` track, a `signal` fill
+ * (the value is state, like a progress fill) and a round `signal` thumb — no
+ * shadow, no border. Supports single and range
  * values, horizontal and vertical orientations, an optional value output, and
  * disabled state. Focus is the outward ring on the thumb.
  *
@@ -89,9 +90,9 @@ export function SliderThumb({ className, ...props }: SliderThumbProps) {
       data-slot="indicator"
       className={composeRenderProps(className, (resolved) =>
         cn(
-          "top-1/2 left-1/2 size-4 rounded-full bg-quebi-action outline-hidden",
+          "top-1/2 left-1/2 size-4 rounded-full bg-quebi-signal outline-hidden",
           "transition-[width,height] duration-150",
-          "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-3 data-[focus-visible]:ring-offset-quebi-bg",
+          "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
           "data-[dragging]:scale-110 data-[disabled]:opacity-60",
           resolved,
         ),
@@ -164,7 +165,7 @@ export function SliderFill({ className, ...props }: React.HTMLAttributes<HTMLDiv
       {...props}
       style={getStyle()}
       className={cn(
-        "pointer-events-none absolute bg-quebi-action",
+        "pointer-events-none absolute bg-quebi-signal",
         "group-orientation-horizontal/track:top-0 group-orientation-horizontal/track:h-full",
         "group-orientation-vertical/track:bottom-0 group-orientation-vertical/track:w-full",
         "group-disabled/track:opacity-60",

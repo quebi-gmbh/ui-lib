@@ -25,7 +25,7 @@ export const iconTileExamples: ComponentExample[] = [
   {
     title: "Intents",
     description:
-      "Badge's intents, in ink. Only the three states take a colour; ai is the action-ink fill and outline a ruled frame.",
+      "Badge's intents, in ink. Only the three states take a colour; ai is the slate action fill and outline a hairline frame.",
     render: () => (
       <Row>
         <IconTile intent="neutral">

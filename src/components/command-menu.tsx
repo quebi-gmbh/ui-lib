@@ -44,10 +44,11 @@ import { cn } from "@/lib/utils"
  * Command Menu — quebi design system
  *
  * A ⌘K command palette built on react-aria-components' Autocomplete + Modal.
- * Renders the elevated floating surface (hairline edge, small radius, float
+ * Renders the elevated floating surface (hairline edge, surface radius, float
  * shadow) inside a dimmed overlay, with a search row, sectioned results under
  * eyebrow headers, keyboard shortcut hints, and a footer. Items reuse the
- * shared Menu/Dropdown styling (square rows, `raised` on hover and focus).
+ * shared Menu/Dropdown styling (control-radius rows, `raised` on hover
+ * and focus).
  */
 
 interface CommandMenuProviderProps {
@@ -131,7 +132,7 @@ const CommandMenu = ({
             className={cn(
               "row-start-2 overflow-hidden border border-quebi-hairline bg-quebi-elevated text-start text-quebi-fg shadow-quebi-float outline-none md:row-start-1",
               "max-h-[calc(var(--visual-viewport-height)*0.8)] w-full sm:fixed sm:top-[10%] sm:left-1/2 sm:-translate-x-1/2",
-              "sm:rounded-quebi-s",
+              "sm:rounded-(--q-radius-surface)",
               sizes[size],
               "entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-300 entering:ease-out",
               "exiting:slide-out-to-bottom sm:exiting:zoom-out-95 sm:exiting:slide-out-to-bottom-0 exiting:animate-out exiting:ease-in",
@@ -182,7 +183,7 @@ const CommandMenuSearch = ({ className, placeholder, ...props }: CommandMenuSear
       {escapeButton && (
         <Button
           onPress={() => state?.close()}
-          className="hidden cursor-default border border-quebi-hairline font-mono text-quebi-fg-subtle transition-colors duration-150 hover:bg-quebi-raised hover:text-quebi-fg lg:inline lg:px-1.5 lg:py-0.5 lg:text-xs"
+          className="hidden cursor-default rounded-(--q-radius-mark) border border-quebi-hairline font-mono text-quebi-fg-subtle transition-colors duration-150 hover:bg-quebi-raised hover:text-quebi-fg lg:inline lg:px-1.5 lg:py-0.5 lg:text-xs"
         >
           esc
         </Button>

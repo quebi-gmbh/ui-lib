@@ -13,8 +13,8 @@ import { cn } from "@/lib/utils"
  * Meter — quebi design system
  *
  * Built on react-aria-components. A labelled progress-style bar for a known
- * range (storage used, quota, score). A thin square track in `raised`; the
- * fill is ink (`action`) and shifts to the warn token from 70% and the danger
+ * range (storage used, quota, score). A thin square track in `hairline`; the
+ * fill is `signal` and shifts to the warn token from 70% and the danger
  * token from 90%, or you can pin an explicit color. Composed from Meter,
  * MeterHeader, MeterValue, and MeterTrack.
  */
@@ -90,7 +90,7 @@ export function MeterTrack({ className, ...props }: React.ComponentProps<"div">)
     <div
       data-slot="meter-track"
       className={cn(
-        "relative h-1 w-full overflow-hidden bg-quebi-raised",
+        "relative h-1 w-full overflow-hidden bg-quebi-hairline",
         className,
       )}
       {...props}
@@ -105,7 +105,7 @@ export function MeterTrack({ className, ...props }: React.ComponentProps<"div">)
 }
 
 function getMeterColor(value: number): string {
-  if (value < 70) return "var(--color-quebi-action)"
+  if (value < 70) return "var(--color-quebi-signal)"
   if (value < 90) return "var(--color-quebi-warn)"
   return "var(--color-quebi-danger)"
 }

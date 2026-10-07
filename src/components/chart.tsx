@@ -707,7 +707,7 @@ const ChartLegendContent = ({
             key={key}
             id={key}
             className={cn(
-              "flex items-center gap-2 px-2 py-1 text-quebi-caption text-quebi-fg-muted *:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:size-2.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-quebi-fg-muted",
+              "flex items-center gap-2 rounded-(--q-radius-control) px-2 py-1 text-quebi-caption text-quebi-fg-muted *:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:size-2.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-quebi-fg-muted",
               // Selected is ink and an underline: no fill, because the swatch
               // beside the label is itself ink-on-paper and a ground would eat it.
               "selected:text-quebi-fg selected:underline selected:decoration-1 selected:underline-offset-5",

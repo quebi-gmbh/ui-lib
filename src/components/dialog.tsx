@@ -17,8 +17,8 @@ import { Button, type ButtonProps } from "@/components/button"
  * body. Foundational — modal / popover / sheet / drawer compose this surface
  * inside their own overlay. Pair with react-aria's Modal/Popover to present it.
  *
- * Surface: `bg-quebi-elevated` with a hairline edge, square. The float shadow
- * belongs to whichever overlay presents it. Titles are Outfit light at the
+ * Surface: `bg-quebi-elevated` with a hairline edge; its corners inherit the
+ * presenting overlay's radius. The float shadow belongs to that overlay. Titles are Outfit light at the
  * title size; descriptions are running text in `fg-muted`.
  */
 const Dialog = ({
@@ -31,7 +31,7 @@ const Dialog = ({
       data-slot="dialog"
       role={role}
       className={cn(
-        "peer/dialog group/dialog relative flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-hidden border border-quebi-hairline bg-quebi-elevated text-quebi-fg outline-none [--gutter:--spacing(6)] sm:[--gutter:--spacing(8)]",
+        "peer/dialog group/dialog relative flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-hidden rounded-[inherit] border border-quebi-hairline bg-quebi-elevated text-quebi-fg outline-none [--gutter:--spacing(6)] sm:[--gutter:--spacing(8)]",
         className,
       )}
       {...props}
@@ -140,7 +140,7 @@ const DialogCloseIcon = ({ className, ...props }: CloseButtonIndicatorProps) => 
       aria-label="Close"
       slot="close"
       className={cn(
-        "close absolute end-1 top-1 z-50 grid size-8 place-content-center text-quebi-fg-muted transition-colors duration-150 hover:bg-quebi-raised hover:text-quebi-fg focus:bg-quebi-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset sm:end-2 sm:top-2 sm:size-7",
+        "close absolute end-1 top-1 z-50 grid size-8 place-content-center rounded-(--q-radius-control) text-quebi-fg-muted transition-colors duration-150 hover:bg-quebi-raised hover:text-quebi-fg focus:bg-quebi-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset sm:end-2 sm:top-2 sm:size-7",
         className,
       )}
     >

@@ -13,8 +13,8 @@ import { cn } from "@/lib/utils"
  *
  * A two-dimensional gradient surface for picking two color channels at once
  * (e.g. saturation/brightness). Built on react-aria-components. The gradient is
- * the picked color (user data) and is left untouched; the chrome is a square
- * field with a hairline edge. The draggable handle is the quebi ColorThumb, and
+ * the picked color (user data) and is left untouched; the chrome is a
+ * control-radius field with a hairline edge. The draggable handle is the quebi ColorThumb, and
  * `children` replace it when you want to supply your own.
  *
  * The hairline is an *inset ring*, not a border, and that is the fix for a real
@@ -38,7 +38,7 @@ export function ColorArea({ className, children, ...props }: ColorAreaProps) {
       data-slot="color-area"
       className={composeRenderProps(className, (resolved) =>
         cn(
-          "size-56 shrink-0 inset-ring-1 inset-ring-quebi-hairline",
+          "size-56 shrink-0 rounded-(--q-radius-control) inset-ring-1 inset-ring-quebi-hairline",
           "disabled:opacity-50 disabled:forced-colors:bg-[GrayText]",
           resolved,
         ),

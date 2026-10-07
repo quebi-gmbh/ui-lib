@@ -23,7 +23,7 @@ export function ProseLink({ className, ...props }: LinkProps) {
       className={cn(
         "text-quebi-fg underline decoration-1 underline-offset-5",
         "transition-[text-underline-offset] duration-150 ease-out hover:underline-offset-8",
-        "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+        "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
         className,
       )}
     />

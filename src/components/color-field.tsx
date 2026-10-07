@@ -99,8 +99,9 @@ export function ColorFieldGroup({ children, className }: ColorFieldGroupProps) {
       data-slot="control"
       className={cn(
         "relative isolate block w-full",
-        // Room for the chip the swatch draws over the start of the field.
-        "[&_input]:ps-8",
+        // Room for the chip the swatch draws over the start of the field,
+        // past the field's own inline padding.
+        "[&_input]:ps-[calc(var(--q-field-px)+--spacing(8))]",
         className,
       )}
     >
@@ -135,7 +136,7 @@ export function ColorFieldSwatch({ className, ...props }: ColorSwatchProps) {
       color={liveColor(state) ?? undefined}
       className={composeRenderProps(className, (resolved) =>
         cn(
-          "pointer-events-none absolute start-0 top-1/2 z-10 size-5 -translate-y-1/2",
+          "pointer-events-none absolute start-(--q-field-px) top-1/2 z-10 size-5 -translate-y-1/2",
           "in-data-[disabled]:opacity-50",
           resolved,
         ),
@@ -172,12 +173,12 @@ export function ColorInput({ className, ...props }: InputProps) {
         cn(
           "relative block w-full appearance-none text-sm text-quebi-fg tabular-nums uppercase",
           "placeholder:text-quebi-fg-subtle placeholder:normal-case",
-          // `Input`'s underline at `md`; focus thickens it to 2px, no ring.
+          // `Input`'s frame at `md`; focus doubles it, no ring.
           "quebi-field px-(--q-field-px) py-2.5",
           "transition-[border-color,box-shadow] duration-150",
-          "outline-none focus:outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
-          "invalid:border-b-quebi-danger data-invalid:border-b-quebi-danger",
-          "focus:invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)] focus:data-invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
+          "outline-none focus:outline-none focus:shadow-(--q-field-focus)",
+          "invalid:[--q-field-edge:var(--q-danger)] data-invalid:[--q-field-edge:var(--q-danger)]",
+          "focus:invalid:shadow-(--q-field-focus-danger) focus:data-invalid:shadow-(--q-field-focus-danger)",
           "disabled:cursor-not-allowed disabled:opacity-50 in-disabled:opacity-50",
           resolved,
         ),

@@ -3,20 +3,21 @@ import { cn } from "@/lib/utils"
 /**
  * Stepper — quebi design system
  *
- * A horizontal progress indicator for multi-step flows, drawn in ink.
+ * A horizontal progress indicator for multi-step flows. Progress is state, so
+ * the step you are on and the way behind it are drawn in `signal`.
  *
  *   Admin (variant="admin", default):
  *     - row of 32px bullets + labels, joined by 1px rules
- *     - states: upcoming (hairline ring, subtle number), done (rule ring, ink
- *       number), active (solid action fill)
- *     - the rule following a done step is ink; the rest are hairlines
+ *     - states: upcoming (hairline ring, subtle number), done (`fg-muted`
+ *       ring, ink number), active (solid `signal` fill)
+ *     - the rule following a done step is `signal`; the rest are hairlines
  *
  *   Kiosk (variant="kiosk"):
  *     - 28px bullets, no labels, short connector rules
  *     - done shows a checkmark; active shows the step number
  *
  * Exactly one bullet is filled — the one the reader is on — so the eye finds it
- * without a hue or a halo. Done and upcoming differ by the weight of their ring
+ * without a halo; its `signal` means "here", nothing decorative. Done and upcoming differ by the weight of their ring
  * and their ink, the way the rest of the system tells strong from quiet.
  */
 
@@ -55,14 +56,14 @@ export function Stepper({
 
 /** Shared by both bullet sizes so the two variants cannot drift. */
 const BULLET_STATE: Record<StepStatus, string> = {
-  done: "border-quebi-rule bg-transparent text-quebi-fg",
-  active: "border-quebi-action bg-quebi-action text-quebi-on-action",
+  done: "border-quebi-fg-muted bg-transparent text-quebi-fg",
+  active: "border-quebi-signal bg-quebi-signal text-quebi-on-signal",
   upcoming: "border-quebi-hairline bg-transparent text-quebi-fg-subtle",
 }
 
-/** The rule after a step: ink once the step is done, a hairline before. */
+/** The rule after a step: `signal` once the step is done, a hairline before. */
 function connectorFor(status: StepStatus) {
-  return status === "done" ? "bg-quebi-rule" : "bg-quebi-hairline"
+  return status === "done" ? "bg-quebi-signal" : "bg-quebi-hairline"
 }
 
 /* ----------------------------------------------------------------------------

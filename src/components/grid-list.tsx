@@ -19,8 +19,9 @@ import { cn } from "@/lib/utils"
  * Built on react-aria-components. A keyboard-navigable, selectable list with
  * optional drag handles and per-row checkboxes, drawn as the index list: a
  * strong rule on top, a hairline under every row, no boxes. A hovered row is
- * raised, a selected one pressed; a row with an `href` also shifts right on
- * hover. Focus is an inset ring, since the rows have no room around them.
+ * raised, a selected one takes the `selected` ground with its icon in signal;
+ * a row with an `href` also shifts right on hover. A drop target is outlined
+ * in signal. Focus is an inset ring, since the rows have no room around them.
  */
 const GridList = <T extends object>({ className, ...props }: GridListProps<T>) => (
   <GridListPrimitive
@@ -29,7 +30,7 @@ const GridList = <T extends object>({ className, ...props }: GridListProps<T>) =
       cn(
         "relative flex flex-col sm:text-sm/6",
         "border-t border-quebi-rule has-data-[slot=grid-list-section]:border-t-0",
-        "*:data-[drop-target]:border *:data-[drop-target]:border-quebi-rule",
+        "*:data-[drop-target]:border *:data-[drop-target]:border-quebi-signal",
         "has-data-[slot=grid-list-section]:gap-y-8",
         resolved,
       ),
@@ -81,7 +82,8 @@ const GridListItem = ({ className, children, ...props }: GridListItemProps) => {
             "data-[dragging]:cursor-grab data-[dragging]:opacity-70",
             "**:data-[slot=icon]:size-5 **:data-[slot=icon]:shrink-0 **:data-[slot=icon]:text-quebi-fg-muted sm:**:data-[slot=icon]:size-4",
             (isHovered || isFocusVisible) && "bg-quebi-raised",
-            isSelected && "bg-quebi-pressed",
+            isSelected &&
+              "bg-quebi-selected text-quebi-on-selected **:data-[slot=icon]:text-quebi-signal",
             isFocusVisible && "ring-2 ring-inset ring-quebi-focus",
             isDisabled && "opacity-50",
             "href" in props && "cursor-pointer",

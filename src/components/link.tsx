@@ -10,28 +10,29 @@ import { cn } from "@/lib/utils"
 /**
  * Link — quebi design system
  *
- * The design's text link: ink, a 1px underline at a 5px offset that drops to
- * 8px on hover. Built on react-aria-components for the accessibility baseline.
+ * The design's text link: signal (a link is state — it goes somewhere), a 1px
+ * underline at a 3px offset that drops to 5px on hover. Built on react-aria-components for the accessibility baseline.
  * External hrefs (http(s):, mailto:, tel:) render as a plain anchor so they keep
  * working outside a router context.
  *
  * No font of its own: a link inside prose is set in the prose's Inter at the
  * prose's size and weight, and the underline is what sets it apart (WCAG 1.4.1
- * — ink against the body grey is not a second cue on its own). A standalone
+ * — a hue against the body grey is not a second cue on its own). A standalone
  * call to action takes the design's Outfit link role from the caller —
  * `className="font-display text-quebi-link"`, a lowercase verb phrase ending
  * in → — rather than a variant, because the only difference is two utilities.
  * Places where a link is not inside prose — nav rows, breadcrumbs, sidebar
- * items — opt out with `no-underline` and still underline on hover.
+ * items — opt out with `no-underline`, set their own text colour, and still
+ * underline on hover.
  */
 const EXTERNAL_HREF_RE = /^(https?:|mailto:|tel:)/i
 
 const BASE_CLASSES = [
-  "text-quebi-fg",
-  "underline decoration-1 underline-offset-5",
+  "text-quebi-signal",
+  "underline decoration-1 underline-offset-3",
   "transition-[text-underline-offset] duration-150 ease-out",
-  "hover:underline hover:underline-offset-8",
-  "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+  "hover:underline hover:underline-offset-5",
+  "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
   "disabled:cursor-default disabled:opacity-45 disabled:no-underline",
   "data-disabled:cursor-default data-disabled:opacity-45 data-disabled:no-underline",
 ]

@@ -8,8 +8,8 @@ import { cn, tv } from "@/lib/utils"
  * (A dark-green → G red). These per-band colours are *domain-semantic* (they ARE
  * the EU label scale, not quebi brand tokens) so they're kept as explicit values.
  * They are the one place this library keeps a hue outside the state tokens: the
- * colour is the content. The chip itself follows the system — square, Inter
- * 500, and a plain raised fallback with a hairline.
+ * colour is the content. The chip itself follows the system — the mark
+ * radius, Inter 500, and a plain raised fallback with a hairline.
  *
  * The letter is always rendered as text, so colour is never the sole signal
  * (WCAG 1.4.1); pass a localised `aria-label` for a fuller screen-reader
@@ -25,7 +25,7 @@ const KNOWN_CLASSES = ["A", "B", "C", "D", "E", "F", "G"] as const
 type EnergyClassLetter = (typeof KNOWN_CLASSES)[number]
 
 export const energyClassBadgeStyles = tv({
-  base: "inline-flex items-center justify-center font-sans font-medium leading-none tracking-tight",
+  base: "inline-flex items-center justify-center rounded-(--q-radius-mark) font-sans font-medium leading-none tracking-tight",
   variants: {
     // Official EU energy-label scale (dark-green A → red G). White text on the
     // dark ends (A, G), black on the bright middle bands keeps every chip ≥ 3:1

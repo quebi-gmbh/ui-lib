@@ -249,13 +249,13 @@ export function AsyncSelect<T extends AsyncSelectOption>({
         }}
         data-invalid={isInvalid || undefined}
         className={cn(
-          // `Input`'s underline, thickened to 2px while the input has focus.
-          "flex w-full items-center gap-1 bg-transparent py-1.5",
+          // `Input`'s frame, doubled while the input has focus.
+          "flex w-full items-center gap-1 px-(--q-field-px) py-1.5",
           "quebi-field",
           "transition-[border-color,box-shadow] duration-150",
-          "focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+          "focus-within:shadow-(--q-field-focus)",
           isInvalid &&
-            "border-b-quebi-danger focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
+            "[--q-field-edge:var(--q-danger)] focus-within:shadow-(--q-field-focus-danger)",
           isDisabled ? "cursor-not-allowed opacity-50" : "cursor-text",
         )}
       >
@@ -369,7 +369,7 @@ export function AsyncSelect<T extends AsyncSelectOption>({
                   )}
                 >
                   <Check
-                    className={cn("size-4 shrink-0", isSel ? "opacity-100" : "opacity-0")}
+                    className={cn("size-4 shrink-0 text-quebi-signal", isSel ? "opacity-100" : "opacity-0")}
                     aria-hidden="true"
                   />
                   <span className="flex-1 truncate">{item.name}</span>

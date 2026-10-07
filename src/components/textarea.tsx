@@ -33,8 +33,9 @@ type TextareaSize = keyof typeof textareaSizeStyles
  * Textarea — quebi design system
  *
  * Built on react-aria-components. A multi-line text input that auto-grows with
- * its content (field-sizing), drawn like `Input`: underline only, focus
- * thickens the line to 2px without moving anything, invalid turns it `danger`.
+ * its content (field-sizing), drawn like `Input`: boxed by default, underlined
+ * inside `quebi-editorial`; focus doubles the frame without moving anything,
+ * invalid turns it `danger`.
  */
 interface TextareaComponentProps extends TextAreaProps {
   /**
@@ -55,12 +56,12 @@ export function Textarea({ className, size: sizeProp, ...props }: TextareaCompon
           cn(
             "field-sizing-content block w-full appearance-none resize-y",
             textareaSizeStyles[size],
-            "bg-transparent text-quebi-fg placeholder:text-quebi-fg-subtle",
+            "text-quebi-fg placeholder:text-quebi-fg-subtle",
             "quebi-field",
             "transition-[border-color,box-shadow] duration-150",
-            "focus:outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
-            "invalid:border-b-quebi-danger focus:invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
-            "aria-invalid:border-b-quebi-danger focus:aria-invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
+            "focus:outline-none focus:shadow-(--q-field-focus)",
+            "invalid:[--q-field-edge:var(--q-danger)] focus:invalid:shadow-(--q-field-focus-danger)",
+            "aria-invalid:[--q-field-edge:var(--q-danger)] focus:aria-invalid:shadow-(--q-field-focus-danger)",
             "disabled:opacity-50 disabled:cursor-not-allowed",
             resolved,
           ),

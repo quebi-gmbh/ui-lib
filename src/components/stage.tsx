@@ -20,12 +20,17 @@ import { cn, tv } from "@/lib/utils"
  *
  * The glyph is sized against the stage's own width (a container query), not
  * the window's, so a stage in a narrow column carries a mark that fits it.
+ *
+ * A stage is the website surface wherever it is mounted: it wears
+ * `quebi-editorial`, which puts back the website's ink grounds, translucent
+ * hairlines, ink action and focus, and square, underlined controls — the app
+ * surface the rest of the library paints stops at its edge.
  */
 
 export const stageStyles = tv({
   slots: {
     root: [
-      "@container relative isolate flex flex-col overflow-hidden text-quebi-fg",
+      "quebi-editorial @container relative isolate flex flex-col overflow-hidden text-quebi-fg",
       "min-h-115 px-5 py-6 sm:px-7 md:min-h-[min(88vh,760px)] md:px-quebi-9",
       "[&>.quebi-eyebrow]:mt-quebi-8",
     ],

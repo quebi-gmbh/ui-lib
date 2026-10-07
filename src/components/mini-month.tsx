@@ -80,7 +80,7 @@ import { cn } from "@/lib/utils"
  * ## Today, the picked day, and focus
  *
  * Three states, three treatments, none of them sharing a property: the picked
- * day fills the date with ink (as `Calendar` does), today underlines it, and
+ * day fills the date with signal (as `Calendar` does), today underlines it, and
  * keyboard focus rings the whole cell. Today is read after mount, never at
  * render, for the same prerender reason `useCalendarToday` gives; pass `now`
  * to pin it.
@@ -207,7 +207,7 @@ function bandClass(color: CalendarColorName | undefined) {
 /**
  * A compact month grid that marks days rather than listing what is on them:
  * one dot per calendar with an event that day, a band behind runs of days such
- * as absences, today underlined and the picked day filled with ink. Pick a day to show its
+ * as absences, today underlined and the picked day filled with signal. Pick a day to show its
  * agenda wherever the page wants it.
  */
 export function MiniMonth<E extends CalendarEvent = CalendarEvent>({
@@ -402,7 +402,7 @@ function MiniMonthGrid({
                     "relative flex h-10 w-9 cursor-default flex-col items-center justify-center gap-0.5 text-quebi-fg text-sm tabular-nums outline-hidden transition-colors",
                     // The hover wash is a background, and so is the band: on a
                     // banded day it would replace the band and punch a hole in
-                    // the run. The band stays, and the date's square takes the
+                    // the run. The band stays, and the date's mark takes the
                     // hover instead.
                     span && !isOutsideMonth ? bandClass(span.color) : isHovered && "bg-quebi-raised",
                     // Square cells cannot round a run's ends, so a run is
@@ -422,8 +422,8 @@ function MiniMonthGrid({
                   <>
                     <span
                       className={cn(
-                        "flex size-6 items-center justify-center leading-none",
-                        isSelected && "bg-quebi-action font-medium text-quebi-on-action",
+                        "flex size-6 items-center justify-center rounded-(--q-radius-mark) leading-none",
+                        isSelected && "bg-quebi-signal font-medium text-quebi-on-signal",
                         span && isHovered && !isSelected && "bg-quebi-pressed",
                         isToday && "font-medium underline decoration-1 underline-offset-4",
                       )}

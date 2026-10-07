@@ -25,8 +25,8 @@ import {
  *
  * Presents the Dialog surface inside a dimmed, blurred overlay. Foundational:
  * date-picker and gallery compose this. Overlay: bg-black/60 + backdrop-blur.
- * Panel: the Dialog's square, hairline-edged elevated surface, lifted by
- * `shadow-quebi-float`.
+ * Panel: the Dialog's hairline-edged elevated surface at the surface radius
+ * (`--q-radius-surface`), lifted by `shadow-quebi-float`.
  *
  * There are two shapes, and which one you want is decided by what opens the
  * modal:
@@ -139,7 +139,7 @@ const ModalContent = ({
               : "sm:[--visual-viewport-vertical-padding:32px]",
             // The Dialog inside draws the surface and its hairline edge; the
             // panel adds only the float shadow, so the edge is not drawn twice.
-            "relative overflow-hidden bg-quebi-elevated text-quebi-fg shadow-quebi-float",
+            "relative overflow-hidden rounded-(--q-radius-surface) bg-quebi-elevated text-quebi-fg shadow-quebi-float",
             sizes[size],
             "entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-300 entering:ease-out",
             "exiting:slide-out-to-bottom sm:exiting:zoom-out-95 sm:exiting:slide-out-to-bottom-0 exiting:animate-out exiting:ease-in",

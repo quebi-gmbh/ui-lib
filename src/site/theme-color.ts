@@ -24,7 +24,7 @@ export interface SourceValues {
 
 export type Lookup = (key: string) => RGBA
 
-export type TokenGroup = "ground" | "ink" | "line" | "action" | "state" | "stage" | "shape" | "type"
+export type TokenGroup = "ground" | "ink" | "line" | "action" | "signal" | "state" | "stage" | "shape" | "type"
 
 export interface TokenSpec {
   /** The quebi token, as the page and the report name it. */
@@ -40,7 +40,7 @@ export interface TokenSpec {
   required?: boolean
   /** Colours and shadows differ per theme; fonts and shape are set once. */
   perTheme: boolean
-  /** Ink & Paper's own value — what the library paints when the token is not set. */
+  /** The library's own value — what it paints when the token is not set. */
   default: string | { light: string; dark: string }
   /** For a `choice`: the values it takes. */
   choices?: readonly string[]

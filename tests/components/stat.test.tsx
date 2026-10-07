@@ -92,7 +92,7 @@ describe("StatDelta", () => {
 
     expect(el).toHaveAttribute("data-direction", "flat")
     expect(el).toHaveTextContent(/^0%$/)
-    expect(el.className).toContain("text-quebi-fg-muted")
+    expect(el.className).toContain("text-quebi-fg-subtle")
   })
 
   test("the arrow is hidden from assistive tech; the signed text carries the direction", () => {

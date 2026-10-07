@@ -12,7 +12,8 @@ import { cn, tv } from "@/lib/utils"
  * Toggle — quebi design system
  *
  * A two-state pressable button (think bold/italic in a toolbar). Selected is
- * an ink fill — the same `action` pair as a solid Button and a checked box.
+ * state, so it is the `selected` ground with a `signal` label — the same pair
+ * as the active segment of a ToggleGroup.
  *
  * Intents: outline (bordered) / plain (borderless). Sizes follow the button
  * scale, including square (sq-*) icon-only variants.
@@ -23,7 +24,7 @@ export const toggleStyles = tv({
     "font-(family-name:--q-font-control) font-medium whitespace-nowrap select-none cursor-pointer",
     "border-(length:--q-border-control) border-solid",
     "transition-[background-color,border-color,color,opacity,translate,box-shadow] duration-150 ease-out",
-    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
     "disabled:opacity-45 disabled:cursor-not-allowed",
     // react-aria slot convention — icons inherit current color
     "*:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center",
@@ -31,18 +32,17 @@ export const toggleStyles = tv({
   variants: {
     intent: {
       outline: [
-        "bg-transparent border-quebi-rule text-quebi-fg shadow-(--q-shadow-control)",
+        "bg-transparent border-quebi-hairline text-quebi-fg shadow-(--q-shadow-control)",
         "hover:bg-quebi-raised",
         // A theme with a hard shadow presses a selected toggle into it.
         "selected:translate-(--q-press) selected:shadow-none",
-        "selected:bg-quebi-action selected:border-quebi-action selected:text-quebi-on-action",
-        "selected:hover:bg-quebi-action-hover selected:hover:border-quebi-action-hover",
+        "selected:bg-quebi-selected selected:text-quebi-signal",
       ],
       plain: [
         "bg-transparent border-transparent text-quebi-fg-muted",
         "hover:bg-quebi-raised hover:text-quebi-fg",
-        "selected:bg-quebi-action selected:border-quebi-action selected:text-quebi-on-action",
-        "selected:hover:bg-quebi-action-hover selected:hover:border-quebi-action-hover selected:hover:text-quebi-on-action",
+        "selected:bg-quebi-selected selected:text-quebi-signal",
+        "selected:hover:bg-quebi-selected selected:hover:text-quebi-signal",
       ],
     },
     size: {

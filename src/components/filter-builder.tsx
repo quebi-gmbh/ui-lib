@@ -200,14 +200,13 @@ export function FilterBuilder({
                     aria-describedby={isSet ? undefined : hintId}
                     className={cn(
                       "col-span-3 col-start-1 row-start-3 w-full justify-start font-normal @2xl:col-span-1 @2xl:col-start-4 @2xl:row-start-1",
-                      // Field-shaped, so drawn like the Selects beside it: an
-                      // underline on no ground, not a button's frame.
-                      "border-x-0 border-t-0 px-0 hover:bg-transparent",
+                      // Field-shaped, so drawn like the boxed Selects beside it:
+                      // a hairline frame on the field ground.
                       // An unfinished condition is inert — it lets every row
                       // through — and the sketch drew its `Select…` in the same
                       // ink as a chosen value, so a row that was doing nothing
                       // looked exactly like the one beside it that was. Muted
-                      // ink and a dashed underline are the two cheapest ways to say
+                      // ink and a dashed edge are the two cheapest ways to say
                       // "there is nothing here yet"; the line below says why it
                       // matters.
                       !isSet && "border-dashed text-quebi-fg-subtle",

@@ -11,14 +11,15 @@ import { cn, tv } from "@/lib/utils"
 /**
  * Button — quebi design system
  *
- * Intents: primary (solid ink), secondary (raised ground), outline (ruled),
- * ghost (no box at rest), danger.
+ * Intents: primary (solid slate), secondary (raised ground), outline
+ * (hairline-edged), ghost (no box at rest), danger (outlined in danger).
  * Sizes: xs / sm / md (default) / lg / xl, plus square icon-only (sq-*).
  *
- * Square, ruled and flat: no radius unless `isCircle`, a 1px border on every
- * intent (transparent where the intent has no edge, so every intent is the same
- * height), and no shadow — a button sits in the page flow, and depth there
- * comes from rules. Hover changes the fill and nothing else.
+ * Flat: the control radius (square inside `quebi-editorial`) unless
+ * `isCircle`, a 1px border on every intent (transparent where the intent has
+ * no edge, so every intent is the same height), and no shadow — a button sits
+ * in the page flow, and depth there comes from rules. Hover changes the fill
+ * and nothing else.
  */
 export const buttonStyles = tv({
   base: [
@@ -29,11 +30,11 @@ export const buttonStyles = tv({
     // and the focus ring. These are what the intents and `disabled:`/`pending:`
     // actually move.
     // A theme with a hard shadow (`--q-shadow-*`) and a `--q-press` makes the
-    // button travel into its shadow under the pointer; in Ink & Paper both are
-    // zero, so only the colours move.
+    // button travel into its shadow under the pointer; in the default theme
+    // and in `quebi-editorial` both are zero, so only the colours move.
     "transition-[background-color,border-color,color,opacity,translate,box-shadow] duration-150 ease-out",
     "hover:translate-(--q-press) pressed:translate-(--q-press) hover:shadow-none pressed:shadow-none disabled:translate-0",
-    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
     "disabled:opacity-45 disabled:cursor-not-allowed",
     "pending:opacity-70 pending:cursor-wait",
     // react-aria slot conventions — icons & loaders inherit current color
@@ -42,26 +43,26 @@ export const buttonStyles = tv({
   ],
   variants: {
     intent: {
-      // The design's solid button. Hover steps the ink toward the body colour
-      // (gray-800 on Daylight, gray-300 on Cinematic); the label stays above
-      // 4.5:1 at both ends.
+      // The design's solid button: slate in Light, light in Dark. Hover steps
+      // the fill toward the body colour; the label stays above 4.5:1 at both
+      // ends.
       primary:
         "bg-quebi-action border-quebi-action text-quebi-on-action shadow-(--q-shadow-action) hover:bg-quebi-action-hover hover:border-quebi-action-hover",
       secondary:
         "bg-quebi-raised border-transparent text-quebi-fg shadow-(--q-shadow-control) hover:bg-quebi-pressed",
-      // The design's outline button: transparent, drawn by a line-strong rule.
+      // The design's outline button, drawn by the app-line hairline every
+      // control edge uses.
       outline:
-        // The control ground: transparent while fields are underlines, the card
-        // ground once a theme boxes them — an outline button is a box too.
-        "bg-(--q-field-bg) border-quebi-rule text-quebi-fg shadow-(--q-shadow-control) hover:bg-quebi-raised",
+        // The control ground: the card ground while fields are boxed,
+        // transparent once a theme underlines them — an outline button follows.
+        "bg-(--q-field-bg) border-quebi-hairline text-quebi-fg shadow-(--q-shadow-control) hover:bg-quebi-raised",
       ghost:
         "bg-transparent border-transparent text-quebi-fg-muted hover:bg-quebi-raised hover:text-quebi-fg",
-      // The label is the page ground, not white: `--q-danger` is red-700 on
-      // Daylight and red-400 on Cinematic, and only the ground flips with it —
-      // white on red-400 is 2.8:1, ink on it is 7:1. Hover fades rather than
-      // shifting hue, so there is no second red to keep in contrast.
+      // Outline-shaped, edged and labelled in `danger`: a destructive button
+      // says what it destroys, it does not shout. Hover is the raised ground,
+      // like the outline button, so there is no second red to keep in contrast.
       danger:
-        "bg-quebi-danger border-quebi-danger text-quebi-bg shadow-(--q-shadow-action) hover:opacity-90",
+        "bg-(--q-field-bg) border-quebi-danger text-quebi-danger shadow-(--q-shadow-control) hover:bg-quebi-raised",
     },
     size: {
       xs: ["text-xs px-2.5 py-1.5", "*:data-[slot=icon]:size-3 *:data-[slot=loader]:size-3"],

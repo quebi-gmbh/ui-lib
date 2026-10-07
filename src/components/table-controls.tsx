@@ -776,8 +776,9 @@ export function TableBulkBar({
     !isAll && onSelectAllMatching && count === pageCount && pageCount > 0 && total !== pageCount
 
   return (
-    <div className="flex flex-wrap items-center gap-2 bg-quebi-raised px-3 py-2 print:hidden">
-      <p className="font-medium text-quebi-fg text-quebi-body-s" aria-live="polite">
+    // The selected ground, like the rows it counts: a selection is state.
+    <div className="flex flex-wrap items-center gap-2 bg-quebi-selected px-3 py-2 print:hidden">
+      <p className="font-medium text-quebi-on-selected text-quebi-body-s" aria-live="polite">
         {count == null ? (
           "Every row matching your filters is selected"
         ) : (

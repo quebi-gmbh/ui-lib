@@ -116,7 +116,7 @@ export function ColorSliderTrack({ className, ...props }: SliderTrackProps) {
           // shorthand resets `background-clip` to `border-box`, so a border is
           // composited over the track's own gradient and thins out where it
           // meets the extremes. A ring is a box-shadow painted above it.
-          "group col-span-2 inset-ring-1 inset-ring-quebi-hairline",
+          "group col-span-2 rounded-(--q-radius-control) inset-ring-1 inset-ring-quebi-hairline",
           // Plain utilities so a consumer's `h-80` / `w-40` can win — see the
           // docblock on ColorSlider (task #151).
           isVertical ? "h-56 w-6" : "h-6 w-full",
@@ -143,9 +143,9 @@ export function ColorSliderThumb({ className }: { className?: string }) {
         // centres the thumb on that point. With `left-[50%]` missing, a
         // vertical thumb fell back to `left: auto` and landed on the track's
         // start edge (task #131). This matches the shared ColorThumb.
-        "top-[50%] left-[50%] size-5 rounded-full border-2 border-white ring-1 ring-quebi-rule",
+        "top-[50%] left-[50%] size-5 rounded-full border-2 border-white ring-1 ring-quebi-fg-muted",
         "transition-[box-shadow] duration-150",
-        "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-3 data-[focus-visible]:ring-offset-quebi-bg",
+        "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
         "data-[dragging]:scale-110",
         className,
       )}

@@ -27,7 +27,7 @@ import { fieldStyles } from "@/components/field"
  * Date Picker — quebi design system
  *
  * A segmented date input paired with a calendar overlay. The trigger uses the
- * underline of `Input`, with a calendar-icon button on the right; clicking it opens a Popover
+ * box of `Input`, with a calendar-icon button on the right; clicking it opens a Popover
  * holding the Calendar (or a Modal on mobile). Composes
  * @/components/{calendar,range-calendar,modal,popover,date-field}. Foundational
  * — the Conform date-picker / date-range-picker variants depend on it.
@@ -144,8 +144,8 @@ export function DatePickerOverlay({
  * DatePickerTrigger — quebi design system
  *
  * DateInput on the left + calendar-icon button on the right, styled as one
- * control: one underline under both, owned by the wrapper. The inner
- * DateInput is rendered `bare` so it draws no line of its own.
+ * control: one box around both, owned by the wrapper. The inner
+ * DateInput is rendered `bare` so it draws no edge of its own.
  */
 export function DatePickerTrigger({ className, ...props }: GroupProps) {
   return (
@@ -153,13 +153,13 @@ export function DatePickerTrigger({ className, ...props }: GroupProps) {
       data-slot="control"
       className={composeRenderProps(className, (resolved) =>
         cn(
-          // `Input`'s underline, under the segments and the calendar button
-          // alike; focus anywhere inside, or the open calendar, thickens it.
-          "group/dpt flex w-full items-stretch overflow-hidden bg-transparent",
+          // `Input`'s box, around the segments and the calendar button alike;
+          // focus anywhere inside, or the open calendar, turns its edge.
+          "group/dpt flex w-full items-stretch overflow-hidden",
           "quebi-field",
           "transition-[border-color,box-shadow] duration-150",
-          "focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-focus)] group-open:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
-          "data-invalid:border-b-quebi-danger data-invalid:focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
+          "focus-within:shadow-(--q-field-focus) group-open:shadow-(--q-field-focus)",
+          "data-invalid:[--q-field-edge:var(--q-danger)] data-invalid:focus-within:shadow-(--q-field-focus-danger)",
           resolved,
         ),
       )}
@@ -171,7 +171,7 @@ export function DatePickerTrigger({ className, ...props }: GroupProps) {
       <Button
         data-slot="date-picker-trigger"
         className={cn(
-          "inline-flex cursor-pointer items-center bg-transparent ps-3 text-quebi-fg-subtle",
+          "inline-flex cursor-pointer items-center bg-transparent ps-3 pe-(--q-field-px) text-quebi-fg-subtle",
           "transition-colors duration-150 hover:text-quebi-fg",
           "outline-none focus-visible:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset",
         )}

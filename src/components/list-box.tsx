@@ -21,7 +21,8 @@ import { cn } from "@/lib/utils"
  *
  * A selectable list rendered on the overlay surface (`bg-quebi-elevated`,
  * never the page's `bg-quebi-bg` — it floats above it) with a hairline edge,
- * the small floating radius and an ink check for selection. Foundational:
+ * the small floating radius and the `selected` ground with a signal check for
+ * selection. Foundational:
  * Multiple Select builds on top of it.
  * Reuses the shared dropdown item styling so items match menus and selects.
  */

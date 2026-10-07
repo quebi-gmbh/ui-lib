@@ -917,7 +917,7 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
                       aria-hidden="true"
                       className={cn(
                         "pointer-events-none absolute z-10",
-                        "border-2 border-quebi-rule border-dashed bg-quebi-raised",
+                        "border-2 border-quebi-focus border-dashed bg-quebi-raised",
                       )}
                       style={{
                         left: Math.max(0, Math.min(previewLeft, gridWidth - previewWidth)),

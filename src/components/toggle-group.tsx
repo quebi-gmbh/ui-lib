@@ -15,8 +15,8 @@ import { cn, tv } from "@/lib/utils"
  * ToggleGroup — quebi design system
  *
  * A set of two-state pressable buttons that act as one control (think a view
- * switcher or a text-alignment toolbar). The selected item is an ink fill; in
- * single-selection mode items sit with a small gutter, in multiple mode they
+ * switcher or a text-alignment toolbar). The selected item is the active
+ * segment — `selected` ground, `signal` label; in single-selection mode items sit with a small gutter, in multiple mode they
  * butt together into a segmented bar. Self-contained — the item
  * styles live here rather than reaching for a sibling Toggle.
  *
@@ -113,7 +113,7 @@ export function ToggleGroup({
         className={composeRenderProps(className, (resolved) =>
           cn(
             "inline-flex p-0.5",
-            "border border-solid border-quebi-rule",
+            "border border-solid border-quebi-hairline",
             orientation === "horizontal" ? "flex-row" : "flex-col",
             selectionMode === "single" ? "gap-0.5" : "gap-0",
             isCircle ? "rounded-full" : "rounded-(--q-radius-control)",
@@ -133,10 +133,9 @@ export const toggleGroupItemStyles = tv({
     "font-sans font-medium whitespace-nowrap select-none cursor-pointer",
     "border border-solid border-transparent text-quebi-fg-muted",
     "transition-[background-color,border-color,color,opacity] duration-150 ease-out",
-    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg focus-visible:z-10",
+    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg focus-visible:z-10",
     "hover:not-selected:bg-quebi-raised hover:not-selected:text-quebi-fg",
-    "selected:bg-quebi-action selected:border-quebi-action selected:text-quebi-on-action",
-    "selected:hover:bg-quebi-action-hover selected:hover:border-quebi-action-hover",
+    "selected:bg-quebi-selected selected:text-quebi-signal",
     "disabled:opacity-45 disabled:cursor-not-allowed disabled:hover:bg-transparent",
     "*:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center",
   ],
@@ -210,14 +209,21 @@ export function ToggleGroupItem({ className, size: sizeProp, ...props }: ToggleG
             selectionMode,
           }),
           fitsShell,
-          // A pill shell rounds what touches its ends: every item when they
-          // stand apart, only the outer two when they butt into one bar.
-          isCircle &&
-            (selectionMode !== "multiple"
+          // The shell's corners carry into what touches its ends: every item
+          // when they stand apart, only the outer two when they butt into one
+          // bar. A control-radius shell holds mark-radius items — 6px less the
+          // 2px padding is 4px, so the corners stay concentric.
+          isCircle
+            ? selectionMode !== "multiple"
               ? "rounded-full"
               : orientation === "vertical"
                 ? "first:rounded-t-full last:rounded-b-full"
-                : "first:rounded-s-full last:rounded-e-full"),
+                : "first:rounded-s-full last:rounded-e-full"
+            : selectionMode !== "multiple"
+              ? "rounded-(--q-radius-mark)"
+              : orientation === "vertical"
+                ? "first:rounded-t-(--q-radius-mark) last:rounded-b-(--q-radius-mark)"
+                : "first:rounded-s-(--q-radius-mark) last:rounded-e-(--q-radius-mark)",
           className,
         ),
       )}

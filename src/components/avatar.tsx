@@ -4,9 +4,9 @@ import { cn } from "@/lib/utils"
  * Avatar — quebi design system
  *
  * Renders a user image, falling back to initials in the muted ink on the
- * raised ground. Circular by default — a face is round by nature — or square
- * via `isSquare`, which is square, not rounded: the system has no radius
- * between none and a pill. The full size scale runs xs → 9xl, driven by a CSS
+ * raised ground. Circular by default — a face is round by nature — or a
+ * squarer mark via `isSquare`, at the mark radius (`--q-radius-mark`, square
+ * under `.quebi-editorial`). The full size scale runs xs → 9xl, driven by a CSS
  * variable so the image and the initials SVG always track the same box. The
  * edge is a hairline, never a drop shadow.
  */
@@ -63,7 +63,9 @@ export function Avatar({
         size === "7xl" && "[--avatar-size:--spacing(32)]",
         size === "8xl" && "[--avatar-size:--spacing(36)]",
         size === "9xl" && "[--avatar-size:--spacing(42)]",
-        isSquare ? "rounded-none *:rounded-none" : "rounded-full *:rounded-full",
+        isSquare
+          ? "rounded-(--q-radius-mark) *:rounded-(--q-radius-mark)"
+          : "rounded-full *:rounded-full",
         className,
       )}
     >

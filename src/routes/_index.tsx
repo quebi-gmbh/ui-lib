@@ -167,12 +167,17 @@ function ClaudeSkill() {
 }
 
 export default function Home() {
+  // The home page is the website, not the app: `quebi-editorial` puts back the
+  // website's ink grounds and rules for everything below the Stage too, and
+  // `bg-quebi-bg` paints that ground — in Cinematic it is ink, not app-bg.
+  // The negative margin and padding carry it through the footer's top margin,
+  // so the ink meets the footer's rule instead of a band of app ground.
   return (
-    <>
+    <div className="quebi-editorial -mb-quebi-10 bg-quebi-bg pb-quebi-10">
       <Hero />
       <Features />
       <ForAgents />
       <ClaudeSkill />
-    </>
+    </div>
   )
 }

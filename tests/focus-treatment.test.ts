@@ -1,6 +1,6 @@
 /**
- * The focus ring, as the design system states it: "a 2px solid `focus` ring
- * with 3px offset on every interactive element".
+ * The focus ring, as the design system states it: "a 2px app-signal ring with
+ * 2px offset" on every interactive element.
  *
  * Two legitimate second forms, neither of them a second language:
  *
@@ -10,9 +10,11 @@
  * - An indicator inside another control's chrome (a tag's ✕, a dialog's close)
  *   stays `ring-offset-0`: there is no page colour at that seam to offset into.
  *
- * Text fields are the one exception the design makes on purpose: they are
- * underline-only, and focus thickens the underline to 2px instead of drawing a
- * ring. Input is the canonical copy of that and is checked by name.
+ * Text fields are the one exception the design makes on purpose: focus turns
+ * their frame (`quebi-field` — a box by default, an underline inside
+ * `quebi-editorial`) the focus colour and doubles it with `--q-field-focus`
+ * instead of drawing a ring. Input is the canonical copy of that and is
+ * checked by name.
  */
 import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
@@ -111,19 +113,20 @@ describe("the focus ring is the design's ring", () => {
     const flush = rings
       .filter(({ utilities }) => !detached(utilities) && !inward(utilities) && !tight(utilities))
       .map(({ path, variant }) => `${path}: ${variant}:`)
-    // Add `<variant>:ring-offset-3 <variant>:ring-offset-quebi-bg` — or
+    // Add `<variant>:ring-offset-2 <variant>:ring-offset-quebi-bg` — or
     // `<variant>:ring-inset` if the control has no room outside itself.
     expect(flush).toEqual([])
   })
 })
 
-describe("a text field draws an underline, not a ring", () => {
+describe("a text field doubles its frame, not a ring", () => {
   const input = readFileSync(join(ROOT, "src", "components", "input.tsx"), "utf8")
 
-  test("Input is underline-only and thickens the line on focus", () => {
-    // The frame (`quebi-field`) is underline-only unless a theme boxes it.
+  test("Input draws the field frame and doubles it on focus", () => {
+    // The frame (`quebi-field`) is a box unless `quebi-editorial` underlines
+    // it; `--q-field-focus` is the matching second pixel for either.
     expect(input).toContain("quebi-field")
-    expect(input).toContain("focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]")
+    expect(input).toContain("focus:shadow-(--q-field-focus)")
   })
 
   test("and puts no focus ring around itself", () => {

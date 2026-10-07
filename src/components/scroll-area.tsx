@@ -57,8 +57,8 @@ const SCROLLBAR_VARIANTS: Record<ScrollAreaScrollbar, string> = {
  * attributes wired up for masking.
  *
  * **The corner.** A scrollbar is painted inside the border box but `overflow`
- * and `border-radius` do not clip it, so on a rounded surface (quebi surfaces are
- * square; the exceptions are floating ones and a stage frame) the bar would
+ * and `border-radius` do not clip it, so on a rounded surface (app surfaces
+ * take the theme's radius; editorial ones are square) the bar would
  * run out through the arc and square off against the top and bottom edges. The
  * viewport carries `quebi-scrollbar-corners`, whose `clip-path: border-box` is
  * the same rounded rect the border draws — so the bar's ends curve away with

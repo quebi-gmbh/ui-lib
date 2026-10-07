@@ -25,8 +25,8 @@ import { cn } from "@/lib/utils"
  *
  * Built on react-aria-components. A text field that turns typed entries into
  * removable chips: press Enter, comma, or semicolon to commit the current
- * input. The input is drawn like `Input` — underline only, thickened on
- * focus; committed tags render as pills with a remove button. Casing-insensitive de-duplication, optional split pattern,
+ * input. The input is drawn like `Input` — boxed by default (underlined inside
+ * `quebi-editorial`), its frame doubled on focus; committed tags render as pills with a remove button. Casing-insensitive de-duplication, optional split pattern,
  * and a hidden mirror input so the comma-joined value submits with a form.
  */
 
@@ -211,13 +211,13 @@ export function TagField({
           <Input
             placeholder={placeholder}
             className={cn(
-              "relative block w-full appearance-none bg-transparent text-quebi-fg placeholder:text-quebi-fg-subtle",
+              "relative block w-full appearance-none text-quebi-fg placeholder:text-quebi-fg-subtle",
               "quebi-field",
               tagFieldSizeStyles[size],
               "transition-[border-color,box-shadow] duration-150",
-              "outline-none focus:outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+              "outline-none focus:outline-none focus:shadow-(--q-field-focus)",
               isInvalid &&
-                "border-b-quebi-danger focus:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
+                "[--q-field-edge:var(--q-danger)] focus:shadow-(--q-field-focus-danger)",
               "disabled:cursor-not-allowed disabled:opacity-50",
             )}
           />
@@ -254,8 +254,8 @@ export function TagField({
                     "bg-quebi-raised text-quebi-fg-muted",
                     "transition-colors duration-150",
                     allowsRemoving && "hover:text-quebi-fg",
-                    "data-[selected]:bg-quebi-pressed data-[selected]:text-quebi-fg",
-                    "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-3 data-[focus-visible]:ring-offset-quebi-bg",
+                    "data-[selected]:bg-quebi-selected data-[selected]:text-quebi-on-selected",
+                    "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
                     "data-[disabled]:opacity-50",
                     "outline-none",
                   ),

@@ -22,8 +22,8 @@ import { cn } from "@/lib/utils"
  * Range Calendar — quebi design system
  *
  * An accessible date-range calendar built on react-aria-components and
- * @internationalized/date. Square cells: the range endpoints fill with ink,
- * the days in-between take the raised ground, and today is underlined. Composes the shared header, body and grid header
+ * @internationalized/date. The range endpoints take the signal fill, the days
+ * in-between the selected ground, and today is underlined. Composes the shared header, body and grid header
  * from the Calendar component — including its `variant`, so the month/year
  * control swaps the Month Picker into this calendar's body exactly as it does
  * in a single-month one, and the chevron-stepper header is available too.
@@ -70,9 +70,10 @@ function RangeCalendar<T extends DateValue>({
                         date={date}
                         className={cn(
                           "group/calendar-cell relative size-9 shrink-0 cursor-default text-sm text-quebi-fg outline-hidden",
-                          // the whole span sits on the raised ground; the
-                          // endpoints paint their ink over it
-                          "selected:bg-quebi-raised",
+                          // the whole span sits on the selected ground, its
+                          // ends rounded; the endpoints paint signal over it
+                          "selected:bg-quebi-selected selected:text-quebi-on-selected",
+                          "data-selection-start:rounded-s-(--q-radius-control) data-selection-end:rounded-e-(--q-radius-control)",
                           "data-outside-month:text-quebi-fg-subtle",
                         )}
                       >
@@ -87,11 +88,11 @@ function RangeCalendar<T extends DateValue>({
                         }) => (
                           <span
                             className={cn(
-                              "flex size-full items-center justify-center tabular-nums transition-colors duration-150",
+                              "flex size-full items-center justify-center rounded-(--q-radius-control) tabular-nums transition-colors duration-150",
                               isSelected && (isSelectionStart || isSelectionEnd)
-                                ? "bg-quebi-action text-quebi-on-action hover:bg-quebi-action-hover"
+                                ? "bg-quebi-signal text-quebi-on-signal"
                                 : isSelected
-                                  ? "group-hover/calendar-cell:bg-quebi-pressed"
+                                  ? "group-hover/calendar-cell:bg-quebi-signal/15"
                                   : "group-hover/calendar-cell:bg-quebi-raised",
                               // today: an underline, in whichever ink the cell is
                               date.compare(now) === 0 &&

@@ -55,7 +55,7 @@ describe("Button", () => {
     expect(button).not.toHaveClass("rounded-none")
   })
 
-  test("defaults to the theme's control radius, which is square in Ink & Paper", () => {
+  test("defaults to the theme's control radius, 6px on the app surface and square inside quebi-editorial", () => {
     render(<Button>Save</Button>)
 
     expect(screen.getByRole("button", { name: "Save" })).toHaveClass("rounded-(--q-radius-control)")
@@ -145,8 +145,8 @@ describe("Button intents: the label on its own fill", () => {
   function resolve(value: string, values: Map<string, string>, behind: string) {
     const [name, alpha] = split(value)
     if (name === "transparent" || name === "current") return behind
-    // A theme variable for a ground, measured at its Ink & Paper default: the
-    // control ground is transparent while fields are underlines.
+    // A theme variable for a ground: the card ground, which is the page itself
+    // (and transparent while fields are underlines).
     if (name === "(--q-field-bg)") return behind
     const hex = name.startsWith("quebi-")
       ? values.get(`q-${name.slice("quebi-".length)}`)
@@ -239,7 +239,7 @@ describe("Button hover: fill only", () => {
   /** The classes `buttonStyles` actually emits for one intent, post-merge. */
   const classesFor = (intent: (typeof INTENTS)[number]) => buttonStyles({ intent }).split(/\s+/)
 
-  test("no intent casts a shadow of its own — only the theme's, which Ink & Paper sets to none", () => {
+  test("no intent casts a shadow of its own — only the theme's, which the theme sets to none", () => {
     // A theme may give controls a hard shadow (`--q-shadow-control`,
     // `--q-shadow-action`) and drop it on press; a literal shadow utility would
     // be one the theme cannot take back.

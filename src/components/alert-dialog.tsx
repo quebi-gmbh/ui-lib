@@ -45,7 +45,7 @@ import {
  * is never more than one on screen.
  */
 
-/** The confirming button: ink (`primary`), or `danger` when the answer destroys something. */
+/** The confirming button: slate (`primary`), or `danger` when the answer destroys something. */
 export type ConfirmIntent = "primary" | "danger"
 
 export interface ConfirmOptions {

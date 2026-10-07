@@ -12,8 +12,8 @@ import { cn, tv } from "@/lib/utils"
 /**
  * <Thing> — quebi design system
  *
- * One-line summary of intents/sizes/states. Ink & Paper: square, ruled, no hue;
- * the solid intent is action ink. No shadow unless the thing floats.
+ * One-line summary of intents/sizes/states. The app surface: control radius,
+ * hairline edges, slate primary, signal only for state. No shadow unless it floats.
  */
 export const thingStyles = tv({
   base: [

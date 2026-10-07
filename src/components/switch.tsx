@@ -11,9 +11,9 @@ import { cn } from "@/lib/utils"
 /**
  * Switch — quebi design system
  *
- * Built on react-aria-components. A 44x24 pill: off is a `rule`-edged track
- * with an ink thumb, on fills the track with `action` ink and turns the thumb
- * `on-action` as it slides 20px right. Focus is the outward ring. A string
+ * Built on react-aria-components. A 44x24 pill: off is an `fg-muted`-edged
+ * track with an `fg-muted` thumb; on is state, so it fills the track with
+ * `signal` and turns the thumb `on-signal` as it slides 20px right. Focus is the outward ring. A string
  * child is set as running text, not as the mono field label.
  */
 export function Switch({ children, className, ...props }: SwitchProps) {
@@ -42,10 +42,10 @@ export function Switch({ children, className, ...props }: SwitchProps) {
               // 44x24 track, pill-shaped.
               "relative isolate inline-flex h-6 w-11 shrink-0 rounded-full border",
               "transition-colors duration-150",
-              "border-quebi-rule bg-transparent",
-              values.isSelected && "border-quebi-action bg-quebi-action",
+              "border-quebi-fg-muted bg-transparent",
+              values.isSelected && "border-quebi-signal bg-quebi-signal",
               values.isFocusVisible &&
-                "ring-2 ring-quebi-focus ring-offset-3 ring-offset-quebi-bg",
+                "ring-2 ring-quebi-focus ring-offset-2 ring-offset-quebi-bg",
             )}
           >
             <span
@@ -57,9 +57,9 @@ export function Switch({ children, className, ...props }: SwitchProps) {
                 // visible gap is `px`, not `0.5`. That leaves 44 - 2*2 - 20 = 20px
                 // of travel, which is what `translate-x-5` covers, so the on state
                 // lands 2px from the right edge and the thumb is centered either way.
-                "pointer-events-none absolute top-px left-px size-5 rounded-full bg-quebi-action",
+                "pointer-events-none absolute top-px left-px size-5 rounded-full bg-quebi-fg-muted",
                 "transition-[translate,background-color] duration-150",
-                values.isSelected && "translate-x-5 bg-quebi-on-action",
+                values.isSelected && "translate-x-5 bg-quebi-on-signal",
               )}
             />
           </span>

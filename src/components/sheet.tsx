@@ -33,9 +33,9 @@ import {
  * `isOpen`/`onOpenChange` and leave `Sheet` out. A `Sheet` with a single child
  * puts that child in its trigger slot, which warns on every render.
  *
- * Surface: bg-quebi-elevated, square, lifted by `shadow-quebi-float`. Docked to
- * an edge it draws one hairline, on the side facing the page; floating, it is
- * ruled all round.
+ * Surface: bg-quebi-elevated, lifted by `shadow-quebi-float`. Docked to an
+ * edge it is square and draws one hairline, on the side facing the page;
+ * floating, it is ruled all round at the surface radius.
  */
 const Sheet = DialogTriggerPrimitive
 
@@ -92,7 +92,7 @@ const SheetContent = ({
           cn(
             // The side variant draws the edge; the Dialog inside is told not to.
             "fixed z-50 grid gap-4 border-quebi-hairline bg-quebi-elevated text-quebi-fg shadow-quebi-float",
-            "data-[float=true]:border",
+            "data-[float=true]:rounded-(--q-radius-surface) data-[float=true]:border",
             "transform-gpu transition ease-in-out will-change-transform [--visual-viewport-vertical-padding:16px]",
             // One length and one curve for both directions, matching Drawer's
             // `0.2s easeInOut` — Drawer is the surface the report held up as the

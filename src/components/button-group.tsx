@@ -67,7 +67,7 @@ export function ButtonGroupText({ className, ...props }: React.ComponentProps<"d
       data-slot="button-group-text"
       className={cn(
         "flex items-center gap-2 whitespace-nowrap",
-        "border border-quebi-rule px-4",
+        "rounded-(--q-radius-control) border border-quebi-hairline px-4",
         "font-sans text-sm font-medium text-quebi-fg-muted",
         "*:data-[slot=icon]:pointer-events-none *:data-[slot=icon]:shrink-0",
         "[&_[data-slot=icon]:not([class*='size-'])]:size-4",

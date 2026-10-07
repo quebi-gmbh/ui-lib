@@ -1032,7 +1032,7 @@ export function TableShell<T extends RowData>({
           <span className="inline-flex max-w-full min-w-0 items-center gap-1 *:shrink-0">
             <span className="min-w-8 shrink! truncate">{meta?.label ?? column.id}</span>
             {priority != null && sorting.length > 1 && (
-              <span className="grid size-4 place-content-center rounded-full bg-quebi-action font-mono text-quebi-label leading-none text-quebi-on-action tabular-nums">
+              <span className="grid size-4 place-content-center rounded-full bg-quebi-signal font-mono text-quebi-label leading-none text-quebi-on-signal tabular-nums">
                 {priority}
               </span>
             )}

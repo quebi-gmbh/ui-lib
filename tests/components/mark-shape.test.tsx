@@ -64,10 +64,10 @@ function boxSize(classes: string[]): number {
 function markRadius(classes: string[], box: number): number {
   const rounded = classes.filter((className) => /^rounded(-|$)/.test(className))
   expect(rounded.length).toBeLessThanOrEqual(1)
-  // Square is the default in Ink & Paper: no radius class is a 0px corner.
+  // No radius class is a 0px corner.
   if (rounded.length === 0 || rounded[0] === "rounded-none") return 0
   if (rounded[0] === "rounded-full") return box / 2
-  // A theme variable: measured at its Ink & Paper default.
+  // A theme variable: measured at its default.
   const variable = rounded[0].match(/^rounded-\((--q-[a-z-]+)\)$/)
   if (variable) return Math.min(themeLength(variable[1]), box / 2)
   const token = rounded[0].match(/^rounded-(quebi-[a-z]+)$/)
@@ -87,7 +87,7 @@ const radioMark = () =>
 
 describe("the checkbox mark is a square, the radio mark is a circle", () => {
   // Shape is the only thing that says whether a group takes one answer or
-  // several. Ink & Paper makes the checkbox a hard square; the radio stays round.
+  // several. The checkbox is a square with 4px corners (app-radius-s); the radio stays round.
   test("the radio mark is a full circle", () => {
     const classes = radioMark()
     expect(markRadius(classes, boxSize(classes))).toBe(boxSize(classes) / 2)

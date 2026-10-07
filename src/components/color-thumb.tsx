@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils"
  *
  * The draggable handle inside a ColorArea or a ColorWheel. Built on
  * react-aria-components. Round by nature: a white border so the picked color
- * (user data, left untouched) reads on any field, inside a rule-coloured ring.
+ * (user data, left untouched) reads on any field, inside a muted-ink ring.
  * Focus grows the thumb and swaps the ring for the focus ink.
  *
  * It is a slot, not only a fixture: `ColorArea` renders its `children` and falls
@@ -31,7 +31,7 @@ export function ColorThumb({ className, ...props }: ColorThumbProps) {
       className={composeRenderProps(className, (resolved) =>
         cn(
           "top-[50%] left-[50%] size-6 rounded-full border-2 border-white",
-          "ring-1 ring-quebi-rule",
+          "ring-1 ring-quebi-fg-muted",
           "transition-[width,height] duration-150",
           "focus-visible:size-8 focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-0",
           "disabled:opacity-50 disabled:forced-colors:border-[GrayText] disabled:forced-colors:bg-[GrayText]",

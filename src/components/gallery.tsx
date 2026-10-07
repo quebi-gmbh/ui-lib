@@ -42,7 +42,7 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
       <div
         data-slot="gallery-empty"
         className={cn(
-          "flex aspect-[4/3] w-full items-center justify-center border border-quebi-hairline bg-quebi-raised text-quebi-fg-subtle",
+          "flex aspect-[4/3] w-full items-center justify-center rounded-(--q-radius-surface) border border-dashed border-quebi-hairline bg-quebi-raised text-quebi-fg-subtle",
           className,
         )}
       >
@@ -69,7 +69,7 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
       <Button
         aria-label="Enlarge image"
         onPress={() => setLightboxOpen(true)}
-        className="group relative flex aspect-[4/3] w-full cursor-zoom-in items-center justify-center overflow-hidden border border-quebi-hairline bg-quebi-bg outline-hidden data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-3 data-[focus-visible]:ring-offset-quebi-bg"
+        className="group relative flex aspect-[4/3] w-full cursor-zoom-in items-center justify-center overflow-hidden rounded-(--q-radius-surface) border border-quebi-hairline bg-quebi-bg outline-hidden data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg"
       >
         <img
           src={active.src}
@@ -77,7 +77,7 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
           className="size-full object-contain"
           loading="lazy"
         />
-        <span className="absolute right-2 bottom-2 bg-quebi-action p-1.5 text-quebi-on-action opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-data-[focus-visible]:opacity-100">
+        <span className="absolute right-2 bottom-2 rounded-(--q-radius-mark) bg-quebi-action p-1.5 text-quebi-on-action opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-data-[focus-visible]:opacity-100">
           <ZoomIn className="size-4" aria-hidden />
         </span>
       </Button>
@@ -96,13 +96,13 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
                 aria-current={index === activeIndex}
                 onPress={() => setSelectedIndex(index)}
                 className={cn(
-                  "size-14 shrink-0 overflow-hidden border bg-quebi-bg outline-hidden transition-colors duration-150",
+                  "size-14 shrink-0 overflow-hidden rounded-(--q-radius-control) border bg-quebi-bg outline-hidden transition-colors duration-150",
                   "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-inset",
-                  // Current: an ink frame, the border doubled by a 1px ring so
-                  // the thumbnail does not change size.
+                  // Current: a signal frame, the border doubled by a 1px ring
+                  // so the thumbnail does not change size.
                   index === activeIndex
-                    ? "border-quebi-rule ring-1 ring-quebi-rule"
-                    : "border-quebi-hairline hover:border-quebi-rule",
+                    ? "border-quebi-signal ring-1 ring-quebi-signal"
+                    : "border-quebi-hairline hover:border-quebi-fg-subtle",
                 )}
               >
                 <img src={item.src} alt="" className="size-full object-contain" loading="lazy" />
@@ -147,18 +147,18 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
               <Button
                 aria-label="Previous image"
                 onPress={() => step(-1)}
-                className="absolute start-2 border border-quebi-rule bg-quebi-bg p-2 text-quebi-fg outline-hidden transition-colors duration-150 hover:bg-quebi-raised data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-3 data-[focus-visible]:ring-offset-quebi-bg"
+                className="absolute start-2 rounded-(--q-radius-control) border border-quebi-hairline bg-quebi-bg p-2 text-quebi-fg-muted outline-hidden transition-colors duration-150 hover:bg-quebi-raised hover:text-quebi-fg data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg"
               >
                 <ChevronLeft className="size-6" aria-hidden />
               </Button>
               <Button
                 aria-label="Next image"
                 onPress={() => step(1)}
-                className="absolute end-2 border border-quebi-rule bg-quebi-bg p-2 text-quebi-fg outline-hidden transition-colors duration-150 hover:bg-quebi-raised data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-3 data-[focus-visible]:ring-offset-quebi-bg"
+                className="absolute end-2 rounded-(--q-radius-control) border border-quebi-hairline bg-quebi-bg p-2 text-quebi-fg-muted outline-hidden transition-colors duration-150 hover:bg-quebi-raised hover:text-quebi-fg data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg"
               >
                 <ChevronRight className="size-6" aria-hidden />
               </Button>
-              <span className="absolute bottom-3 bg-quebi-bg px-2 py-1 font-mono text-quebi-fg-subtle text-quebi-label tabular-nums">
+              <span className="absolute bottom-3 rounded-(--q-radius-mark) bg-quebi-bg px-2 py-1 font-mono text-quebi-fg-subtle text-quebi-label tabular-nums">
                 {activeIndex + 1} / {items.length}
               </span>
             </>

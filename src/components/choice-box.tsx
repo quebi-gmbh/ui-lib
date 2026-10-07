@@ -12,9 +12,10 @@ import { cn, tv } from "@/lib/utils"
  *
  * Selectable cards built on react-aria-components' GridList. Single or multiple
  * selection, 1–6 column layouts, optional label/description/icon/avatar slots.
- * Square, hairline-edged tiles. Hover lifts a tile onto `raised`; a selected
- * tile is edged in `rule` and sits on `pressed`, the library's selected-row
- * ground (and in multiple mode its checkbox fills with ink). Focus is the
+ * Hairline-edged tiles at the control radius (a collapsed stack rounds only
+ * its outer corners). Hover lifts a tile onto `raised`; a selected tile is
+ * state, so it is edged in `signal` and sits on `selected`, the library's
+ * selected-row ground (and in multiple mode its checkbox fills with `signal`). Focus is the
  * outward ring; invalid edges the tile in `danger`.
  */
 
@@ -79,7 +80,7 @@ const choiceBoxStyles = tv({
       gap: 0,
       columns: 1,
       className:
-        "*:data-[slot=choice-box-item]:-mt-px",
+        "*:data-[slot=choice-box-item]:-mt-px *:data-[slot=choice-box-item]:not-first:rounded-t-none *:data-[slot=choice-box-item]:not-last:rounded-b-none",
     },
   ],
 })
@@ -126,7 +127,7 @@ const ChoiceBox = <T extends object>({
 const choiceBoxItemStyles = tv({
   base: [
     "group outline-hidden",
-    "border border-quebi-hairline bg-quebi-bg p-(--gutter) **:data-[slot=label]:font-medium",
+    "rounded-(--q-radius-control) border border-quebi-hairline bg-quebi-bg p-(--gutter) **:data-[slot=label]:font-medium",
     "transition-colors duration-150",
     "**:data-[slot=avatar]:row-span-2 **:data-[slot=avatar]:mt-0.5 **:data-[slot=avatar]:shrink-0",
     "**:data-[slot=icon]:row-span-2 **:data-[slot=icon]:mt-0.5 **:data-[slot=icon]:shrink-0",
@@ -143,14 +144,14 @@ const choiceBoxItemStyles = tv({
       true: "not-data-readonly:not-selected:bg-quebi-raised",
     },
     isFocused: {
-      true: "ring-2 ring-quebi-focus ring-offset-3 ring-offset-quebi-bg invalid:ring-quebi-danger/50",
+      true: "ring-2 ring-quebi-focus ring-offset-2 ring-offset-quebi-bg invalid:ring-quebi-danger/50",
     },
     isInvalid: { true: "border-quebi-danger" },
     isOneColumn: {
       true: "col-span-full",
     },
     isActive: {
-      true: ["border-quebi-rule bg-quebi-pressed"],
+      true: ["border-quebi-signal bg-quebi-selected"],
     },
     isDisabled: {
       true: "opacity-50 **:data-[slot=label]:text-quebi-fg-muted forced-colors:text-[GrayText] **:[[slot=description]]:text-quebi-fg-subtle",
@@ -174,7 +175,7 @@ const choiceBoxItemStyles = tv({
     elevation: {
       /** A ring, drawn outside the border: has to clear a *selected* neighbour. */
       ring: "z-30",
-      /** A `rule` border on all four edges: has to clear a plain neighbour. */
+      /** A `signal` border on all four edges: has to clear a plain neighbour. */
       selected: "z-20",
       /** Faded, but still its own edges rather than the next card's. */
       disabled: "z-10",

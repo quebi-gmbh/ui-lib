@@ -21,8 +21,9 @@ import { cn } from "@/lib/utils"
  * Tree — quebi design system
  *
  * Built on react-aria-components. A collapsible, optionally multi-selectable
- * tree view of flat, square rows: a hovered row is raised, a selected one
- * pressed, and focus is an inset ring because the rows touch. Expand chevrons
+ * tree view of flat rows at the control radius: a hovered row is raised, a
+ * selected one takes the `selected` ground with its icon in signal, and focus
+ * is an inset ring because the rows touch. Expand chevrons
  * are muted and rotate on open. Supports checkbox selection via the Checkbox
  * sibling.
  */
@@ -45,12 +46,12 @@ const TreeItem = <T extends object>({ className, ...props }: TreeItemProps<T>) =
     <TreeItemPrimitive
       className={composeRenderProps(className, (resolved) =>
         cn(
-          "group/tree-item relative flex shrink-0 select-none px-2 py-1.5",
+          "group/tree-item relative flex shrink-0 select-none rounded-(--q-radius-control) px-2 py-1.5",
           "text-sm/6 text-quebi-fg transition-colors duration-150 focus:outline-hidden",
           "hover:bg-quebi-raised",
-          "selected:bg-quebi-pressed selected:hover:bg-quebi-pressed",
+          "selected:bg-quebi-selected selected:text-quebi-on-selected selected:hover:bg-quebi-selected",
           "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-quebi-focus",
-          "**:data-[slot=icon]:me-1 **:data-[slot=icon]:size-4 **:data-[slot=icon]:shrink-0 **:data-[slot=icon]:text-quebi-fg-muted",
+          "**:data-[slot=icon]:me-1 **:data-[slot=icon]:size-4 **:data-[slot=icon]:shrink-0 **:data-[slot=icon]:text-quebi-fg-muted selected:**:data-[slot=icon]:text-quebi-signal",
           "disabled:opacity-50",
           "href" in props ? "cursor-pointer" : "cursor-default",
           resolved,

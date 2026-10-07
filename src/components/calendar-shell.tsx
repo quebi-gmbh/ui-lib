@@ -100,7 +100,7 @@ import { Popover, PopoverContent } from "@/components/popover"
  * (`quebi-fg`, `quebi-fg-muted`) on every ground, which is why no slot is an
  * ink *fill*: the title would vanish into it.
  *
- * **Selection is an ink outline** (`selected`), never the inset ring focus
+ * **Selection is a signal outline** (`selected`), never the inset ring focus
  * uses: an inset ring lands on the 2px edge and erases it, and an outline rides
  * a different CSS property, so a block both focused and selected shows both.
  *
@@ -116,56 +116,56 @@ export const CALENDAR_COLORS: Record<
     edge: "border-l-quebi-fg",
     dot: "bg-quebi-fg-subtle",
     band: "bg-quebi-pressed",
-    selected: "outline-quebi-fg",
+    selected: "outline-quebi-signal",
   },
   orange: {
     block: "bg-quebi-bg bg-[repeating-linear-gradient(135deg,var(--color-quebi-hairline)_0_1px,transparent_1px_6px)] hover:bg-quebi-raised",
     edge: "border-l-quebi-fg",
     dot: "border border-quebi-fg bg-quebi-bg bg-[repeating-linear-gradient(135deg,var(--color-quebi-hairline)_0_1px,transparent_1px_6px)]",
     band: "bg-quebi-bg bg-[repeating-linear-gradient(135deg,var(--color-quebi-hairline)_0_1px,transparent_1px_6px)]",
-    selected: "outline-quebi-fg",
+    selected: "outline-quebi-signal",
   },
   brand: {
     block: "bg-quebi-raised hover:bg-quebi-pressed",
     edge: "border-l-quebi-fg",
     dot: "bg-quebi-fg",
     band: "bg-quebi-raised",
-    selected: "outline-quebi-fg",
+    selected: "outline-quebi-signal",
   },
   amber: {
     block: "bg-[color-mix(in_oklab,var(--color-quebi-surface)_5%,var(--color-quebi-bg))] hover:bg-quebi-raised",
     edge: "border-l-quebi-fg",
     dot: "border border-quebi-fg",
     band: "bg-[color-mix(in_oklab,var(--color-quebi-surface)_5%,var(--color-quebi-bg))]",
-    selected: "outline-quebi-fg",
+    selected: "outline-quebi-signal",
   },
   pink: {
     block: "bg-quebi-raised hover:bg-quebi-pressed",
     edge: "border-dashed border-l-quebi-fg",
     dot: "border border-dashed border-quebi-fg",
     band: "bg-quebi-raised",
-    selected: "outline-quebi-fg",
+    selected: "outline-quebi-signal",
   },
   emerald: {
     block: "bg-quebi-pressed hover:bg-[color-mix(in_oklab,var(--color-quebi-surface)_20%,var(--color-quebi-bg))]",
     edge: "border-dashed border-l-quebi-fg",
     dot: "border border-quebi-fg-subtle bg-quebi-pressed",
     band: "bg-quebi-pressed",
-    selected: "outline-quebi-fg",
+    selected: "outline-quebi-signal",
   },
   violet: {
     block: "bg-quebi-bg bg-[repeating-linear-gradient(135deg,var(--color-quebi-hairline)_0_1px,transparent_1px_6px)] hover:bg-quebi-raised",
     edge: "border-dashed border-l-quebi-fg",
     dot: "border border-dashed border-quebi-fg-subtle",
     band: "bg-quebi-bg bg-[repeating-linear-gradient(135deg,var(--color-quebi-hairline)_0_1px,transparent_1px_6px)]",
-    selected: "outline-quebi-fg",
+    selected: "outline-quebi-signal",
   },
   rose: {
     block: "bg-[color-mix(in_oklab,var(--color-quebi-surface)_5%,var(--color-quebi-bg))] hover:bg-quebi-raised",
     edge: "border-dashed border-l-quebi-fg",
     dot: "border border-quebi-fg-subtle",
     band: "bg-[color-mix(in_oklab,var(--color-quebi-surface)_5%,var(--color-quebi-bg))]",
-    selected: "outline-quebi-fg",
+    selected: "outline-quebi-signal",
   },
 }
 
@@ -1069,7 +1069,7 @@ export function DayHeading({ day, locale, timeZone, isToday }: DayHeadingProps) 
       </span>
       <span
         className={cn(
-          "flex h-7 w-7 items-center justify-center text-sm tabular-nums",
+          "flex h-7 w-7 items-center justify-center rounded-(--q-radius-mark) text-sm tabular-nums",
           isToday ? "bg-quebi-action text-quebi-on-action" : "text-quebi-fg",
         )}
       >

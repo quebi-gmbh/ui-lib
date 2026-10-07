@@ -39,9 +39,9 @@ import { Button, type ButtonProps } from "@/components/button"
  * drawer a route opens, say — render `DrawerContent` on its own with
  * `isOpen`/`onOpenChange` and leave `Drawer` out.
  *
- * Surface: bg-quebi-elevated, square, lifted by `shadow-quebi-float`. Docked
- * to an edge it draws one hairline, on the side facing the page; floating, it
- * is ruled all round. Titles are Outfit light at the title size.
+ * Surface: bg-quebi-elevated, lifted by `shadow-quebi-float`. Docked to an
+ * edge it is square and draws one hairline, on the side facing the page;
+ * floating, it is ruled all round at the surface radius. Titles are Outfit light at the title size.
  */
 
 const DrawerRoot = motion.create(ModalPrimitive)
@@ -114,7 +114,7 @@ const DrawerContent = ({
             <DrawerRoot
               className={cn(
                 "fixed max-h-full touch-none overflow-hidden border-quebi-hairline bg-quebi-elevated align-middle text-quebi-fg shadow-quebi-float will-change-transform",
-                isFloat && "border",
+                isFloat && "rounded-(--q-radius-surface) border",
                 side === "top" && (isFloat ? "inset-x-2 top-2" : "inset-x-0 top-0 border-b"),
                 side === "right" &&
                   [

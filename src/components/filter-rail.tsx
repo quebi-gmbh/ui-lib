@@ -379,7 +379,7 @@ function NumberFacet({
           (`overflow-y-auto`, which forces `overflow-x` to match), so that
           overhang was not overflow, it was a cut: both dots rendered as flat
           half-circles against the rail's edges and a focused one lost a side of
-          its ring. 14px is `size-5`'s radius (10) plus `ring-offset-3` and
+          its ring. 14px is `size-5`'s radius (10) plus `ring-offset-2` and
           `ring-2` (4) — the rail giving the control the room it needs rather
           than the control shrinking for every other consumer.
 

@@ -13,8 +13,9 @@ import { cn } from "@/lib/utils"
 /**
  * Checkbox — quebi design system
  *
- * Built on react-aria-components. An 18px square edged in `rule`; checked and
- * indeterminate fill with `action` ink and draw the glyph in `on-action`.
+ * Built on react-aria-components. An 18px box edged in `fg-muted`; checked
+ * and indeterminate are state, so they fill with `signal` and draw the glyph
+ * in `on-signal`.
  * Focus is the outward ring; invalid edges (and, checked, fills) the box in
  * `danger`.
  */
@@ -42,25 +43,25 @@ export function Checkbox({ className, children, ...props }: CheckboxProps) {
           <span
             data-slot="indicator"
             className={cn(
-              // Square, edged in `rule`. Shape is what tells a reader whether a
-              // group takes one answer or several, so the box never rounds —
-              // the radio beside it is the round one.
-              "relative flex size-[18px] shrink-0 items-center justify-center rounded-(--q-radius-mark) border-(length:--q-border-control) border-quebi-rule bg-transparent",
+              // A box edged in `fg-muted`. Shape is what tells a reader whether
+              // a group takes one answer or several, so the box only ever takes
+              // the small mark radius — the radio beside it is the round one.
+              "relative flex size-[18px] shrink-0 items-center justify-center rounded-(--q-radius-mark) border-(length:--q-border-control) border-quebi-fg-muted bg-transparent",
               "transition-colors duration-150",
-              // Checked and indeterminate are ink: `action` fill, `on-action` glyph.
-              "group-data-[selected]:border-quebi-action group-data-[selected]:bg-quebi-action",
-              "group-data-[indeterminate]:border-quebi-action group-data-[indeterminate]:bg-quebi-action",
-              "group-data-[focus-visible]:ring-2 group-data-[focus-visible]:ring-quebi-focus group-data-[focus-visible]:ring-offset-3 group-data-[focus-visible]:ring-offset-quebi-bg",
+              // Checked and indeterminate are state: `signal` fill, `on-signal` glyph.
+              "group-data-[selected]:border-quebi-signal group-data-[selected]:bg-quebi-signal",
+              "group-data-[indeterminate]:border-quebi-signal group-data-[indeterminate]:bg-quebi-signal",
+              "group-data-[focus-visible]:ring-2 group-data-[focus-visible]:ring-quebi-focus group-data-[focus-visible]:ring-offset-2 group-data-[focus-visible]:ring-offset-quebi-bg",
               isInvalid &&
                 "border-quebi-danger group-data-[focus-visible]:ring-quebi-danger/50 group-data-[selected]:border-quebi-danger group-data-[selected]:bg-quebi-danger",
             )}
           >
             {isIndeterminate ? (
-              <Minus className="size-3 text-quebi-on-action" strokeWidth={3} aria-hidden="true" />
+              <Minus className="size-3 text-quebi-on-signal" strokeWidth={3} aria-hidden="true" />
             ) : isSelected ? (
               <span
                 aria-hidden="true"
-                className="block h-[9px] w-[5px] -translate-y-px rotate-45 border-quebi-on-action border-r-2 border-b-2"
+                className="block h-[9px] w-[5px] -translate-y-px rotate-45 border-quebi-on-signal border-r-2 border-b-2"
               />
             ) : null}
           </span>

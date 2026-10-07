@@ -131,7 +131,7 @@ describe("the calendar palette is opaque ink", () => {
 })
 
 /**
- * Selection is an ink outline; focus is an inset ring.
+ * Selection is a signal outline; focus is an inset ring.
  *
  * Selection was once drawn as the focus treatment byte for byte — an *inset*
  * ring that landed exactly on the 2px `edge` and erased the only mark of which
@@ -150,9 +150,9 @@ describe("selection is drawn as an outline from the palette", () => {
     }
   })
 
-  test("selection is ink, the same for every slot", () => {
+  test("selection is signal, the same for every slot", () => {
     for (const [name, palette] of entries) {
-      expect([name, palette.selected]).toEqual([name, "outline-quebi-fg"])
+      expect([name, palette.selected]).toEqual([name, "outline-quebi-signal"])
     }
   })
 

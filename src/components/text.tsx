@@ -21,7 +21,7 @@ export function Text({ className, ...props }: React.ComponentPropsWithoutRef<"p"
 }
 
 /**
- * What a TextLink adds to a `Link`, which is only the icon layout: the ink
+ * What a TextLink adds to a `Link`, which is only the icon layout: the signal
  * and the resting underline are the Link's own base styles, so the prose link
  * and every other link cannot drift apart.
  */
@@ -47,7 +47,7 @@ export function Code({ className, ...props }: React.ComponentPropsWithoutRef<"co
     <code
       {...props}
       className={cn(
-        "bg-quebi-raised px-1.25 py-px font-mono text-[0.8125rem] text-quebi-fg",
+        "rounded-(--q-radius-mark) bg-quebi-raised px-1.25 py-px font-mono text-[0.8125rem] text-quebi-fg",
         className,
       )}
     />

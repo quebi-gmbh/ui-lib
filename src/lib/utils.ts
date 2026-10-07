@@ -27,7 +27,7 @@ const QUEBI_MERGE = {
   extend: {
     theme: {
       radius: ["quebi-s", "quebi-l"],
-      shadow: ["quebi-float"],
+      shadow: ["quebi-float", "quebi-overlay"],
       container: ["quebi-content", "quebi-shell"],
       // The type scale. Without this entry `text-quebi-title` is an unknown
       // value in a `text-` position, which tailwind-merge files as a *colour* —

@@ -40,8 +40,9 @@ import { cn, tv } from "@/lib/utils"
  * and nested submenus. Foundational — command-menu and context-menu compose this.
  *
  * Surface: the Popover (elevated, hairline edge, small radius, float shadow);
- * items reuse the dropdown item styling — square rows, `raised` on hover and
- * focus, an ink check mark for the selected item.
+ * items reuse the dropdown item styling — control-radius rows, `raised` on
+ * hover and focus, the `selected` ground and a signal check for the selected
+ * item.
  */
 
 const Menu = (props: MenuTriggerPrimitiveProps) => <MenuTriggerPrimitive {...props} />
@@ -63,7 +64,7 @@ const MenuTrigger = ({ className, ref, ...props }: MenuTriggerProps) => (
     className={composeRenderProps(className, (resolved) =>
       cn(
         "relative inline text-start outline-hidden",
-        "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+        "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
         "*:data-[slot=chevron]:size-5 sm:*:data-[slot=chevron]:size-4",
         resolved,
       ),

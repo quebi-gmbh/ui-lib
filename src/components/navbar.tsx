@@ -245,7 +245,7 @@ const NavbarItem = ({ className, isCurrent, ...props }: NavbarItemProps) => {
             "*:data-[slot=avatar]:-m-0.5 *:data-[slot=avatar]:size-6 md:*:data-[slot=avatar]:size-5",
             "pressed:*:data-[slot=icon]:text-quebi-fg hover:*:data-[slot=icon]:text-quebi-fg",
             "transition-colors duration-150",
-            "outline-hidden focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+            "outline-hidden focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
             "text-start disabled:cursor-default disabled:opacity-50",
           ],
           resolved,

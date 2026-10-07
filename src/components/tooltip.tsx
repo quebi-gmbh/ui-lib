@@ -15,13 +15,12 @@ import { cn, tv } from "@/lib/utils"
 /**
  * Tooltip — quebi design system
  *
- * A floating label built on react-aria-components, set in inverted ink —
- * `bg-quebi-action text-quebi-on-action`, so ink on paper and paper on ink —
- * at caption size, with the small floating radius and an optional arrow that
- * orients itself to the trigger. Inverting is what tells it apart from a
- * popover, which is paper and can hold controls; a tooltip only holds words.
- * It takes no shadow: the float shadow lifts a paper surface off paper, and
- * an ink chip is already as separate from the page as anything can be.
+ * A floating label built on react-aria-components, set on the overlay —
+ * `bg-quebi-overlay text-quebi-on-overlay`, slate in Light, ink with a 1px
+ * ring in Dark — at caption size, with the mark radius and an optional arrow
+ * that orients itself to the trigger. The overlay is what tells it apart from
+ * a popover, which is elevated paper and can hold controls; a tooltip only
+ * holds words. Its shadow is the overlay's, never the float shadow.
  *
  * Compose `Tooltip` (the trigger wrapper) around an interactive
  * `TooltipTrigger` and a `TooltipContent`.
@@ -29,12 +28,13 @@ import { cn, tv } from "@/lib/utils"
 const tooltipStyles = tv({
   base: [
     "group max-w-sm origin-(--trigger-anchor-point) will-change-transform",
-    "rounded-quebi-s bg-quebi-action px-2.5 py-1.5",
+    "rounded-(--q-radius-mark) bg-quebi-overlay px-2.5 py-1.5 shadow-quebi-overlay",
     // The caption size is added outside tv, in TooltipContent: tv's own
     // tailwind-merge does not know the quebi type scale and files
     // `text-quebi-caption` as a colour, dropping one of it and this.
-    "text-quebi-on-action",
-    "*:[strong]:font-medium **:[.text-muted]:text-quebi-on-action/70",
+    "text-quebi-on-overlay",
+    "*:[strong]:font-medium **:[.text-muted]:text-quebi-on-overlay/70",
+    "**:[a]:text-quebi-signal-inverse **:[a]:underline",
     "forced-colors:border forced-colors:border-[CanvasText] forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]",
   ],
   variants: {
@@ -84,7 +84,7 @@ const TooltipContent = ({ offset = 10, arrow = true, children, ...props }: Toolt
             viewBox="0 0 12 12"
             className={twJoin(
               "block group-placement-bottom:rotate-180 group-placement-left:-rotate-90 group-placement-right:rotate-90 forced-colors:fill-[Canvas] forced-colors:stroke-[ButtonBorder]",
-              "fill-quebi-action",
+              "fill-quebi-overlay",
             )}
           >
             <path d="M0 0 L6 6 L12 0" />
