@@ -312,7 +312,7 @@ export function TableToolbar({ children, actions, caption, className }: TableToo
       {caption && <div className="text-quebi-body-s text-quebi-fg-muted">{caption}</div>}
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex flex-1 flex-wrap items-center gap-2">{children}</div>
-        <div className="flex flex-none items-center gap-1.5">{actions}</div>
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">{actions}</div>
       </div>
     </div>
   )

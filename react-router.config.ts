@@ -20,6 +20,7 @@ export default {
       ...metaRegistry.map((c) => `/components/${c.slug}`),
       "/rules",
       "/rules/enforcement",
+      "/theme",
       ...rulesRegistry.map((r) => `/rules/${r.id}`),
     ]
   },

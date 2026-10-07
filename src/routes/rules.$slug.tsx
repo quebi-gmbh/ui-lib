@@ -227,7 +227,7 @@ export default function RuleDetail({ loaderData }: Route.ComponentProps) {
             <article key={example.title}>
               <h3
                 id={headingId("example", example.title)}
-                className={cn(ANCHOR, "font-display text-quebi-fg text-quebi-title")}
+                className={cn(ANCHOR, "min-w-0 wrap-anywhere font-display text-quebi-fg text-quebi-title")}
               >
                 {example.title}
               </h3>
@@ -280,7 +280,7 @@ export default function RuleDetail({ loaderData }: Route.ComponentProps) {
                 <div className="flex flex-wrap items-center gap-2">
                   <h3
                     id={headingId("check", check.title)}
-                    className={cn(ANCHOR, "font-display text-quebi-fg text-quebi-title")}
+                    className={cn(ANCHOR, "min-w-0 wrap-anywhere font-display text-quebi-fg text-quebi-title")}
                   >
                     {check.title}
                   </h3>

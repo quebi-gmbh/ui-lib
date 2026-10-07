@@ -138,7 +138,7 @@ const Pagination = ({ className, size, ref, children, ...props }: PaginationProp
   <nav
     data-slot="pagination"
     aria-label="Pagination"
-    className={cn("mx-auto flex w-full items-center justify-center gap-2", className)}
+    className={cn("mx-auto flex w-full flex-wrap items-center justify-center gap-2", className)}
     ref={ref}
     {...props}
   >
@@ -170,7 +170,7 @@ const PaginationList = ({ className, ref, ...props }: React.ComponentProps<"ul">
   <ul
     ref={ref}
     data-slot="pagination-list"
-    className={cn("flex items-center gap-1", className)}
+    className={cn("flex flex-wrap items-center justify-center gap-1", className)}
     {...props}
   />
 )

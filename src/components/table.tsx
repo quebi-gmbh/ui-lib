@@ -194,7 +194,7 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
       )}
     >
       {(values) => (
-        <div className="inline-flex items-center gap-2 **:data-[slot=icon]:shrink-0">
+        <div className="inline-flex max-w-full min-w-0 items-center gap-2 align-middle **:data-[slot=icon]:shrink-0">
           {typeof props.children === "function" ? props.children(values) : props.children}
           {values.allowsSorting && (
             // The sort affordance is an IconTile at the inline `2xs` size

@@ -831,7 +831,10 @@ export function TableShell<T extends RowData>({
                 // column after it. The truncation goes, because a message under
                 // a field is the one thing in a cell that has to wrap and
                 // because `overflow-hidden` would clip the focus ring.
-                (meta?.truncate || isEditingThisCell) && "max-w-0",
+                // Table layout only: a virtualized cell is a block at a fixed
+                // width already, and there `max-width: 0` is taken literally —
+                // the cell collapses to its padding and hides its content.
+                !virtualize && (meta?.truncate || isEditingThisCell) && "max-w-0",
                 meta?.truncate && !isEditingThisCell && "truncate",
                 // Editable at rest, not only under the pointer. A hover-only
                 // hint was defensible while the gesture was a double-click
@@ -995,7 +998,10 @@ export function TableShell<T extends RowData>({
         allowsSorting={column.getCanSort()}
         isResizable={allowResize && column.getCanResize()}
         width={allowResize ? column.getSize() : undefined}
-        minWidth={column.columnDef.minSize}
+        // A virtualized table lays its columns out at fixed widths, and a mono
+        // label plus its filter, menu and sort controls needs about 10rem to
+        // stay legible; the wrapper scrolls sideways when they do not fit.
+        minWidth={column.columnDef.minSize ?? (virtualize ? 160 : undefined)}
         maxWidth={column.columnDef.maxSize}
         className={cn(
           alignClass(meta?.align),
@@ -1009,7 +1015,7 @@ export function TableShell<T extends RowData>({
           ...(stickyHeader ? { top: showBands ? TABLE_BAND_HEIGHT : 0 } : null),
         }}
       >
-        <span className="flex flex-col items-start">
+        <span className="flex max-w-full min-w-0 flex-col items-start">
           {hasBands && !showBands && (
             // py-3 + TABLE_BAND_HEIGHT + label line + py-3 is exactly the banded
             // header's two rows, so the gate opening does not shift the page.
@@ -1020,8 +1026,11 @@ export function TableShell<T extends RowData>({
               {meta?.group ?? "\u00a0"}
             </span>
           )}
-          <span className="inline-flex items-center gap-1">
-            {meta?.label ?? column.id}
+          {/* A fixed-width column (virtualized, resizable) can be narrower than
+              the mono label plus its buttons: the label gives way, not the
+              buttons, so nothing spills into the next column. */}
+          <span className="inline-flex max-w-full min-w-0 items-center gap-1 *:shrink-0">
+            <span className="min-w-8 shrink! truncate">{meta?.label ?? column.id}</span>
             {priority != null && sorting.length > 1 && (
               <span className="grid size-4 place-content-center rounded-full bg-quebi-action font-mono text-quebi-label leading-none text-quebi-on-action tabular-nums">
                 {priority}
@@ -1103,7 +1112,9 @@ export function TableShell<T extends RowData>({
       style={virtualize ? { height: height ?? 400, overflow: "auto" } : undefined}
       className={cn(
         isRefreshing && "opacity-60 transition-opacity",
-        virtualize && "overflow-visible",
+        // The table element scrolls vertically itself (above); the wrapper only
+        // has to keep a wide virtualized table from widening the page.
+        virtualize && "overflow-x-auto overflow-y-hidden",
         className,
       )}
     >

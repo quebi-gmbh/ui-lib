@@ -32,7 +32,10 @@ export interface IndexListProps extends Omit<React.HTMLAttributes<HTMLOListEleme
   items: IndexListItem[]
 }
 
-const ROW = "grid grid-cols-[2.5rem_1fr_auto] items-baseline gap-3.5 px-1 py-3.5 text-quebi-fg"
+// Below `sm` the meta drops under the title instead of squeezing it: a
+// three-column row at 375px leaves the title a few characters wide.
+const ROW =
+  "grid grid-cols-[2.5rem_1fr] items-baseline gap-x-3.5 gap-y-1 px-1 py-3.5 text-quebi-fg sm:grid-cols-[2.5rem_1fr_auto]"
 
 /** Restates every part of the Link's own look the row does not want: it is a row, not prose. */
 const LINK_ROW = [
@@ -54,11 +57,11 @@ export function IndexList({ items, className, ...props }: IndexListProps) {
         const cells = (
           <>
             <span className="font-mono text-xs text-quebi-fg-subtle">{number}</span>
-            <span className="font-display text-quebi-title">{item.title}</span>
+            <span className="min-w-0 wrap-break-word font-display text-quebi-title">{item.title}</span>
             {item.meta != null ? (
-              <span className="text-right text-quebi-caption text-quebi-fg-subtle">{item.meta}</span>
+              <span className="col-start-2 min-w-0 text-quebi-caption text-quebi-fg-subtle sm:col-start-auto sm:text-right">{item.meta}</span>
             ) : (
-              <span />
+              <span className="hidden sm:block" />
             )}
           </>
         )

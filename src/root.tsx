@@ -1,8 +1,10 @@
+import { useEffect } from "react"
 import { I18nProvider } from "react-aria-components"
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLocation } from "react-router"
 import { Header } from "@/site/site-header"
 import { Footer } from "@/site/site-footer"
 import { NavigationStatus } from "@/site/navigation-status"
+import { restoreCustomTheme } from "@/site/custom-theme"
 import "./main.css"
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -109,6 +111,13 @@ export default function App() {
   // dates and numbers in a scene have to be formatted the way the gallery
   // formats them, or the share image shows a component the site does not.
   const isOgCanvas = useLocation().pathname.startsWith("/og/")
+
+  // A theme imported on /theme follows the reader around the site. After
+  // hydration, never during, and with no state: nothing above <Outlet /> may
+  // re-render on its own (see tests/hydration-boundaries.test.tsx).
+  useEffect(() => {
+    if (!isOgCanvas) restoreCustomTheme()
+  }, [isOgCanvas])
 
   if (isOgCanvas) {
     return (
