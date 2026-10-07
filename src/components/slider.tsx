@@ -18,15 +18,16 @@ import { cn } from "@/lib/utils"
 /**
  * Slider — quebi design system
  *
- * Built on react-aria-components. A slim cyan-tinted track whose filled portion
- * and grab handle use brand teal. Supports single and range values, horizontal
- * and vertical orientations, an optional value output, and disabled state. Focus
- * uses the quebi teal ring.
+ * Built on react-aria-components. A 2px `hairline` track, an `action` ink fill
+ * and a round ink thumb — no shadow, no border. Supports single and range
+ * values, horizontal and vertical orientations, an optional value output, and
+ * disabled state. Focus is the outward ring on the thumb.
  *
  * The slider's length along its own axis is a default, not a fixture: a
  * horizontal slider fills its container and a vertical one is 12rem tall until
  * `className` says otherwise (`w-72`, `h-64`, `h-full`). The other axis is the
- * track's 6px thickness, which the component owns.
+ * track's 2px thickness, which the component owns; a transparent `before:`
+ * band widens what a pointer can hit to 18px without drawing anything.
  */
 export function SliderGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -75,7 +76,7 @@ export function SliderOutput({ className, ...props }: SliderOutputProps) {
     <SliderOutputPrimitive
       data-slot="label"
       className={composeRenderProps(className, (resolved) =>
-        cn("font-medium text-sm text-quebi-fg tabular-nums", resolved),
+        cn("font-mono text-quebi-caption text-quebi-fg-subtle tabular-nums", resolved),
       )}
       {...props}
     />
@@ -88,9 +89,9 @@ export function SliderThumb({ className, ...props }: SliderThumbProps) {
       data-slot="indicator"
       className={composeRenderProps(className, (resolved) =>
         cn(
-          "top-1/2 left-1/2 size-5 rounded-full border border-quebi-line/20 bg-quebi-brand outline-hidden",
-          "shadow-quebi-glow transition-[width,height] duration-150",
-          "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
+          "top-1/2 left-1/2 size-4 rounded-full bg-quebi-action outline-hidden",
+          "transition-[width,height] duration-150",
+          "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-3 data-[focus-visible]:ring-offset-quebi-bg",
           "data-[dragging]:scale-110 data-[disabled]:opacity-60",
           resolved,
         ),
@@ -109,8 +110,9 @@ export function SliderTrack({ className, children, ...props }: SliderTrackProps)
       data-slot="control"
       className={composeRenderProps(className, (resolved) =>
         cn(
-          "group/track relative cursor-default rounded-full bg-cyan-500/10",
-          "grow group-orientation-horizontal:h-1.5 group-orientation-horizontal:w-full group-orientation-vertical:w-1.5 group-orientation-vertical:flex-1",
+          "group/track relative cursor-default bg-quebi-hairline",
+          "grow group-orientation-horizontal:h-0.5 group-orientation-horizontal:w-full group-orientation-vertical:w-0.5 group-orientation-vertical:flex-1",
+          "before:absolute before:content-[''] group-orientation-horizontal:before:inset-x-0 group-orientation-horizontal:before:-inset-y-2 group-orientation-vertical:before:inset-y-0 group-orientation-vertical:before:-inset-x-2",
           "disabled:cursor-default disabled:opacity-60",
           resolved,
         ),
@@ -162,7 +164,7 @@ export function SliderFill({ className, ...props }: React.HTMLAttributes<HTMLDiv
       {...props}
       style={getStyle()}
       className={cn(
-        "pointer-events-none absolute rounded-full bg-quebi-brand",
+        "pointer-events-none absolute bg-quebi-action",
         "group-orientation-horizontal/track:top-0 group-orientation-horizontal/track:h-full",
         "group-orientation-vertical/track:bottom-0 group-orientation-vertical/track:w-full",
         "group-disabled/track:opacity-60",

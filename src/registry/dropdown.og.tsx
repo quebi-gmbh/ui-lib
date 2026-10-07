@@ -14,16 +14,16 @@ export const dropdownOgScene: OgScene = {
     <ListBox aria-label="Account" selectionMode="none" className="w-64 p-1.5">
       <DropdownItem>
         <User data-slot="icon" aria-hidden="true" />
-        <DropdownLabel>Profile</DropdownLabel>
+        <DropdownLabel>profile</DropdownLabel>
       </DropdownItem>
       <DropdownItem>
         <CreditCard data-slot="icon" aria-hidden="true" />
-        <DropdownLabel>Billing</DropdownLabel>
+        <DropdownLabel>billing</DropdownLabel>
       </DropdownItem>
       <DropdownSeparator />
       <DropdownItem>
         <Settings data-slot="icon" aria-hidden="true" />
-        <DropdownLabel>Settings</DropdownLabel>
+        <DropdownLabel>settings</DropdownLabel>
       </DropdownItem>
     </ListBox>
   ),

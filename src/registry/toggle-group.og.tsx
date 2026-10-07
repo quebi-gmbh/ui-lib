@@ -6,9 +6,9 @@ export const toggleGroupOgScene: OgScene = {
   scale: 1.8,
   render: () => (
     <ToggleGroup selectionMode="single" defaultSelectedKeys={["board"]}>
-      <ToggleGroupItem id="list">List</ToggleGroupItem>
-      <ToggleGroupItem id="board">Board</ToggleGroupItem>
-      <ToggleGroupItem id="calendar">Calendar</ToggleGroupItem>
+      <ToggleGroupItem id="list">list</ToggleGroupItem>
+      <ToggleGroupItem id="board">board</ToggleGroupItem>
+      <ToggleGroupItem id="calendar">calendar</ToggleGroupItem>
     </ToggleGroup>
   ),
 }

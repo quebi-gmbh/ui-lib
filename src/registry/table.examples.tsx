@@ -72,10 +72,10 @@ export const tableExamples: ComponentExample[] = [
     title: "Plain",
     frame: "none",
     description:
-      "The plain variant drops the panel: a header rule and row dividers on whatever is behind the table. The right table for a page section — the heading above it already says where the section starts, and a border round the rows would say it twice.",
+      "The plain variant drops the top rule and the page fill: a header rule and row dividers on whatever is behind the table. The right table for a page section — the heading above it already says where the section starts, and a second rule above the header would say it twice.",
     render: () => (
       <section className="flex flex-col gap-4">
-        <Heading level={3}>Plans</Heading>
+        <Heading level={3}>plans</Heading>
         <Table aria-label="Plans" variant="plain">
           <PlanRows />
         </Table>
@@ -89,8 +89,8 @@ export const tableExamples: ComponentExample[] = [
       "Bleed takes the padding off the first and last columns, so Plan lines up with the heading and the end-aligned prices with the right edge of the text column. Read down the left edge of this example and there is one line, not two.",
     render: () => (
       <section className="flex flex-col gap-2">
-        <Heading level={3}>Plans</Heading>
-        <p className="text-sm text-quebi-fg-muted">Prices include VAT. Cancel monthly plans anytime.</p>
+        <Heading level={3}>plans</Heading>
+        <p className="text-quebi-body-s text-quebi-fg-muted">Prices include VAT. Cancel monthly plans anytime.</p>
         <Table aria-label="Plans" variant="plain" bleed className="mt-2">
           <PlanRows />
         </Table>
@@ -101,10 +101,10 @@ export const tableExamples: ComponentExample[] = [
     title: "Plain, in a dashboard widget",
     frame: "none",
     description:
-      "The one place a table does belong in a card: a widget with its own title, beside widgets that are not tables. The card is the surface, so the table is plain and bleeds — a surface table here would be a box inside a box, and its padding would put the first column one gutter to the right of the card's title.",
+      "The one place a table does belong in a card: a widget with its own title, beside widgets that are not tables. The card is the frame, so the table is plain and bleeds — a surface table here would rule a second edge inside the card's, and its padding would put the first column one gutter to the right of the card's title.",
     render: () => (
       <Card className="max-w-xl">
-        <CardHeader title="Top plans" description="By new contracts this month." />
+        <CardHeader title="top plans" description="By new contracts this month." />
         <CardContent>
           <Table aria-label="Top plans" variant="plain" bleed>
             <PlanRows />

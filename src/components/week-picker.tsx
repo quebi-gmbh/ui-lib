@@ -12,6 +12,7 @@ import {
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { useState } from "react"
 import {
+  Button as FieldTrigger,
   ListBoxItem as ListBoxItemPrimitive,
   ListBox as ListBoxPrimitive,
   useLocale,
@@ -187,14 +188,14 @@ export function WeekPicker({
           weekday name above a row that is selected whole adds nothing to it. */}
       <div aria-hidden="true" className="flex items-center gap-1 px-0.5 pb-2">
         {!hideWeekNumbers && (
-          <span className="w-8 text-center font-semibold text-[11px] text-quebi-fg-muted uppercase tracking-[0.08em]">
+          <span className="quebi-eyebrow inline-block w-8 text-center">
             Wk
           </span>
         )}
         {Array.from({ length: 7 }, (_, index) => firstWeekStart.add({ days: index })).map((day) => (
           <span
             key={day.toString()}
-            className="w-9 text-center font-semibold text-[11px] text-quebi-fg-muted uppercase tracking-[0.08em]"
+            className="quebi-eyebrow w-9 text-center"
           >
             {weekdayFormatter.format(day.toDate("UTC"))}
           </span>
@@ -237,12 +238,12 @@ export function WeekPicker({
               aria-label={label}
               className={({ isSelected, isDisabled: isItemDisabled, isFocusVisible }) =>
                 cn(
-                  "flex cursor-default items-center gap-1 rounded-quebi-sm px-0.5 py-0.5 outline-hidden transition-colors duration-150 hover:bg-quebi-surface/[0.04]",
-                  isCurrentWeek && !isSelected && "ring-1 ring-inset ring-quebi-brand-mark",
-                  isSelected && "bg-quebi-brand hover:bg-quebi-brand-hover",
+                  "flex cursor-default items-center gap-1 px-0.5 py-0.5 outline-hidden transition-colors duration-150 hover:bg-quebi-raised",
+                  isCurrentWeek && !isSelected && "ring-1 ring-inset ring-quebi-focus",
+                  isSelected && "bg-quebi-action hover:bg-quebi-action-hover",
                   isItemDisabled && "hover:bg-transparent",
                   isFocusVisible &&
-                    "ring-2 ring-quebi-brand-mark ring-offset-2 ring-offset-quebi-bg",
+                    "ring-2 ring-quebi-focus ring-offset-3 ring-offset-quebi-bg",
                 )
               }
             >
@@ -252,7 +253,7 @@ export function WeekPicker({
                     <span
                       className={cn(
                         "w-8 text-center text-xs tabular-nums transition-colors duration-150",
-                        isSelected ? "text-quebi-on-brand/80" : "text-quebi-fg-muted",
+                        isSelected ? "text-quebi-on-action/80" : "text-quebi-fg-muted",
                       )}
                     >
                       {numberFormatter.format(weekNumber)}
@@ -262,15 +263,15 @@ export function WeekPicker({
                     <span
                       key={day.toString()}
                       className={cn(
-                        "flex size-9 items-center justify-center rounded-quebi-sm text-sm tabular-nums transition-colors duration-150",
-                        isSelected ? "text-quebi-on-brand" : "text-quebi-fg",
+                        "flex size-9 items-center justify-center text-sm tabular-nums transition-colors duration-150",
+                        isSelected ? "text-quebi-on-action" : "text-quebi-fg",
                         day.month !== visibleMonth.month &&
-                          (isSelected ? "text-quebi-on-brand/70" : "text-quebi-fg-subtle"),
+                          (isSelected ? "text-quebi-on-action/70" : "text-quebi-fg-subtle"),
                         isItemDisabled && !isSelected && "text-quebi-fg-subtle",
                         // Today's dot, the same marker Range Calendar uses.
                         day.compare(now) === 0 &&
                           !isSelected &&
-                          "relative after:pointer-events-none after:absolute after:bottom-1 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-quebi-brand",
+                          "relative after:pointer-events-none after:absolute after:bottom-1 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-quebi-action",
                       )}
                     >
                       {dayFormatter.format(day.toDate("UTC"))}
@@ -292,6 +293,19 @@ export interface WeekPickerFieldProps extends Omit<WeekPickerProps, "autoFocus">
   /** Where the popover opens; `bottom start` by default. */
   placement?: "bottom" | "bottom start" | "bottom end" | "top" | "top start" | "top end"
 }
+
+/**
+ * The trigger is field-shaped, so it is drawn like `SelectTrigger`: `Input`'s
+ * underline at `sm` (38px), thickened to 2px while focused or open, no ring.
+ */
+const fieldTriggerStyles = cn(
+  "inline-flex cursor-default items-center justify-between gap-x-2 bg-transparent py-2 text-sm text-quebi-fg tabular-nums",
+  "border-y border-t-transparent border-b-quebi-rule",
+  "transition-[border-color,box-shadow] duration-150",
+  "outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)] aria-expanded:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+  "disabled:cursor-not-allowed disabled:opacity-50",
+  "*:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0",
+)
 
 /**
  * WeekPickerField — the Week Picker behind a trigger.
@@ -337,16 +351,14 @@ export function WeekPickerField({
 
   return (
     <Popover isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Button
+      <FieldTrigger
         aria-label={ariaLabel ?? "Week"}
-        intent="outline"
-        size="sm"
         isDisabled={isDisabled}
-        className={cn("w-72 justify-between font-normal tabular-nums", className)}
+        className={cn(fieldTriggerStyles, "w-72", className)}
       >
-        <span className={cn("truncate", !selected && "text-quebi-fg-muted")}>{label}</span>
-        <ChevronDown data-slot="icon" className="text-quebi-fg-muted" />
-      </Button>
+        <span className={cn("truncate", !selected && "text-quebi-fg-subtle")}>{label}</span>
+        <ChevronDown data-slot="icon" className="text-quebi-fg-subtle" />
+      </FieldTrigger>
       <PopoverContent placement={placement} className="w-auto max-w-none p-3">
         <WeekPicker
           {...props}
@@ -400,7 +412,7 @@ function PagerHeader({
       data-slot="picker-header"
       className="flex w-full items-center justify-between gap-1.5 ps-1.5 pe-1 pt-1 pb-4"
     >
-      <span aria-live="polite" className="font-semibold text-quebi-fg text-sm tabular-nums">
+      <span aria-live="polite" className="font-medium text-quebi-fg text-sm tabular-nums">
         {label}
       </span>
       <div className="flex items-center gap-1">

@@ -249,10 +249,13 @@ export function AsyncSelect<T extends AsyncSelectOption>({
         }}
         data-invalid={isInvalid || undefined}
         className={cn(
-          "flex w-full items-center gap-1 rounded-quebi-sm border border-quebi-line/10 bg-quebi-surface/[0.02] p-1.5 pe-2",
-          "transition-[border-color,box-shadow] duration-150 focus-within:border-quebi-brand-mark",
-          "focus-within:ring-2 focus-within:ring-quebi-brand-mark focus-within:ring-offset-2 focus-within:ring-offset-quebi-bg",
-          isInvalid && "border-red-500",
+          // `Input`'s underline, thickened to 2px while the input has focus.
+          "flex w-full items-center gap-1 bg-transparent py-1.5",
+          "border-y border-t-transparent border-b-quebi-rule",
+          "transition-[border-color,box-shadow] duration-150",
+          "focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+          isInvalid &&
+            "border-b-quebi-danger focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
           isDisabled ? "cursor-not-allowed opacity-50" : "cursor-text",
         )}
       >
@@ -282,8 +285,8 @@ export function AsyncSelect<T extends AsyncSelectOption>({
           onClick={openMenu}
           onKeyDown={handleKeyDown}
           className={cn(
-            "min-w-0 flex-1 bg-transparent px-1.5 py-0.5 text-sm text-quebi-fg outline-none",
-            "placeholder:text-quebi-fg-subtle placeholder:italic",
+            "min-w-0 flex-1 bg-transparent py-0.5 text-sm text-quebi-fg outline-none",
+            "placeholder:text-quebi-fg-subtle",
           )}
         />
 
@@ -300,7 +303,7 @@ export function AsyncSelect<T extends AsyncSelectOption>({
             }}
             className={cn(
               "flex size-5 shrink-0 items-center justify-center rounded-full text-quebi-fg-subtle outline-none transition-colors duration-150",
-              "hover:bg-cyan-500/10 hover:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-brand-mark",
+              "hover:bg-quebi-raised hover:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-0",
             )}
           >
             <X className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
@@ -361,9 +364,8 @@ export function AsyncSelect<T extends AsyncSelectOption>({
                   onMouseEnter={() => setActiveKey(k)}
                   onClick={() => selectKey(k)}
                   className={cn(
-                    "flex cursor-pointer items-center gap-2 rounded-quebi-sm px-2.5 py-1.5 text-sm text-quebi-fg outline-none transition-colors duration-150",
-                    isActive && "bg-quebi-surface/[0.05]",
-                    isSel && "text-quebi-brand-text",
+                    "flex cursor-pointer items-center gap-2 px-2.5 py-1.5 text-sm text-quebi-fg outline-none transition-colors duration-150",
+                    isActive && "bg-quebi-raised",
                   )}
                 >
                   <Check

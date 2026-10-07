@@ -16,7 +16,7 @@ export const noHardcodedDesignValuesRule: RuleMeta = {
     "An agent that cannot recall a token name writes the value it can see: `bg-[#0ea5e9]`, `text-gray-500`. It renders identically today, which is exactly why nobody catches it, and it stops following the theme the moment the theme moves.",
   rationale: [
     "A token is a promise that one edit changes every site of a colour, radius, or elevation. A literal opts out of that promise silently: bg-[#0b0f14] looks identical to bg-quebi-bg today and stops matching the day the theme moves, and nothing fails when it does.",
-    "Raw palette scales are the same defect wearing a nicer name. text-gray-500 is not a token — it is a hardcoded value with a Tailwind alias, it has no light/dark behaviour of its own, and it is why a page ends up with four almost-identical greys. quebi's tokens (quebi-fg-muted, quebi-fg-subtle, quebi-line) resolve per theme; the palette scales do not.",
+    "Raw palette scales are the same defect wearing a nicer name. text-gray-500 is not a token — it is a hardcoded value with a Tailwind alias, it has no light/dark behaviour of its own, and it is why a page ends up with four almost-identical greys. quebi's tokens (quebi-fg-muted, quebi-fg-subtle, quebi-hairline) resolve per theme; the palette scales do not.",
     "This tier is where an escape hatch has to exist rather than be pretended away. Some values are mandated by something outside the design system — a regulator's colour scale, a partner's brand mark. Those stay literal, and the rule records where and why, so a real carve-out is not indistinguishable from sloppiness.",
   ],
   appliesTo: ["app/**/*.{tsx,jsx,css}", "src/**/*.{tsx,jsx,css}"],
@@ -24,11 +24,10 @@ export const noHardcodedDesignValuesRule: RuleMeta = {
     allowed: [
       "bg-quebi-*",
       "text-quebi-*",
-      "border-quebi-line/*",
-      "rounded-quebi-{xs,sm,md,lg}",
-      "rounded-full",
-      "shadow-quebi-glow",
-      "shadow-quebi-glow-strong",
+      "border-quebi-hairline, border-quebi-rule",
+      "rounded-quebi-{s,l}, rounded-full (square is the default)",
+      "shadow-quebi-float",
+      "text-quebi-{display-xl,display-l,display-m,display-s,title,body,caption,label,…}",
       "text-{xs,sm,base,lg,xl,...}",
       "p-*, m-*, gap-* (the spacing scale)",
     ],
@@ -36,7 +35,7 @@ export const noHardcodedDesignValuesRule: RuleMeta = {
       "bg-[#...], text-[13px], p-[7px] (arbitrary values)",
       "text-gray-500, bg-slate-800 (raw palette scales)",
       "style={{ color: \"#0ea5e9\" }}",
-      "rounded-md, rounded-lg (Tailwind's default radii instead of rounded-quebi-*)",
+      "rounded-md, rounded-lg (Tailwind's default radii — quebi is square; the exceptions are rounded-quebi-s and rounded-full)",
       "brand-*, ink-*, text-body-* (legacy Cellestial tokens)",
     ],
     note: "The spacing and type scales are tokens too — p-4 and text-sm are fine. It is colour, radius, elevation, and off-scale sizes that must resolve to quebi tokens.",
@@ -45,22 +44,22 @@ export const noHardcodedDesignValuesRule: RuleMeta = {
     {
       title: "A hand-built chip with literal values",
       wrong: `<span className="rounded-md bg-[#0ea5e9] px-2 py-1 text-[13px] text-gray-500">
-  Beta
+  beta
 </span>`,
       right: `import { Badge } from "@/components/badge"
 
-<Badge intent="info">Beta</Badge>`,
+<Badge>beta</Badge>`,
       note: "Three literals and a Tailwind default radius, all to rebuild something the library ships. Tier 3 violations are usually tier 2 violations that went one step further.",
     },
     {
       title: "Translating literals to tokens",
       wrong: `<div className="border border-[#1f2937] bg-[#0b0f14] p-4 text-gray-400">
-  <p className="text-[15px] font-semibold text-white">Storage</p>
+  <p className="text-[15px] font-medium text-white">Storage</p>
 </div>`,
-      right: `<div className="border border-quebi-line/10 bg-quebi-bg p-4 text-quebi-fg-muted">
-  <p className="text-base font-semibold text-quebi-fg">Storage</p>
+      right: `<div className="border border-quebi-hairline bg-quebi-bg p-4 text-quebi-fg-muted">
+  <p className="text-base font-medium text-quebi-fg">Storage</p>
 </div>`,
-      note: "Same pixels today, and the only version that follows the theme. Note that text-white is a literal too: quebi is dark-first but not dark-only, and quebi-fg is what flips in light mode.",
+      note: "Same pixels today, and the only version that follows the theme. Note that text-white is a literal too: quebi has a Daylight and a Cinematic theme, and quebi-fg is what flips between them.",
     },
     {
       title: "The exception, and why it is one",
@@ -111,7 +110,7 @@ export const noHardcodedDesignValuesRule: RuleMeta = {
   $value <: r".*(?:\\[#[0-9a-fA-F]{3,8}\\]|\\[[0-9]+(?:px|rem|em)\\]|\\b(?:bg|text|border|ring|fill|stroke|from|via|to)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-[0-9]{2,3}\\b).*"`,
     },
     message:
-      "Hardcoded design value. Use a quebi token: colours -> bg-quebi-*/text-quebi-*/border-quebi-line, radii -> rounded-quebi-{xs,sm,md,lg}, elevation -> shadow-quebi-glow. Raw palette scales (text-gray-500) are hardcoded values too — they do not follow the theme. See https://ui-lib.quebi.de/rules/no-hardcoded-design-values",
+      "Hardcoded design value. Use a quebi token: colours -> bg-quebi-*/text-quebi-*/border-quebi-hairline, radii -> none (square) or rounded-quebi-s, elevation -> shadow-quebi-float. Raw palette scales (text-gray-500) are hardcoded values too — they do not follow the theme. See https://ui-lib.quebi.de/rules/no-hardcoded-design-values",
     grep: "\\[#[0-9a-fA-F]{3,8}\\]|\\b(bg|text|border|ring|fill|stroke)-(slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-[0-9]{2,3}",
     note: "The check reads .tsx/.jsx only, so a hex in a stylesheet slips past — pair it with a CSS-side check everywhere except the file that defines your theme. A value mandated from outside the design system is not always a whole file you can except, so the last snippet shows how to claim that carve-out inline.",
   },

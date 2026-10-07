@@ -26,7 +26,7 @@ import {
  *
  * A polar radar (spider) chart on the quebi `Chart` wrapper. `dataKey` names the
  * axis label on every row and each key in `config` becomes one overlaid polygon,
- * colored from the teal-led quebi palette. The grid, angle axis and radius axis
+ * colored from the ink series palette. The grid, angle axis and radius axis
  * are themed; the interactive legend focuses a single series on click.
  *
  * Requires the `recharts` npm package as a peer dependency.
@@ -123,18 +123,18 @@ export function RadarChart<TValue extends ValueType, TName extends NameType>({
           {!hidePolarGrid && (
             <PolarGrid
               gridType={gridType}
-              className="stroke-quebi-line/10"
+              className="stroke-quebi-hairline"
               {...polarGridProps}
             />
           )}
           <PolarAngleAxis
             dataKey={dataKey}
-            className="text-xs **:[text]:fill-quebi-fg-muted"
+            className="text-quebi-caption **:[text]:fill-quebi-fg-subtle"
             tickLine={false}
             {...polarAngleAxisProps}
           />
           <PolarRadiusAxis
-            className="text-xs **:[text]:fill-quebi-fg-muted"
+            className="text-quebi-caption **:[text]:fill-quebi-fg-subtle"
             tick={showRadiusAxis}
             axisLine={false}
             tickFormatter={valueFormatter}

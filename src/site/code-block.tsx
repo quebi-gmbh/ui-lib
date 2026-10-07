@@ -1,7 +1,6 @@
 import { useState } from "react"
 import { Check, Copy } from "lucide-react"
 import { Button } from "@/components/button"
-import { Card } from "@/components/card"
 import { SteadyWidth } from "@/lib/steady-width"
 import { cn } from "@/lib/utils"
 import { ScrollSurface } from "@/site/scroll-surface"
@@ -18,12 +17,11 @@ interface CodeBlockProps {
  * Renders build-time Shiki HTML in a quebi-styled surface with a copy button.
  * No syntax highlighter ships to the browser — the HTML is pre-rendered.
  *
- * The surface is a Card, not a hand-built rounded+bordered div: this is site
- * code, so the same rule that would catch the div in a consumer's app catches
- * it here. `p-0` moves the padding onto the scroll container so the scrollbar
- * runs the full height of the block, and `bg-quebi-bg` is the code surface —
- * a shade darker than a Card's default fill, so highlighted source reads as
- * code rather than as prose.
+ * The surface is the design's `pre`: square, on the raised ground, no frame.
+ * It is a ground rather than a box — no radius, no border — so it is not a
+ * Card rebuilt by hand, and a code block inside an example Card does not
+ * read as a card in a card. The padding sits on the scroll container so the
+ * scrollbar runs the full height of the block. Mono at the code size.
  */
 export function CodeBlock({ html, code, className }: CodeBlockProps) {
   const [copied, setCopied] = useState(false)
@@ -35,15 +33,16 @@ export function CodeBlock({ html, code, className }: CodeBlockProps) {
   }
 
   return (
-    <Card className={cn("group relative overflow-hidden bg-quebi-bg p-0", className)}>
+    <div data-slot="code-block" className={cn("group relative bg-quebi-raised", className)}>
       <Button
         intent="outline"
         size="xs"
         onPress={copy}
         aria-label={copied ? "Copied" : "Copy code"}
-        // Position and the backdrop that keeps the label legible over code are
-        // this control's context, not its appearance — intent/size own the rest.
-        className="absolute top-3 right-3 z-10 bg-quebi-bg/80 backdrop-blur"
+        // Position and the opaque ground that keeps the label legible over
+        // scrolled code are this control's context, not its appearance —
+        // intent/size own the rest.
+        className="absolute top-3 right-3 z-10 bg-quebi-raised"
       >
         {copied ? <Check data-slot="icon" /> : <Copy data-slot="icon" />}
         {/* Reserved for the longer of the two words: the button sits over the
@@ -52,10 +51,10 @@ export function CodeBlock({ html, code, className }: CodeBlockProps) {
             seconds later on its own. */}
         <SteadyWidth candidates={["Copy", "Copied"]}>{copied ? "Copied" : "Copy"}</SteadyWidth>
       </Button>
-      <ScrollSurface className="code-block max-h-150 p-5 text-sm leading-relaxed [&_pre]:bg-transparent! [&_pre]:outline-none">
+      <ScrollSurface className="code-block max-h-150 p-4 font-mono text-quebi-code [&_pre]:bg-transparent! [&_pre]:outline-none">
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: `html` is Shiki output produced at build time by scripts/generate-api.ts from source in this repo — there is no path by which user input reaches it. */}
         <div dangerouslySetInnerHTML={{ __html: html }} />
       </ScrollSurface>
-    </Card>
+    </div>
   )
 }

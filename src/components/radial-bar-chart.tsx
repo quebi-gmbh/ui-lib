@@ -198,7 +198,7 @@ export function RadialBarChart<TValue extends ValueType, TName extends NameType>
 
           {showLabel && (
             <text
-              className="fill-quebi-fg font-semibold"
+              className="fill-quebi-fg font-display font-extralight"
               data-slot="label"
               x="50%"
               y="50%"
@@ -208,7 +208,7 @@ export function RadialBarChart<TValue extends ValueType, TName extends NameType>
               <tspan className="text-2xl">{centerLabel}</tspan>
               {labelDescription && (
                 <tspan
-                  className="fill-quebi-fg-muted text-xs"
+                  className="fill-quebi-fg-subtle font-sans text-quebi-caption"
                   x="50%"
                   dy="1.6em"
                   fontWeight="normal"

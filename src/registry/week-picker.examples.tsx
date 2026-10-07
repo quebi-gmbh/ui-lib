@@ -37,7 +37,7 @@ const WeekStarts = () => (
       { caption: 'locale="en-US"', props: { locale: "en-US" } as const },
     ].map((variant) => (
       <div key={variant.caption} className="flex flex-col gap-2">
-        <p className="font-semibold text-quebi-fg-muted text-xs uppercase tracking-[0.08em]">
+        <p className="font-medium text-quebi-fg-muted text-xs uppercase tracking-[0.08em]">
           {variant.caption}
         </p>
         <WeekPicker aria-label={variant.caption} hideWeekNumbers {...variant.props} />
@@ -50,7 +50,7 @@ export const weekPickerExamples: ComponentExample[] = [
   {
     title: "Default",
     description:
-      "Hover lights the whole week; one click selects it. The gutter numbers the weeks ISO-8601, and the current week is ringed in brand teal.",
+      "Hover lights the whole week; one click selects it. The gutter numbers the weeks ISO-8601, and the current week is ringed in ink.",
     render: () => <WeekPicker aria-label="Week" />,
   },
   {

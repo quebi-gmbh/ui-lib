@@ -45,17 +45,17 @@ describe("Table", () => {
     expect(within(table).getByRole("rowheader")).toHaveTextContent("Galaxy S24")
   })
 
-  test("draws its own panel by default, and none when plain", () => {
+  test("opens on a top rule by default, and on none when plain", () => {
     const panel = () =>
       document.querySelector('[data-slot="table-surface"]')?.className.split(/\s+/) ?? []
 
     const surface = render(<BasicTable />)
-    expect(panel()).toContain("rounded-quebi-md")
-    expect(panel()).toContain("border")
+    expect(panel()).toContain("border-t")
+    expect(panel()).toContain("border-quebi-rule")
     surface.unmount()
 
     // A plain table is rows on whatever is behind it — the case a page section
-    // or a Card needs, where the panel would be a box drawn inside a box.
+    // or a Card needs, where a second rule above the header would say it twice.
     render(
       <Table aria-label="Devices" variant="plain">
         <TableHeader>
@@ -68,8 +68,7 @@ describe("Table", () => {
         </TableBody>
       </Table>,
     )
-    expect(panel()).not.toContain("rounded-quebi-md")
-    expect(panel()).not.toContain("border")
+    expect(panel().some((c) => c.startsWith("border"))).toBe(false)
     expect(panel().some((c) => c.startsWith("bg-"))).toBe(false)
     expect(screen.getByRole("grid", { name: "Devices" })).toBeInTheDocument()
   })

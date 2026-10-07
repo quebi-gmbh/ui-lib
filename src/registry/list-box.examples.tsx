@@ -11,13 +11,13 @@ import type { ComponentExample } from "./types"
 export const listBoxExamples: ComponentExample[] = [
   {
     title: "Single selection",
-    description: "Pick one row; the selected item fills with brand teal and a check.",
+    description: "Pick one row; the selected item is marked with an ink check.",
     render: () => (
       <ListBox aria-label="View" selectionMode="single" defaultSelectedKeys={["board"]}>
-        <ListBoxItem id="list">List</ListBoxItem>
-        <ListBoxItem id="board">Board</ListBoxItem>
-        <ListBoxItem id="calendar">Calendar</ListBoxItem>
-        <ListBoxItem id="timeline">Timeline</ListBoxItem>
+        <ListBoxItem id="list">list</ListBoxItem>
+        <ListBoxItem id="board">board</ListBoxItem>
+        <ListBoxItem id="calendar">calendar</ListBoxItem>
+        <ListBoxItem id="timeline">timeline</ListBoxItem>
       </ListBox>
     ),
   },
@@ -30,10 +30,10 @@ export const listBoxExamples: ComponentExample[] = [
         selectionMode="multiple"
         defaultSelectedKeys={["design", "eng"]}
       >
-        <ListBoxItem id="design">Design</ListBoxItem>
-        <ListBoxItem id="eng">Engineering</ListBoxItem>
-        <ListBoxItem id="product">Product</ListBoxItem>
-        <ListBoxItem id="sales">Sales</ListBoxItem>
+        <ListBoxItem id="design">design</ListBoxItem>
+        <ListBoxItem id="eng">engineering</ListBoxItem>
+        <ListBoxItem id="product">product</ListBoxItem>
+        <ListBoxItem id="sales">sales</ListBoxItem>
       </ListBox>
     ),
   },
@@ -44,17 +44,17 @@ export const listBoxExamples: ComponentExample[] = [
       <ListBox aria-label="Media" selectionMode="single" defaultSelectedKeys={["photos"]}>
         <ListBoxItem id="photos" textValue="Photos">
           <Image data-slot="icon" />
-          <ListBoxLabel>Photos</ListBoxLabel>
+          <ListBoxLabel>photos</ListBoxLabel>
           <ListBoxDescription>1,204 items</ListBoxDescription>
         </ListBoxItem>
         <ListBoxItem id="music" textValue="Music">
           <Music data-slot="icon" />
-          <ListBoxLabel>Music</ListBoxLabel>
+          <ListBoxLabel>music</ListBoxLabel>
           <ListBoxDescription>312 tracks</ListBoxDescription>
         </ListBoxItem>
         <ListBoxItem id="files" textValue="Files">
           <Folder data-slot="icon" />
-          <ListBoxLabel>Files</ListBoxLabel>
+          <ListBoxLabel>files</ListBoxLabel>
           <ListBoxDescription>48 documents</ListBoxDescription>
         </ListBoxItem>
       </ListBox>
@@ -65,11 +65,11 @@ export const listBoxExamples: ComponentExample[] = [
     description: "Group related rows under titled sections.",
     render: () => (
       <ListBox aria-label="Workspaces" selectionMode="single" defaultSelectedKeys={["acme"]}>
-        <ListBoxSection title="Personal">
-          <ListBoxItem id="me">My workspace</ListBoxItem>
-          <ListBoxItem id="drafts">Drafts</ListBoxItem>
+        <ListBoxSection title="personal">
+          <ListBoxItem id="me">my workspace</ListBoxItem>
+          <ListBoxItem id="drafts">drafts</ListBoxItem>
         </ListBoxSection>
-        <ListBoxSection title="Teams">
+        <ListBoxSection title="teams">
           <ListBoxItem id="acme">Acme Inc.</ListBoxItem>
           <ListBoxItem id="globex">Globex</ListBoxItem>
         </ListBoxSection>
@@ -86,9 +86,9 @@ export const listBoxExamples: ComponentExample[] = [
         disabledKeys={["enterprise"]}
         defaultSelectedKeys={["pro"]}
       >
-        <ListBoxItem id="free">Free</ListBoxItem>
-        <ListBoxItem id="pro">Pro</ListBoxItem>
-        <ListBoxItem id="enterprise">Enterprise (contact sales)</ListBoxItem>
+        <ListBoxItem id="free">free</ListBoxItem>
+        <ListBoxItem id="pro">pro</ListBoxItem>
+        <ListBoxItem id="enterprise">enterprise (contact sales)</ListBoxItem>
       </ListBox>
     ),
   },

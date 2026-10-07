@@ -4,26 +4,26 @@ import type { ComponentExample } from "./types"
 export const tabsExamples: ComponentExample[] = [
   {
     title: "Default",
-    description: "A horizontal tab strip with the active tab in brand teal.",
+    description: "A horizontal tab strip on a hairline, the selected tab in ink with a rule under it.",
     render: () => (
       <Tabs defaultSelectedKey="pricing" className="w-full max-w-md">
         <TabList aria-label="Plan editor sections">
-          <Tab id="pricing">Pricing</Tab>
-          <Tab id="inclusions">Inclusions</Tab>
-          <Tab id="visibility">Visibility</Tab>
-          <Tab id="history">History</Tab>
+          <Tab id="pricing">pricing</Tab>
+          <Tab id="inclusions">inclusions</Tab>
+          <Tab id="visibility">visibility</Tab>
+          <Tab id="history">history</Tab>
         </TabList>
         <TabPanels>
-          <TabPanel id="pricing" className="mt-4 text-quebi-fg-muted">
+          <TabPanel id="pricing" className="mt-4">
             Pricing panel content.
           </TabPanel>
-          <TabPanel id="inclusions" className="mt-4 text-quebi-fg-muted">
+          <TabPanel id="inclusions" className="mt-4">
             Inclusions panel content.
           </TabPanel>
-          <TabPanel id="visibility" className="mt-4 text-quebi-fg-muted">
+          <TabPanel id="visibility" className="mt-4">
             Visibility panel content.
           </TabPanel>
-          <TabPanel id="history" className="mt-4 text-quebi-fg-muted">
+          <TabPanel id="history" className="mt-4">
             History panel content.
           </TabPanel>
         </TabPanels>
@@ -36,18 +36,18 @@ export const tabsExamples: ComponentExample[] = [
     render: () => (
       <Tabs orientation="vertical" defaultSelectedKey="account" className="w-full max-w-lg">
         <TabList aria-label="Settings sections">
-          <Tab id="account">Account</Tab>
-          <Tab id="notifications">Notifications</Tab>
-          <Tab id="billing">Billing</Tab>
+          <Tab id="account">account</Tab>
+          <Tab id="notifications">notifications</Tab>
+          <Tab id="billing">billing</Tab>
         </TabList>
         <TabPanels>
-          <TabPanel id="account" className="text-quebi-fg-muted">
+          <TabPanel id="account">
             Manage your account details.
           </TabPanel>
-          <TabPanel id="notifications" className="text-quebi-fg-muted">
+          <TabPanel id="notifications">
             Choose how you get notified.
           </TabPanel>
-          <TabPanel id="billing" className="text-quebi-fg-muted">
+          <TabPanel id="billing">
             Update your billing information.
           </TabPanel>
         </TabPanels>
@@ -60,20 +60,20 @@ export const tabsExamples: ComponentExample[] = [
     render: () => (
       <Tabs defaultSelectedKey="overview" className="w-full max-w-md">
         <TabList aria-label="Project sections">
-          <Tab id="overview">Overview</Tab>
-          <Tab id="activity">Activity</Tab>
+          <Tab id="overview">overview</Tab>
+          <Tab id="activity">activity</Tab>
           <Tab id="settings" isDisabled>
-            Settings
+            settings
           </Tab>
         </TabList>
         <TabPanels>
-          <TabPanel id="overview" className="mt-4 text-quebi-fg-muted">
+          <TabPanel id="overview" className="mt-4">
             Overview panel content.
           </TabPanel>
-          <TabPanel id="activity" className="mt-4 text-quebi-fg-muted">
+          <TabPanel id="activity" className="mt-4">
             Activity panel content.
           </TabPanel>
-          <TabPanel id="settings" className="mt-4 text-quebi-fg-muted">
+          <TabPanel id="settings" className="mt-4">
             Settings panel content.
           </TabPanel>
         </TabPanels>

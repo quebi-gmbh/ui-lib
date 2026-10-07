@@ -45,7 +45,7 @@ export function OnThisPage({
       <aside data-slot="on-this-page" className="hidden xl:block">
         <TableOfContents
           items={contents}
-          label="On this page"
+          label="on this page"
           className="sticky top-(--quebi-rail-top) max-h-[calc(100dvh-var(--quebi-rail-top)-1.5rem)] overflow-y-auto overscroll-contain"
         />
       </aside>

@@ -9,37 +9,37 @@ export const badgeExamples: ComponentExample[] = [
   {
     title: "Intents",
     description:
-      "Nine intents. Brand teal flags feature highlights; reserve the ai gradient for AI surfaces.",
+      "Nine intents, one hue-free tag. Only the three states take a colour; ai is the ink fill, outline a hairline.",
     render: () => (
       <Row>
-        <Badge intent="neutral">Neutral</Badge>
-        <Badge intent="brand">Featured</Badge>
-        <Badge intent="accent">Best value</Badge>
-        <Badge intent="success">Live</Badge>
-        <Badge intent="warning">Review</Badge>
-        <Badge intent="danger">Overdue</Badge>
-        <Badge intent="info">Info</Badge>
-        <Badge intent="ai">AI match</Badge>
-        <Badge intent="outline">Archived</Badge>
+        <Badge intent="neutral">neutral</Badge>
+        <Badge intent="brand">featured</Badge>
+        <Badge intent="accent">best value</Badge>
+        <Badge intent="success">live</Badge>
+        <Badge intent="warning">review</Badge>
+        <Badge intent="danger">overdue</Badge>
+        <Badge intent="info">info</Badge>
+        <Badge intent="ai">ai match</Badge>
+        <Badge intent="outline">archived</Badge>
       </Row>
     ),
   },
   {
     title: "With dot",
-    description: "Prepend a colored dot for live-state indicators — it inherits the badge text color.",
+    description: "Prepend a dot for live-state indicators — it inherits the badge text colour.",
     render: () => (
       <Row>
         <Badge intent="success">
           <BadgeDot />
-          Live on kiosk
+          live on kiosk
         </Badge>
         <Badge intent="warning">
           <BadgeDot />
-          Draft
+          draft
         </Badge>
         <Badge intent="danger">
           <BadgeDot />
-          Overdue
+          overdue
         </Badge>
       </Row>
     ),

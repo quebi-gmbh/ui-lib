@@ -3,24 +3,24 @@ import { cn } from "@/lib/utils"
 /**
  * Card — quebi design system
  *
- * A surface for grouping related content. Depth comes from shadow-quebi-glow —
- * a mint bloom on dark, a neutral shadow on light — never a hand-rolled
- * shadow-lg; the signature is a faint cyan border over a near-transparent
- * white fill. Interactive cards lift on hover and pick up that elevation.
+ * A surface for grouping related content: paper with a hairline round it,
+ * square, and no shadow — structure comes from the rule, not from depth.
+ * Interactive cards answer hover with the raised ground, never with a lift.
  *
- * Note that a Card is *not* an overlay: it stays on the tinted surface token
- * and does not take `bg-quebi-elevated`, which is for things that float above
- * the page.
+ * Note that a Card is *not* an overlay: it sits in the page flow on the page
+ * ground and does not take `bg-quebi-elevated` or `shadow-quebi-float`, which
+ * are for things that float above the page.
  *
  * Sub-components compose the layout: CardHeader (title + description + action),
  * CardContent, and CardFooter.
  */
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** `feature` swaps the muted surface for a brand-tinted, glowing one. Reserve
-   * it for the hero/feature card in a set — not every card. */
+  /** `feature` sets the card on the raised ground behind a stronger rule.
+   * Reserve it for the one card in a set that carries the point — not every
+   * card. */
   variant?: "default" | "feature"
-  /** Opt in to the hover lift + glow. Set for cards that behave like a link or
+  /** Opt in to the hover ground. Set for cards that behave like a link or
    * button. Default cards stay static so informational surfaces don't imply
    * interactivity. */
   interactive?: boolean
@@ -33,12 +33,11 @@ const Card = ({ className, variant = "default", interactive = false, ...props }:
       className={cn(
         // flex-col + h-full so a child with `mt-auto` (e.g. the action button)
         // pins to the bottom and buttons align across a row of cards.
-        "flex flex-col h-full rounded-quebi-md p-5 text-quebi-fg",
+        "flex flex-col h-full border p-6 text-quebi-fg",
         variant === "feature"
-          ? "border border-quebi-brand/30 bg-quebi-brand/[0.06] shadow-quebi-glow"
-          : "border border-quebi-line/10 bg-quebi-surface/[0.02]",
-        interactive &&
-          "transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-quebi-brand/30 hover:shadow-quebi-glow",
+          ? "border-quebi-rule bg-quebi-raised"
+          : "border-quebi-hairline bg-quebi-bg",
+        interactive && "transition-colors duration-150 hover:bg-quebi-raised",
         className,
       )}
       {...props}
@@ -71,7 +70,7 @@ const CardTitle = ({ className, ...props }: React.ComponentProps<"div">) => {
     <div
       data-slot="card-title"
       className={cn(
-        "font-sans font-semibold text-lg text-quebi-fg tracking-[-0.01em] text-balance",
+        "font-display text-quebi-title text-quebi-fg text-balance",
         className,
       )}
       {...props}
@@ -83,7 +82,7 @@ const CardDescription = ({ className, ...props }: React.HTMLAttributes<HTMLDivEl
   return (
     <div
       data-slot="card-description"
-      className={cn("text-sm text-quebi-fg-muted text-pretty", className)}
+      className={cn("text-quebi-body-s text-quebi-fg-muted text-pretty", className)}
       {...props}
     />
   )

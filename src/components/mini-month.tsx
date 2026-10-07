@@ -80,7 +80,7 @@ import { cn } from "@/lib/utils"
  * ## Today, the picked day, and focus
  *
  * Three states, three treatments, none of them sharing a property: the picked
- * day fills the date with brand teal (as `Calendar` does), today rings it, and
+ * day fills the date with ink (as `Calendar` does), today underlines it, and
  * keyboard focus rings the whole cell. Today is read after mount, never at
  * render, for the same prerender reason `useCalendarToday` gives; pass `now`
  * to pin it.
@@ -195,13 +195,10 @@ function spanOn(spans: readonly MiniMonthSpan[], day: CalendarDate) {
 }
 
 /**
- * The neutral band. Opaque rather than an alpha'd `quebi-fg`, for the reason
- * `CALENDAR_COLORS` gives for its washes: the band sits behind a date that has
- * to keep its contrast, and a mix resolved against the page is the same colour
- * in both themes without anything showing through it.
+ * The neutral band: the raised ground, opaque for the reason `CALENDAR_COLORS`
+ * gives — the band sits behind a date that has to keep its contrast.
  */
-const NEUTRAL_BAND =
-  "bg-[color-mix(in_oklab,var(--color-quebi-fg)_16%,var(--color-quebi-bg))]"
+const NEUTRAL_BAND = "bg-quebi-raised"
 
 function bandClass(color: CalendarColorName | undefined) {
   return color ? CALENDAR_COLORS[color].band : NEUTRAL_BAND
@@ -210,7 +207,7 @@ function bandClass(color: CalendarColorName | undefined) {
 /**
  * A compact month grid that marks days rather than listing what is on them:
  * one dot per calendar with an event that day, a band behind runs of days such
- * as absences, today ringed and the picked day filled. Pick a day to show its
+ * as absences, today underlined and the picked day filled with ink. Pick a day to show its
  * agenda wherever the page wants it.
  */
 export function MiniMonth<E extends CalendarEvent = CalendarEvent>({
@@ -274,13 +271,12 @@ export function MiniMonth<E extends CalendarEvent = CalendarEvent>({
           !showHeader && "sr-only",
         )}
       >
-        <Heading className="ps-1 font-semibold text-quebi-fg text-sm" />
+        <Heading className="ps-1 font-display font-light text-quebi-fg text-quebi-nav" />
         <div className="flex items-center gap-0.5">
           <Button
             slot="previous"
             size="sq-sm"
             intent="ghost"
-            isCircle
             aria-label={previousLabel}
             className="size-7 **:data-[slot=icon]:text-quebi-fg-muted"
           >
@@ -294,7 +290,6 @@ export function MiniMonth<E extends CalendarEvent = CalendarEvent>({
             slot="next"
             size="sq-sm"
             intent="ghost"
-            isCircle
             aria-label={nextLabel}
             className="size-7 **:data-[slot=icon]:text-quebi-fg-muted"
           >
@@ -366,7 +361,7 @@ function MiniMonthGrid({
       {showLabel && first && (
         // Hidden from assistive tech: each grid is already named by react-aria
         // with its own month, and the heading above names the whole range.
-        <p aria-hidden="true" className="mb-2 text-center font-medium text-quebi-fg-muted text-sm">
+        <p aria-hidden="true" className="quebi-eyebrow mb-2 block text-center">
           {getDateTimeFormat(locale, { month: "long", year: "numeric", timeZone }).format(
             dayToDate(first, timeZone),
           )}
@@ -375,7 +370,7 @@ function MiniMonthGrid({
       <CalendarGrid offset={{ months: offset }}>
         <CalendarGridHeader>
           {(weekday) => (
-            <CalendarHeaderCell className="w-9 pb-2 text-center font-semibold text-quebi-fg-muted text-xs uppercase tracking-[0.08em]">
+            <CalendarHeaderCell className="quebi-eyebrow w-9 pb-2 text-center">
               {weekday}
             </CalendarHeaderCell>
           )}
@@ -407,14 +402,19 @@ function MiniMonthGrid({
                     "relative flex h-10 w-9 cursor-default flex-col items-center justify-center gap-0.5 text-quebi-fg text-sm tabular-nums outline-hidden transition-colors",
                     // The hover wash is a background, and so is the band: on a
                     // banded day it would replace the band and punch a hole in
-                    // the run. The band stays, and the date's circle takes the
+                    // the run. The band stays, and the date's square takes the
                     // hover instead.
-                    span && !isOutsideMonth ? bandClass(span.color) : isHovered && "bg-quebi-surface/[0.04]",
-                    opens && "rounded-s-quebi-sm",
-                    closes && "rounded-e-quebi-sm",
-                    isFocusVisible && "rounded-quebi-sm ring-2 ring-quebi-brand-mark ring-inset",
+                    span && !isOutsideMonth ? bandClass(span.color) : isHovered && "bg-quebi-raised",
+                    // Square cells cannot round a run's ends, so a run is
+                    // closed by a rule instead — at the span's own ends and
+                    // where a week or the month cuts it.
+                    span && !isOutsideMonth && "border-quebi-rule",
+                    span && !isOutsideMonth && opens && "border-s",
+                    span && !isOutsideMonth && closes && "border-e",
+                    isFocusVisible && "ring-2 ring-quebi-focus ring-inset",
                     isOutsideMonth && "text-quebi-fg-subtle",
-                    (isDisabled || isUnavailable) && "text-quebi-fg-subtle",
+                    isDisabled && "text-quebi-fg-subtle",
+                    isUnavailable && "text-quebi-fg-subtle line-through",
                   )
                 }
               >
@@ -422,12 +422,10 @@ function MiniMonthGrid({
                   <>
                     <span
                       className={cn(
-                        "flex size-6 items-center justify-center rounded-full leading-none",
-                        isSelected && "bg-quebi-brand font-semibold text-quebi-on-brand",
-                        span && isHovered && !isSelected && "bg-quebi-surface/[0.08]",
-                        isToday &&
-                          !isSelected &&
-                          "font-semibold text-quebi-brand-text ring-1 ring-quebi-brand-mark ring-inset",
+                        "flex size-6 items-center justify-center leading-none",
+                        isSelected && "bg-quebi-action font-medium text-quebi-on-action",
+                        span && isHovered && !isSelected && "bg-quebi-pressed",
+                        isToday && "font-medium underline decoration-1 underline-offset-4",
                       )}
                     >
                       {formattedDate}
@@ -519,7 +517,7 @@ export function MiniMonthLegend({ calendars = [], spans = [], className }: MiniM
         <li key={`span-${span.title}`} className="flex items-center gap-1.5">
           <span
             aria-hidden="true"
-            className={cn("h-2 w-5 shrink-0 rounded-full", bandClass(span.color))}
+            className={cn("h-2 w-5 shrink-0", bandClass(span.color))}
           />
           {span.title}
         </li>

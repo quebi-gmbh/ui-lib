@@ -2,7 +2,7 @@ import { AlertTriangle, CreditCard, Rocket, Sparkles } from "lucide-react"
 import { IconTile } from "@/components/icon-tile"
 import type { OgScene } from "./types"
 
-/** Four tints, including the ai gradient that only belongs on AI surfaces. */
+/** The ink tile, a state tint and the action-ink fill. */
 export const iconTileOgScene: OgScene = {
   scale: 2.4,
   render: () => (

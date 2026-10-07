@@ -10,8 +10,7 @@ import {
   useState,
 } from "react"
 import { createPortal } from "react-dom"
-import { tv } from "tailwind-variants"
-import { cn } from "@/lib/utils"
+import { cn, tv } from "@/lib/utils"
 import { Button } from "react-aria-components"
 
 /**
@@ -21,9 +20,12 @@ import { Button } from "react-aria-components"
  * a context-backed queue renders a fixed, portalled stack with an aria-live
  * region for accessibility.
  *
- * Intents: default (neutral surface), success (emerald), warning (amber),
- * danger (red), info (cyan) — matching the quebi status ramps. Auto-dismiss
- * after `duration` ms (set to 0 to keep until dismissed).
+ * Every toast is the same floating surface — elevated, hairline edge, small
+ * radius, float shadow — with ink text. The intent is carried by the icon and
+ * a 2px rule down the leading edge: `success`, `warning` and `danger` in their
+ * state tokens, `info` in ink, `default` with neither. The surface itself is
+ * never tinted. Auto-dismiss after `duration` ms (set to 0 to keep until
+ * dismissed).
  *
  * Usage:
  *   <ToastProvider> wraps your app, then call `const toast = useToast()`
@@ -150,18 +152,20 @@ const iconMap = {
 
 const toastStyles = tv({
   base: [
-    "pointer-events-auto flex w-full max-w-sm items-start gap-3",
-    "rounded-quebi-md border p-4 text-sm/5 text-pretty backdrop-blur-sm",
-    "shadow-quebi-glow",
+    "pointer-events-auto relative flex w-full max-w-sm items-start gap-3 overflow-hidden",
+    "rounded-quebi-s border border-quebi-hairline bg-quebi-elevated p-4 shadow-quebi-float",
+    "text-sm/5 text-pretty text-quebi-fg-muted",
+    // The intent rule: a 2px bar on the leading edge, clipped to the radius.
+    "before:absolute before:inset-y-0 before:start-0 before:w-0.5",
     "transition-all duration-200 ease-out",
   ],
   variants: {
     intent: {
-      default: "border-quebi-line/10 bg-quebi-elevated/90 text-quebi-fg-muted",
-      success: "border-emerald-500/20 bg-emerald-500/10 text-quebi-success",
-      warning: "border-amber-500/20 bg-amber-500/10 text-quebi-warn",
-      danger: "border-red-500/20 bg-red-500/10 text-quebi-danger",
-      info: "border-quebi-line/20 bg-cyan-500/10 text-quebi-info",
+      default: "before:hidden",
+      success: "before:bg-quebi-success *:data-[slot=toast-icon]:text-quebi-success",
+      warning: "before:bg-quebi-warn *:data-[slot=toast-icon]:text-quebi-warn",
+      danger: "before:bg-quebi-danger *:data-[slot=toast-icon]:text-quebi-danger",
+      info: "before:bg-quebi-rule *:data-[slot=toast-icon]:text-quebi-fg",
     },
   },
   defaultVariants: { intent: "default" },
@@ -178,7 +182,6 @@ const positionStyles: Record<ToastPosition, string> = {
 
 function ToastItem({ toast, onDismiss }: { toast: ToastRecord; onDismiss: (id: string) => void }) {
   const Icon = iconMap[toast.intent]
-  const isNeutral = toast.intent === "default"
 
   useEffect(() => {
     if (!toast.duration) return
@@ -188,26 +191,20 @@ function ToastItem({ toast, onDismiss }: { toast: ToastRecord; onDismiss: (id: s
 
   return (
     <div data-slot="toast" className={cn(toastStyles({ intent: toast.intent }))}>
-      {Icon && <Icon className="mt-px size-5 shrink-0" />}
+      {Icon && <Icon data-slot="toast-icon" className="mt-px size-5 shrink-0" />}
       <div className="min-w-0 flex-1">
-        {/* Title and description inherit the intent colour — the same rule Note
-            follows (task #136). Both used to force `text-quebi-fg` /
-            `text-quebi-fg-muted`, which left an intent-tinted toast with no
-            intent-coloured text at all, and a near-black heading on the light
-            theme's coloured surface. `default` keeps the two-step hierarchy,
-            because its root is already the muted token. */}
-        <div className={cn("font-semibold", isNeutral && "text-quebi-fg")}>{toast.title}</div>
-        {toast.description && (
-          <div className={cn("mt-1", isNeutral && "text-quebi-fg-muted")}>{toast.description}</div>
-        )}
+        {/* Words stay ink on every intent: the hue is the icon's and the rule's,
+            so a warning reads as a warning without a sentence set in amber. */}
+        <div className="font-medium text-quebi-fg">{toast.title}</div>
+        {toast.description && <div className="mt-1">{toast.description}</div>}
       </div>
       <Button
         aria-label="Dismiss notification"
         onPress={() => onDismiss(toast.id)}
         className={cn(
-          "-mr-1 -mt-1 shrink-0 cursor-pointer rounded-quebi-sm p-1 text-current/70",
-          "transition-colors duration-150 hover:bg-quebi-surface/10 hover:text-current",
-          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+          "-mr-1 -mt-1 shrink-0 cursor-pointer p-1 text-quebi-fg-subtle",
+          "transition-colors duration-150 hover:bg-quebi-raised hover:text-quebi-fg",
+          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
         )}
       >
         <CloseIcon className="size-4" />

@@ -2,9 +2,8 @@ import { Tracker, type TrackerBlockProps } from "@/components/tracker"
 import type { OgScene } from "./types"
 
 /**
- * Forty days of uptime with two bad ones in it. The colours are quebi status
- * tokens rather than the palette scales the gallery example reaches for: this
- * file is linted as app code, and a status colour has a token.
+ * Forty days of uptime with two bad ones in it, in the quebi state tokens:
+ * uptime is semantic state, and a state colour has a token.
  */
 const uptime: TrackerBlockProps[] = Array.from({ length: 40 }, (_, index) => {
   if (index === 11 || index === 28)

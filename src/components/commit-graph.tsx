@@ -39,13 +39,13 @@ import { cn } from "@/lib/utils"
  *
  * Lane colour is a pure function of the lane index (`laneColor`), so a lane
  * keeps its colour for as long as it is alive and a reused lane picks up the
- * colour of its index rather than of its history. The hues are quebi semantic
- * tokens, which are re-declared per theme, so the graph reads in light and dark
- * without a second palette — see `LANE_COLORS` for why that rules out the
- * brand teal, of all colours.
+ * colour of its index rather than of its history. The colours are the ink
+ * ramp — quebi's text tokens, re-declared per theme — so the graph reads in
+ * light and dark without a second palette and without a hue: which branch is
+ * which is carried by position and the curves, the tone only helps.
  */
 
-/** A ref pointing at a commit. `kind` drives the badge's colour and glyph. */
+/** A ref pointing at a commit. `kind` drives the badge's weight and glyph. */
 export interface CommitGraphRef {
   name: string
   kind: "branch" | "tag" | "head" | "remote"
@@ -362,33 +362,24 @@ const BEND_SPAN = ROW_HEIGHT / 2 - NODE_STEM
  * declared in ordinary `:root` / `.light` rules, so they exist no matter what a
  * scanner concludes.
  *
- * **Why whole literals rather than a built string.** This list used to hold bare
- * token names and `laneColor` assembled `var(--color-${name})`. That reads
- * tidier and it silently broke three of the five lanes: the assembled name never
- * appears in the source, Tailwind never emitted `--color-quebi-accent`,
- * `-info` or `-danger`, and those lanes fell back to SVG's own defaults — black
- * dots and, because SVG's default stroke is `none`, no line at all. Nothing
- * failed; the graph just quietly lost its branches. Keep these as literals.
+ * **Why whole literals rather than a built string.** An assembled
+ * `var(--color-${name})` never appears in the source, so Tailwind never emits
+ * it, and the lane falls back to SVG's defaults — black dots and, because SVG's
+ * default stroke is `none`, no line at all. Keep these as literals.
  *
- * The list is five and not the six it reads like it wants to be because a lane
- * line is a graphical object carrying meaning, so WCAG 1.4.11 asks 3:1 of it,
- * and two otherwise obvious candidates miss on the light surface: `--q-brand` is
- * deliberately the *same* teal in both modes and measures 1.74:1 there, and
- * `--q-warn` misses at 2.94:1. `--q-success` is within a shade of the brand teal
- * on dark, so lane 0 still looks like quebi without being the one colour that
- * cannot flip.
+ * The palette is the ink ramp — `fg`, `fg-subtle`, `fg-muted` — ordered so the
+ * darkest and the lightest alternate. A lane line is a graphical object, so
+ * WCAG 1.4.11 asks 3:1 of it; every step of the text ramp clears 4.5:1 on the
+ * page in both themes. Three steps and not more: past that the greys stop
+ * being told apart, and a lane colour that cannot be told apart is noise.
  *
  * `tests/commit-graph-contrast.test.ts` checks both halves against
  * `src/quebi-theme.css`: that every variable named here is really declared by
  * both themes, and that each clears 3:1 against its own background.
- *
- * Ordered so no two adjacent lanes are neighbouring hues.
  */
 export const LANE_COLORS = [
-  "var(--q-success)",
-  "var(--q-accent)",
-  "var(--q-info)",
-  "var(--q-danger)",
+  "var(--q-fg)",
+  "var(--q-fg-subtle)",
   "var(--q-fg-muted)",
 ] as const
 
@@ -566,11 +557,13 @@ function CommitGraphLanes({
   )
 }
 
+// No hues: HEAD is the filled tag, everything else an outline; the glyph says
+// which kind of ref it is.
 const refIntents = {
-  head: "brand",
-  branch: "info",
+  head: "neutral",
+  branch: "outline",
   remote: "outline",
-  tag: "warning",
+  tag: "outline",
 } as const
 
 const refIcons = {
@@ -689,14 +682,14 @@ export function CommitGraph({
     <div
       data-slot="commit-graph"
       className={cn(
-        "w-full overflow-hidden rounded-quebi-md border border-quebi-line/10 bg-quebi-bg",
+        "w-full overflow-hidden border border-quebi-hairline bg-quebi-bg",
         className,
       )}
       {...props}
     >
       <GridList
         aria-label={ariaLabel}
-        className="gap-y-0"
+        className="border-t-0"
         selectionMode={isSelectable ? "single" : "none"}
         selectionBehavior="replace"
         {...(selectedSha === undefined
@@ -708,7 +701,9 @@ export function CommitGraph({
           if (first !== undefined) onSelectCommit?.(String(first))
         }}
         renderEmptyState={() => (
-          <div className="px-4 py-10 text-center text-quebi-fg-muted text-sm">{emptyState}</div>
+          <div className="px-4 py-10 text-center text-quebi-body-s text-quebi-fg-muted">
+            {emptyState}
+          </div>
         )}
       >
         {rows.map((row) => {
@@ -719,23 +714,13 @@ export function CommitGraph({
               key={commit.sha}
               id={commit.sha}
               textValue={`${shortSha} ${commit.message}`}
-              // Two overrides here, and only one of them is a matter of taste.
-              //
               // `py-0` is load-bearing: the band is drawn at exactly ROW_HEIGHT
               // and stretched to the row's content box, so vertical padding
               // would squash it below the row's own pitch and the lines would
-              // stop meeting across rows. The horizontal padding is *not*
-              // overridden — GridListItem's `px-3` is what every other row in
-              // the library sits on, and the graph column needs that gutter as
-              // much as the text does.
-              //
-              // The row separator is a pseudo-element rather than a bottom
-              // border: GridListItem's own `border` is a four-sided one, and
-              // killing it needs `border-0`, which then has to out-order a
-              // `border-b` in the generated sheet rather than simply beating it.
-              // Absolute + `inset-x-0` resolves against the padding box, so the
-              // rule still spans the full row rather than stopping at the text.
-              className="relative h-14 gap-3 rounded-none border-0 py-0 after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-quebi-line/10 last:after:hidden sm:gap-3"
+              // stop meeting across rows. `px-3` is the gutter the graph column
+              // needs inside the bordered box. GridListItem's own hairline
+              // separates the rows; the box's border closes the last one.
+              className="h-14 gap-3 px-3 py-0 last:border-b-0 sm:gap-3"
             >
               <CommitGraphLanes
                 row={row}
@@ -746,9 +731,9 @@ export function CommitGraph({
               <Snippet
                 text={shortSha}
                 symbol=""
-                className="w-auto shrink-0 gap-1.5 rounded-none border-0 bg-transparent px-0 py-0"
+                className="w-auto shrink-0 gap-1.5 border-0 bg-transparent px-0 py-0"
               />
-              <span className="min-w-0 flex-1 truncate text-quebi-fg text-sm">
+              <span className="min-w-0 flex-1 truncate text-quebi-body-s text-quebi-fg">
                 {commit.message}
               </span>
               {commit.refs?.length ? (
@@ -773,14 +758,14 @@ export function CommitGraph({
                 date={commit.date}
                 dateStyle="medium"
                 relative={relativeDates}
-                className="shrink-0 text-quebi-fg-subtle text-xs tabular-nums"
+                className="shrink-0 font-mono text-quebi-fg-subtle text-xs tabular-nums"
               />
             </GridListItem>
           )
         })}
       </GridList>
       {onLoadMore ? (
-        <div className="flex justify-center border-quebi-line/10 border-t px-4 py-3">
+        <div className="flex justify-center border-quebi-hairline border-t px-4 py-3">
           <Button
             intent="outline"
             size="sm"

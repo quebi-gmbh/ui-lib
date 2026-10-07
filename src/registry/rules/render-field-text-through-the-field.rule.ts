@@ -50,7 +50,7 @@ export const renderFieldTextThroughTheFieldRule: RuleMeta = {
 // inputProps carries aria-describedby={field.errorId} whenever the field is invalid
 
 <Checkbox {...inputProps} isInvalid={hasErrors}>{label}</Checkbox>
-{hasErrors && <p className="text-sm text-red-500">{field.errors?.join(", ")}</p>}`,
+{hasErrors && <p className="text-sm text-quebi-danger">{field.errors?.join(", ")}</p>}`,
       right: `<Checkbox
   name={field.name}
   isInvalid={hasErrors}
@@ -66,7 +66,7 @@ export const renderFieldTextThroughTheFieldRule: RuleMeta = {
       wrong: `<TextField isInvalid={errors.length > 0}>
   <Label>Email</Label>
   <Input />
-  {errors.length > 0 && <p className="mt-1 text-[12px] text-red-500">{errors[0]}</p>}
+  {errors.length > 0 && <p className="mt-1 text-[12px] text-quebi-danger">{errors[0]}</p>}
 </TextField>`,
       right: `<TextField isInvalid={errors.length > 0}>
   <Label>Email</Label>

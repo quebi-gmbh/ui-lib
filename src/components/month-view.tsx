@@ -133,7 +133,7 @@ import { cn } from "@/lib/utils"
  *   being a peek, and the chevron drawn over it is how you go there. *Seeing*
  *   next month is not being in it.
  * - **The blur ramps rather than covering.** Two masked `backdrop-blur` layers
- *   and a dimming gradient over the same axis, so a peek is sharp where it
+ *   and a masked dimming layer over the same axis, so a peek is sharp where it
  *   meets the window and blurred at its outer edge. A uniform blur reads as a
  *   frosted panel stuck to the side of the calendar; a ramp reads as the page
  *   carrying on past the edge of what you are looking at.
@@ -593,23 +593,6 @@ function bandGeometry(band: EventBand, dayCount: number): React.CSSProperties {
   const left = (band.startIndex / dayCount) * 100
   const width = ((band.endIndex - band.startIndex + 1) / dayCount) * 100
   return { left: `${left}%`, width: `calc(${width}% - 6px)`, marginLeft: 3 }
-}
-
-/**
- * Which of a chip's corners the *week boundary* cuts.
- *
- * Only that one, now: the accented edge is squared by `CalendarEventRow`
- * itself (task #176, and see the radius there), because whether a row draws
- * the accent is the row's own business and the panel lists the same events
- * with no geometry at all. What is left is what the grid knows and the row
- * cannot — that this chip is one half of an event cut at the end of a week,
- * and the two halves read as one thing only if the cut is square.
- */
-function bandCorners(band: EventBand): string {
-  return cn(
-    band.continuesBefore && "rounded-l-none",
-    isAllDayEvent(band.event) && band.continuesAfter && "rounded-r-none",
-  )
 }
 
 /** `range`'s default, hoisted so it is not a new object on every render. */
@@ -1299,11 +1282,11 @@ interface MonthPeekProps {
  *
  * The blur is *progressive* — two `backdrop-blur` layers, each masked to begin
  * further out than the last, so the strip is sharp where it meets the month
- * being read and eight pixels of blur at the viewport's edge, with a dimming
- * gradient over the same axis. A single uniform blur reads as a frosted panel
- * stuck to the side of the calendar; a ramp reads as the page carrying on past
- * the edge of what you are looking at. It is masks and a gradient rather than
- * an animated filter for a plain reason: no browser interpolates a blur radius
+ * being read and eight pixels of blur at the viewport's edge, with a flat dim
+ * of the page's own ground masked over the same axis. A single uniform blur
+ * reads as a frosted panel stuck to the side of the calendar; a ramp reads as
+ * the page carrying on past the edge of what you are looking at. It is masks
+ * rather than an animated filter for a plain reason: no browser interpolates a blur radius
  * across an element, and stacking two cheap ones is how every progressive blur
  * is actually built.
  *
@@ -1364,9 +1347,8 @@ function MonthPeek({ side, width, label, onStep, isFocusable }: MonthPeekProps) 
             "absolute inset-0",
             VEIL_TRANSITION,
             "group-hover/peek:opacity-40",
-            leading
-              ? "bg-gradient-to-l from-transparent to-quebi-bg/70"
-              : "bg-gradient-to-r from-transparent to-quebi-bg/70",
+            "bg-quebi-bg/70",
+            leading ? "mask-r-from-0% mask-r-to-100%" : "mask-l-from-0% mask-l-to-100%",
           )}
         />
       </div>
@@ -1383,7 +1365,7 @@ function MonthPeek({ side, width, label, onStep, isFocusable }: MonthPeekProps) 
           aria-label={label}
           excludeFromTabOrder={!isFocusable}
           onPress={onStep}
-          className="rounded-full bg-quebi-elevated/80 shadow-md backdrop-blur-sm"
+          className="bg-quebi-bg"
         >
           {leading ? (
             <ChevronLeft data-slot="icon" aria-hidden="true" />
@@ -1413,15 +1395,15 @@ function MonthPlaceholder({ weekHeight }: { weekHeight: number }) {
     <div
       aria-hidden="true"
       data-slot="month-placeholder"
-      className="w-full overflow-hidden rounded-quebi-md border border-quebi-line/10 bg-quebi-bg"
+      className="w-full overflow-hidden border border-quebi-hairline bg-quebi-bg"
     >
-      <div className="border-quebi-line/10 border-b py-2 text-xs">{"\u00a0"}</div>
+      <div className="border-quebi-hairline border-b py-2 text-xs">{"\u00a0"}</div>
       {Array.from({ length: CAROUSEL_WEEK_ROWS }, (_, row) => (
         <div
           // The rows are a fixed count in a fixed order and never reorder.
           // biome-ignore lint/suspicious/noArrayIndexKey: six empty rows have no identity but their place
           key={row}
-          className="border-quebi-line/10 border-b last:border-b-0"
+          className="border-quebi-hairline border-b last:border-b-0"
           style={{ height: weekHeight }}
         />
       ))}
@@ -1508,15 +1490,15 @@ function MonthGrid<E extends CalendarEvent>({
   return (
     <div
       className={cn(
-        "min-w-0 flex-1 overflow-hidden rounded-quebi-md border border-quebi-line/10 bg-quebi-bg",
+        "min-w-0 flex-1 overflow-hidden border border-quebi-hairline bg-quebi-bg",
         className,
       )}
     >
-      <div className="grid grid-cols-7 border-quebi-line/10 border-b">
+      <div className="grid grid-cols-7 border-quebi-hairline border-b">
         {headerDays.map((day) => (
           <div
             key={day.toString()}
-            className="px-2 py-2 text-center text-quebi-fg-subtle text-xs uppercase"
+            className="quebi-eyebrow block px-2 py-2 text-center"
           >
             {getDateTimeFormat(locale, { weekday: "short", timeZone }).format(
               dayToDate(day, timeZone),
@@ -1576,7 +1558,7 @@ function MonthGrid<E extends CalendarEvent>({
                 CELL_HEADER +
                 Math.min(band.lane, maxLanes - 1) * LANE_HEIGHT,
             }}
-            className={cn("absolute", bandCorners(band))}
+            className="absolute"
           />
         ))}
       </div>
@@ -1639,7 +1621,7 @@ function MonthWeek<E extends CalendarEvent>({
   }
 
   return (
-    <div className="relative border-quebi-line/10 border-b last:border-b-0" style={{ height: weekHeight }}>
+    <div className="relative border-quebi-hairline border-b last:border-b-0" style={{ height: weekHeight }}>
       <div className="grid h-full grid-cols-7">
         {week.map((day) => {
           const outside = month !== null && !isInMonth(day, month)
@@ -1653,8 +1635,8 @@ function MonthWeek<E extends CalendarEvent>({
             <div
               key={day.toString()}
               className={cn(
-                "border-quebi-line/10 border-l first:border-l-0",
-                outside && "bg-quebi-surface/[0.02]",
+                "border-quebi-hairline border-l first:border-l-0",
+                outside && "bg-transparent",
               )}
             >
               <div className="flex justify-end px-1.5 pt-1" style={{ height: CELL_HEADER }}>
@@ -1662,12 +1644,16 @@ function MonthWeek<E extends CalendarEvent>({
                   onPress={() => onDayClick?.(day)}
                   isDisabled={!onDayClick}
                   className={cn(
-                    "flex h-6 min-w-6 items-center justify-center rounded-full px-1.5",
-                    "font-semibold text-xs tabular-nums transition-colors duration-150",
-                    "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
-                    onDayClick && "cursor-pointer hover:bg-quebi-surface/[0.08]",
+                    "flex h-6 min-w-6 items-center justify-center px-1.5",
+                    "text-xs tabular-nums transition-colors duration-150",
+                    "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset",
+                    onDayClick &&
+                      cn(
+                        "cursor-pointer",
+                        isToday ? "hover:bg-quebi-action-hover" : "hover:bg-quebi-raised",
+                      ),
                     isToday
-                      ? "bg-quebi-brand text-quebi-on-brand"
+                      ? "bg-quebi-action text-quebi-on-action"
                       : outside
                         ? "text-quebi-fg-subtle"
                         : "text-quebi-fg",
@@ -1828,7 +1814,6 @@ function MonthChip<E extends CalendarEvent>({
       className={cn(
         isMovable ? "w-full cursor-grab active:cursor-grabbing" : "absolute",
         move.preview?.event.id === band.event.id && "opacity-40",
-        bandCorners(band),
       )}
     />
   )

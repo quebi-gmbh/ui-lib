@@ -5,15 +5,14 @@ import {
   ToggleButton as TogglePrimitive,
   type ToggleButtonProps,
 } from "react-aria-components"
-import { tv, type VariantProps } from "tailwind-variants"
-import { cn } from "@/lib/utils"
+import type { VariantProps } from "tailwind-variants"
+import { cn, tv } from "@/lib/utils"
 
 /**
  * Toggle — quebi design system
  *
- * A two-state pressable button (think bold/italic in a toolbar). The selected
- * state lights up with brand teal; depth comes from a quebi glow, never a drop
- * shadow.
+ * A two-state pressable button (think bold/italic in a toolbar). Selected is
+ * an ink fill — the same `action` pair as a solid Button and a checked box.
  *
  * Intents: outline (bordered) / plain (borderless). Sizes follow the button
  * scale, including square (sq-*) icon-only variants.
@@ -21,37 +20,34 @@ import { cn } from "@/lib/utils"
 export const toggleStyles = tv({
   base: [
     "inline-flex items-center justify-center gap-2",
-    "font-sans font-semibold whitespace-nowrap select-none cursor-pointer",
+    "font-sans font-medium whitespace-nowrap select-none cursor-pointer",
     "border border-solid",
-    "transition-all duration-200 ease-out",
-    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-    "disabled:opacity-50 disabled:cursor-not-allowed",
+    "transition-[background-color,border-color,color,opacity] duration-150 ease-out",
+    "outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+    "disabled:opacity-45 disabled:cursor-not-allowed",
     // react-aria slot convention — icons inherit current color
     "*:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center",
   ],
   variants: {
-    // The selected chip's mint fill is edged in `--q-brand-mark`, not in the
-    // fill token, and the edge does not move on hover — see button.tsx for the
-    // numbers (task #145). Mint on the light page is 1.74:1, so a mint chip
-    // edged in mint had no boundary there; teal-600 is 3.45:1, and on dark the
-    // mark token *is* the fill token, so the dark theme is unchanged.
     intent: {
       outline: [
-        "bg-transparent border-quebi-line/20 text-quebi-fg-muted",
-        "hover:text-quebi-fg hover:border-quebi-brand-mark",
-        "selected:bg-quebi-brand selected:border-quebi-brand-mark selected:text-quebi-on-brand selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover selected:hover:text-quebi-on-brand",
+        "bg-transparent border-quebi-rule text-quebi-fg",
+        "hover:bg-quebi-raised",
+        "selected:bg-quebi-action selected:border-quebi-action selected:text-quebi-on-action",
+        "selected:hover:bg-quebi-action-hover selected:hover:border-quebi-action-hover",
       ],
       plain: [
         "bg-transparent border-transparent text-quebi-fg-muted",
-        "hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
-        "selected:bg-quebi-brand selected:border-quebi-brand-mark selected:text-quebi-on-brand selected:shadow-quebi-glow selected:hover:bg-quebi-brand-hover selected:hover:text-quebi-on-brand",
+        "hover:bg-quebi-raised hover:text-quebi-fg",
+        "selected:bg-quebi-action selected:border-quebi-action selected:text-quebi-on-action",
+        "selected:hover:bg-quebi-action-hover selected:hover:border-quebi-action-hover selected:hover:text-quebi-on-action",
       ],
     },
     size: {
       xs: ["text-xs px-2.5 py-1.5", "*:data-[slot=icon]:size-3.5"],
-      sm: ["text-sm px-3 py-2", "*:data-[slot=icon]:size-4"],
-      md: ["text-base px-5 py-2.5", "*:data-[slot=icon]:size-5"],
-      lg: ["text-lg px-6 py-3", "*:data-[slot=icon]:size-5"],
+      sm: ["text-sm px-3.5 py-2", "*:data-[slot=icon]:size-4"],
+      md: ["text-sm px-5 py-3", "*:data-[slot=icon]:size-4"],
+      lg: ["text-base px-6 py-3.5", "*:data-[slot=icon]:size-5"],
       // Square / icon-only. `size-*` is border-box, so a square matches its
       // text-sized sibling only if the number includes the 1px border on each
       // side: xs is line-height 16 + py-1.5 12 + 2 = 30px, and so on — see
@@ -64,7 +60,7 @@ export const toggleStyles = tv({
     // Radius belongs to the variant, not `base` — see button.tsx.
     isCircle: {
       true: "rounded-full",
-      false: "rounded-quebi-sm",
+      false: "rounded-none",
     },
   },
   defaultVariants: {

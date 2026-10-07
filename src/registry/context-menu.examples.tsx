@@ -13,7 +13,7 @@ import {
 import type { ComponentExample } from "./types"
 
 const ContextMenuTriggerArea = ({ children }: { children: React.ReactNode }) => (
-  <ContextMenuTrigger className="flex h-28 w-full items-center justify-center rounded-quebi-md border border-quebi-line/20 border-dashed text-quebi-fg-muted text-sm select-none">
+  <ContextMenuTrigger className="flex h-28 w-full items-center justify-center border border-quebi-hairline border-dashed text-quebi-fg-muted text-sm select-none">
     {children}
   </ContextMenuTrigger>
 )
@@ -26,10 +26,10 @@ export const contextMenuExamples: ComponentExample[] = [
       <ContextMenu>
         <ContextMenuTriggerArea>Right-click here</ContextMenuTriggerArea>
         <ContextMenuContent>
-          <ContextMenuItem>Edit</ContextMenuItem>
-          <ContextMenuItem>Duplicate</ContextMenuItem>
+          <ContextMenuItem>edit</ContextMenuItem>
+          <ContextMenuItem>duplicate</ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem intent="danger">Delete</ContextMenuItem>
+          <ContextMenuItem intent="danger">delete</ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
     ),
@@ -43,22 +43,22 @@ export const contextMenuExamples: ComponentExample[] = [
         <ContextMenuContent className="min-w-52">
           <ContextMenuItem>
             <Pencil data-slot="icon" />
-            <ContextMenuLabel>Edit</ContextMenuLabel>
+            <ContextMenuLabel>edit</ContextMenuLabel>
             <ContextMenuShortcut>⌘E</ContextMenuShortcut>
           </ContextMenuItem>
           <ContextMenuItem>
             <Copy data-slot="icon" />
-            <ContextMenuLabel>Copy</ContextMenuLabel>
+            <ContextMenuLabel>copy</ContextMenuLabel>
             <ContextMenuShortcut>⌘C</ContextMenuShortcut>
           </ContextMenuItem>
           <ContextMenuItem>
             <Share2 data-slot="icon" />
-            <ContextMenuLabel>Share</ContextMenuLabel>
+            <ContextMenuLabel>share</ContextMenuLabel>
           </ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem intent="danger">
             <Trash2 data-slot="icon" />
-            <ContextMenuLabel>Delete</ContextMenuLabel>
+            <ContextMenuLabel>delete</ContextMenuLabel>
             <ContextMenuShortcut>⌫</ContextMenuShortcut>
           </ContextMenuItem>
         </ContextMenuContent>
@@ -76,18 +76,18 @@ export const contextMenuExamples: ComponentExample[] = [
           <ContextMenuSection label="File">
             <ContextMenuItem>
               <Download data-slot="icon" />
-              <ContextMenuLabel>Download</ContextMenuLabel>
+              <ContextMenuLabel>download</ContextMenuLabel>
             </ContextMenuItem>
             <ContextMenuItem>
               <Copy data-slot="icon" />
-              <ContextMenuLabel>Copy</ContextMenuLabel>
+              <ContextMenuLabel>copy</ContextMenuLabel>
             </ContextMenuItem>
           </ContextMenuSection>
           <ContextMenuSeparator />
           <ContextMenuSection label="Danger zone">
             <ContextMenuItem intent="danger">
               <Trash2 data-slot="icon" />
-              <ContextMenuLabel>Delete</ContextMenuLabel>
+              <ContextMenuLabel>delete</ContextMenuLabel>
             </ContextMenuItem>
           </ContextMenuSection>
         </ContextMenuContent>

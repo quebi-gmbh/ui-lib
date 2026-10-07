@@ -17,7 +17,7 @@ import {
  * Treemap — quebi design system
  *
  * Hierarchical data as nested rectangles, on the quebi `Chart` wrapper. Every
- * top-level branch takes one hue from the quebi palette and its descendants
+ * top-level branch takes one step of the ink palette and its descendants
  * inherit it, so depth reads as nesting and color reads as branch. Leaves are
  * filled and labelled; a branch that contains other nodes is drawn as a frame.
  * Override a branch's color with a `config` entry under its name.
@@ -31,7 +31,7 @@ export interface TreemapDatum extends Record<string, unknown> {
 }
 
 /**
- * Paint each top-level branch with one palette hue and hand that hue down to
+ * Paint each top-level branch with one palette step and hand it down to
  * every descendant. Recharts keeps unknown fields on a node as it computes the
  * layout, so a `fill` written here is what the content renderer reads back.
  */
@@ -139,7 +139,7 @@ export function Treemap<TValue extends ValueType, TName extends NameType>({
 
       // Recharts lays out the root of the tree as a node of its own, filling
       // the whole chart. Drawing it would put a frame around everything and a
-      // wash of the first palette hue behind every branch.
+      // wash of the first palette step behind every branch.
       if (depth === 0) {
         return <g />
       }
@@ -159,11 +159,10 @@ export function Treemap<TValue extends ValueType, TName extends NameType>({
             y={y}
             width={width}
             height={height}
-            rx={isBranch ? 6 : 4}
-            fill={color}
+                        fill={color}
             fillOpacity={isBranch ? 0 : 0.5}
             // A leaf is separated from its neighbours by the chart surface
-            // showing through; a branch is outlined in its own hue. Both are
+            // showing through; a branch is outlined in its own ink. Both are
             // set as attributes rather than as a class, because a stroke class
             // would win over the attribute and paint every frame the same.
             stroke={isBranch ? color : "var(--color-quebi-bg)"}
@@ -176,8 +175,8 @@ export function Treemap<TValue extends ValueType, TName extends NameType>({
               y={y + (isBranch ? 16 : fitsValue ? height / 2 - 2 : height / 2 + 4)}
               className={
                 isBranch
-                  ? "fill-quebi-fg-muted text-xs uppercase tracking-wide"
-                  : "fill-quebi-fg font-medium text-xs"
+                  ? "quebi-eyebrow fill-current"
+                  : "fill-quebi-fg text-quebi-caption"
               }
             >
               {name}
@@ -187,7 +186,7 @@ export function Treemap<TValue extends ValueType, TName extends NameType>({
             <text
               x={x + 8}
               y={y + height / 2 + 14}
-              className="fill-quebi-fg-muted font-mono text-xs tabular-nums"
+              className="fill-quebi-fg-muted font-mono text-quebi-caption tabular-nums"
             >
               {valueFormatter(Number(value) || 0)}
             </text>

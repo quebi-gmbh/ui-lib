@@ -61,15 +61,17 @@ function NumberField({
 /**
  * The field size scale — the same three steps `Input` publishes, so a number
  * field and the button beside it are the same height: `xs` is 30px and `sm`
- * 38px, matching `Button`'s `xs` and `sm`; `md` is the default and unchanged.
+ * 38px, matching `Button`'s `xs` and `sm`; `md` is the default.
  *
- * The addons and steppers stretch to the input, so sizing the input sizes the
- * whole group.
+ * The underline belongs to the group, not the input, so it runs under the
+ * addons and steppers too; the group's 1px border top (transparent) and
+ * bottom is what the 1px per side in that arithmetic is. The addons and
+ * steppers stretch to the input, so sizing the input sizes the whole group.
  */
 const numberInputSizeStyles = {
-  xs: "text-xs px-2.5 py-1.5",
-  sm: "text-sm px-3 py-2",
-  md: "text-sm px-3 py-2.5",
+  xs: "text-xs px-0 py-1.5",
+  sm: "text-sm px-0 py-2",
+  md: "text-sm px-0 py-2.5",
 } as const
 
 type NumberInputSize = keyof typeof numberInputSizeStyles
@@ -127,33 +129,24 @@ interface NumberInputProps extends Omit<InputProps, "prefix" | "size"> {
 }
 
 const addonStyles = cn(
-  "inline-flex select-none items-center px-3 text-[13px] font-medium",
-  "pointer-events-none bg-quebi-surface/[0.02] text-quebi-fg-muted",
-  "border border-quebi-line/20",
-  "transition-[border-color] duration-200",
-  // Same guard as the input's hover, for the same reason: `group-hover` and
-  // `group-focus-within` are both (0,2,0) and Tailwind emits `focus-within`
-  // *before* `hover`, so unguarded the addon reverts to the grey hairline the
-  // moment the pointer lands on a focused field — while the input beside it
-  // stays mark-teal, which is the one thing these addons exist not to do.
-  "group-not-focus-within/addons:group-hover/addons:border-quebi-line/40 group-focus-within/addons:border-quebi-brand-mark",
+  "inline-flex select-none items-center text-quebi-fg-subtle",
+  "pointer-events-none",
 )
 
 const stepperStyles = cn(
-  "inline-flex items-center justify-center px-2.5",
-  "bg-quebi-surface/[0.02] text-quebi-fg-muted",
-  "border border-quebi-line/20",
-  "transition-[color,border-color,background-color] duration-200",
+  "inline-flex items-center justify-center px-1.5",
+  "bg-transparent text-quebi-fg-subtle",
+  "transition-colors duration-150",
   "outline-none cursor-pointer",
-  "hover:border-quebi-brand-mark hover:text-quebi-brand-text",
-  "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-  "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-quebi-line/20 disabled:hover:text-quebi-fg-muted",
+  "hover:text-quebi-fg",
+  "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset",
+  "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:text-quebi-fg-subtle",
 )
 
 /**
  * NumberInput renders the input for a NumberField, with optional prefix/suffix
- * addons and increment / decrement steppers that read as one unified control
- * (shared focus ring, shared hover).
+ * addons and increment / decrement steppers that read as one control: one
+ * underline under all of them, thickened while anything inside has focus.
  */
 function NumberInput({
   prefix,
@@ -170,40 +163,26 @@ function NumberInput({
     <Group
       data-slot="control"
       className={cn(
-        // Group named `addons` so the addons / steppers react to the wrapper's
-        // hover and focus-within state.
-        "group/addons flex w-full items-stretch rounded-quebi-sm",
-        "transition-[box-shadow] duration-200",
-        // Wrapper owns the outer focus ring so every segment highlights together.
-        "focus-within:ring-2 focus-within:ring-quebi-brand-mark focus-within:ring-offset-2 focus-within:ring-offset-quebi-bg",
-        // Strip inner input's own ring (wrapper owns it).
-        "[&_input:focus]:ring-0 [&_input:focus]:ring-transparent",
+        "group/addons flex w-full items-stretch",
+        "border-y border-t-transparent border-b-quebi-rule",
+        "transition-[border-color,box-shadow] duration-150",
+        "focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+        "group-invalid/number-field:border-b-quebi-danger group-invalid/number-field:focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
       )}
     >
       {prefix ? (
-        <span data-slot="addon" className={cn(addonStyles, "rounded-s-quebi-sm border-r-0")}>
+        <span data-slot="addon" className={cn(addonStyles, "pe-2")}>
           {prefix}
         </span>
       ) : null}
       <InputPrimitive
         className={composeRenderProps(className, (resolved) =>
           cn(
-            "relative block w-full min-w-0 appearance-none text-quebi-fg tabular-nums",
+            "relative block w-full min-w-0 appearance-none bg-transparent text-quebi-fg tabular-nums",
             "placeholder:text-quebi-fg-subtle",
-            "border border-quebi-line/20 bg-quebi-surface/[0.02]",
             numberInputSizeStyles[size],
-            "transition-[border-color,box-shadow] duration-200",
-            // `not-focus` guards against hover *beating* focus: `enabled:hover:` is
-            // (0,3,0) specificity and `focus:` is (0,2,0), so unguarded a hovered,
-            // focused field loses its mint border and keeps only the ring — a halo.
-            "enabled:not-focus:hover:border-quebi-line/40",
-            "outline-none focus:outline-none focus:border-quebi-brand-mark",
-            "invalid:border-red-500",
+            "outline-none focus:outline-none",
             "disabled:cursor-not-allowed disabled:opacity-50 in-disabled:opacity-50",
-            "scheme-dark",
-            // Corner rounding depends on neighbouring segments.
-            prefix ? "rounded-s-none" : "rounded-s-quebi-sm",
-            suffix || !hideStepper ? "rounded-e-none" : "rounded-e-quebi-sm",
             resolved,
           ),
         )}
@@ -212,11 +191,7 @@ function NumberInput({
       {suffix ? (
         <span
           data-slot="addon"
-          className={cn(
-            addonStyles,
-            "border-l-0",
-            hideStepper ? "rounded-e-quebi-sm" : "",
-          )}
+          className={cn(addonStyles, "ps-2")}
         >
           {suffix}
         </span>
@@ -226,14 +201,14 @@ function NumberInput({
           <Button
             slot="decrement"
             aria-label="Decrease"
-            className={cn(stepperStyles, "-ml-px")}
+            className={stepperStyles}
           >
             <DecrementIcon className="size-4" />
           </Button>
           <Button
             slot="increment"
             aria-label="Increase"
-            className={cn(stepperStyles, "-ml-px rounded-e-quebi-sm")}
+            className={cn(stepperStyles, "pe-0")}
           >
             <IncrementIcon className="size-4" />
           </Button>

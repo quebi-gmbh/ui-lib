@@ -93,6 +93,12 @@ import { formattedStorageMeta } from "./formatted-storage.meta"
 import { galleryMeta } from "./gallery.meta"
 import { gridListMeta } from "./grid-list.meta"
 import { headingMeta } from "./heading.meta"
+import { eyebrowMeta } from "./eyebrow.meta"
+import { indexListMeta } from "./index-list.meta"
+import { logoMeta } from "./logo.meta"
+import { lowTitleMeta } from "./low-title.meta"
+import { metaRowMeta } from "./meta-row.meta"
+import { stageMeta } from "./stage.meta"
 import { iconTileMeta } from "./icon-tile.meta"
 import { inputMeta } from "./input.meta"
 import { inputOtpMeta } from "./input-otp.meta"
@@ -347,4 +353,10 @@ export const metaRegistry: ComponentMeta[] = [
   weekViewMeta,
   yearPickerMeta,
   yearViewMeta,
+  eyebrowMeta,
+  indexListMeta,
+  logoMeta,
+  lowTitleMeta,
+  metaRowMeta,
+  stageMeta,
 ]

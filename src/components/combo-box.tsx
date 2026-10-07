@@ -28,8 +28,8 @@ import { Input } from "@/components/input"
  *
  * An autocomplete combo box: a quebi-styled text input paired with a filterable
  * dropdown of options. Built on react-aria-components, it composes the quebi
- * Input for the control and reuses the Dropdown surface/items inside a Popover.
- * Selection and focus read in brand teal via the shared dropdown styling.
+ * Input for the control — so it is underlined like every other field — and
+ * reuses the Dropdown surface/items inside a Popover.
  *
  * The list opens as soon as the input is focused (`menuTrigger="focus"`), so
  * tabbing in shows there is a list instead of making the first keystroke both
@@ -106,16 +106,17 @@ const ComboBoxContent = <T extends object>({
  * The chevron stays rendered whatever the input holds: it is the button's only
  * visible affordance, and hiding it once you type left a 36px-wide invisible
  * toggle over the end of the field — and moved the input's end padding with it.
+ * The chevron sits on the field's end edge, where `Select` puts its own.
  */
 const ComboBoxInput = (props: React.ComponentProps<typeof Input>) => {
   return (
     <span
       data-slot="control"
-      className="relative isolate block has-[[data-slot=icon]:last-child]:[&_input]:pe-10"
+      className="relative isolate block has-[[data-slot=icon]:last-child]:[&_input]:pe-8"
     >
       <Input {...props} placeholder={props?.placeholder} />
-      <Button className="absolute end-0 top-0 grid h-full w-9 cursor-default place-content-center outline-none">
-        <ChevronsUpDown data-slot="icon" className="-me-1 size-4 text-quebi-fg-muted" />
+      <Button className="absolute end-0 top-0 flex h-full w-8 cursor-default items-center justify-end outline-none">
+        <ChevronsUpDown data-slot="icon" className="size-4 text-quebi-fg-subtle" />
       </Button>
     </span>
   )

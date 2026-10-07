@@ -21,12 +21,12 @@ import { cn } from "@/lib/utils"
  * toggles and separators — into a single keyboard-navigable surface. Built on
  * react-aria-components for roving-focus and arrow-key navigation.
  *
- * Styled as a quebi surface: a subtle background panel with the signature
- * hairline cyan border and a quebi radius.
+ * Drawn as a ruled tray: a hairline box, square, no fill of its own — the
+ * controls inside carry their own edges.
  *
  * Two kinds of item, and the choice between them is not cosmetic:
- * `ToolbarItem` is a Toggle, so it has an on state that lights up with brand
- * teal and reports `aria-pressed`. `ToolbarButton` is a Button — Save, Export,
+ * `ToolbarItem` is a Toggle, so it has an on state that fills with ink and
+ * reports `aria-pressed`. `ToolbarButton` is a Button — Save, Export,
  * Delete — which has no such state, and saying it does would be a lie to a
  * screen reader. Both carry the same size and intent defaults, so a row of
  * either or both lines up.
@@ -60,9 +60,9 @@ const Toolbar = ({ orientation = "horizontal", isCircle, className, ...props }: 
         {...props}
         className={composeRenderProps(className, (className, { orientation }) =>
           cn(
-            "group inline-flex gap-1.5 border border-quebi-line/10 bg-quebi-bg p-1.5",
+            "group inline-flex gap-1.5 border border-quebi-hairline p-1.5",
             "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-            isCircle ? "rounded-full" : "rounded-quebi-md",
+            isCircle && "rounded-full",
             orientation === "horizontal"
               ? "flex-row items-center"
               : "flex-col items-start",

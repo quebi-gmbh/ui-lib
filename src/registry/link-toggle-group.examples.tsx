@@ -4,15 +4,15 @@ import type { ComponentExample } from "./types"
 export const linkToggleGroupExamples: ComponentExample[] = [
   {
     title: "Default",
-    description: "Each segment is a link; the current value is highlighted in brand teal.",
+    description: "Each segment is a link; the current value fills with ink.",
     render: () => (
       <LinkToggleGroup
         ariaLabel="Calendar range"
         current="week"
         options={[
-          { value: "day", label: "Day", href: "#day" },
-          { value: "week", label: "Week", href: "#week" },
-          { value: "month", label: "Month", href: "#month" },
+          { value: "day", label: "day", href: "#day" },
+          { value: "week", label: "week", href: "#week" },
+          { value: "month", label: "month", href: "#month" },
         ]}
       />
     ),
@@ -25,8 +25,8 @@ export const linkToggleGroupExamples: ComponentExample[] = [
         ariaLabel="Layout"
         current="board"
         options={[
-          { value: "list", label: "List", href: "#list" },
-          { value: "board", label: "Board", href: "#board" },
+          { value: "list", label: "list", href: "#list" },
+          { value: "board", label: "board", href: "#board" },
         ]}
       />
     ),
@@ -39,9 +39,9 @@ export const linkToggleGroupExamples: ComponentExample[] = [
         ariaLabel="Time frame"
         current="all"
         options={[
-          { value: "all", label: "All", href: "#all" },
-          { value: "open", label: "Open", href: "#open" },
-          { value: "closed", label: "Closed", href: "#closed" },
+          { value: "all", label: "all", href: "#all" },
+          { value: "open", label: "open", href: "#open" },
+          { value: "closed", label: "closed", href: "#closed" },
         ]}
       />
     ),

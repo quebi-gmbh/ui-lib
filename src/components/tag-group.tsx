@@ -16,15 +16,16 @@ import { cn } from "@/lib/utils"
 /**
  * TagGroup — quebi design system
  *
- * Built on react-aria-components. Tags are hairline cyan-tinted pills; the
- * selected state fills with brand teal. Removable tags expose a small remove
- * button. Focus uses the quebi teal ring; disabled dims.
+ * Built on react-aria-components. Each tag is the design's Tag — a pill on the
+ * raised ground in the muted ink, lowercase label — and a selected tag takes
+ * the action-ink fill, like every other selected control. Removable tags
+ * expose a small remove button. Focus is the outward ring; disabled dims.
  */
 export function TagGroup({ className, ...props }: TagGroupProps) {
   return (
     <TagGroupPrimitive
       data-slot="control"
-      className={cn("flex flex-col gap-y-1.5 *:data-[slot=label]:font-medium", className)}
+      className={cn("flex flex-col gap-y-2", className)}
       {...props}
     />
   )
@@ -50,14 +51,14 @@ export function Tag({ children, className, ...props }: TagProps) {
       data-slot="control"
       className={composeRenderProps(className, (className, { allowsRemoving, isDisabled }) =>
         cn(
-          "inline-flex cursor-default items-center gap-x-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium",
-          "border-quebi-line/10 bg-transparent text-quebi-fg-muted",
+          "group inline-flex cursor-default items-center gap-x-1.5 rounded-full px-3 py-1.5 text-quebi-tag",
+          "bg-quebi-raised text-quebi-fg-muted",
           "transition-colors duration-150",
-          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-          "hover:border-quebi-line/20",
-          "data-[selected]:border-quebi-brand-mark data-[selected]:bg-quebi-brand data-[selected]:text-quebi-on-brand",
+          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+          "hover:bg-quebi-pressed hover:text-quebi-fg",
+          "data-[selected]:bg-quebi-action data-[selected]:text-quebi-on-action",
           "data-[href]:cursor-pointer",
-          allowsRemoving && "pr-1",
+          allowsRemoving && "pr-1.5",
           isDisabled && "cursor-not-allowed opacity-50",
           className,
         ),
@@ -73,9 +74,9 @@ export function Tag({ children, className, ...props }: TagProps) {
               className={cn(
                 "-mr-0.5 flex size-4 shrink-0 items-center justify-center rounded-full",
                 "text-quebi-fg-subtle outline-none transition-colors duration-150",
-                "hover:bg-cyan-500/10 hover:text-quebi-fg",
-                "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark",
-                "group-data-[selected]:text-quebi-on-brand/70 group-data-[selected]:hover:bg-quebi-bg/20 group-data-[selected]:hover:text-quebi-on-brand",
+                "hover:bg-quebi-bg hover:text-quebi-fg",
+                "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-0",
+                "group-data-[selected]:text-quebi-on-action group-data-[selected]:hover:bg-quebi-action-hover group-data-[selected]:hover:text-quebi-on-action",
               )}
             >
               <X className="size-3" strokeWidth={2.5} aria-hidden="true" />

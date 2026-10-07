@@ -40,41 +40,48 @@ build script can import under bun without pulling in React/JSX.
    `text-body-*`, `rounded-xs`). See the styling section below.
 6. **`@/` is the `src/` alias.** It's fine — shadcn's CLI rewrites it for consumers.
 
-## Quebi styling cheatsheet
+## Quebi styling cheatsheet — Ink & Paper
 
-Pull from `src/quebi-theme.css` tokens (the quebi-styleguide skill is the source of truth):
+Pull from `src/quebi-theme.css` tokens; `quebi-design-system.html` is the design system they
+translate, and `tests/ink-and-paper.test.ts` holds the translation. Ink and paper, no hue, square,
+ruled, one directional light on a stage.
 
-- Background `bg-quebi-bg`, text `text-white` / muted `text-quebi-fg-muted` / subtle `text-quebi-fg-subtle`.
-- A surface that **floats above the page** — a popover, a menu, a list box, a dialog panel, a toast,
-  a `float`/inset chrome variant — is `bg-quebi-elevated`, not `bg-quebi-bg`. The two share a value
-  on dark and differ in light, where the page is `#f4f6f6`, a Card tints *down* from it, and an
-  overlay painted in the page colour renders lighter than the card it sits in — a pale patch rather
-  than something raised. A surface that is *flush* with the page (a docked sidebar, a default
-  navbar, a table's pinned column, an input) stays on `bg-quebi-bg`.
-- Brand teal is three tokens, one per role, because one value cannot clear three contrast bars in
-  light mode. A **fill** is `bg-quebi-brand` (hover `bg-quebi-brand-hover`), and a `border-` belongs
-  here only when it is that fill's own edge (`border-quebi-brand bg-quebi-brand`). **Text or a
-  glyph** is `text-quebi-brand-text` / `decoration-quebi-brand-text`. A **thin graphical mark** — a
-  focus ring, an SVG stroke, a lone border that is the only thing marking a state — is
-  `ring-`/`stroke-`/`outline-`/`border-quebi-brand-mark`, drawn opaque: an alpha'd mark is under
-  3:1 in *both* themes, not just light. `tests/mark-contrast.test.ts` and
-  `tests/badge-contrast.test.ts` recompute all of this from the theme, so getting it wrong fails.
-  Teal is the accent either way — reserve it for the primary/active state, not body text or
-  headings.
-- Borders: the signature is `border border-cyan-500/10` (or `/20` for interactive).
-- Radii: `rounded-quebi-sm` (inputs/buttons), `rounded-quebi-md` (cards/surfaces). If a variant
-  changes the radius (`isCircle`, `isSquare`, …), put the radius on *every* branch of that variant
-  and none of it in `base` — a base radius and a variant radius both survive the merge, and the
-  sheet decides the winner, so the variant silently loses. `tests/radius-merge.test.ts` enforces it.
-- Depth = `shadow-quebi-glow` / `shadow-quebi-glow-strong`, never a hand-rolled `shadow-lg`. The
-  token is theme-aware: the signature mint bloom on dark, a neutral downward shadow on light, where
-  an emissive glow reads as "shiny" rather than "raised". Both are declared in the `@theme inline`
-  block of `src/quebi-theme.css` and flip through `--q-glow*`, so the class means "this is raised"
-  and the theme decides how that looks.
-- Motion: `transition-* duration-150/200`, `hover:scale-[1.02]` (buttons) / `hover:-translate-y-0.5`
-  (cards). No bouncy springs.
-- Focus: `focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg`.
-- Invalid: `border-red-500` / `text-red-500`. Eyebrow labels: the `quebi-eyebrow` utility.
+- Grounds: page `bg-quebi-bg`; raised/inset/hovered/tags `bg-quebi-raised`; pressed/selected rows
+  `bg-quebi-pressed`. A surface that **floats above the page** — popover, menu, list box, dialog,
+  toast — is `bg-quebi-elevated shadow-quebi-float`. A surface flush with the page (a docked
+  sidebar, a navbar, an input) stays on `bg-quebi-bg` or transparent.
+- Ink: `text-quebi-fg` (headlines, nav, links), `text-quebi-fg-muted` (running text),
+  `text-quebi-fg-subtle` (labels, captions, numbers). Never `text-white`.
+- Rules, not boxes: `border-quebi-hairline` between rows, around cards, under the nav — it is
+  already translucent, never add `/opacity`. `border-quebi-rule` for control borders and the top
+  rule of an index or table.
+- Action: the solid button, a checked box, a selected day — `bg-quebi-action text-quebi-on-action`,
+  hover `bg-quebi-action-hover`. At most one solid button per view.
+- No hue. Emphasis is size, weight or action ink. `quebi-danger` / `quebi-warn` / `quebi-success`
+  exist only for state that must not be missed (an invalid field, a destructive action) and are text
+  values first. A component whose content *is* colour (colour pickers, the EU energy label) is the
+  documented exception.
+- Import `tv` from `@/lib/utils`, never from "tailwind-variants": that `tv` carries the same
+  tailwind-merge config as `cn`, so the quebi type scale and radius tokens merge correctly inside a
+  variant.
+- Square: no radius by default. `rounded-quebi-s` (6px) for tooltips, menus and popovers;
+  `rounded-full` for tags and things round by nature; `rounded-quebi-l` (22px) only for an embedded
+  stage frame. If a variant changes the radius (`isCircle`, …), put the radius on *every* branch of
+  that variant and none of it in `base` — `tests/radius-merge.test.ts` enforces it.
+- Depth: `shadow-quebi-float` on floating surfaces only. Nothing in the page flow takes a shadow.
+- Type: Inter (`font-sans`, the default) for running text and controls; Outfit (`font-display`) for
+  headlines with the `text-quebi-display-{xl,l,m,s}` / `text-quebi-title` scale at weights 100–300;
+  JetBrains Mono (`font-mono`) for code and the label role — `quebi-eyebrow` (mono, uppercase,
+  tracked, fg-subtle) for kickers, field labels, column headers, counts. Never Outfit for running
+  text, never Inter for headlines.
+- Motion: `duration-150` for colour and underline changes, `duration-300` for row shifts. No scale on
+  hover, no lift. Reduced motion is switched off globally.
+- Focus: `focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3
+  focus-visible:ring-offset-quebi-bg` — `ring-inset` for cells and rows with no room outside. Text
+  inputs are underline-only and thicken the underline to 2px on focus instead.
+- Invalid: `border-quebi-danger` / `text-quebi-danger`.
+- Content: lowercase for headlines, navigation, buttons, links and tags ("get started →"); sentences
+  in running text stay sentence case. No emoji, no exclamation marks.
 
 When porting a component from the Cellestial-era source (it lived in a top-level `components/`
 folder, deleted in task #4 — recover a file from git history if you need one), **restyle entirely**
@@ -231,7 +238,7 @@ const isRequired = field.required ?? false
   points the control at them: pass no `id` and no `aria-describedby`. Outside one (Switch, Slider,
   ChoiceBox, a hidden-input control) nothing does, so set `id={field.errorId}` /
   `id={field.descriptionId}` and `aria-describedby={describedBy(...)}` from `@/components/field`.
-- **Required marker:** `{isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}` in the
+- **Required marker:** `{isRequired && <span className="ml-1 text-quebi-fg">*</span>}` in the
   label, and `cn(hasErrors && "text-red-500")` on the label itself.
 - **A control with no native form value** (TimeField, DateRangePicker, FileTrigger, ChoiceBox,
   Calendar, RangeCalendar, DaySchedule, ColorPicker) uses `useControl` + `BaseControl` from

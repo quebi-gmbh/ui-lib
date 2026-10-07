@@ -55,9 +55,11 @@ export const multiSelectKey = (option: MultiSelectOption) => String(option.id)
  *
  * A chips-and-input box has no single line to pad, so the height is the box's
  * own padding plus the input row inside it: `xs` is 4 + 20 + 4 + 2px of border
- * = 30px, `sm` 38px and `md` 42px, which are `Input`'s three steps and
- * `Button`'s `xs` and `sm` to the pixel. The text size rides along and the
- * input inherits it, so a small field's chips and caret shrink with the box.
+ * (top transparent, bottom the underline) = 30px, `sm` 38px and `md` 42px,
+ * which are `Input`'s three steps and `Button`'s `xs` and `sm` to the pixel.
+ * Vertical padding only — like `Input`, the first chip starts under the label.
+ * The text size rides along and the input inherits it, so a small field's
+ * chips and caret shrink with the box.
  *
  * `md` was 38px before task #186 — the default box was a size too short to
  * stand beside an `Input`, which is the whole complaint the scale answers.
@@ -67,9 +69,9 @@ export const multiSelectKey = (option: MultiSelectOption) => String(option.id)
  * file.
  */
 const multiSelectControlSizeStyles = {
-  xs: "p-1 text-xs",
-  sm: "p-1.5 text-sm",
-  md: "p-2 text-sm",
+  xs: "py-1 text-xs",
+  sm: "py-1.5 text-sm",
+  md: "py-2 text-sm",
 } as const
 
 type MultiSelectControlSize = keyof typeof multiSelectControlSizeStyles
@@ -286,11 +288,14 @@ export function MultiSelectControl<T extends MultiSelectOption>({
         }}
         data-invalid={isInvalid || undefined}
         className={cn(
-          "flex w-full flex-wrap items-center gap-1.5 rounded-quebi-sm border border-quebi-line/10 bg-quebi-surface/[0.02]",
+          // `Input`'s underline, thickened to 2px while the input has focus.
+          "flex w-full flex-wrap items-center gap-1.5 bg-transparent",
+          "border-y border-t-transparent border-b-quebi-rule",
           multiSelectControlSizeStyles[size],
-          "transition-[border-color,box-shadow] duration-150 focus-within:border-quebi-brand-mark",
-          "focus-within:ring-2 focus-within:ring-quebi-brand-mark focus-within:ring-offset-2 focus-within:ring-offset-quebi-bg",
-          isInvalid && "border-red-500",
+          "transition-[border-color,box-shadow] duration-150",
+          "focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+          isInvalid &&
+            "border-b-quebi-danger focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
           isDisabled ? "cursor-not-allowed opacity-50" : "cursor-text",
         )}
       >
@@ -300,7 +305,7 @@ export function MultiSelectControl<T extends MultiSelectOption>({
             <span
               key={k}
               data-slot="chip"
-              className="inline-flex items-center gap-x-1 rounded-full border border-quebi-line/10 bg-quebi-surface/[0.03] py-0.5 pe-1 ps-2.5 font-medium text-quebi-fg-muted text-xs"
+              className="inline-flex items-center gap-x-1 rounded-full bg-quebi-raised py-0.5 pe-1 ps-2.5 text-quebi-fg-muted text-quebi-tag"
             >
               {item.name}
               {!isDisabled && (
@@ -318,7 +323,7 @@ export function MultiSelectControl<T extends MultiSelectOption>({
                   }}
                   className={cn(
                     "flex size-4 shrink-0 items-center justify-center rounded-full text-quebi-fg-subtle outline-none transition-colors duration-150",
-                    "hover:bg-cyan-500/10 hover:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-brand-mark",
+                    "hover:bg-quebi-pressed hover:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-0",
                   )}
                 >
                   <X className="size-3" strokeWidth={2.5} aria-hidden="true" />
@@ -354,8 +359,9 @@ export function MultiSelectControl<T extends MultiSelectOption>({
           className={cn(
             // No text size of its own: it inherits the box's, so the caret and
             // the placeholder shrink with the field.
-            "min-w-24 flex-1 bg-transparent px-1.5 py-0.5 text-quebi-fg outline-none",
-            "placeholder:text-quebi-fg-subtle placeholder:italic",
+            // `first:ps-0`: with no chips before it, the text starts on the edge.
+            "min-w-24 flex-1 bg-transparent px-1.5 py-0.5 text-quebi-fg outline-none first:ps-0",
+            "placeholder:text-quebi-fg-subtle",
           )}
         />
       </div>
@@ -408,9 +414,8 @@ export function MultiSelectControl<T extends MultiSelectOption>({
                   onMouseEnter={() => setActiveKey(k)}
                   onClick={() => onToggle(item)}
                   className={cn(
-                    "flex cursor-pointer items-center gap-2 rounded-quebi-sm px-2.5 py-1.5 text-sm text-quebi-fg outline-none transition-colors duration-150",
-                    isActive && "bg-quebi-surface/[0.05]",
-                    isSel && "text-quebi-brand-text",
+                    "flex cursor-pointer items-center gap-2 px-2.5 py-1.5 text-sm text-quebi-fg outline-none transition-colors duration-150",
+                    isActive && "bg-quebi-raised",
                   )}
                 >
                   <Check

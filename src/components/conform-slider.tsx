@@ -99,7 +99,7 @@ export function ConformSlider({
           data-slot="label"
           className={cn("flex items-center", label ? "justify-between" : "justify-end")}
         >
-          {label && <Label className={cn(hasErrors && "text-red-500")}>{label}</Label>}
+          {label && <Label className={cn(hasErrors && "text-quebi-danger")}>{label}</Label>}
           {showOutput && <SliderOutput />}
         </div>
       )}

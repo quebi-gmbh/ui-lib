@@ -1,8 +1,8 @@
 "use client"
 
 import { createContext, type ReactNode, useContext } from "react"
-import { tv, type VariantProps } from "tailwind-variants"
-import { cn } from "@/lib/utils"
+import type { VariantProps } from "tailwind-variants"
+import { cn, tv } from "@/lib/utils"
 import { Badge } from "@/components/badge"
 import { FormattedNumber } from "@/components/formatted-number"
 
@@ -37,7 +37,7 @@ import { FormattedNumber } from "@/components/formatted-number"
  *
  * `StatDelta` takes the change as a number, signs and formats it (a percentage
  * by default), picks the direction from the sign, and colours it by whether
- * that direction is good: up is green, unless `invert` says a rise is bad —
+ * that direction is good: up takes the success token, unless `invert` says a rise is bad —
  * errors, latency, churn. The direction is also drawn as an arrow, so it is
  * never carried by colour alone.
  *
@@ -52,12 +52,14 @@ import { FormattedNumber } from "@/components/formatted-number"
 const InGroupContext = createContext(false)
 
 export const statValueStyles = tv({
-  base: "font-semibold text-quebi-fg tabular-nums leading-tight",
+  base: "font-display font-extralight text-quebi-fg tabular-nums leading-none",
   variants: {
+    // The figure is the headline of a stat, so it takes the display face at
+    // its thinnest: size carries the emphasis, never weight.
     size: {
-      sm: "text-lg",
-      md: "text-2xl",
-      lg: "text-4xl tracking-tight",
+      sm: "text-2xl",
+      md: "text-4xl",
+      lg: "text-6xl",
     },
   },
   defaultVariants: {
@@ -97,8 +99,8 @@ export function Stat({
   const hasFooter = delta != null || trend != null || caption != null
 
   const stat = (
-    <div {...props} data-slot="stat" className={cn("flex min-w-0 flex-col gap-1", className)}>
-      <dt className="text-xs text-quebi-fg-muted">{label}</dt>
+    <div {...props} data-slot="stat" className={cn("flex min-w-0 flex-col gap-2", className)}>
+      <dt className="quebi-eyebrow">{label}</dt>
       <dd className={statValueStyles({ size })}>
         {typeof value === "number" ? (
           <FormattedNumber value={value} options={formatOptions} />
@@ -107,7 +109,7 @@ export function Stat({
         )}
       </dd>
       {hasFooter && (
-        <dd className="flex flex-wrap items-center gap-2 text-xs text-quebi-fg-subtle">
+        <dd className="flex flex-wrap items-center gap-2 text-quebi-caption text-quebi-fg-subtle">
           {delta}
           {trend}
           {caption != null && <span>{caption}</span>}
@@ -200,7 +202,7 @@ export function StatGroup({ className, children, ...props }: StatGroupProps) {
         data-slot="stat-group"
         className={cn(
           "flex flex-col gap-4",
-          "sm:flex-row sm:gap-6 sm:[&>*+*]:border-l sm:[&>*+*]:border-quebi-line/20 sm:[&>*+*]:pl-6",
+          "sm:flex-row sm:gap-8 sm:[&>*+*]:border-l sm:[&>*+*]:border-quebi-hairline sm:[&>*+*]:pl-8",
           className,
         )}
       >

@@ -12,7 +12,7 @@ const BoldIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -25,16 +25,16 @@ const BoldIcon = () => (
 export const toggleExamples: ComponentExample[] = [
   {
     title: "Intents",
-    description: "Outline is bordered; plain is borderless. Both light up teal when selected.",
+    description: "Outline is bordered; plain is borderless. Both fill with ink when selected.",
     render: () => (
       <Row>
-        <Toggle intent="outline">Outline</Toggle>
+        <Toggle intent="outline">outline</Toggle>
         <Toggle intent="outline" defaultSelected>
-          Selected
+          selected
         </Toggle>
-        <Toggle intent="plain">Plain</Toggle>
+        <Toggle intent="plain">plain</Toggle>
         <Toggle intent="plain" defaultSelected>
-          Selected
+          selected
         </Toggle>
       </Row>
     ),
@@ -43,10 +43,10 @@ export const toggleExamples: ComponentExample[] = [
     title: "Sizes",
     render: () => (
       <Row>
-        <Toggle size="xs">Extra small</Toggle>
-        <Toggle size="sm">Small</Toggle>
-        <Toggle size="md">Default</Toggle>
-        <Toggle size="lg">Large</Toggle>
+        <Toggle size="xs">extra small</Toggle>
+        <Toggle size="sm">small</Toggle>
+        <Toggle size="md">default</Toggle>
+        <Toggle size="lg">large</Toggle>
       </Row>
     ),
   },
@@ -69,10 +69,10 @@ export const toggleExamples: ComponentExample[] = [
     render: () => (
       <Row>
         <Toggle intent="outline" isDisabled>
-          Disabled
+          disabled
         </Toggle>
         <Toggle intent="outline" isDisabled defaultSelected>
-          Disabled selected
+          disabled selected
         </Toggle>
       </Row>
     ),
@@ -84,7 +84,7 @@ export const toggleExamples: ComponentExample[] = [
         const [selected, setSelected] = useState(false)
         return (
           <Toggle intent="outline" isSelected={selected} onChange={setSelected}>
-            {selected ? "On" : "Off"}
+            {selected ? "on" : "off"}
           </Toggle>
         )
       }

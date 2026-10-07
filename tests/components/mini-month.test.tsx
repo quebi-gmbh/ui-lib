@@ -97,10 +97,11 @@ describe("MiniMonth", () => {
     for (const day of [11, 12, 13, 14, 15]) expect(cell(day).dataset.span).toBe("leave")
     expect(cell(10).dataset.span).toBeUndefined()
     expect(cell(16).dataset.span).toBeUndefined()
-    // Sunday 13th closes the first week's run, Monday 14th opens the next.
-    expect(cell(13).className).toContain("rounded-e-")
-    expect(cell(14).className).toContain("rounded-s-")
-    expect(cell(12).className).not.toMatch(/rounded-(s|e)-/)
+    // Sunday 13th closes the first week's run, Monday 14th opens the next;
+    // the cells are square, so a run's end is a rule.
+    expect(cell(13).className.split(" ")).toContain("border-e")
+    expect(cell(14).className.split(" ")).toContain("border-s")
+    expect(cell(12).className).not.toMatch(/border-(s|e)(\s|$)/)
   })
 
   test("marks today only when told what today is", () => {

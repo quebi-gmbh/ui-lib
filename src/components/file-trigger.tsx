@@ -18,14 +18,12 @@ import { Loader } from "@/components/loader"
  * paperclip. While `isPending` it shows the quebi Loader.
  *
  * It defaults to `size="sm"`, not Button's `md`. A picker is read as a field
- * control, not as a call to action: Button's `md` is `text-base` (16px, 46px
- * tall) while every field-shaped control in the library — Input, the Select
- * trigger, the DropZone label — is `text-sm` at its default size, and a
- * FileTrigger sits directly against those (inside a DropZone in
- * `conform-file-trigger`, beside an Input in a form). `sm` is `text-sm px-3
- * py-2` → 38px, which is the field scale's own `sm` by the arithmetic in the
- * `inputSizeStyles` comment. The `size` prop is untouched, so a consumer who
- * wants the CTA scale still passes `size="md"`.
+ * control, not as a call to action: `md` is the design's 46px button, while
+ * every field-shaped control in the library — Input, the Select trigger, the
+ * DropZone label — is `text-sm` at `py-2` by default, and a FileTrigger sits
+ * directly against those (inside a DropZone in `conform-file-trigger`, beside
+ * an Input in a form). `sm` shares that type and vertical padding, so the two
+ * share a baseline. A consumer who wants the CTA scale passes `size="md"`.
  */
 const PaperClipIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -33,7 +31,7 @@ const PaperClipIcon = (props: React.SVGProps<SVGSVGElement>) => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="1.8"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -49,7 +47,7 @@ const FolderIcon = (props: React.SVGProps<SVGSVGElement>) => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="1.8"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -65,7 +63,7 @@ const CameraIcon = (props: React.SVGProps<SVGSVGElement>) => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="1.8"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -118,10 +116,10 @@ export function FileTrigger({
         ) : (
           <>
             {props.allowsMultiple
-              ? "Browse files"
+              ? "browse files"
               : props.acceptDirectory
-                ? "Browse"
-                : "Browse a file"}
+                ? "browse"
+                : "browse a file"}
             ...
           </>
         )}

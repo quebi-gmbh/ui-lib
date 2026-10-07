@@ -9,16 +9,19 @@ import {
   TooltipTrigger as TooltipTriggerPrimitive,
 } from "react-aria-components"
 import { twJoin } from "tailwind-merge"
-import { tv, type VariantProps } from "tailwind-variants"
+import type { VariantProps } from "tailwind-variants"
+import { cn, tv } from "@/lib/utils"
 
 /**
  * Tooltip — quebi design system
  *
- * A floating label built on react-aria-components. The surface is
- * `bg-quebi-elevated` — the overlay surface, not the page one — with a subtle
- * cyan hairline border and an optional arrow that orients itself to the
- * trigger. Depth is `shadow-quebi-glow`, which is a mint bloom on dark and a
- * neutral drop shadow on light.
+ * A floating label built on react-aria-components, set in inverted ink —
+ * `bg-quebi-action text-quebi-on-action`, so ink on paper and paper on ink —
+ * at caption size, with the small floating radius and an optional arrow that
+ * orients itself to the trigger. Inverting is what tells it apart from a
+ * popover, which is paper and can hold controls; a tooltip only holds words.
+ * It takes no shadow: the float shadow lifts a paper surface off paper, and
+ * an ink chip is already as separate from the page as anything can be.
  *
  * Compose `Tooltip` (the trigger wrapper) around an interactive
  * `TooltipTrigger` and a `TooltipContent`.
@@ -26,9 +29,13 @@ import { tv, type VariantProps } from "tailwind-variants"
 const tooltipStyles = tv({
   base: [
     "group max-w-sm origin-(--trigger-anchor-point) will-change-transform",
-    "rounded-quebi-sm border border-quebi-line/20 bg-quebi-elevated px-2.5 py-1.5",
-    "text-sm/6 text-quebi-fg shadow-quebi-glow",
-    "*:[strong]:font-semibold **:[.text-muted]:text-quebi-fg-muted",
+    "rounded-quebi-s bg-quebi-action px-2.5 py-1.5",
+    // The caption size is added outside tv, in TooltipContent: tv's own
+    // tailwind-merge does not know the quebi type scale and files
+    // `text-quebi-caption` as a colour, dropping one of it and this.
+    "text-quebi-on-action",
+    "*:[strong]:font-medium **:[.text-muted]:text-quebi-on-action/70",
+    "forced-colors:border forced-colors:border-[CanvasText] forced-colors:bg-[Canvas] forced-colors:text-[CanvasText]",
   ],
   variants: {
     isEntering: {
@@ -65,10 +72,7 @@ const TooltipContent = ({ offset = 10, arrow = true, children, ...props }: Toolt
       {...props}
       offset={offset}
       className={composeRenderProps(props.className, (className, renderProps) =>
-        tooltipStyles({
-          ...renderProps,
-          className,
-        }),
+        cn("text-quebi-caption", tooltipStyles({ ...renderProps, className })),
       )}
     >
       {arrow && (
@@ -80,7 +84,7 @@ const TooltipContent = ({ offset = 10, arrow = true, children, ...props }: Toolt
             viewBox="0 0 12 12"
             className={twJoin(
               "block group-placement-bottom:rotate-180 group-placement-left:-rotate-90 group-placement-right:rotate-90 forced-colors:fill-[Canvas] forced-colors:stroke-[ButtonBorder]",
-              "fill-quebi-bg stroke-quebi-line/20",
+              "fill-quebi-action",
             )}
           >
             <path d="M0 0 L6 6 L12 0" />

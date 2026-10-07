@@ -42,7 +42,7 @@ export const statExamples: ComponentExample[] = [
             label={k.label}
             value={k.value}
             delta={<StatDelta value={k.delta} invert={k.fallIsGood} />}
-            trend={<Sparkline data={k.series} className="text-quebi-brand-text" />}
+            trend={<Sparkline data={k.series} className="text-quebi-fg" />}
           />
         ))}
       </StatGroup>

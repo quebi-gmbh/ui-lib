@@ -23,7 +23,7 @@ import {
  * LineChart — quebi design system
  *
  * A config-driven line chart built on the quebi `Chart` wrapper. It renders one
- * teal-led `<Line>` per `config` key with a styled grid, axes, tooltip, and an
+ * `<Line>` per `config` key with a styled grid, axes, tooltip, and an
  * interactive legend. Series colors come from the quebi palette and can be
  * overridden per key via the `config` prop. Pass `children` to take full manual
  * control of the rendered series.

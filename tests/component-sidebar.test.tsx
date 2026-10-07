@@ -48,7 +48,7 @@ const isExpanded = (category: string) =>
 const WRITTEN_PAGES = new Set(["/components/focus"])
 
 /**
- * Component links only — neither the "All components" home link nor a written
+ * Component links only — neither the "all components" home link nor a written
  * page above the groups is one of them.
  */
 const componentLinks = () =>
@@ -79,7 +79,7 @@ describe("on the catalog index", () => {
   test("the written pages sit above the groups, outside them", () => {
     renderAt("/components")
 
-    const focus = screen.getByRole("link", { name: "Focus indicators" })
+    const focus = screen.getByRole("link", { name: "focus indicators" })
     expect(focus).toHaveAttribute("href", "/components/focus")
     // It cannot arrive through a category: the grouped nav is built from
     // metaRegistry, and a written page has no entry there to be grouped by.

@@ -56,7 +56,7 @@ export const treeExamples: ComponentExample[] = [
   },
   {
     title: "Single selection",
-    description: "Click a row to select it; selected rows get a brand-teal tint.",
+    description: "Click a row to select it; a selected row is pressed into the page.",
     render: () => (
       <Tree
         aria-label="Files"

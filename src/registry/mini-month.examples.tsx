@@ -142,7 +142,7 @@ const WithAgenda = () => {
               dateStyle="full"
               locale={locale}
                       timeZone={TIME_ZONE}
-              className="font-semibold text-quebi-fg"
+              className="font-medium text-quebi-fg"
             />
             {onDay.length === 0 ? (
               <p className="text-quebi-fg-muted text-xs">Nothing on this day.</p>

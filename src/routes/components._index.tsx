@@ -1,9 +1,7 @@
-import { Link } from "react-router"
-import { ArrowRight } from "lucide-react"
-import { Card, CardDescription, CardTitle } from "@/components/card"
 import { metaRegistry } from "@/registry/meta"
 import { groupByCategory } from "@/registry/grouping"
 import { seo } from "@/lib/seo"
+import { IndexLinkList } from "@/site/prose-link"
 
 export function meta() {
   return seo({
@@ -13,40 +11,37 @@ export function meta() {
   })
 }
 
+const pad = (n: number) => String(n).padStart(2, "0")
+
 export default function Components() {
   const groups = groupByCategory(metaRegistry)
 
   return (
     <div>
-      <span className="quebi-eyebrow">Catalog</span>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
-        Components
-      </h1>
-      <p className="mt-4 max-w-quebi-content text-base leading-relaxed text-quebi-fg-muted">
-        {metaRegistry.length} component{metaRegistry.length === 1 ? "" : "s"} and counting. Each renders live
-        and ships as copy-paste source.
+      <p className="quebi-eyebrow">catalog — {metaRegistry.length} components</p>
+      <h1 className="mt-3 font-display text-quebi-display-l text-quebi-fg">components</h1>
+      <p className="mt-5 max-w-[60ch] text-quebi-body text-quebi-fg-muted">
+        {metaRegistry.length} component{metaRegistry.length === 1 ? "" : "s"} and counting. Each
+        renders live and ships as copy-paste source.
       </p>
 
-      <div className="mt-12 space-y-14">
-        {groups.map((group) => (
-          <section key={group.category}>
-            <h2 className="quebi-eyebrow mb-4">{group.category}</h2>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              {group.components.map((c) => (
-                <Link key={c.slug} to={`/components/${c.slug}`} className="group block">
-                  <Card interactive className="p-6">
-                    <CardTitle>{c.name}</CardTitle>
-                    <CardDescription className="mt-2 line-clamp-2">{c.description}</CardDescription>
-                    <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-quebi-brand-text transition-colors duration-200 group-hover:text-quebi-brand-text-hover">
-                      View <ArrowRight className="h-4 w-4" />
-                    </span>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </section>
-        ))}
-      </div>
+      {groups.map((group) => (
+        <section key={group.category} className="mt-quebi-9">
+          <div className="mb-5 flex items-end justify-between gap-4">
+            <h2 className="font-display text-quebi-display-s text-quebi-fg">
+              {group.category.toLowerCase()}
+            </h2>
+            <span className="quebi-eyebrow">{pad(group.components.length)} entries</span>
+          </div>
+          <IndexLinkList
+            rows={group.components.map((c) => ({
+              to: `/components/${c.slug}`,
+              title: c.name,
+              description: c.description,
+            }))}
+          />
+        </section>
+      ))}
     </div>
   )
 }

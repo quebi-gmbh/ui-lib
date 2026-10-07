@@ -20,7 +20,7 @@ export const dialogOgScene: OgScene = {
   render: () => (
     <Dialog className="w-112">
       <DialogHeader>
-        <DialogTitle>Invite your team</DialogTitle>
+        <DialogTitle>invite your team</DialogTitle>
         <DialogDescription>Send an invitation to collaborate on this workspace.</DialogDescription>
       </DialogHeader>
       <DialogBody>
@@ -29,8 +29,8 @@ export const dialogOgScene: OgScene = {
         </p>
       </DialogBody>
       <DialogFooter>
-        <Button intent="outline">Cancel</Button>
-        <Button intent="primary">Send invite</Button>
+        <Button intent="outline">cancel</Button>
+        <Button intent="primary">send invite</Button>
       </DialogFooter>
     </Dialog>
   ),

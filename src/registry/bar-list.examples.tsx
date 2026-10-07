@@ -13,7 +13,7 @@ const pages = [
 export const barListExamples: ComponentExample[] = [
   {
     title: "Default",
-    description: "Each bar's brand-teal width is scaled to the largest value.",
+    description: "Each bar's width is scaled to the largest value.",
     render: () => <BarList data={pages} className="w-full max-w-md" />,
   },
   {

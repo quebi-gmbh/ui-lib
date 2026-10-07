@@ -9,8 +9,8 @@ export default function ComponentsLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <div className="quebi-shell py-12">
-      <div className="lg:grid lg:grid-cols-[16rem_1fr] lg:gap-10">
+    <div className="quebi-shell pt-quebi-8 pb-quebi-10">
+      <div className="lg:grid lg:grid-cols-[15rem_1fr] lg:gap-12">
         <Button
           intent="outline"
           size="sm"
@@ -19,7 +19,7 @@ export default function ComponentsLayout() {
           className="mb-4 lg:hidden"
         >
           {mobileOpen ? <X data-slot="icon" aria-hidden /> : <Menu data-slot="icon" aria-hidden />}
-          Components
+          components
         </Button>
 
         <aside

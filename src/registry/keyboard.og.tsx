@@ -7,10 +7,10 @@ export const keyboardOgScene: OgScene = {
   render: () => (
     <div className="flex items-center gap-6 text-sm text-quebi-fg-muted">
       <span className="flex items-center gap-2">
-        Search <Keyboard>⌘K</Keyboard>
+        search <Keyboard>⌘K</Keyboard>
       </span>
       <span className="flex items-center gap-2">
-        Save <Keyboard>⌘S</Keyboard>
+        save <Keyboard>⌘S</Keyboard>
       </span>
     </div>
   ),

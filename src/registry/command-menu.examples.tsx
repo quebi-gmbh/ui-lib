@@ -30,32 +30,32 @@ const Palette = ({
       <CommandMenuSection label="Suggestions">
         <CommandMenuItem textValue="Calendar">
           <Calendar data-slot="icon" />
-          <CommandMenuLabel>Calendar</CommandMenuLabel>
+          <CommandMenuLabel>calendar</CommandMenuLabel>
         </CommandMenuItem>
         <CommandMenuItem textValue="Search users">
           <Users data-slot="icon" />
-          <CommandMenuLabel>Search users</CommandMenuLabel>
-          <CommandMenuDescription>Team</CommandMenuDescription>
+          <CommandMenuLabel>search users</CommandMenuLabel>
+          <CommandMenuDescription>team</CommandMenuDescription>
         </CommandMenuItem>
         <CommandMenuItem textValue="New project">
           <Plus data-slot="icon" />
-          <CommandMenuLabel>New project</CommandMenuLabel>
+          <CommandMenuLabel>new project</CommandMenuLabel>
           <CommandMenuShortcut>⌘N</CommandMenuShortcut>
         </CommandMenuItem>
       </CommandMenuSection>
       <CommandMenuSection label="Settings">
         <CommandMenuItem textValue="Profile">
           <User data-slot="icon" />
-          <CommandMenuLabel>Profile</CommandMenuLabel>
+          <CommandMenuLabel>profile</CommandMenuLabel>
           <CommandMenuShortcut>⌘P</CommandMenuShortcut>
         </CommandMenuItem>
         <CommandMenuItem textValue="Billing">
           <CreditCard data-slot="icon" />
-          <CommandMenuLabel>Billing</CommandMenuLabel>
+          <CommandMenuLabel>billing</CommandMenuLabel>
         </CommandMenuItem>
         <CommandMenuItem textValue="Settings">
           <Settings data-slot="icon" />
-          <CommandMenuLabel>Settings</CommandMenuLabel>
+          <CommandMenuLabel>settings</CommandMenuLabel>
           <CommandMenuShortcut>⌘S</CommandMenuShortcut>
         </CommandMenuItem>
       </CommandMenuSection>

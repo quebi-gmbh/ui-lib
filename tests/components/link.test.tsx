@@ -139,5 +139,5 @@ test("a plain string className still merges with BASE_CLASSES", () => {
   const classes = screen.getByRole("link", { name: "Dashboard" }).className.split(/\s+/)
   expect(classes).toContain("no-underline")
   expect(classes).not.toContain("underline")
-  expect(classes).toContain("font-medium")
+  expect(classes).toContain("text-quebi-fg")
 })

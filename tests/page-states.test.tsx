@@ -23,6 +23,7 @@ import {
 
 const skeletons = (root: HTMLElement) => root.querySelectorAll("[data-slot=skeleton]")
 const cards = (root: HTMLElement) => root.querySelectorAll("[data-slot=card]")
+const codeBlocks = (root: HTMLElement) => root.querySelectorAll("[data-slot=code-block]")
 
 describe("the gallery fallback", () => {
   test("is one unit per example that is coming", () => {
@@ -70,7 +71,7 @@ describe("the source block", () => {
   test("waits with the shape of a code block", () => {
     const { container } = render(<CodeBlockSkeleton lines={9} />)
 
-    expect(cards(container)).toHaveLength(1)
+    expect(codeBlocks(container)).toHaveLength(1)
     expect(skeletons(container)).toHaveLength(9)
   })
 

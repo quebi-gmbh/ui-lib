@@ -100,8 +100,8 @@ export const skeletonExamples: ComponentExample[] = [
     title: "Card",
     description: "A full card placeholder built from several skeletons.",
     render: () => (
-      <div className="w-72 rounded-quebi-md border border-quebi-line/10 bg-quebi-bg p-4">
-        <Skeleton className="mb-4 h-40 w-full rounded-quebi-sm" />
+      <div className="w-72 border border-quebi-hairline p-4">
+        <Skeleton className="mb-4 h-40 w-full" />
         <Skeleton className="mb-2 h-5 w-3/4" />
         <Skeleton soft className="mb-1.5 h-3 w-full" />
         <Skeleton soft className="h-3 w-5/6" />

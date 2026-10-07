@@ -31,31 +31,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
     // every page paid for, which task #174 had already recommended removing.
     <html
       lang="en"
-      className="quebi-scrollbar bg-quebi-bg dark [scrollbar-gutter:stable]"
+      className="quebi-scrollbar bg-quebi-bg light [scrollbar-gutter:stable]"
       suppressHydrationWarning
     >
       <head>
         {/* No-flash theme init: runs before paint so the saved theme is applied
-            before first render. quebi is dark-first, so dark is the default. */}
+            before first render. Daylight (light) is the default theme. */}
         <script
           // biome-ignore lint/security/noDangerouslySetInnerHtml: the only way to run a script before first paint, and the payload is this string literal — no interpolation, so there is no input for an injection to arrive through.
           dangerouslySetInnerHTML={{
             __html:
               "(function(){try{var t=localStorage.getItem('quebi-theme');" +
-              "if(t!=='light'&&t!=='dark')t='dark';" +
+              "if(t!=='light'&&t!=='dark')t='light';" +
               "var e=document.documentElement;e.classList.remove('light','dark');" +
               "e.classList.add(t);e.style.colorScheme=t;}catch(e){}})();",
           }}
         />
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        {/* The one font first paint needs, discoverable by the preload scanner at
-            the first byte of the document instead of after the root stylesheet has
-            been downloaded and parsed. Only the latin subset: the latin-ext face is
-            unicode-range gated and nothing in the site renders a codepoint in its
-            range, so preloading it would force a download that otherwise never
-            happens. `crossOrigin` is required even same-origin — fonts are fetched
-            in CORS mode, and a preload without it is a second, separate fetch. */}
+        {/* The two faces first paint needs, discoverable by the preload scanner
+            at the first byte of the document instead of after the root
+            stylesheet has been parsed: Inter sets every line of running text
+            and Outfit every headline. JetBrains Mono (labels, code) and the
+            latin-ext Outfit face load on demand. `crossOrigin` is required even
+            same-origin — fonts are fetched in CORS mode, and a preload without
+            it is a second, separate fetch. */}
+        <link
+          rel="preload"
+          href="/fonts/inter-latin.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
         <link
           rel="preload"
           href="/fonts/outfit-latin.woff2"
@@ -63,9 +70,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           type="font/woff2"
           crossOrigin="anonymous"
         />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-transparent-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-transparent-32x32.png" />
-        <link rel="icon" type="image/png" sizes="128x128" href="/favicon-transparent-128x128.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
         <Meta />
         <Links />
       </head>

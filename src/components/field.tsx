@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils"
  * Field primitives — quebi design system
  *
  * Built on react-aria-components. A small set of building blocks for composing
- * accessible form fields: a Label, a muted Description hint, a red FieldError
+ * accessible form fields: a mono Label, a caption Description hint, a FieldError
  * message, plus Field/Fieldset/Legend wrappers that lay out the
  * label → control → hint stack with consistent spacing.
  *
@@ -32,7 +32,8 @@ export function Label({ className, ...props }: LabelProps) {
       data-slot="label"
       {...props}
       className={cn(
-        "select-none font-semibold text-[13px] text-quebi-fg",
+        // The design's Label role: mono, uppercase, tracked, `fg-subtle`.
+        "quebi-eyebrow block select-none",
         "in-disabled:opacity-50 group-disabled:opacity-50",
         className,
       )}
@@ -46,7 +47,7 @@ export function Description({ className, ...props }: TextProps) {
       {...props}
       slot="description"
       className={cn(
-        "block text-[12px] text-quebi-fg-muted",
+        "block text-quebi-caption text-quebi-fg-subtle",
         "in-disabled:opacity-50 group-disabled:opacity-50",
         className,
       )}
@@ -57,7 +58,7 @@ export function Description({ className, ...props }: TextProps) {
 /** The shared look of an inline field error, in one place for both branches below. */
 const fieldErrorClasses = (className?: string) =>
   cn(
-    "block text-[12px] text-red-500",
+    "block text-quebi-caption text-quebi-danger",
     "in-disabled:opacity-50 group-disabled:opacity-50",
     "forced-colors:text-[Mark]",
     className,
@@ -268,7 +269,7 @@ export function Field({ className, ...props }: React.ComponentProps<"div">) {
  * 3. Each row then sizes to its tallest member and the fields share three
  * baselines whatever their heights.
  *
- * The hint row carries a floor of one line of 12px text, so a field going
+ * The hint row carries a floor of one line of caption text, so a field going
  * invalid fills reserved space instead of pushing the page down. That
  * reservation is only affordable because of the subgrid: under a plain stack
  * it would cost ~18px under every field on the page forever, whereas here the
@@ -377,7 +378,7 @@ export function Legend({ className, ...props }: React.ComponentProps<"legend">) 
     <legend
       data-slot="legend"
       {...props}
-      className={cn("font-semibold text-base/6 text-quebi-fg data-disabled:opacity-50", className)}
+      className={cn("font-display text-quebi-title text-quebi-fg data-disabled:opacity-50", className)}
     />
   )
 }

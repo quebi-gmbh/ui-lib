@@ -4,7 +4,7 @@ export const cardMeta: ComponentMeta = {
   slug: "card",
   name: "Card",
   description:
-    "A surface for a self-contained unit that sits beside a few others of a different kind. Composes a header, content, and footer, with default and feature variants plus an optional hover glow. Most things that look like they want a card want a heading, a list or a table instead — read its usage guidance first.",
+    "A surface for a self-contained unit that sits beside a few others of a different kind. Composes a header, content, and footer, with default and feature variants plus an optional hover ground. Most things that look like they want a card want a heading, a list or a table instead — read its usage guidance first.",
   category: "Layout",
   tags: ["layout", "surface", "container", "display"],
   usage: {

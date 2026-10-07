@@ -32,7 +32,7 @@ const VolumeForm = () => {
     >
       <ConformSlider field={fields.volume} label="Volume" maxValue={100} />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )
@@ -70,7 +70,7 @@ const PriceForm = () => {
         maxValue={100}
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

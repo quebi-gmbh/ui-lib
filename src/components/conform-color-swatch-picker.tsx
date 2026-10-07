@@ -133,9 +133,9 @@ export function ConformColorSwatchPicker({
       />
 
       {label && (
-        <Label className={cn(hasErrors && "text-red-500")}>
+        <Label className={cn(hasErrors && "text-quebi-danger")}>
           {label}
-          {field.required && <span className="ml-1 text-quebi-brand-text">*</span>}
+          {field.required && <span className="ml-1 text-quebi-fg">*</span>}
         </Label>
       )}
       {/* These ids are ours to set: the swatch grid is not a react-aria field,
@@ -171,14 +171,14 @@ export function ConformColorSwatchPicker({
             // The quebi ColorSwatchPickerItem's look, on a listbox option: the
             // ring is keyed off `data-[selected]`, which react-aria now sets,
             // rather than off a className the component computes for itself.
-            // Selection is the neutral halo, focus the mint ring — see that
-            // component for why the selection mark is not a brand hue.
+            // Selection is an `fg` halo, focus the `focus` ring — both ink, so
+            // the only hue on the row is the swatches' own.
             className={cn(
-              "relative rounded-quebi-sm outline-hidden",
-              "*:rounded-quebi-sm",
+              "relative rounded-none outline-hidden",
+              "*:rounded-none",
               "transition-opacity duration-150",
-              "data-[selected]:ring-2 data-[selected]:ring-quebi-fg data-[selected]:ring-offset-2 data-[selected]:ring-offset-quebi-bg",
-              "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
+              "data-[selected]:ring-2 data-[selected]:ring-quebi-fg data-[selected]:ring-offset-3 data-[selected]:ring-offset-quebi-bg",
+              "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-3 data-[focus-visible]:ring-offset-quebi-bg",
               "hover:opacity-90",
             )}
           >

@@ -31,7 +31,7 @@ const PlanForm = () => {
         <SelectItem id="enterprise">Enterprise</SelectItem>
       </ConformSelect>
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

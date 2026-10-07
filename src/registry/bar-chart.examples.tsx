@@ -22,7 +22,7 @@ export const barChartExamples: ComponentExample[] = [
   {
     title: "Grouped",
     description:
-      "Two teal-led series rendered side by side. Click a legend item to focus a single series.",
+      "Two ink series rendered side by side. Click a legend item to focus a single series.",
     render: () => (
       <BarChart config={config} data={data} dataKey="month" containerHeight={280} />
     ),

@@ -19,8 +19,8 @@ export const carouselOgScene: OgScene = {
       <CarouselContent>
         {[1, 2, 3].map((n) => (
           <CarouselItem key={n}>
-            <Card className="flex h-32 items-center justify-center text-3xl font-semibold text-quebi-fg">
-              {n}
+            <Card className="flex h-32 items-center justify-center font-display font-extralight text-quebi-display-s text-quebi-fg">
+              {String(n).padStart(2, "0")}
             </Card>
           </CarouselItem>
         ))}

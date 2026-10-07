@@ -1,17 +1,17 @@
-import { tv, type VariantProps } from "tailwind-variants"
-import { cn } from "@/lib/utils"
+import type { VariantProps } from "tailwind-variants"
+import { cn, tv } from "@/lib/utils"
 
 /**
  * IconTile — quebi design system
  *
- * A tinted box that holds exactly one icon: the leading glyph of a feature row,
+ * A square on the raised ground that holds exactly one icon, in ink: the leading glyph of a feature row,
  * an empty state, a stat card, or a list row. Non-interactive on purpose — a
  * tile that responds to a press is a `Button` with `size="sq-*"`, and a tile
  * with a label beside the glyph is a `Badge`.
  *
- * The tint is Badge's, value for value (see `iconTileIntents`), so a tile and a
- * badge on the same surface read as one family. The box is Button's square
- * scale, so a tile lines up with the icon button next to it in the same row.
+ * The intents are Badge's names (see `iconTileIntents`), so a call site can
+ * hand the same intent to both. The box is Button's square scale, so a tile
+ * lines up with the icon button next to it in the same row.
  *
  * Decorative by default: the tile is a plain `<span>` with no role, and the
  * icon inside is expected to carry `data-slot="icon"` (the tile sizes and tints
@@ -21,39 +21,28 @@ import { cn } from "@/lib/utils"
  */
 
 /**
- * The quebi tint scale: a low-opacity fill, a matching saturated foreground and
- * a hairline border.
+ * Ink, per intent. Badge's key set, so an intent handed to one is valid for the
+ * other, but not Badge's values: a tile holds a glyph rather than a label, so
+ * it takes full ink (`text-quebi-fg`) where a tag takes the muted one.
  *
- * A verbatim copy of `badgeIntents` in `badge.tsx`, kept a copy rather than an
- * import because these components are distributed by copy-paste: an import
- * would make `shadcn add icon-tile` drag Badge into a project that asked for a
- * box with an icon in it, for nine strings. That is the trade this library has
- * already made twice — `select.tsx` spells out Input's size scale rather than
- * gaining Input as a registry dependency "for three strings", and toggle.tsx
- * spells out Button's.
- *
- * The difference is that a comment is the only thing holding those two in step.
- * Here the copy is pinned: `tests/components/icon-tile.test.tsx` asserts the two
- * records are equal, so a tint that changes in one file and not the other fails
- * the suite instead of drifting for a year. Change both, or change neither.
+ * `brand`, `accent` and `info` are the plain tile — names kept for call sites,
+ * no hue behind them. The three state intents are Badge's tints exactly (the
+ * state token over a 10% wash of itself); `ai` is the action-ink fill and
+ * `outline` a rule-weight frame on no ground. Kept a copy rather than an import
+ * because these components are distributed by copy-paste: an import would make
+ * `shadcn add icon-tile` drag Badge into a project that asked for a box with an
+ * icon in it. `tests/components/icon-tile.test.tsx` pins the shared half.
  */
 export const iconTileIntents = {
-  neutral: "bg-quebi-surface/[0.06] border-quebi-surface/10 text-quebi-fg-muted",
-  brand: "bg-quebi-brand/10 border-quebi-brand/20 text-quebi-brand-text",
-  accent: "bg-purple-500/10 border-purple-500/20 text-quebi-accent",
-  success: "bg-emerald-500/10 border-emerald-500/20 text-quebi-success",
-  warning: "bg-amber-500/10 border-amber-500/20 text-quebi-warn",
-  danger: "bg-red-500/10 border-red-500/20 text-quebi-danger",
-  info: "bg-cyan-500/10 border-quebi-line/20 text-quebi-info",
-  // The one intent that is a fill rather than a tint, and the only one whose
-  // label crosses two colours. `text-quebi-on-brand` is dark ink, so the far
-  // stop is the one that decides legibility and a *darker* purple is the wrong
-  // direction: `purple-700` would read 2.12:1. `purple-400` is the vivid end of
-  // the sweep that the ink still clears — 7.81:1 over the mint, 6.07:1 at the
-  // midpoint, 5.60:1 over the purple, where `purple-500` was 3.74:1 and the
-  // label faded out across its own badge. Pinned by `tests/badge-contrast.test.ts`.
-  ai: "border-transparent bg-gradient-to-r from-quebi-brand to-purple-400 text-quebi-on-brand shadow-quebi-glow",
-  outline: "bg-transparent border-quebi-line/20 text-quebi-fg-muted",
+  neutral: "border-transparent bg-quebi-raised text-quebi-fg",
+  brand: "border-transparent bg-quebi-raised text-quebi-fg",
+  accent: "border-transparent bg-quebi-raised text-quebi-fg",
+  success: "border-transparent bg-quebi-success/10 text-quebi-success",
+  warning: "border-transparent bg-quebi-warn/10 text-quebi-warn",
+  danger: "border-transparent bg-quebi-danger/10 text-quebi-danger",
+  info: "border-transparent bg-quebi-raised text-quebi-fg",
+  ai: "border-transparent bg-quebi-action text-quebi-on-action",
+  outline: "border-quebi-rule bg-transparent text-quebi-fg",
 }
 
 export const iconTileStyles = tv({
@@ -77,13 +66,12 @@ export const iconTileStyles = tv({
       // the glyph fills the box rather than sitting in it.
       "2xs": "size-4.5 *:data-[slot=icon]:size-3.5",
     },
-    // Radius belongs to the variant, not `base` — see button.tsx. `isCircle`
-    // rather than Avatar's `isSquare`: square is the default here, as it is for
-    // Button and Toggle, and a tile lines those up more often than it lines up
-    // an avatar.
+    // `isCircle` rather than Avatar's `isSquare`: square is the default here,
+    // as it is for Button and Toggle. `rounded-none` stays explicit so a
+    // `false` reads as a choice in the class list, not an absence.
     isCircle: {
       true: "rounded-full",
-      false: "rounded-quebi-sm",
+      false: "rounded-none",
     },
   },
   defaultVariants: {

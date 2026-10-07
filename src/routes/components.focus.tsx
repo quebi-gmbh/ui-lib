@@ -67,7 +67,7 @@ interface ControlProps<T extends string> {
 function Control<T extends string>({ label, value, onChange, options }: ControlProps<T>) {
   return (
     <div className="flex flex-col gap-1.5">
-      <span className="text-sm font-semibold text-quebi-fg-muted">{label}</span>
+      <span className="quebi-eyebrow">{label}</span>
       <ToggleGroup
         size="sm"
         aria-label={label}
@@ -148,20 +148,20 @@ function VariantTile({ variant, trigger, state, surface }: DemoFieldProps & { su
   return (
     <Card className="gap-4">
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-sm font-semibold text-quebi-fg">{variant.name}</h3>
+        <h3 className="font-display text-quebi-fg text-quebi-title">{variant.name}</h3>
         <Badge intent={VERDICT_INTENT[variant.verdict]}>{VERDICT_LABEL[variant.verdict]}</Badge>
       </div>
 
-      <div className={cn("rounded-quebi-sm px-4 py-5", SURFACE_CLASS[surface])}>
+      <div className={cn("px-4 py-5", SURFACE_CLASS[surface])}>
         <DemoField variant={variant} trigger={trigger} state={state} />
       </div>
 
-      <pre className="overflow-x-auto rounded-quebi-sm bg-quebi-bg p-3 font-mono text-xs leading-relaxed text-quebi-fg-muted">
+      <pre className="overflow-x-auto bg-quebi-raised p-3 font-mono text-quebi-caption text-quebi-fg-muted">
         {variant.css}
       </pre>
 
-      <Text className="text-sm text-quebi-fg-muted">{variant.note}</Text>
-      <Text className="mt-auto text-xs text-quebi-fg-subtle">{variant.verdictWhy}</Text>
+      <Text className="text-quebi-body-s text-quebi-fg-muted">{variant.note}</Text>
+      <Text className="mt-auto text-quebi-caption text-quebi-fg-subtle">{variant.verdictWhy}</Text>
     </Card>
   )
 }
@@ -177,18 +177,16 @@ export default function FocusIndicators() {
 
   return (
     <div>
-      <span className="quebi-eyebrow">Foundations</span>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
-        Focus indicators
-      </h1>
-      <p className="mt-4 max-w-quebi-content text-base leading-relaxed text-quebi-fg-muted">
+      <p className="quebi-eyebrow">foundations — focus</p>
+      <h1 className="mt-3 font-display text-quebi-display-l text-quebi-fg">focus indicators</h1>
+      <p className="mt-5 max-w-[60ch] text-quebi-body text-quebi-fg-muted">
         Thirty-three ways to say “this control has keyboard focus”, drawn on the same field so they
         can be compared rather than described. None of them is the house style yet — this page
         exists to choose one. The library ships the offset ring today, and it is in the grid below
         on the same terms as the other thirty-two.
       </p>
 
-      <Note intent="info" className="mt-6">
+      <Note intent="info" className="mt-quebi-8 max-w-quebi-content">
         Tab into a field rather than clicking it. That is the whole difference between the first two
         trigger settings, and it is invisible from a screenshot: <Code>:focus</Code> fires for the
         mouse too, <Code>:focus-visible</Code> is the browser’s judgement that a keyboard put you
@@ -196,9 +194,9 @@ export default function FocusIndicators() {
         stops.
       </Note>
 
-      <div className="sticky top-20 z-10 -mx-2 mt-8 flex flex-wrap gap-6 rounded-quebi-md bg-quebi-bg/90 px-2 py-4 backdrop-blur">
+      <div className="sticky top-20 z-10 -mx-2 mt-8 flex flex-wrap gap-6 border-quebi-hairline border-b bg-quebi-bg px-2 py-4">
         <Control
-          label="Trigger"
+          label="trigger"
           value={trigger}
           onChange={setTrigger}
           options={[
@@ -208,7 +206,7 @@ export default function FocusIndicators() {
           ]}
         />
         <Control
-          label="Backdrop"
+          label="backdrop"
           value={surface}
           onChange={setSurface}
           options={[
@@ -218,7 +216,7 @@ export default function FocusIndicators() {
           ]}
         />
         <Control
-          label="State"
+          label="state"
           value={state}
           onChange={setState}
           options={[
@@ -239,9 +237,16 @@ export default function FocusIndicators() {
       )}
 
       {focusGroups.map((group) => (
-        <section key={group.id} className="mt-14">
-          <h2 className="text-xl font-semibold tracking-tight text-quebi-fg">{group.title}</h2>
-          <p className="mt-2 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
+        <section key={group.id} className="mt-quebi-9">
+          <div className="flex items-end justify-between gap-4">
+            <h2 className="font-display text-quebi-display-s text-quebi-fg">
+              {group.title.toLowerCase()}
+            </h2>
+            <span className="quebi-eyebrow">
+              {String(group.variants.length).padStart(2, "0")} variants
+            </span>
+          </div>
+          <p className="mt-3 max-w-[60ch] text-quebi-body-s text-quebi-fg-muted">
             {group.blurb}
           </p>
           <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
@@ -258,24 +263,24 @@ export default function FocusIndicators() {
         </section>
       ))}
 
-      <section className="mt-16">
-        <h2 className="text-xl font-semibold tracking-tight text-quebi-fg">
-          What the verdicts are measured against
+      <section className="mt-quebi-10">
+        <h2 className="font-display text-quebi-display-s text-quebi-fg">
+          what the verdicts are measured against
         </h2>
-        <div className="mt-4 max-w-quebi-content space-y-3 text-sm leading-relaxed text-quebi-fg-muted">
+        <div className="mt-5 max-w-[60ch] space-y-3 text-quebi-body-s text-quebi-fg-muted">
           <p>
-            <strong className="font-semibold text-quebi-fg">WCAG 1.4.11 Non-text Contrast</strong>{" "}
+            <strong className="font-medium text-quebi-fg">WCAG 1.4.11 Non-text Contrast</strong>{" "}
             (AA) asks the indicator to reach 3:1 against what is next to it.{" "}
-            <strong className="font-semibold text-quebi-fg">WCAG 2.4.13 Focus Appearance</strong>{" "}
+            <strong className="font-medium text-quebi-fg">WCAG 2.4.13 Focus Appearance</strong>{" "}
             (AAA) adds a shape: at least the area of a 2px perimeter, and a 3:1 change between the
             focused and unfocused states. A badge here describes the drawing on this page, not the
             family in general — a border at 2px can clear both criteria where the same border at 1px
             cannot.
           </p>
           <p>
-            Colour is not the axis. <Code>--q-brand-mark</Code> clears 3:1 on both themes with 0.45
-            to spare, so everything marked <em>Fails</em> below fails on geometry or on
-            translucency. Where a variant depends on something else being drawn beside it — the
+            Colour is not the axis. <Code>--q-focus</Code> is the ink itself and clears 3:1 on both
+            themes many times over, so everything marked <em>Fails</em> below fails on geometry or
+            on translucency. Where a variant depends on something else being drawn beside it — the
             opaque border under a soft glow, the ring beside a floating label — the verdict says so,
             because that dependency is what breaks the first time someone simplifies it.
           </p>

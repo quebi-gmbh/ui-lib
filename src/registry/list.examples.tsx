@@ -41,15 +41,15 @@ const FILES = [
 ]
 
 const PROJECTS = [
-  { id: "atlas", name: "Atlas", detail: "Design system migration", status: "Active" },
-  { id: "beacon", name: "Beacon", detail: "Onboarding flow rewrite", status: "Review" },
-  { id: "cobalt", name: "Cobalt", detail: "Billing export", status: "Paused" },
+  { id: "atlas", name: "Atlas", detail: "Design system migration", status: "active" },
+  { id: "beacon", name: "Beacon", detail: "Onboarding flow rewrite", status: "review" },
+  { id: "cobalt", name: "Cobalt", detail: "Billing export", status: "paused" },
 ] as const
 
 const STATUS_INTENT = {
-  Active: "success",
-  Review: "warning",
-  Paused: "neutral",
+  active: "success",
+  review: "warning",
+  paused: "neutral",
 } as const
 
 const ENVIRONMENTS = [
@@ -82,7 +82,7 @@ export const listExamples: ComponentExample[] = [
   {
     title: "Divided",
     description:
-      "The default. A hairline between rows and nothing around them — the list sits on the page, and each row is an `Item`: media, title and secondary line, meta, an action.",
+      "The default, and the design's index list: a strong rule on top, a hairline between rows and nothing around them — the list sits on the page, and each row is an `Item`: media, title and secondary line, meta, an action.",
     render: () => (
       <List aria-label="Members" className="w-full max-w-md">
         {MEMBERS.map((m) => (
@@ -97,7 +97,7 @@ export const listExamples: ComponentExample[] = [
             <ItemMeta>{m.role}</ItemMeta>
             <ItemActions>
               <Button intent="outline" size="xs">
-                Manage
+                manage
               </Button>
             </ItemActions>
           </Item>
@@ -154,7 +154,7 @@ export const listExamples: ComponentExample[] = [
     frame: "none",
     render: () => (
       <Card className="max-w-md">
-        <CardHeader title="Team" description="Three members with access to this project." />
+        <CardHeader title="team" description="Three members with access to this project." />
         <CardContent>
           <List inset aria-label="Team">
             {MEMBERS.map((m) => (
@@ -188,7 +188,7 @@ export const listExamples: ComponentExample[] = [
   {
     title: "Rows that navigate",
     description:
-      "A `ListLink` in the title stretches over the whole row: one target, one tab stop, a hover tint and a focus ring round the row. The action slot sits above it, so the row's own Button still takes its own press. This is navigation — rows the user selects or arrows through are a GridList.",
+      "A `ListLink` in the title stretches over the whole row: one target, one tab stop, a raised ground and a 12px shift on hover, and a focus ring inside the row. The action slot sits above it, so the row's own Button still takes its own press. This is navigation — rows the user selects or arrows through are a GridList.",
     render: () => (
       <List aria-label="Projects" className="w-full max-w-md">
         {PROJECTS.map((p) => (
@@ -228,7 +228,7 @@ export const listExamples: ComponentExample[] = [
           </ItemContent>
           <ItemActions>
             <Button intent="outline" size="xs">
-              Review
+              review
             </Button>
           </ItemActions>
         </Item>
@@ -281,7 +281,7 @@ export const listExamples: ComponentExample[] = [
     frame: "none",
     render: () => (
       <Card className="max-w-md">
-        <CardHeader title="Invitations" description="People you have invited to this project." />
+        <CardHeader title="invitations" description="People you have invited to this project." />
         <CardContent>
           <ListEmpty
             icon={
@@ -289,12 +289,12 @@ export const listExamples: ComponentExample[] = [
                 <Inbox data-slot="icon" aria-hidden />
               </IconTile>
             }
-            title="No pending invitations"
+            title="no pending invitations"
             description="Invite a teammate and they will show up here until they accept."
           >
             <Button size="sm">
               <Plus data-slot="icon" aria-hidden />
-              Invite
+              invite
             </Button>
           </ListEmpty>
         </CardContent>

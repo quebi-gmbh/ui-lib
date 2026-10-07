@@ -12,7 +12,8 @@
  *
  * The order is roughly the order you build a page in: the shell, how you move
  * around it, what you press, then the five kinds of form control, then what
- * the app says back, what floats above it, what it displays, and charts.
+ * the app says back, what floats above it, what it displays, the brand pieces
+ * a landing page opens with (logo, stage, low title), and charts.
  * Conform comes last because it is a parallel set of the form controls above,
  * for people already using Conform — the same names a second time, which is
  * why it is worth keeping out of the way.
@@ -29,6 +30,7 @@ export const componentCategories = [
   "Feedback",
   "Overlays",
   "Display",
+  "Brand",
   "Charts",
   "Conform",
 ] as const

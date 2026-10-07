@@ -32,7 +32,7 @@ const SignupForm = () => {
         description="We'll never share your email."
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

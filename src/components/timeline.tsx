@@ -12,7 +12,6 @@ import {
 } from "react"
 import { useLocale } from "react-aria-components"
 import { Avatar } from "@/components/avatar"
-import { badgeIntents } from "@/components/badge"
 import { Disclosure, DisclosurePanel, DisclosureTrigger } from "@/components/disclosure-group"
 import { Link } from "@/components/link"
 import { ScrollArea } from "@/components/scroll-area"
@@ -704,9 +703,14 @@ const DISC_OFFSET = [
 const FLEX_ALIGN =
   "group-data-[align=end]/timeline-item:justify-end @xl:group-data-[align=end-wide]/timeline-item:justify-end"
 
+/**
+ * Marks are ink. `brand` is the action fill — the item the reader is on —
+ * `neutral` is ink, `muted` the subtle grey; the three state tokens are for an
+ * item whose state is the point (delivered, delayed, failed).
+ */
 const DOT_TONES: Record<TimelineTone, string> = {
-  neutral: "bg-quebi-fg-muted",
-  brand: "bg-quebi-brand",
+  neutral: "bg-quebi-fg",
+  brand: "bg-quebi-action",
   success: "bg-quebi-success",
   warning: "bg-quebi-warn",
   danger: "bg-quebi-danger",
@@ -714,22 +718,26 @@ const DOT_TONES: Record<TimelineTone, string> = {
 }
 
 const RING_TONES: Record<TimelineTone, string> = {
-  neutral: "border-quebi-fg-muted",
-  brand: "border-quebi-brand-mark",
+  neutral: "border-quebi-rule",
+  brand: "border-quebi-action",
   success: "border-quebi-success",
   warning: "border-quebi-warn",
   danger: "border-quebi-danger",
   muted: "border-quebi-fg-subtle",
 }
 
-/** Icon and number markers are tinted discs — the Badge's tints, on a circle. */
+/**
+ * Icon and number markers are discs: the raised ground for `neutral`, the
+ * action fill for `brand`, a hairline ring for `muted`, and a state token's own
+ * tint for the three states.
+ */
 const TINT_TONES: Record<TimelineTone, string> = {
-  neutral: badgeIntents.neutral,
-  brand: badgeIntents.brand,
-  success: badgeIntents.success,
-  warning: badgeIntents.warning,
-  danger: badgeIntents.danger,
-  muted: badgeIntents.outline,
+  neutral: "border-quebi-hairline bg-quebi-raised text-quebi-fg",
+  brand: "border-quebi-action bg-quebi-action text-quebi-on-action",
+  success: "border-quebi-success/20 bg-quebi-success/10 text-quebi-success",
+  warning: "border-quebi-warn/20 bg-quebi-warn/10 text-quebi-warn",
+  danger: "border-quebi-danger/20 bg-quebi-danger/10 text-quebi-danger",
+  muted: "border-quebi-hairline bg-transparent text-quebi-fg-subtle",
 }
 
 // ---------------------------------------------------------------------------
@@ -852,7 +860,7 @@ export function Timeline({
       <div
         data-slot="timeline-empty"
         className={cn(
-          "rounded-quebi-md border border-dashed border-quebi-line/20 px-4 py-6 text-center text-sm text-quebi-fg-muted",
+          "border border-dashed border-quebi-hairline px-4 py-6 text-center text-quebi-body-s text-quebi-fg-muted",
           className,
         )}
       >
@@ -923,7 +931,7 @@ export function Timeline({
             tabIndex={0}
             role="region"
             aria-label={props["aria-label"] ?? "Timeline"}
-            className="snap-x snap-proximity pb-3 focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset"
+            className="snap-x snap-proximity pb-3 focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset"
           >
             {list}
           </ScrollArea>
@@ -1049,8 +1057,8 @@ export function TimelineItem({
               data-slot="timeline-connector"
               data-connector={line}
               className={cn(
-                "flex-1 border-quebi-line/25",
-                vertical ? "my-1 min-h-3 w-0 border-s-2" : "mx-1 h-0 min-w-3 border-t-2",
+                "flex-1 border-quebi-hairline",
+                vertical ? "my-1 min-h-3 w-0 border-s" : "mx-1 h-0 min-w-3 border-t",
                 line === "dashed" && "border-dashed",
                 line === "none" && "border-transparent",
                 slot.trailing &&
@@ -1065,7 +1073,7 @@ export function TimelineItem({
           <div
             data-slot="timeline-time-cell"
             className={cn(
-              "text-sm/5 text-quebi-fg-muted tabular-nums",
+              "font-mono text-xs/5 text-quebi-fg-subtle tabular-nums",
               vertical && DISC_OFFSET,
               layout.time,
             )}
@@ -1088,8 +1096,7 @@ export function TimelineItem({
             <div
               data-slot="timeline-time-cell"
               className={cn(
-                "text-quebi-fg-subtle tabular-nums",
-                compact ? "text-xs/5" : "text-xs/5 font-medium",
+                "font-mono text-xs/5 text-quebi-fg-subtle tabular-nums",
               )}
             >
               {timeNode}
@@ -1162,7 +1169,7 @@ export function TimelineMarker({
     ) : kind === "icon" || kind === "number" ? (
       <span
         className={cn(
-          "flex items-center justify-center rounded-full border font-semibold tabular-nums",
+          "flex items-center justify-center rounded-full border font-mono tabular-nums",
           DISC_SIZES[size],
           TINT_TONES[tone],
         )}
@@ -1174,7 +1181,7 @@ export function TimelineMarker({
         className={cn(
           "block rounded-full forced-colors:outline forced-colors:outline-1",
           DOT_SIZES[size],
-          kind === "ring" ? ["border-2 bg-quebi-bg", RING_TONES[tone]] : DOT_TONES[tone],
+          kind === "ring" ? ["border bg-quebi-bg", RING_TONES[tone]] : DOT_TONES[tone],
         )}
       />
     )
@@ -1257,7 +1264,7 @@ export function TimelineTitle({ href, className, children, ...props }: TimelineT
     <div
       {...props}
       data-slot="timeline-title"
-      className={cn("text-sm/5 font-medium text-quebi-fg", className)}
+      className={cn("font-display text-base/5 font-light tracking-wide text-quebi-fg", className)}
     >
       {href ? (
         <Link href={href} className="no-underline hover:underline">
@@ -1275,7 +1282,7 @@ export function TimelineDescription({ className, ...props }: React.ComponentProp
     <p
       {...props}
       data-slot="timeline-description"
-      className={cn("text-sm text-quebi-fg-muted", className)}
+      className={cn("text-quebi-body-s text-quebi-fg-muted", className)}
     />
   )
 }
@@ -1287,7 +1294,7 @@ export function TimelineMeta({ className, ...props }: React.ComponentProps<"div"
       {...props}
       data-slot="timeline-meta"
       className={cn(
-        "flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-quebi-fg-subtle",
+        "flex flex-wrap items-center gap-x-2 gap-y-1 text-quebi-caption text-quebi-fg-subtle",
         FLEX_ALIGN,
         className,
       )}
@@ -1344,13 +1351,13 @@ export function TimelineNow({ label, date, time, children, ...props }: TimelineN
       marker={
         <span
           className={cn(
-            "rounded-full bg-quebi-brand",
+            "bg-quebi-action",
             vertical ? "h-0.5 w-5" : "h-5 w-0.5",
           )}
         />
       }
     >
-      <span className="quebi-eyebrow text-quebi-brand-text">{label ?? context.labels.now}</span>
+      <span className="quebi-eyebrow text-quebi-fg">{label ?? context.labels.now}</span>
       {children}
     </TimelineItem>
   )
@@ -1581,7 +1588,7 @@ function ProportionalTimeline({
         tabIndex={0}
         role="region"
         aria-label={props["aria-label"] ?? "Timeline"}
-        className="pb-3 focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset"
+        className="pb-3 focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset"
       >
         {/* The bottom padding is the "Now" label's row, clear of the tick labels. */}
         <div className={cn("relative", nowX !== null && "pb-6")} style={{ width }}>
@@ -1589,7 +1596,7 @@ function ProportionalTimeline({
             {ticks.map((tick) => (
               <span
                 key={tick.key}
-                className="absolute top-6 bottom-0 border-s border-quebi-line/10"
+                className="absolute top-6 bottom-0 border-s border-quebi-hairline"
                 style={{ insetInlineStart: tick.x }}
               />
             ))}
@@ -1599,17 +1606,17 @@ function ProportionalTimeline({
                 <span
                   key={s.from}
                   data-slot="timeline-break"
-                  className="absolute top-0 bottom-0 border-x border-dashed border-quebi-line/25 bg-quebi-surface/[0.03]"
+                  className="absolute top-0 bottom-0 border-x border-dashed border-quebi-hairline"
                   style={{ insetInlineStart: s.x + 6, width: s.width - 12 }}
                 />
               ))}
             {nowX !== null ? (
               <span
                 data-slot="timeline-now-line"
-                className="absolute top-0 bottom-0 border-s-2 border-quebi-brand-mark"
+                className="absolute top-0 bottom-0 border-s-2 border-quebi-rule"
                 style={{ insetInlineStart: nowX }}
               >
-                <span className="quebi-eyebrow absolute bottom-0 ms-1.5 text-quebi-brand-text">
+                <span className="quebi-eyebrow absolute bottom-0 ms-1.5 text-quebi-fg">
                   {context.labels.now}
                 </span>
               </span>
@@ -1618,12 +1625,12 @@ function ProportionalTimeline({
           <div
             aria-hidden="true"
             data-slot="timeline-ticks"
-            className="relative h-6 border-b border-quebi-line/20"
+            className="relative h-6 border-b border-quebi-hairline"
           >
             {ticks.map((tick) => (
               <span
                 key={tick.key}
-                className="absolute bottom-1 ps-1 text-xs whitespace-nowrap text-quebi-fg-subtle tabular-nums"
+                className="absolute bottom-1 ps-1 font-mono text-xs whitespace-nowrap text-quebi-fg-subtle tabular-nums"
                 style={{ insetInlineStart: tick.x }}
               >
                 {tick.label}
@@ -1685,7 +1692,7 @@ function ProportionalItem({
           <span
             data-slot="timeline-bar"
             className={cn(
-              "h-2 rounded-full",
+              "h-2",
               DOT_TONES[tone],
               props.end === "present" && "mask-r-from-60%",
             )}
@@ -1696,7 +1703,7 @@ function ProportionalItem({
         )}
       </span>
       <span className="flex min-w-0 flex-col gap-0.5 pe-3">
-        <span className="text-xs text-quebi-fg-subtle tabular-nums">
+        <span className="font-mono text-xs text-quebi-fg-subtle tabular-nums">
           {props.time ?? <TimelineTime date={props.date} start={props.start} end={props.end} />}
         </span>
         {props.children}

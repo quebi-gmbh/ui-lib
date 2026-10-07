@@ -11,7 +11,7 @@ export const showMoreOgScene: OgScene = {
         to xl.
       </p>
       <div className="mt-6">
-        <ShowMore>Show more</ShowMore>
+        <ShowMore>show more</ShowMore>
       </div>
     </div>
   ),

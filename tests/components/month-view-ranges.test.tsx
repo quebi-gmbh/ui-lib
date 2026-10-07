@@ -324,7 +324,7 @@ describe("the carousel's peeking months", () => {
     const [leading, trailing] = veils(container)
     expect(veils(container)).toHaveLength(2)
 
-    // Two blur layers and a dimming gradient, each masked from the outer edge
+    // Two blur layers and a dimming layer, each masked from the outer edge
     // inwards — and mirrored, so both ends blur away from the window.
     const layers = (veil: HTMLElement) =>
       Array.from(veil.children).map((layer) => layer.className)
@@ -333,14 +333,14 @@ describe("the carousel's peeking months", () => {
     expect(leadingFar).toContain("backdrop-blur-xs")
     expect(leadingNear).toContain("mask-r-from-0% mask-r-to-100%")
     expect(leadingFar).toContain("mask-r-from-0% mask-r-to-50%")
-    expect(leadingDim).toContain("bg-gradient-to-l from-transparent to-quebi-bg/70")
+    expect(leadingDim).toContain("mask-r-from-0% mask-r-to-100%")
 
     const [trailingNear, trailingFar, trailingDim] = layers(trailing as HTMLElement)
     expect(trailingNear).toContain("backdrop-blur-xs")
     expect(trailingFar).toContain("backdrop-blur-xs")
     expect(trailingNear).toContain("mask-l-from-0% mask-l-to-100%")
     expect(trailingFar).toContain("mask-l-from-0% mask-l-to-50%")
-    expect(trailingDim).toContain("bg-gradient-to-r from-transparent to-quebi-bg/70")
+    expect(trailingDim).toContain("mask-l-from-0% mask-l-to-100%")
 
     // Hovering eases the veil rather than clearing it: the compounding blur
     // goes — eight pixels at the outer edge become four, on the same ramp —

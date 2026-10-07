@@ -1,7 +1,3 @@
-import { Link } from "react-router"
-import { FileCode } from "lucide-react"
-import { Badge } from "@/components/badge"
-import { Card, CardDescription, CardTitle } from "@/components/card"
 import { CodeBlock } from "@/site/code-block"
 import { ProseLink } from "@/site/prose-link"
 import {
@@ -31,17 +27,27 @@ export function meta() {
   })
 }
 
+/** The section head the design repeats: a display-s heading, a mono number on the right. */
+function SectionHead({ title, count }: { title: string; count: string }) {
+  return (
+    <div className="mb-5 flex items-end justify-between gap-4">
+      <h2 className="font-display text-quebi-display-s text-quebi-fg">{title}</h2>
+      <span className="quebi-eyebrow">{count}</span>
+    </div>
+  )
+}
+
 export default function RulesEnforcement() {
   const plugins = pluginRules(rulesRegistry)
   const builtIns = builtInRules(rulesRegistry)
 
   return (
     <div>
-      <span className="quebi-eyebrow">Enforcement</span>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-quebi-fg sm:text-4xl">
-        Run the rules, don't just read them
+      <p className="quebi-eyebrow">enforcement — biome</p>
+      <h1 className="mt-3 font-display text-quebi-display-l text-quebi-fg">
+        run the rules, don't just read them.
       </h1>
-      <p className="mt-4 max-w-quebi-content text-base leading-relaxed text-quebi-fg-muted">
+      <p className="mt-5 max-w-[60ch] text-quebi-body text-quebi-fg-muted">
         All {rulesRegistry.length} rules as one Biome setup, exceptions included. It is rebuilt from
         the rules whenever they change, so re-download it rather than maintaining a copy by hand —
         that way a rule we sharpen reaches your CI. Enforcing one rule at a time? Each rule's page
@@ -49,7 +55,7 @@ export default function RulesEnforcement() {
         all.
       </p>
 
-      <Note intent="info" className="mt-6">
+      <Note intent="info" className="mt-quebi-8 max-w-quebi-content">
         Nothing to install from us beyond Biome itself, which parses TSX with no parser to configure.
         These keys are a fragment to merge: the config says nothing about Biome's{" "}
         <Code>recommended</Code> rules, so dropping it in cannot silently change what else your
@@ -57,19 +63,19 @@ export default function RulesEnforcement() {
         with <Code>overrides</Code>, or drop an entry you disagree with.
       </Note>
 
-      <section className="mt-12">
-        <h2 className="text-lg font-semibold text-quebi-fg">Wire it up</h2>
-        <div className="mt-4">
+      <section className="mt-quebi-10">
+        <SectionHead title="wire it up" count="01" />
+        <div>
           <CodeBlock html={biomeSetupHighlighted} code={biomeSetupSource} />
         </div>
       </section>
 
-      <section className="mt-12">
-        <h2 className="text-lg font-semibold text-quebi-fg">How Biome carries each rule</h2>
-        <p className="mt-1 max-w-quebi-content text-sm leading-relaxed text-quebi-fg-muted">
+      <section className="mt-quebi-10">
+        <SectionHead title="how biome carries each rule" count="02" />
+        <p className="max-w-[60ch] text-quebi-body-s text-quebi-fg-muted">
           Two mechanisms, and the difference decides how a rule's documented exceptions are applied.
         </p>
-        <DescriptionList className="mt-4">
+        <DescriptionList className="mt-5">
           <DescriptionTerm>Built-in rules</DescriptionTerm>
           <DescriptionDetails>
             {builtIns.map((rule) => (
@@ -98,9 +104,8 @@ export default function RulesEnforcement() {
                   </ProseLink>{" "}
                   <UiLink
                     href={`/api/rules/plugins/${rule.id}.grit`}
-                    className="inline-flex items-center gap-1 text-xs"
+                    className="font-mono text-quebi-caption"
                   >
-                    <FileCode className="h-3.5 w-3.5" />
                     {rule.id}.grit
                   </UiLink>
                 </li>
@@ -118,37 +123,25 @@ export default function RulesEnforcement() {
         </DescriptionList>
       </section>
 
-      <section className="mt-12">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-semibold text-quebi-fg">
-            biome.jsonc — all {rulesRegistry.length} rules
-          </h2>
-          <UiLink
-            href="/api/rules/biome.jsonc"
-            className="inline-flex items-center gap-1.5 text-sm font-medium"
-          >
-            <FileCode className="h-4 w-4" />
-            /api/rules/biome.jsonc
-          </UiLink>
-        </div>
-        <div className="mt-4">
+      <section className="mt-quebi-10">
+        <SectionHead title={`biome.jsonc — all ${rulesRegistry.length} rules`} count="03" />
+        <UiLink href="/api/rules/biome.jsonc" className="font-mono text-quebi-code">
+          /api/rules/biome.jsonc
+        </UiLink>
+        <div className="mt-5">
           <CodeBlock html={biomeConfigHighlighted} code={biomeConfigSource} />
         </div>
       </section>
 
-      <section className="mt-12">
-        <Link to="/rules" className="group block">
-          <Card interactive>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge intent="brand">{rulesRegistry.length} rules</Badge>
-            </div>
-            <CardTitle className="mt-3">Back to the rules</CardTitle>
-            <CardDescription className="mt-2">
-              Every rule names what to import instead of what it forbids, shows a real wrong/right
-              pair, and lists the exceptions this config applies.
-            </CardDescription>
-          </Card>
-        </Link>
+      <section className="mt-quebi-10 border-quebi-rule border-t pt-6">
+        <p className="quebi-eyebrow">{rulesRegistry.length} rules</p>
+        <p className="mt-3 max-w-[60ch] text-quebi-body-s text-quebi-fg-muted">
+          Every rule names what to import instead of what it forbids, shows a real wrong/right
+          pair, and lists the exceptions this config applies.
+        </p>
+        <ProseLink to="/rules" className="mt-5 inline-block font-display text-quebi-link">
+          back to the rules →
+        </ProseLink>
       </section>
     </div>
   )

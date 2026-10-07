@@ -36,7 +36,7 @@ const OpeningForm = () => {
         description="Submitted through a hidden input — a named TimeField submits nothing on its own."
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

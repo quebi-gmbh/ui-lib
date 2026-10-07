@@ -35,7 +35,7 @@ const ColorForm = () => {
         description="Choose your brand's primary color."
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )
@@ -66,7 +66,7 @@ const PrefilledColorForm = () => {
     >
       <ConformColorPicker field={fields.accent} label="Accent color" />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

@@ -38,7 +38,7 @@ const StayForm = () => {
         description="Submitted as stay.start and stay.end."
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

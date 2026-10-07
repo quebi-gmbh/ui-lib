@@ -110,7 +110,7 @@ export const tagFieldExamples: ComponentExample[] = [
               placeholder="Add a channel…"
               aria-label="Channels"
             />
-            <p className="text-[12px] text-quebi-fg-muted">{count} selected</p>
+            <p className="text-quebi-caption text-quebi-fg-subtle">{count} selected</p>
           </div>
         )
       }

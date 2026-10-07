@@ -11,7 +11,7 @@ const ArrowIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -25,26 +25,23 @@ export const linkButtonExamples: ComponentExample[] = [
   {
     title: "Intents",
     description:
-      "Looks like a Button, navigates like a link. Six intents share the Button's quebi styling.",
+      "Looks like a Button, navigates like a link. Five intents share the Button's quebi styling.",
     render: () => (
       <Row>
         <LinkButton href="#" intent="primary">
-          Get started
+          get started
         </LinkButton>
         <LinkButton href="#" intent="secondary">
-          Preview
+          preview
         </LinkButton>
         <LinkButton href="#" intent="outline">
-          Docs
+          docs
         </LinkButton>
         <LinkButton href="#" intent="ghost">
-          Learn more
-        </LinkButton>
-        <LinkButton href="#" intent="accent">
-          Highlight
+          learn more
         </LinkButton>
         <LinkButton href="#" intent="danger">
-          Leave
+          leave
         </LinkButton>
       </Row>
     ),
@@ -54,19 +51,19 @@ export const linkButtonExamples: ComponentExample[] = [
     render: () => (
       <Row>
         <LinkButton href="#" size="xs">
-          Extra small
+          extra small
         </LinkButton>
         <LinkButton href="#" size="sm">
-          Small
+          small
         </LinkButton>
         <LinkButton href="#" size="md">
-          Default
+          default
         </LinkButton>
         <LinkButton href="#" size="lg">
-          Large
+          large
         </LinkButton>
         <LinkButton href="#" size="xl">
-          Extra large
+          extra large
         </LinkButton>
       </Row>
     ),
@@ -76,11 +73,11 @@ export const linkButtonExamples: ComponentExample[] = [
     render: () => (
       <Row>
         <LinkButton href="#" intent="primary">
-          Continue
+          continue
           <ArrowIcon />
         </LinkButton>
         <LinkButton href="#" intent="outline">
-          View pricing
+          view pricing
           <ArrowIcon />
         </LinkButton>
       </Row>
@@ -91,10 +88,10 @@ export const linkButtonExamples: ComponentExample[] = [
     render: () => (
       <Row>
         <LinkButton href="#" intent="primary" isDisabled>
-          Disabled
+          disabled
         </LinkButton>
         <LinkButton href="#" intent="outline" isDisabled>
-          Disabled
+          disabled
         </LinkButton>
       </Row>
     ),

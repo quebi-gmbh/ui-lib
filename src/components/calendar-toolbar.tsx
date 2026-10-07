@@ -47,7 +47,7 @@ import { cn } from "@/lib/utils"
  * than no box. The group survives any subset, because `ButtonGroup` squares the
  * inner corners off `:first-child` / `:last-child` rather than off a fixed count,
  * so `‹ ›` with no today button and a lone `Today` with no chevrons both come out
- * as one properly rounded control.
+ * as one control.
  *
  * When the heading is a picker it is a button, so it joins that group rather
  * than standing beside it: one bar reading `[‹][21. September 2026 ⌄][Today][›]`
@@ -625,7 +625,7 @@ export function CalendarToolbar({
               ref={staticLabelRef}
               style={staticLabelStyle}
               data-slot="calendar-toolbar-label"
-              className="truncate font-semibold text-base text-quebi-fg tracking-tight"
+              className="truncate font-display font-light text-base text-quebi-fg"
             >
               {label}
             </span>
@@ -764,7 +764,7 @@ interface DateControlsProps {
  * in the popover they are a row of their own under the grid. `ButtonGroup`
  * squares its inner corners off `:first-child` / `:last-child` rather than off a
  * fixed count, so any subset — with or without a heading among them — still
- * comes out as one properly rounded control.
+ * comes out as one control.
  *
  * Back comes before the heading because the two chevrons are then the ends of
  * the bar, and everything between them is what they move: the date you are
@@ -988,7 +988,7 @@ function CalendarToolbarPicker({
         // growing past its container — the heading is the only segment in the
         // bar whose width is a sentence, so it is the one that has to give
         // (task #208).
-        className="min-w-0 py-1.5 font-semibold text-base tracking-tight"
+        className="min-w-0 py-1.5 font-display font-light text-base"
       >
         {/* The one segment in the bar whose width is a sentence, and the
             sentence changes on every press. Left to size itself, it took 40px
@@ -1078,7 +1078,7 @@ function CalendarToolbarPicker({
           />
         )}
         {onPrevious || onToday || onNext ? (
-          <div className="mt-3 flex justify-center border-quebi-line/10 border-t pt-3">
+          <div className="mt-3 flex justify-center border-quebi-hairline border-t pt-3">
             <ButtonGroup aria-label={navigationLabel}>
               <DateControls
                 layout={navigationLayout}

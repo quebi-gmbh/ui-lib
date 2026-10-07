@@ -11,9 +11,9 @@ import { cn } from "@/lib/utils"
  * ColorThumb — quebi design system
  *
  * The draggable handle inside a ColorArea or a ColorWheel. Built on
- * react-aria-components. The thumb's ring and border use quebi tokens; its fill
- * is the picked color (user data) and is left untouched. Focus grows the thumb
- * and adds the quebi teal ring; dragging keeps the picked color visible.
+ * react-aria-components. Round by nature: a white border so the picked color
+ * (user data, left untouched) reads on any field, inside a rule-coloured ring.
+ * Focus grows the thumb and swaps the ring for the focus ink.
  *
  * It is a slot, not only a fixture: `ColorArea` renders its `children` and falls
  * back to this thumb, so styling the handle means passing one of these with a
@@ -31,9 +31,9 @@ export function ColorThumb({ className, ...props }: ColorThumbProps) {
       className={composeRenderProps(className, (resolved) =>
         cn(
           "top-[50%] left-[50%] size-6 rounded-full border-2 border-white",
-          "shadow-quebi-glow ring-1 ring-quebi-line/30",
+          "ring-1 ring-quebi-rule",
           "transition-[width,height] duration-150",
-          "focus-visible:size-8 focus-visible:ring-2 focus-visible:ring-quebi-brand-mark",
+          "focus-visible:size-8 focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-0",
           "disabled:opacity-50 disabled:forced-colors:border-[GrayText] disabled:forced-colors:bg-[GrayText]",
           "forced-colors:border-[ButtonBorder]",
           resolved,

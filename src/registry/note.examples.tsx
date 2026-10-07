@@ -35,11 +35,11 @@ export const noteExamples: ComponentExample[] = [
     description: "A bold heading sits above the body content.",
     render: () => (
       <Column>
-        <Note intent="info" title="Centrally managed">
+        <Note intent="info" title="centrally managed">
           Carriers, devices and plans flow from the catalog. Edits here apply to your storefront
           only.
         </Note>
-        <Note intent="danger" title="Couldn't publish">
+        <Note intent="danger" title="couldn't publish">
           Three plans failed validation. Fix the highlighted prices and publish again.
         </Note>
       </Column>
@@ -64,7 +64,7 @@ export const noteExamples: ComponentExample[] = [
     description: "Bodies accept inline markup like links and emphasis.",
     render: () => (
       <Column>
-        <Note intent="warning" title="Action needed">
+        <Note intent="warning" title="action needed">
           <strong>VAT rate changed.</strong> Review affected plans in{" "}
           <Link href="#settings">billing settings</Link> before your next publish.
         </Note>

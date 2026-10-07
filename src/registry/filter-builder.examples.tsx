@@ -50,15 +50,15 @@ function useKiosks(initial: FilterCondition[] = []) {
 function Results({ rows }: { rows: Kiosk[] }) {
   return (
     <div className="flex flex-col gap-2">
-      <Text className="text-quebi-fg-subtle text-xs">
+      <Text className="text-quebi-caption text-quebi-fg-subtle">
         <FormattedNumber value={rows.length} /> of <FormattedNumber value={KIOSKS.length} /> kiosks
       </Text>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {rows.map((row) => (
           <Card key={row.id}>
             <CardContent className="flex flex-col items-start gap-1 p-3">
-              <span className="font-medium text-quebi-fg text-sm">{row.title}</span>
-              <span className="text-quebi-fg-subtle text-xs">{row.room}</span>
+              <span className="font-medium text-quebi-fg text-quebi-body-s">{row.title}</span>
+              <span className="text-quebi-caption text-quebi-fg-subtle">{row.room}</span>
               <Badge intent={row.status === "live" ? "success" : "neutral"}>{row.status}</Badge>
             </CardContent>
           </Card>
@@ -135,7 +135,7 @@ function AsAQuery() {
       />
       <Card>
         <CardContent className="p-3">
-          <code className="break-all text-quebi-fg-muted text-xs">
+          <code className="break-all text-quebi-caption text-quebi-fg-muted">
             {params === "" ? "/kiosks" : `/kiosks?${params}`}
           </code>
         </CardContent>

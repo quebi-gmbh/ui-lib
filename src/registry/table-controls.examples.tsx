@@ -212,7 +212,7 @@ const Filters = () => {
         }
       />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-quebi-md border border-quebi-line/10">
+        <div className="border border-quebi-hairline">
           <TableFilterPanel
             columnId="status"
             label="Status"
@@ -223,7 +223,7 @@ const Filters = () => {
             onClear={() => apply("status", undefined, undefined)}
           />
         </div>
-        <div className="rounded-quebi-md border border-quebi-line/10">
+        <div className="border border-quebi-hairline">
           <TableFilterPanel
             columnId="amount"
             label="Amount"
@@ -234,7 +234,7 @@ const Filters = () => {
             onClear={() => apply("amount", undefined, undefined)}
           />
         </div>
-        <div className="rounded-quebi-md border border-quebi-line/10">
+        <div className="border border-quebi-hairline">
           <TableFilterPanel
             columnId="date"
             label="Date"
@@ -295,7 +295,7 @@ const PagerAndSelection = () => {
         onClear={() => setSelection(emptySelection)}
       >
         <Button intent="ghost" size="xs">
-          Export selected
+          export selected
         </Button>
       </TableBulkBar>
       {/*
@@ -314,7 +314,7 @@ const PagerAndSelection = () => {
           >
             Select this page
           </Checkbox>
-          <span className="ms-auto text-quebi-fg-muted text-sm">
+          <span className="ms-auto text-quebi-body-s text-quebi-fg-muted">
             <FormattedNumber value={selectedOnPage.length} /> of{" "}
             <FormattedNumber value={rowsOnPage} /> on this page
           </span>
@@ -334,7 +334,7 @@ const PagerAndSelection = () => {
                   )
                 }
               >
-                <span className="flex min-w-0 flex-1 items-baseline justify-between gap-3 text-sm">
+                <span className="flex min-w-0 flex-1 items-baseline justify-between gap-3 text-quebi-body-s">
                   <span className="truncate">{order.reference}</span>
                   <Money value={order.amount} />
                 </span>

@@ -14,8 +14,8 @@ export default function RulesLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <div className="quebi-shell py-12">
-      <div className="lg:grid lg:grid-cols-[16rem_1fr] lg:gap-10">
+    <div className="quebi-shell pt-quebi-8 pb-quebi-10">
+      <div className="lg:grid lg:grid-cols-[15rem_1fr] lg:gap-12">
         <Button
           intent="outline"
           size="sm"
@@ -28,7 +28,7 @@ export default function RulesLayout() {
           ) : (
             <Menu data-slot="icon" aria-hidden />
           )}
-          Rules
+          rules
         </Button>
 
         <aside

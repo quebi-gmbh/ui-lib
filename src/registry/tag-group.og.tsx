@@ -1,7 +1,7 @@
 import { Tag, TagGroup, TagList } from "@/components/tag-group"
 import type { OgScene } from "./types"
 
-/** Four static pills. */
+/** Four static tags. */
 export const tagGroupOgScene: OgScene = {
   scale: 2,
   render: () => (

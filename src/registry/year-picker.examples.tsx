@@ -21,7 +21,7 @@ export const yearPickerExamples: ComponentExample[] = [
   {
     title: "Default",
     description:
-      "One calendar decade per page, with the year either side dimmed in place. The current year is ringed in brand teal.",
+      "One calendar decade per page, with the year either side dimmed in place. The current year is ringed in ink.",
     render: () => <YearPicker aria-label="Year" />,
   },
   {

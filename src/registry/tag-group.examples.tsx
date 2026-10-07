@@ -6,7 +6,7 @@ import type { ComponentExample } from "./types"
 export const tagGroupExamples: ComponentExample[] = [
   {
     title: "Default",
-    description: "A simple set of static tag pills.",
+    description: "A simple set of static tags.",
     render: () => (
       <TagGroup aria-label="Technologies">
         <TagList>
@@ -20,13 +20,13 @@ export const tagGroupExamples: ComponentExample[] = [
   },
   {
     title: "Selection",
-    description: "Single-select tags; the active tag fills with brand teal.",
+    description: "Single-select tags; the active tag takes the ink fill.",
     render: () => (
       <TagGroup aria-label="Filter" selectionMode="single" defaultSelectedKeys={["all"]}>
         <TagList>
-          <Tag id="all">All</Tag>
-          <Tag id="active">Active</Tag>
-          <Tag id="archived">Archived</Tag>
+          <Tag id="all">all</Tag>
+          <Tag id="active">active</Tag>
+          <Tag id="archived">archived</Tag>
         </TagList>
       </TagGroup>
     ),
@@ -37,9 +37,9 @@ export const tagGroupExamples: ComponentExample[] = [
     render: () => {
       const RemovableExample = () => {
         const [items, setItems] = useState([
-          { id: "design", name: "Design" },
-          { id: "eng", name: "Engineering" },
-          { id: "product", name: "Product" },
+          { id: "design", name: "design" },
+          { id: "eng", name: "engineering" },
+          { id: "product", name: "product" },
         ])
         return (
           <TagGroup
@@ -82,9 +82,9 @@ export const tagGroupExamples: ComponentExample[] = [
     render: () => (
       <TagGroup aria-label="Statuses" selectionMode="single" disabledKeys={["pending"]}>
         <TagList>
-          <Tag id="ready">Ready</Tag>
-          <Tag id="pending">Pending</Tag>
-          <Tag id="done">Done</Tag>
+          <Tag id="ready">ready</Tag>
+          <Tag id="pending">pending</Tag>
+          <Tag id="done">done</Tag>
         </TagList>
       </TagGroup>
     ),

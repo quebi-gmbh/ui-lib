@@ -145,9 +145,9 @@ function matchable(selector: string): string {
 }
 
 describe("hover cannot apply to a focused field", () => {
-  const GUARDED = "enabled:not-focus:hover:border-quebi-line/40"
-  const UNGUARDED = "enabled:hover:border-quebi-line/40"
-  const FOCUS_BORDER = "focus:border-quebi-brand"
+  const GUARDED = "enabled:not-focus:hover:border-quebi-rule"
+  const UNGUARDED = "enabled:hover:border-quebi-rule"
+  const FOCUS_BORDER = "focus:border-quebi-action"
   const FOCUSED_AND_HOVERED = { "data-focused": "true", "data-hovered": "true" }
 
   test("the shape that shipped applies to a focused, hovered field", async () => {
@@ -180,7 +180,7 @@ describe("hover cannot apply to a focused field", () => {
   })
 
   test("the same holds for focus-within", async () => {
-    const within = "not-focus-within:hover:border-quebi-line/40"
+    const within = "not-focus-within:hover:border-quebi-rule"
     const selector = matchable((await selectorFor([within]))[within])
 
     const inside = field([within], { "data-focus-within": "true", "data-hovered": "true" })
@@ -189,7 +189,7 @@ describe("hover cannot apply to a focused field", () => {
   })
 
   test("and for the open state, which Select's trigger holds the brand border in", async () => {
-    const open = "not-group-open/select:hover:border-quebi-line/40"
+    const open = "not-group-open/select:hover:border-quebi-rule"
     const { [open]: selector } = await selectorFor([open])
 
     // Asserted on the selector rather than through `matches`: happy-dom cannot

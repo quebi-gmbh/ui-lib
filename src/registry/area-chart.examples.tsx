@@ -35,7 +35,7 @@ export const areaChartExamples: ComponentExample[] = [
   {
     title: "Default",
     description:
-      "Two teal-led series with gradient fills, an interactive legend, and a themed tooltip.",
+      "Two ink series with flat translucent fills, an interactive legend, and a themed tooltip.",
     render: () => (
       <AreaChart
         config={config}
@@ -102,7 +102,7 @@ export const areaChartExamples: ComponentExample[] = [
             travellerWidth={8}
             startIndex={2}
             endIndex={9}
-            stroke="var(--color-quebi-brand)"
+            stroke="var(--color-quebi-action)"
             fill="var(--color-quebi-bg)"
           />
         }

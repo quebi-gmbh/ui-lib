@@ -1,5 +1,5 @@
-import { tv, type VariantProps } from "tailwind-variants"
-import { cn } from "@/lib/utils"
+import type { VariantProps } from "tailwind-variants"
+import { cn, tv } from "@/lib/utils"
 
 /**
  * EnergyClassBadge — EU energy-efficiency class chip (A–G).
@@ -7,14 +7,16 @@ import { cn } from "@/lib/utils"
  * Renders the class letter on the official EU energy-label colour for that band
  * (A dark-green → G red). These per-band colours are *domain-semantic* (they ARE
  * the EU label scale, not quebi brand tokens) so they're kept as explicit values.
- * The chip itself is styled with quebi conventions (rounded-quebi-sm radius,
- * font-sans, neutral fallback on quebi tokens).
+ * They are the one place this library keeps a hue outside the state tokens: the
+ * colour is the content. The chip itself follows the system — square, Inter
+ * 500, and a plain raised fallback with a hairline.
  *
  * The letter is always rendered as text, so colour is never the sole signal
  * (WCAG 1.4.1); pass a localised `aria-label` for a fuller screen-reader
  * description ("Energy efficiency class A"). Per-band text colour is fixed
- * (`text-quebi-fg` / `text-black`) so each chip keeps ≥ 3:1 contrast against its
- * fill in any theme.
+ * (`text-white` / `text-black`) so each chip keeps ≥ 3:1 contrast against its
+ * fill in any theme — a theme token would flip to ink in Daylight and sink
+ * into the dark green and red.
  *
  * Unknown / legacy values (e.g. "A+", "A+++") fall back to a neutral quebi chip
  * showing the raw text, so nothing is ever silently dropped.
@@ -23,20 +25,20 @@ const KNOWN_CLASSES = ["A", "B", "C", "D", "E", "F", "G"] as const
 type EnergyClassLetter = (typeof KNOWN_CLASSES)[number]
 
 export const energyClassBadgeStyles = tv({
-  base: "inline-flex items-center justify-center rounded-quebi-sm font-sans font-bold leading-none tracking-tight",
+  base: "inline-flex items-center justify-center font-sans font-medium leading-none tracking-tight",
   variants: {
     // Official EU energy-label scale (dark-green A → red G). White text on the
     // dark ends (A, G), black on the bright middle bands keeps every chip ≥ 3:1
     // against its fill (large/graphical-object budget).
     band: {
-      A: "bg-[#00843d] text-quebi-fg",
+      A: "bg-[#00843d] text-white",
       B: "bg-[#4caf30] text-black",
       C: "bg-[#bccf00] text-black",
       D: "bg-[#fff100] text-black",
       E: "bg-[#fabe00] text-black",
       F: "bg-[#ee7d00] text-black",
-      G: "bg-[#e30613] text-quebi-fg",
-      unknown: "bg-quebi-surface/[0.06] text-quebi-fg-muted border border-quebi-line/10",
+      G: "bg-[#e30613] text-white",
+      unknown: "border border-quebi-hairline bg-quebi-raised text-quebi-fg-muted",
     },
     size: {
       sm: "min-w-[20px] px-1.5 py-0.5 text-[12px]",

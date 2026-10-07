@@ -561,7 +561,7 @@ export function FilterPanel({
       {isLive && liveError && <FieldError>{liveError}</FieldError>}
 
       {!isLive && (
-        <div className="flex items-center gap-2 border-quebi-line/10 border-t pt-3">
+        <div className="flex items-center gap-2 border-quebi-hairline border-t pt-3">
           <Button
             intent="ghost"
             size="xs"
@@ -618,11 +618,11 @@ export function FilterChips({
       {filters.map((filter) => (
         <span
           key={filter.id}
-          className="inline-flex items-center gap-x-1 rounded-full border border-quebi-brand/30 bg-quebi-brand/10 py-0.5 pe-1 ps-2.5 font-medium text-quebi-brand-text text-xs"
+          className="inline-flex items-center gap-x-1 rounded-full bg-quebi-raised py-1 pe-1 ps-3 text-quebi-fg text-quebi-tag"
         >
           <span>
             {filter.label}
-            <span className="text-quebi-brand-text/70"> · {filter.text}</span>
+            <span className="text-quebi-fg-muted"> · {filter.text}</span>
           </span>
           {/*
             The variants are named, not fought with a className (task #187).
@@ -630,14 +630,14 @@ export function FilterChips({
             defaults — `intent="primary"` and `size="md"` — and `size-4` merges
             away only the *size*: `px-5 py-2.5` is a different group, so it
             survived and left a 16px box with 20px of padding a side. The
-            content box collapsed to 0 and the × vanished inside a solid mint
+            content box collapsed to 0 and the × vanished inside a solid
             blob. `ghost` + a square size is the shape this actually wants; the
             className is then only what is particular to a chip — its 16px box,
-            and mint ink instead of the muted default. `isCircle` is a variant
+            and its own hover ground. `isCircle` is a variant
             for the reason button.tsx gives: `rounded-full` in a className loses
-            to `rounded-quebi-sm` on sheet order. The ring loses its offset
-            because a 2px halo in the page colour around a 16px button inside a
-            22px pill paints over the chip's own tint.
+            to `rounded-none` on sheet order. The ring loses its offset
+            because a 3px halo in the page colour around a 16px button inside a
+            pill paints over the chip's own ground.
           */}
           <Button
             intent="ghost"
@@ -645,7 +645,7 @@ export function FilterChips({
             isCircle
             aria-label={`Clear ${filter.label} filter`}
             onPress={() => onClear(filter.id)}
-            className="size-4 shrink-0 text-quebi-brand-text/80 hover:bg-quebi-brand/20 hover:text-quebi-brand-text focus-visible:ring-offset-0"
+            className="size-4 shrink-0 text-quebi-fg-subtle hover:bg-quebi-pressed hover:text-quebi-fg focus-visible:ring-offset-0"
           >
             <X className="size-3" strokeWidth={2.5} aria-hidden="true" />
           </Button>
@@ -927,10 +927,10 @@ export function FilterBar({
                 key={`${field.id}-${resetToken}`}
                 className={cn(
                   "flex flex-col gap-2",
-                  index > 0 && "border-quebi-line/10 border-t pt-4",
+                  index > 0 && "border-quebi-hairline border-t pt-4",
                 )}
               >
-                <span className="font-medium text-quebi-fg text-sm">{field.label}</span>
+                <span className="quebi-eyebrow">{field.label}</span>
                 {panelFor(field, "live")}
               </div>
             ))}

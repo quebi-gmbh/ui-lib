@@ -67,7 +67,7 @@ function nestedCard(comment: string): string {
     "  return (",
     "    <Card>",
     `      ${comment}`,
-    '      <Card className="rounded-lg border bg-[#f00]">x</Card>',
+    '      <Card className="rounded-none border bg-[#f00]">x</Card>',
     "    </Card>",
     "  )",
     "}",

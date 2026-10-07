@@ -3,10 +3,12 @@ import { cn } from "@/lib/utils"
 /**
  * Avatar — quebi design system
  *
- * Renders a user image, falling back to initials on a subtle dark surface.
- * Circular by default, or rounded-square via `isSquare`. The full size scale
- * runs xs → 9xl, driven by a CSS variable so the image and the initials SVG
- * always track the same box. Depth is a faint cyan ring, never a drop shadow.
+ * Renders a user image, falling back to initials in the muted ink on the
+ * raised ground. Circular by default — a face is round by nature — or square
+ * via `isSquare`, which is square, not rounded: the system has no radius
+ * between none and a pill. The full size scale runs xs → 9xl, driven by a CSS
+ * variable so the image and the initials SVG always track the same box. The
+ * edge is a hairline, never a drop shadow.
  */
 export interface AvatarProps {
   src?: string | null
@@ -45,9 +47,9 @@ export function Avatar({
       {...props}
       className={cn(
         "inline-grid size-(--avatar-size) shrink-0 select-none align-middle",
-        "bg-quebi-surface/[0.04] text-quebi-fg-muted",
-        "outline outline-1 -outline-offset-1 outline-quebi-line/20",
-        "[--avatar-radius:25%] *:col-start-1 *:row-start-1 *:size-(--avatar-size)",
+        "bg-quebi-raised text-quebi-fg-muted",
+        "outline outline-1 -outline-offset-1 outline-quebi-hairline",
+        "*:col-start-1 *:row-start-1 *:size-(--avatar-size)",
         size === "xs" && "[--avatar-size:--spacing(5)]",
         size === "sm" && "[--avatar-size:--spacing(6)]",
         size === "md" && "[--avatar-size:--spacing(8)]",
@@ -61,16 +63,14 @@ export function Avatar({
         size === "7xl" && "[--avatar-size:--spacing(32)]",
         size === "8xl" && "[--avatar-size:--spacing(36)]",
         size === "9xl" && "[--avatar-size:--spacing(42)]",
-        isSquare
-          ? "rounded-(--avatar-radius) *:rounded-(--avatar-radius)"
-          : "rounded-full *:rounded-full",
+        isSquare ? "rounded-none *:rounded-none" : "rounded-full *:rounded-full",
         className,
       )}
     >
       {initials &&
         (alt ? (
           <svg
-            className="size-full select-none fill-current p-[5%] text-[48px] font-semibold uppercase"
+            className="size-full select-none fill-current p-[5%] text-[48px] font-medium uppercase"
             viewBox="0 0 100 100"
           >
             <title>{alt}</title>
@@ -87,7 +87,7 @@ export function Avatar({
           </svg>
         ) : (
           <svg
-            className="size-full select-none fill-current p-[5%] text-[48px] font-semibold uppercase"
+            className="size-full select-none fill-current p-[5%] text-[48px] font-medium uppercase"
             viewBox="0 0 100 100"
             aria-hidden="true"
           >

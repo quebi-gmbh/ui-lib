@@ -24,8 +24,8 @@ import {
  *
  * A filled area chart built on the quebi `Chart` recharts wrapper. Renders one
  * area per key in `config`, with an interactive legend, themed tooltip, and a
- * teal-led series palette. Supports stacked / percent stacking and gradient,
- * solid, or no fill. Pass `children` to take full control of the area marks.
+ * ink series palette. Supports stacked / percent stacking and solid (the
+ * default), gradient, or no fill. Pass `children` to take full control of the area marks.
  *
  * Requires the `recharts` npm package as a peer dependency.
  */
@@ -73,7 +73,7 @@ export function AreaChart<TValue extends ValueType, TName extends NameType>({
   connectNulls = false,
   type = "default",
 
-  fillType = "gradient",
+  fillType = "solid",
   config,
   children,
 
@@ -135,14 +135,12 @@ export function AreaChart<TValue extends ValueType, TName extends NameType>({
         >
           {!hideGridLines && <CartesianGrid {...cartesianGridProps} strokeDasharray="3 3" />}
           <XAxis
-            className="text-quebi-fg-muted **:[text]:fill-quebi-fg-muted"
             hide={hideXAxis}
             displayEdgeLabelsOnly={displayEdgeLabelsOnly}
             intervalType={intervalType}
             {...xAxisProps}
           />
           <YAxis
-            className="text-quebi-fg-muted **:[text]:fill-quebi-fg-muted"
             hide={hideYAxis}
             tickFormatter={type === "percent" ? valueToPercent : valueFormatter}
             {...yAxisProps}
@@ -183,7 +181,15 @@ export function AreaChart<TValue extends ValueType, TName extends NameType>({
             ? configEntries.map(([category, values]) => {
                 const categoryId = `${areaId}-${category.replace(slugRegExp, "")}`
                 const strokeOpacity = selectedLegend && selectedLegend !== category ? 0.1 : 1
-                const stopOpacity = selectedLegend && selectedLegend !== category ? 0.1 : 0.5
+                // A solid fill is a flat wash under the line, so it stays light
+                // enough for a second series to read through it; a gradient
+                // fades out on its own and can start darker.
+                const stopOpacity =
+                  selectedLegend && selectedLegend !== category
+                    ? 0.05
+                    : fillType === "gradient"
+                      ? 0.5
+                      : 0.12
                 const color = getColorValue(values.color || categoryColors.get(category))
 
                 return (

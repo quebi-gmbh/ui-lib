@@ -1,7 +1,7 @@
 "use client"
 
-import { tv, type VariantProps } from "tailwind-variants"
-import { cn } from "@/lib/utils"
+import type { VariantProps } from "tailwind-variants"
+import { cn, tv } from "@/lib/utils"
 
 /**
  * ButtonGroup — quebi design system
@@ -67,7 +67,7 @@ export function ButtonGroupText({ className, ...props }: React.ComponentProps<"d
       data-slot="button-group-text"
       className={cn(
         "flex items-center gap-2 whitespace-nowrap",
-        "rounded-quebi-sm border border-quebi-line/10 bg-quebi-surface/[0.03] px-4",
+        "border border-quebi-rule px-4",
         "font-sans text-sm font-medium text-quebi-fg-muted",
         "*:data-[slot=icon]:pointer-events-none *:data-[slot=icon]:shrink-0",
         "[&_[data-slot=icon]:not([class*='size-'])]:size-4",

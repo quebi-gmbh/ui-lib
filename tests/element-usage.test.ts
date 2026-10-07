@@ -88,14 +88,14 @@ const APPEARANCE = "no-appearance-classes-on-layout-elements"
 describe(APPEARANCE, () => {
   test("true positive: a div rebuilding a Card surface", () => {
     const code = component(
-      `    <div className="rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02] p-6">{props.children}</div>`,
+      `    <div className="rounded-none border border-quebi-hairline bg-transparent p-6">{props.children}</div>`,
     )
     expect(fires(APPEARANCE, code)).toBe(true)
   })
 
   test("true positive: the same class list assembled in a cn() call", () => {
     const code = component(
-      `    <div className={cn("rounded-quebi-md border border-quebi-line/10 p-6", props.className)}>{props.children}</div>`,
+      `    <div className={cn("rounded-none border border-quebi-hairline p-6", props.className)}>{props.children}</div>`,
     )
     expect(fires(APPEARANCE, code)).toBe(true)
   })
@@ -125,14 +125,14 @@ describe(APPEARANCE, () => {
   test("known blind spot: a class list built with a template literal is missed", () => {
     const code = component(
       // biome-ignore lint/suspicious/noTemplateCurlyInString: the string is the fixture's source text, not a template literal that lost its backticks — the interpolation is the whole point of the case.
-      "    <div className={`rounded-quebi-md ${props.tone} border border-quebi-line/10`}>{props.children}</div>",
+      "    <div className={`rounded-none ${props.tone} border border-quebi-hairline`}>{props.children}</div>",
     )
     expect(fires(APPEARANCE, code)).toBe(false)
   })
 
   test("known blind spot: the wider policy (bg/shadow/text sizing) is review-only", () => {
     // Documented in the rule: only the radius+border signature is linted.
-    const code = component(`    <div className="bg-quebi-surface p-4 text-lg font-semibold">{props.children}</div>`)
+    const code = component(`    <div className="bg-quebi-surface p-4 text-lg font-medium">{props.children}</div>`)
     expect(fires(APPEARANCE, code)).toBe(false)
   })
 })
@@ -150,7 +150,7 @@ describe(TOKENS, () => {
 
   test("true negative: quebi tokens", () => {
     const code = component(
-      `    <div className="rounded-quebi-md bg-quebi-bg p-4 text-base text-quebi-fg-muted">{props.children}</div>`,
+      `    <div className="rounded-none bg-quebi-bg p-4 text-base text-quebi-fg-muted">{props.children}</div>`,
     )
     expect(fires(TOKENS, code)).toBe(false)
   })
@@ -158,7 +158,7 @@ describe(TOKENS, () => {
   test("no false positive: an arbitrary *opacity* on a token is not a hardcoded value", () => {
     // bg-quebi-surface/[0.02] is a token with a modifier. The selector requires a
     // unit or a hex inside the brackets, which is what keeps this quiet.
-    const code = component(`    <div className="bg-quebi-surface/[0.02] p-4">{props.children}</div>`)
+    const code = component(`    <div className="bg-transparent p-4">{props.children}</div>`)
     expect(fires(TOKENS, code)).toBe(false)
   })
 

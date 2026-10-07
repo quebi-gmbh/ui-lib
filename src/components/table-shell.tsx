@@ -170,9 +170,9 @@ const densityFieldSizing: Record<DataTableDensity, FieldSizing> = {
 }
 
 const densityEditingCell: Record<DataTableDensity, string> = {
-  compact: "px-[3px] py-px",
-  normal: "px-px py-[3px]",
-  comfortable: "px-px py-[7px]",
+  compact: "px-0.75 py-px",
+  normal: "px-px py-0.75",
+  comfortable: "px-px py-1.75",
 }
 
 const alignClass = (align: string | undefined) =>
@@ -578,7 +578,7 @@ function SpanningRow({
   children: ReactNode
 }) {
   return (
-    <Row id={id} className="group border-quebi-line/10 border-b last:border-b-0">
+    <Row id={id} className="group border-quebi-hairline border-b last:border-b-0">
       <Cell colSpan={columnCount} className={cn("outline-hidden", className)}>
         <OutsideTheCollection>{children}</OutsideTheCollection>
       </Cell>
@@ -842,13 +842,13 @@ export function TableShell<T extends RowData>({
                 // firms it up, and the cell is the control only once it opens.
                 canEdit &&
                   !isEditingThisCell &&
-                  "cursor-text underline decoration-quebi-line/50 decoration-dotted underline-offset-4 hover:decoration-quebi-brand-text/70",
+                  "cursor-text underline decoration-quebi-rule decoration-dotted underline-offset-4 hover:decoration-quebi-fg/70",
                 // `align-middle` is the cell's own and is why this does not say
                 // `align-top`: a row is as tall as its tallest cell, so a row
                 // with actions in it is taller than the control, and a control
                 // pinned to the top of one would sit above the text it
                 // replaced. Centred, it lands exactly where the value was.
-                isEditingThisCell && "bg-quebi-brand/5 whitespace-normal",
+                isEditingThisCell && "bg-quebi-raised whitespace-normal",
                 table.getColumn(header.column.id)?.getIsPinned?.() && "bg-quebi-bg",
               )}
               style={pinStyle(header.column.id)}
@@ -955,7 +955,7 @@ export function TableShell<T extends RowData>({
           key={detailKey}
           id={detailKey}
           columnCount={columnCount}
-          className="bg-quebi-surface/[0.02] px-4 py-3"
+          className="bg-quebi-raised px-4 py-3"
         >
           {renderDetail(row.original)}
         </SpanningRow>,
@@ -1014,7 +1014,7 @@ export function TableShell<T extends RowData>({
             // py-3 + TABLE_BAND_HEIGHT + label line + py-3 is exactly the banded
             // header's two rows, so the gate opening does not shift the page.
             <span
-              className="flex items-center text-[0.625rem] text-quebi-fg-subtle leading-none tracking-[0.12em]"
+              className="flex items-center font-mono text-quebi-label uppercase leading-none text-quebi-fg-subtle"
               style={{ height: TABLE_BAND_HEIGHT }}
             >
               {meta?.group ?? "\u00a0"}
@@ -1023,7 +1023,7 @@ export function TableShell<T extends RowData>({
           <span className="inline-flex items-center gap-1">
             {meta?.label ?? column.id}
             {priority != null && sorting.length > 1 && (
-              <span className="grid size-4 place-content-center rounded-full bg-quebi-brand/20 font-semibold text-[10px] text-quebi-brand-text tabular-nums">
+              <span className="grid size-4 place-content-center rounded-full bg-quebi-action font-mono text-quebi-label leading-none text-quebi-on-action tabular-nums">
                 {priority}
               </span>
             )}
@@ -1037,7 +1037,7 @@ export function TableShell<T extends RowData>({
                   size="sq-xs"
                   isCircle
                   aria-label={isFiltered ? `Filter ${meta?.label} (active)` : `Filter ${meta?.label}`}
-                  className={cn("relative", isFiltered && "text-quebi-brand-text")}
+                  className={cn("relative", isFiltered && "text-quebi-fg")}
                 >
                   <Filter data-slot="icon" aria-hidden="true" />
                 </PopoverTrigger>
@@ -1154,7 +1154,7 @@ export function TableShell<T extends RowData>({
               // Two different problems, two different sentences: an empty
               // dataset is a state of the world, an empty result is a state of
               // the filters — and only one of them has a next step.
-              <p className="text-quebi-fg-muted text-sm">
+              <p className="text-quebi-body-s text-quebi-fg-muted">
                 {hasQuery ? noResultsMessage : emptyMessage}
               </p>
             )}
@@ -1181,9 +1181,9 @@ export function TableShell<T extends RowData>({
           <TableLoadMoreItem
             onLoadMore={onLoadMore}
             isLoading={isLoadingMore}
-            className="border-quebi-line/10 border-t"
+            className="border-quebi-hairline border-t"
           >
-            <div className="flex items-center justify-center gap-2 py-3 text-quebi-fg-subtle text-sm">
+            <div className="flex items-center justify-center gap-2 py-3 text-quebi-caption text-quebi-fg-subtle">
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
               Loading more…
             </div>
@@ -1209,7 +1209,7 @@ export function TableShell<T extends RowData>({
         </Virtualizer>
       ) : height ? (
         <div
-          className="quebi-scrollbar quebi-scrollbar-corners overflow-auto rounded-quebi-md"
+          className="quebi-scrollbar quebi-scrollbar-corners overflow-auto"
           style={{ maxHeight: height }}
         >
           {tableElement}
@@ -1221,7 +1221,7 @@ export function TableShell<T extends RowData>({
         // A background refresh keeps the rows on screen and says so. Swapping
         // them for a skeleton would be a different, louder claim: that there is
         // nothing to look at, when in fact there is — it is just one query old.
-        <span className="pointer-events-none absolute end-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-quebi-bg/90 px-2 py-1 text-quebi-fg-subtle text-xs">
+        <span className="pointer-events-none absolute end-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-quebi-raised px-2.5 py-1 text-quebi-caption text-quebi-fg-muted">
           <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
           Refreshing…
         </span>
@@ -1271,7 +1271,7 @@ function ColumnMenu<T extends RowData>({ column, onSort, allowGrouping }: Column
       */}
       <MenuTrigger
         aria-label={`Options for ${column.columnDef.meta?.label ?? column.id}`}
-        className="rounded-quebi-sm p-0.5 text-quebi-fg-subtle hover:text-quebi-fg"
+        className="p-0.5 text-quebi-fg-subtle transition-colors duration-150 hover:text-quebi-fg"
       >
         <EllipsisVertical data-slot="icon" aria-hidden="true" className="size-3.5" />
       </MenuTrigger>
@@ -1345,10 +1345,10 @@ function ShellFooter<T extends RowData>({ table, leafHeaders }: ShellFooterProps
   const cells = leafHeaders.filter((header) => header.column.columnDef.footer)
   if (cells.length === 0) return null
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-quebi-md border border-quebi-line/10 bg-quebi-surface/[0.02] px-3.5 py-2 text-sm">
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-1 border-t border-quebi-rule px-3.5 py-2.5 text-sm">
       {cells.map((header) => (
         <span key={header.column.id} className="inline-flex items-center gap-2">
-          <span className="text-quebi-fg-subtle text-xs uppercase tracking-[0.08em]">
+          <span className="quebi-eyebrow">
             {header.column.columnDef.meta?.label ?? header.column.id}
           </span>
           <span className="font-medium text-quebi-fg tabular-nums">

@@ -7,9 +7,9 @@ export const buttonGroupOgScene: OgScene = {
   scale: 1.8,
   render: () => (
     <ButtonGroup>
-      <Button intent="outline">Day</Button>
-      <Button intent="outline">Week</Button>
-      <Button intent="outline">Month</Button>
+      <Button intent="outline">day</Button>
+      <Button intent="outline">week</Button>
+      <Button intent="outline">month</Button>
     </ButtonGroup>
   ),
 }

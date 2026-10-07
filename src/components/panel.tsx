@@ -17,10 +17,11 @@ import { cn } from "@/lib/utils"
  *   amount, so the text inside starts where the text outside does. Outside a
  *   Container the variable is unset and `bleed` does nothing.
  *
- * `tone="brand"` is the mint tint, for the one band on a page that is asking
- * for something (a call to action, an upgrade). The muted tone is everything
- * else. The fill flips with the theme through `quebi-surface`: a white tint on
- * dark, an ink tint on light, so the band reads as recessed in both.
+ * The muted tone is the raised ground (`bg-quebi-raised`), the inset band the
+ * rest of the system uses. `tone="brand"` is one step deeper
+ * (`bg-quebi-pressed`), for the one band on a page that is asking for
+ * something (a call to action, an upgrade) — emphasis by ink, not by hue.
+ * Both grounds flip with the theme, so the band reads as recessed in either.
  */
 export interface PanelProps extends React.HTMLAttributes<HTMLElement> {
   /** `muted` for grouping, `brand` for the single band that carries the ask. */
@@ -45,7 +46,7 @@ export function Panel({
       data-tone={tone}
       className={cn(
         "py-8 text-quebi-fg",
-        tone === "brand" ? "bg-quebi-brand/[0.06]" : "bg-quebi-surface/[0.03]",
+        tone === "brand" ? "bg-quebi-pressed" : "bg-quebi-raised",
         bleed
           ? "-mx-(--container-padding) px-[var(--container-padding,calc(var(--spacing)*6))]"
           : "px-6",

@@ -36,7 +36,7 @@ const DeliveryForm = () => {
         description="Submitted as deliveryWeek.start and deliveryWeek.end — two ISO dates, not a week token."
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

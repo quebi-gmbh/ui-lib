@@ -49,7 +49,7 @@ export const textareaExamples: ComponentExample[] = [
               value={value}
               onChange={(e) => setValue(e.target.value)}
             />
-            <span className="text-[12px] text-quebi-fg-muted">{value.length} characters</span>
+            <span className="text-quebi-caption text-quebi-fg-subtle">{value.length} characters</span>
           </Col>
         )
       }

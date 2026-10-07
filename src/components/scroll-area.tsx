@@ -8,8 +8,8 @@ type ScrollAreaOrientation = "vertical" | "horizontal" | "both"
 /**
  * How the bar meets the surface.
  *
- * - `flush` — the default, and the quebi bar: a 6px pill hugging the edge, no
- *   padding around it, clipped to the surface's own rounded corner.
+ * - `flush` — the default, and the quebi bar: a 6px ink pill hugging the edge,
+ *   no padding around it, clipped to the surface's corner if it has one.
  * - `floating` — a 6px pill inside a 12px track, 3px clear of every edge. For
  *   content that scrolls *under* the bar, and for a bar a pointer user is
  *   expected to drag: 12px of track is twice the grab width.
@@ -47,7 +47,7 @@ const SCROLLBAR_VARIANTS: Record<ScrollAreaScrollbar, string> = {
 /**
  * ScrollArea — quebi design system
  *
- * A scrollable viewport with the quebi native scrollbar: a 6px tinted pill
+ * A scrollable viewport with the quebi native scrollbar: a 6px ink pill
  * hugging the edge, no stepper arrows and no padding around it (`scrollbar`
  * picks a different bar, arrows included — see `ScrollAreaScrollbar`).
  * Optionally fades content
@@ -57,15 +57,16 @@ const SCROLLBAR_VARIANTS: Record<ScrollAreaScrollbar, string> = {
  * attributes wired up for masking.
  *
  * **The corner.** A scrollbar is painted inside the border box but `overflow`
- * and `border-radius` do not clip it, so on a rounded surface the bar used to
+ * and `border-radius` do not clip it, so on a rounded surface (quebi surfaces are
+ * square; the exceptions are floating ones and a stage frame) the bar would
  * run out through the arc and square off against the top and bottom edges. The
  * viewport carries `quebi-scrollbar-corners`, whose `clip-path: border-box` is
  * the same rounded rect the border draws — so the bar's ends curve away with
  * the corner. It follows whatever radius the surface actually has, including
  * the `rounded-[inherit]` this element takes from its parent, which is why
  * there is no radius prop to keep in sync. Two consequences worth knowing:
- * the clip also trims anything painted *outside* the border box, so a glow or
- * an `outline` ring on the ScrollArea itself is cut by it; and past roughly
+ * the clip also trims anything painted *outside* the border box, so a shadow
+ * or an `outline` ring on the ScrollArea itself is cut by it; and past roughly
  * `rounded-[calc(infinity*1px)]` the arc is longer than the bar's travel, so a
  * capsule-shaped scroll surface wants `scrollbar="floating"` instead.
  *
@@ -173,9 +174,8 @@ export function ScrollArea({
       className={cn(
         "size-full min-h-0 overscroll-auto rounded-[inherit] outline-none transition-shadow",
         "data-has-overflow-y:overscroll-y-contain data-has-overflow-x:overscroll-x-contain",
-        // Slim, cyan-tinted scrollbar — the shared quebi native scrollbar,
-        // clipped to this surface's own rounded corner unless the variant is
-        // the one that cannot be.
+        // The shared quebi native scrollbar, clipped to this surface's own
+        // corner unless the variant is the one that cannot be.
         "quebi-scrollbar",
         SCROLLBAR_VARIANTS[scrollbar],
         orientation === "vertical"

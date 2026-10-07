@@ -8,8 +8,8 @@ import { cn } from "@/lib/utils"
  *
  * An indeterminate spinner built on react-aria-components' ProgressBar
  * (announces a busy state to assistive tech). Two glyphs: a smooth `ring`
- * and a segmented `spin`. Inherits `currentColor`, so it adopts the teal
- * brand accent wherever you set `text-quebi-brand-text` (the natural default).
+ * and a segmented `spin`. Inherits `currentColor` and defaults to ink
+ * (`text-quebi-fg`); set a `text-*` token to put it on another ground.
  */
 const Ring = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
   <svg
@@ -95,7 +95,7 @@ export function Loader({ isIndeterminate = true, ref, ...props }: LoaderProps) {
       <LoaderPrimitive
         role="presentation"
         className={cn(
-          "size-4 text-quebi-brand-text",
+          "size-4 text-quebi-fg",
           variant === "ring" && "animate-spin",
           className,
         )}

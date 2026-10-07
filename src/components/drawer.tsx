@@ -39,9 +39,9 @@ import { Button, type ButtonProps } from "@/components/button"
  * drawer a route opens, say — render `DrawerContent` on its own with
  * `isOpen`/`onOpenChange` and leave `Drawer` out.
  *
- * Surface tokens: bg-quebi-elevated, border-quebi-line/20. Depth is a neutral
- * shadow, not the mint `shadow-quebi-glow` it used to carry: a halo painted at
- * full strength from the first frame of the slide is what task #142 reported.
+ * Surface: bg-quebi-elevated, square, lifted by `shadow-quebi-float`. Docked
+ * to an edge it draws one hairline, on the side facing the page; floating, it
+ * is ruled all round. Titles are Outfit light at the title size.
  */
 
 const DrawerRoot = motion.create(ModalPrimitive)
@@ -113,26 +113,22 @@ const DrawerContent = ({
           {({ state }) => (
             <DrawerRoot
               className={cn(
-                "fixed max-h-full touch-none overflow-hidden border border-quebi-line/20 bg-quebi-elevated align-middle text-quebi-fg shadow-xl will-change-transform",
-                side === "top" &&
-                  (isFloat
-                    ? "inset-x-2 top-2 rounded-quebi-md"
-                    : "inset-x-0 top-0 rounded-b-quebi-md"),
+                "fixed max-h-full touch-none overflow-hidden border-quebi-hairline bg-quebi-elevated align-middle text-quebi-fg shadow-quebi-float will-change-transform",
+                isFloat && "border",
+                side === "top" && (isFloat ? "inset-x-2 top-2" : "inset-x-0 top-0 border-b"),
                 side === "right" &&
                   [
                     "w-full max-w-xs overflow-y-auto",
                     "**:[[slot=header]]:text-start",
-                    isFloat ? "inset-y-2 right-2 rounded-quebi-md" : "inset-y-0 right-0 h-auto",
+                    isFloat ? "inset-y-2 right-2" : "inset-y-0 right-0 h-auto border-l",
                   ].join(" "),
                 side === "bottom" &&
-                  (isFloat
-                    ? "inset-x-2 bottom-2 rounded-quebi-md"
-                    : "inset-x-0 bottom-0 rounded-t-quebi-md"),
+                  (isFloat ? "inset-x-2 bottom-2" : "inset-x-0 bottom-0 border-t"),
                 side === "left" &&
                   [
                     "w-full max-w-xs overflow-y-auto",
                     "**:[[slot=header]]:text-start",
-                    isFloat ? "inset-y-2 left-2 rounded-quebi-md" : "inset-y-0 left-0 h-auto",
+                    isFloat ? "inset-y-2 left-2" : "inset-y-0 left-0 h-auto border-r",
                   ].join(" "),
                 className,
               )}
@@ -194,11 +190,11 @@ const DrawerContent = ({
                 )}
               >
                 {notch && side === "bottom" && (
-                  <div className="notch sticky top-0 mx-auto mt-2.5 h-1.5 w-10 shrink-0 touch-pan-y rounded-full bg-quebi-surface/20" />
+                  <div className="notch sticky top-0 mx-auto mt-2.5 h-1.5 w-10 shrink-0 touch-pan-y rounded-full bg-quebi-pressed" />
                 )}
                 {children as React.ReactNode}
                 {notch && side === "top" && (
-                  <div className="notch sticky bottom-0 mx-auto mb-2.5 h-1.5 w-10 shrink-0 touch-pan-y rounded-full bg-quebi-surface/20" />
+                  <div className="notch sticky bottom-0 mx-auto mb-2.5 h-1.5 w-10 shrink-0 touch-pan-y rounded-full bg-quebi-pressed" />
                 )}
               </Dialog>
             </DrawerRoot>
@@ -222,13 +218,17 @@ const DrawerHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 const DrawerTitle = ({ className, ...props }: HeadingProps) => (
   <Heading
     slot="title"
-    className={cn("font-semibold text-quebi-fg text-lg/8", className)}
+    className={cn("font-display text-quebi-fg text-quebi-title", className)}
     {...props}
   />
 )
 
 const DrawerDescription = ({ className, ...props }: TextProps) => (
-  <Text slot="description" className={cn("text-quebi-fg-muted text-sm", className)} {...props} />
+  <Text
+    slot="description"
+    className={cn("text-quebi-body-s text-quebi-fg-muted", className)}
+    {...props}
+  />
 )
 
 const DrawerBody = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

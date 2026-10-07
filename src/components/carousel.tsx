@@ -12,8 +12,10 @@ import { cn } from "@/lib/utils"
  *
  * A slide-able content region powered by embla-carousel-react. Compose with
  * CarouselContent + CarouselItem for the track, and CarouselHandler +
- * CarouselButton for the prev/next controls (built on the quebi Button).
- * Supports horizontal/vertical orientation and arrow-key navigation.
+ * CarouselButton for the prev/next controls — square outline buttons, the
+ * quebi Button at its defaults, set at the end of the track. The track itself
+ * draws nothing: frames and rules belong to the slides. Supports
+ * horizontal/vertical orientation and arrow-key navigation.
  */
 
 type CarouselApi = UseEmblaCarouselType[1]
@@ -206,7 +208,7 @@ const CarouselButton = ({
   segment,
   className,
   intent = "outline",
-  isCircle = true,
+  isCircle = false,
   size = "sq-sm",
   ref,
   ...props

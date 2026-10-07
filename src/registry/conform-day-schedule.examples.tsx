@@ -62,7 +62,7 @@ const AgendaForm = () => {
         height={420}
       />
       <Button type="submit" size="sm" className="self-start">
-        Save agenda
+        save agenda
       </Button>
     </form>
   )

@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils"
 /**
  * ProgressCircle — quebi design system
  *
- * Built on react-aria-components. A circular progress indicator: a faint
- * cyan track with a brand-teal ring that fills clockwise as the value grows.
+ * Built on react-aria-components. A circular progress indicator: a hairline
+ * track with an ink (`action`) arc that fills clockwise as the value grows.
  * Pass `isIndeterminate` for a continuous spinning state (useful as a button
  * or inline loading glyph). Inherits its size from the surrounding font size,
  * or override with a `size-*` class.
@@ -35,7 +35,7 @@ function ProgressCircle({ className, ref, ...props }: ProgressCircleProps) {
             cy={c}
             r={r}
             strokeWidth={3}
-            className="stroke-quebi-line/10"
+            className="stroke-quebi-hairline"
           />
           {!isIndeterminate ? (
             <circle
@@ -46,9 +46,8 @@ function ProgressCircle({ className, ref, ...props }: ProgressCircleProps) {
               pathLength={100}
               strokeDasharray="100 200"
               strokeDashoffset={100 - (percentage ?? 0)}
-              strokeLinecap="round"
               transform="rotate(-90)"
-              className="origin-center stroke-quebi-brand-mark transition-[stroke-dashoffset] duration-200"
+              className="origin-center stroke-quebi-action transition-[stroke-dashoffset] duration-200"
             />
           ) : (
             <circle
@@ -59,8 +58,7 @@ function ProgressCircle({ className, ref, ...props }: ProgressCircleProps) {
               pathLength={100}
               strokeDasharray="100 200"
               strokeDashoffset={100 - 30}
-              strokeLinecap="round"
-              className="origin-center stroke-quebi-brand-mark animate-[spin_1s_cubic-bezier(0.4,0,0.2,1)_infinite]"
+              className="origin-center stroke-quebi-action animate-[spin_1s_cubic-bezier(0.4,0,0.2,1)_infinite]"
             />
           )}
         </svg>

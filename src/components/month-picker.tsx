@@ -15,6 +15,7 @@ import {
 import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { useState } from "react"
 import {
+  Button as FieldTrigger,
   ListBoxItem as ListBoxItemPrimitive,
   ListBox as ListBoxPrimitive,
   useLocale,
@@ -201,12 +202,12 @@ export function MonthPicker({
               aria-label={`${longMonthFormatter.format(date)} ${yearFormatter.format(date)}`}
               className={({ isSelected, isDisabled: isItemDisabled, isFocusVisible }) =>
                 cn(
-                  "flex h-10 w-20 cursor-default items-center justify-center rounded-quebi-sm text-sm text-quebi-fg tabular-nums outline-hidden transition-colors duration-150 hover:bg-quebi-surface/[0.04]",
-                  isCurrent && !isSelected && "ring-1 ring-inset ring-quebi-brand-mark",
-                  isSelected && "bg-quebi-brand text-quebi-on-brand hover:bg-quebi-brand-hover",
+                  "flex h-10 w-20 cursor-default items-center justify-center text-sm text-quebi-fg tabular-nums outline-hidden transition-colors duration-150 hover:bg-quebi-raised",
+                  isCurrent && !isSelected && "ring-1 ring-inset ring-quebi-focus",
+                  isSelected && "bg-quebi-action text-quebi-on-action hover:bg-quebi-action-hover",
                   isItemDisabled && "text-quebi-fg-subtle hover:bg-transparent",
                   isFocusVisible &&
-                    "ring-2 ring-quebi-brand-mark ring-offset-2 ring-offset-quebi-bg",
+                    "ring-2 ring-quebi-focus ring-offset-3 ring-offset-quebi-bg",
                 )
               }
             >
@@ -225,6 +226,19 @@ export interface MonthPickerFieldProps extends Omit<MonthPickerProps, "autoFocus
   /** Where the popover opens; `bottom start` by default. */
   placement?: "bottom" | "bottom start" | "bottom end" | "top" | "top start" | "top end"
 }
+
+/**
+ * The trigger is field-shaped, so it is drawn like `SelectTrigger`: `Input`'s
+ * underline at `sm` (38px), thickened to 2px while focused or open, no ring.
+ */
+const fieldTriggerStyles = cn(
+  "inline-flex cursor-default items-center justify-between gap-x-2 bg-transparent py-2 text-sm text-quebi-fg tabular-nums",
+  "border-y border-t-transparent border-b-quebi-rule",
+  "transition-[border-color,box-shadow] duration-150",
+  "outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)] aria-expanded:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+  "disabled:cursor-not-allowed disabled:opacity-50",
+  "*:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0",
+)
 
 /**
  * MonthPickerField — the Month Picker behind a trigger.
@@ -256,18 +270,16 @@ export function MonthPickerField({
 
   return (
     <Popover isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Button
+      <FieldTrigger
         aria-label={ariaLabel ?? "Month"}
-        intent="outline"
-        size="sm"
         isDisabled={isDisabled}
-        className={cn("w-48 justify-between font-normal tabular-nums", className)}
+        className={cn(fieldTriggerStyles, "w-48", className)}
       >
-        <span className={cn(!selected && "text-quebi-fg-muted")}>
+        <span className={cn(!selected && "text-quebi-fg-subtle")}>
           {selected ? formatter.format(selected.toDate("UTC")) : placeholder}
         </span>
-        <ChevronDown data-slot="icon" className="text-quebi-fg-muted" />
-      </Button>
+        <ChevronDown data-slot="icon" className="text-quebi-fg-subtle" />
+      </FieldTrigger>
       <PopoverContent placement={placement} className="w-auto max-w-none p-3">
         <MonthPicker
           {...props}
@@ -325,7 +337,7 @@ function PagerHeader({
       data-slot="picker-header"
       className="flex w-full items-center justify-between gap-1.5 ps-1.5 pe-1 pt-1 pb-4"
     >
-      <span aria-live="polite" className="font-semibold text-quebi-fg text-sm tabular-nums">
+      <span aria-live="polite" className="font-medium text-quebi-fg text-sm tabular-nums">
         {label}
       </span>
       <div className="flex items-center gap-1">

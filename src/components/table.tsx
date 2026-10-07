@@ -37,30 +37,29 @@ import { cn } from "@/lib/utils"
 /**
  * Table — quebi design system
  *
- * Built on react-aria-components. A borderless data table inside a rounded,
- * cyan-tinted surface — or, with `variant="plain"`, on no surface at all: rows
- * divided by hairlines on whatever the table sits on. Headers use muted quebi foreground in small uppercase
- * caps; rows separate with faint cyan borders, lift to a subtle white tint on
- * hover, and fill with brand teal at low opacity when selected. Supports
- * selection, sorting, dragging, resizable columns, striping, and grid lines.
+ * Built on react-aria-components. A ruled table in the shape of the design's
+ * index list: a strong rule across the top, column headers as mono labels over
+ * a second strong rule, hairlines between rows. Rows lift to the raised ground
+ * on hover and sit on the pressed ground when selected. `variant="plain"` drops
+ * the top rule and the page fill. Supports selection, sorting, dragging,
+ * resizable columns, striping, and grid lines.
  */
 
 interface TableProps extends Omit<TablePrimitiveProps, "className"> {
   allowResize?: boolean
   className?: string
   /**
-   * `surface` (default) draws the table on its own bordered, rounded panel —
-   * for a table that stands alone on a page. `plain` draws no panel: a header
-   * rule and row dividers on whatever is behind it. Use `plain` under a
+   * `surface` (default) opens the table with a strong top rule on the page
+   * ground — for a table that stands alone on a page. `plain` draws neither: a
+   * header rule and row dividers on whatever is behind it. Use `plain` under a
    * heading in a page section, and inside a Card or a dashboard widget, where
-   * the surface would be a box drawn inside a box.
+   * the Card's own edge already frames it.
    */
   variant?: "surface" | "plain"
   /**
    * Take the inline padding off the first and last columns, so their text
    * lines up with the heading and prose around the table instead of sitting
-   * one gutter in. Meant for `plain`; on a `surface` it puts text against the
-   * border.
+   * one gutter in.
    */
   bleed?: boolean
   grid?: boolean
@@ -111,12 +110,11 @@ const Table = ({
           data-variant={variant}
           className={cn(
             "quebi-scrollbar quebi-scrollbar-corners relative overflow-auto whitespace-nowrap [--gutter-y:--spacing(3)]",
-            variant === "surface" && "rounded-quebi-md border border-quebi-line/10 bg-quebi-bg",
-            // The header cells are filled with the page colour so that a
-            // sticky header hides the rows scrolling under it. On a panel that
-            // fill is invisible; with no panel it is a dark strip across
-            // whatever the table sits on — a Card's tint, most often. A plain
-            // table's header takes the colour of what is behind it instead.
+            variant === "surface" && "border-t border-quebi-rule bg-quebi-bg",
+            // The header cells are filled with the page ground so that a sticky
+            // header hides the rows scrolling under it. On the page that fill is
+            // invisible; on a raised inset it is a strip of the wrong ground. A
+            // plain table's header takes the colour of what is behind it instead.
             variant === "plain" && "[&_th]:bg-transparent",
             // On the header cells and body cells alike, and on the checkbox and
             // drag gutters too when they are the first column: the edge is the
@@ -146,12 +144,12 @@ const ColumnResizer = ({ className, ...props }: ColumnResizerProps) => (
     {...props}
     className={composeRenderProps(className, (className) =>
       cn(
-        "absolute end-0 top-0 bottom-0 grid w-px touch-none place-content-center px-1 [&[data-resizable-direction=left]]:cursor-e-resize [&[data-resizable-direction=right]]:cursor-w-resize [&[data-resizable-direction=both]]:cursor-ew-resize [&[data-resizing]>div]:bg-quebi-brand",
+        "absolute end-0 top-0 bottom-0 grid w-px touch-none place-content-center px-1 [&[data-resizable-direction=left]]:cursor-e-resize [&[data-resizable-direction=right]]:cursor-w-resize [&[data-resizable-direction=both]]:cursor-ew-resize [&[data-resizing]>div]:bg-quebi-action",
         className,
       ),
     )}
   >
-    <div className="h-full w-px bg-quebi-line/20 py-(--gutter-y)" />
+    <div className="h-full w-px bg-quebi-hairline py-(--gutter-y)" />
   </ColumnResizerPrimitive>
 )
 
@@ -164,7 +162,7 @@ const TableBody = <T extends object>({ renderEmptyState, ...props }: TableBodyPr
           renderEmptyState(state)
         ) : (
           <div className="flex min-h-56 items-center justify-center sm:min-h-96">
-            <span className="text-sm text-quebi-fg-muted">No records found.</span>
+            <span className="text-quebi-body-s text-quebi-fg-muted">No records found.</span>
           </div>
         )}
       </>
@@ -185,9 +183,11 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
       {...props}
       className={composeRenderProps(className, (className) =>
         cn(
-          "text-start bg-quebi-bg text-quebi-fg-muted text-xs font-semibold uppercase tracking-[0.08em] py-3 px-3.5 border-b border-quebi-line/10",
+          "text-start bg-quebi-bg font-mono text-quebi-label uppercase text-quebi-fg-subtle py-3 px-3.5 border-b border-b-quebi-rule",
           "relative allows-sorting:cursor-default dragging:cursor-grabbing outline-hidden",
-          grid && "border-l border-quebi-line/10 first:border-l-0",
+          // Side-specific colours: a plain `border-quebi-hairline` here would
+          // merge with the header rule and repaint it as a hairline.
+          grid && "border-l border-l-quebi-hairline first:border-l-0",
           isResizable && "overflow-hidden truncate",
           className,
         ),
@@ -197,17 +197,15 @@ const TableColumn = ({ isResizable = false, className, ...props }: TableColumnPr
         <div className="inline-flex items-center gap-2 **:data-[slot=icon]:shrink-0">
           {typeof props.children === "function" ? props.children(values) : props.children}
           {values.allowsSorting && (
-            // The sort affordance is a tile: a tinted box holding one icon, at
-            // the inline `2xs` size. It used to be a private span here with the
-            // recipe spelled out — which is the shape IconTile publishes, so
-            // keeping a copy of it would have been the drift the tile exists to
-            // stop. The hover tint is the one thing the tile does not own (it
-            // is not interactive; the *column* is), so it overrides the fill.
+            // The sort affordance is an IconTile at the inline `2xs` size
+            // rather than a private copy of its recipe. The hover fill is the
+            // one thing the tile does not own (it is not interactive; the
+            // *column* is), so it overrides the fill.
             <IconTile
               size="2xs"
               className={cn(
                 "*:data-[slot=icon]:transition-transform *:data-[slot=icon]:duration-200",
-                values.isHovered ? "bg-quebi-surface/[0.08]" : "",
+                values.isHovered ? "bg-quebi-pressed" : "",
               )}
             >
               <ChevronDown
@@ -319,15 +317,15 @@ const TableColumnGroup = createBranchComponent<
     "data-focus-visible": isFocusVisible || undefined,
     style: { height: TABLE_BAND_HEIGHT },
     className: cn(
-      "bg-quebi-bg px-3.5 text-center align-middle text-[0.625rem] font-semibold uppercase tracking-[0.12em] text-quebi-fg-subtle outline-hidden",
+      "bg-quebi-bg px-3.5 text-center align-middle font-mono text-quebi-label uppercase text-quebi-fg-subtle outline-hidden",
       // The underline is what makes a band read as a band, so the cell that only
       // fills the row does not get one — the gap above an ungrouped column is
       // how you see where the band beside it stops. Side-specific border colours
       // throughout, so the grid's vertical rule and this do not merge into one
       // `border-*` class where the last one written wins.
-      label != null && "border-b border-b-quebi-line/10",
-      grid && "border-l border-l-quebi-line/10 first:border-l-0",
-      "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-brand-mark data-[focus-visible]:ring-inset",
+      label != null && "border-b border-b-quebi-hairline",
+      grid && "border-l border-l-quebi-hairline first:border-l-0",
+      "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-inset",
       className,
     ),
   }
@@ -416,7 +414,7 @@ const TableHeader = <T extends object>({
           <Column
             data-slot="table-column"
             isRowHeader
-            className="bg-quebi-bg border-b border-quebi-line/10 py-3 px-3.5 w-px"
+            className="bg-quebi-bg border-b border-quebi-rule py-3 px-3.5 w-px"
           />,
           bandDepth,
           "drag",
@@ -427,7 +425,7 @@ const TableHeader = <T extends object>({
           <Column
             data-slot="table-column"
             isRowHeader
-            className="bg-quebi-bg border-b border-quebi-line/10 py-3 px-3.5 w-px"
+            className="bg-quebi-bg border-b border-quebi-rule py-3 px-3.5 w-px"
           >
             {selectionMode === "multiple" && <Checkbox slot="selection" />}
           </Column>,
@@ -475,15 +473,14 @@ const TableRow = <T extends object>({
           },
         ) =>
           cn(
-            "group relative cursor-default outline outline-transparent transition-colors duration-150 hover:bg-quebi-surface/[0.02]",
-            isFocusVisible &&
-              "bg-quebi-brand/10 outline-quebi-brand-mark ring-2 ring-quebi-brand-mark ring-inset",
-            isDragging && "cursor-grabbing bg-quebi-brand/10 text-quebi-fg outline-quebi-brand-mark",
-            isSelected && "bg-quebi-brand/10 text-quebi-fg",
-            striped && "even:bg-quebi-surface/[0.02]",
+            "group relative cursor-default outline outline-transparent transition-colors duration-150 hover:bg-quebi-raised",
+            striped && "even:bg-quebi-raised",
             (props.href || props.onAction || selectionMode === "multiple") &&
               isFocusVisibleWithin &&
-              "bg-quebi-brand/5 selected:bg-quebi-brand/10 text-quebi-fg",
+              "bg-quebi-raised text-quebi-fg",
+            isFocusVisible && "bg-quebi-raised ring-2 ring-quebi-focus ring-inset",
+            isSelected && "bg-quebi-pressed text-quebi-fg",
+            isDragging && "cursor-grabbing bg-quebi-pressed text-quebi-fg",
             isDisabled && "opacity-50",
             className,
           ),
@@ -493,7 +490,7 @@ const TableRow = <T extends object>({
         <TableCell className="px-0">
           <Button
             slot="drag"
-            className="grid place-content-center rounded-quebi-sm px-2 text-quebi-fg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-quebi-brand-mark"
+            className="grid place-content-center px-2 text-quebi-fg-subtle outline-hidden focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset"
           >
             <svg
               aria-hidden="true"
@@ -553,8 +550,8 @@ const TableCell = ({ className, ref, ...props }: TableCellProps) => {
       className={composeRenderProps(className, (className) =>
         cn(
           "group align-middle outline-hidden py-3 px-3.5 group-has-data-focus-visible-within:text-quebi-fg",
-          !striped && "border-b border-quebi-line/10 group-[:last-child]:border-b-0",
-          grid && "border-l border-quebi-line/10 first:border-l-0",
+          !striped && "border-b border-quebi-hairline group-[:last-child]:border-b-0",
+          grid && "border-l border-quebi-hairline first:border-l-0",
           allowResize && "overflow-hidden truncate",
           className,
         ),

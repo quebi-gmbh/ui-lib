@@ -28,7 +28,7 @@ export const listOgScene: OgScene = {
             <ItemDescription>{m.email}</ItemDescription>
           </ItemContent>
           <ItemMeta>
-            <Badge intent={m.role === "Owner" ? "brand" : "neutral"}>{m.role}</Badge>
+            <Badge intent={m.role === "Owner" ? "neutral" : "outline"}>{m.role.toLowerCase()}</Badge>
             <ChevronRight className="size-4" aria-hidden />
           </ItemMeta>
         </Item>

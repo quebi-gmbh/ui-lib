@@ -23,17 +23,19 @@ const maxScore = players[0].score
 export const leaderboardExamples: ComponentExample[] = [
   {
     title: "Default",
-    description: "Each row's brand-teal fill is scaled to the leader's score.",
+    description: "Each row's ink rule is scaled to the leader's score.",
     render: () => (
       <Leaderboard className="w-full max-w-md">
         <LeaderboardHeader>
-          <LeaderboardTitle>Top players</LeaderboardTitle>
+          <LeaderboardTitle>top players</LeaderboardTitle>
         </LeaderboardHeader>
         <LeaderboardContent>
           {players.map((player, i) => (
             <LeaderboardItem key={player.name} value={player.score} maxValue={maxScore}>
               <LeaderboardStart>
-                <span className="text-quebi-fg-muted tabular-nums">{i + 1}.</span>
+                <span className="w-6 font-mono text-xs text-quebi-fg-subtle tabular-nums">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
                 {player.name}
               </LeaderboardStart>
               <LeaderboardEnd>
@@ -47,11 +49,11 @@ export const leaderboardExamples: ComponentExample[] = [
   },
   {
     title: "Actionable rows",
-    description: "Pass onAction to make rows clickable — the fill brightens on hover.",
+    description: "Pass onAction to make rows clickable — a row is raised and shifts right on hover.",
     render: () => (
       <Leaderboard className="w-full max-w-md">
         <LeaderboardHeader>
-          <LeaderboardTitle>Leaderboard</LeaderboardTitle>
+          <LeaderboardTitle>leaderboard</LeaderboardTitle>
         </LeaderboardHeader>
         <LeaderboardContent>
           {players.slice(0, 3).map((player, i) => (
@@ -62,7 +64,9 @@ export const leaderboardExamples: ComponentExample[] = [
               onAction={() => {}}
             >
               <LeaderboardStart>
-                <span className="text-quebi-fg-muted tabular-nums">{i + 1}.</span>
+                <span className="w-6 font-mono text-xs text-quebi-fg-subtle tabular-nums">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
                 {player.name}
               </LeaderboardStart>
               <LeaderboardEnd>

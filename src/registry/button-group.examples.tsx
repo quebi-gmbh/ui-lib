@@ -8,7 +8,7 @@ const ChevronLeft = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -23,7 +23,7 @@ const ChevronRight = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
@@ -38,9 +38,9 @@ export const buttonGroupExamples: ComponentExample[] = [
     description: "The default — buttons connect into a single segmented control.",
     render: () => (
       <ButtonGroup>
-        <Button intent="outline">Day</Button>
-        <Button intent="outline">Week</Button>
-        <Button intent="outline">Month</Button>
+        <Button intent="outline">day</Button>
+        <Button intent="outline">week</Button>
+        <Button intent="outline">month</Button>
       </ButtonGroup>
     ),
   },
@@ -49,9 +49,9 @@ export const buttonGroupExamples: ComponentExample[] = [
     description: "Stack the same group with `orientation=\"vertical\"`.",
     render: () => (
       <ButtonGroup orientation="vertical">
-        <Button intent="outline">Profile</Button>
-        <Button intent="outline">Billing</Button>
-        <Button intent="outline">Team</Button>
+        <Button intent="outline">profile</Button>
+        <Button intent="outline">billing</Button>
+        <Button intent="outline">team</Button>
       </ButtonGroup>
     ),
   },
@@ -74,7 +74,7 @@ export const buttonGroupExamples: ComponentExample[] = [
     description: "Pair buttons with a flush, non-interactive label via ButtonGroupText.",
     render: () => (
       <ButtonGroup>
-        <ButtonGroupText>Qty</ButtonGroupText>
+        <ButtonGroupText>qty</ButtonGroupText>
         <Button intent="outline" size="sq-md" aria-label="Decrease">
           –
         </Button>
@@ -89,9 +89,9 @@ export const buttonGroupExamples: ComponentExample[] = [
     description: "Promote the chosen segment with the primary intent.",
     render: () => (
       <ButtonGroup>
-        <Button intent="outline">List</Button>
-        <Button intent="primary">Board</Button>
-        <Button intent="outline">Timeline</Button>
+        <Button intent="outline">list</Button>
+        <Button intent="primary">board</Button>
+        <Button intent="outline">timeline</Button>
       </ButtonGroup>
     ),
   },

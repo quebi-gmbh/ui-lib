@@ -13,9 +13,10 @@ import { cn } from "@/lib/utils"
 /**
  * Checkbox — quebi design system
  *
- * Built on react-aria-components. An 18px square with a cyan-tinted border;
- * selected state fills with brand teal and shows a chunky check glyph. Focus
- * uses the quebi teal ring; invalid uses red.
+ * Built on react-aria-components. An 18px square edged in `rule`; checked and
+ * indeterminate fill with `action` ink and draw the glyph in `on-action`.
+ * Focus is the outward ring; invalid edges (and, checked, fills) the box in
+ * `danger`.
  */
 export function CheckboxGroup({ className, ...props }: CheckboxGroupProps) {
   return (
@@ -41,42 +42,25 @@ export function Checkbox({ className, children, ...props }: CheckboxProps) {
           <span
             data-slot="indicator"
             className={cn(
-              // `rounded-quebi-xs` (4px), not the `sm` every other control
-              // takes: on an 18px box the maximum radius is 9px, so `sm`'s 8px
-              // left a 2px flat run per side and the checkbox was the radio's
-              // circle with four dents in it. Shape is the only thing that
-              // tells a reader whether a group takes one answer or several, so
-              // that made every multi-select in the library read as
-              // single-select (task #199). See the token's comment in
-              // quebi-theme.css for why a mark has its own step.
-              "relative flex size-[18px] shrink-0 items-center justify-center rounded-quebi-xs border bg-transparent",
+              // Square, edged in `rule`. Shape is what tells a reader whether a
+              // group takes one answer or several, so the box never rounds —
+              // the radio beside it is the round one.
+              "relative flex size-[18px] shrink-0 items-center justify-center border border-quebi-rule bg-transparent",
               "transition-colors duration-150",
-              "border-quebi-line/30",
-              // The checked box's boundary against the page is drawn in the
-              // *mark* token: mint on `#f4f6f6` is 1.74:1, so a mint square
-              // edged in mint had no visible outline on the light page at all
-              // (task #145). Teal-600 reaches 3.45:1 there — 1.4.11's bar for
-              // the boundary of a control whose state is information — and on
-              // dark `--q-brand-mark` *is* `--q-brand`, so nothing changes.
-              "group-data-[selected]:border-quebi-brand-mark group-data-[selected]:bg-quebi-brand",
-              "group-data-[indeterminate]:border-quebi-brand-mark group-data-[indeterminate]:bg-quebi-brand",
-              "group-data-[focus-visible]:ring-2 group-data-[focus-visible]:ring-quebi-brand-mark group-data-[focus-visible]:ring-offset-2 group-data-[focus-visible]:ring-offset-quebi-bg",
+              // Checked and indeterminate are ink: `action` fill, `on-action` glyph.
+              "group-data-[selected]:border-quebi-action group-data-[selected]:bg-quebi-action",
+              "group-data-[indeterminate]:border-quebi-action group-data-[indeterminate]:bg-quebi-action",
+              "group-data-[focus-visible]:ring-2 group-data-[focus-visible]:ring-quebi-focus group-data-[focus-visible]:ring-offset-3 group-data-[focus-visible]:ring-offset-quebi-bg",
               isInvalid &&
-                "border-red-500 group-data-[focus-visible]:ring-red-500/50 group-data-[selected]:border-red-500 group-data-[selected]:bg-red-500",
+                "border-quebi-danger group-data-[focus-visible]:ring-quebi-danger/50 group-data-[selected]:border-quebi-danger group-data-[selected]:bg-quebi-danger",
             )}
           >
             {isIndeterminate ? (
-              <Minus className="size-3 text-quebi-on-brand" strokeWidth={3} aria-hidden="true" />
+              <Minus className="size-3 text-quebi-on-action" strokeWidth={3} aria-hidden="true" />
             ) : isSelected ? (
-              // The tick is drawn in `on-brand`, the token for anything sitting
-              // ON a mint fill (7.81:1 in both themes), not in the page colour.
-              // `border-quebi-bg` only looked right on dark, where the page
-              // happens to be near-black; on light it painted a `#f4f6f6` tick
-              // on mint — 1.74:1, the checked state invisible from inside as
-              // well as out (task #145).
               <span
                 aria-hidden="true"
-                className="block h-[9px] w-[5px] -translate-y-px rotate-45 border-quebi-on-brand border-r-2 border-b-2"
+                className="block h-[9px] w-[5px] -translate-y-px rotate-45 border-quebi-on-action border-r-2 border-b-2"
               />
             ) : null}
           </span>

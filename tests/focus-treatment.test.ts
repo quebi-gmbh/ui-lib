@@ -1,43 +1,18 @@
 /**
- * The focus ring is detached from the border it sits on.
+ * The focus ring, as the design system states it: "a 2px solid `focus` ring
+ * with 3px offset on every interactive element".
  *
- * What was reported on `/components/input` as the focus glow being too much
- * (task #110) had two causes. One was a cascade bug — hover outranking focus,
- * fixed there and held by `focus-precedence.test.ts`. The other is geometry,
- * and it is what this file holds: a 1px mark-teal border with a 2px mark-teal
- * ring painted straight onto it is 3px of continuous, fully opaque teal with
- * nothing between the two to say where the field stops. That falloff reads as a
- * bloom rather than an edge.
+ * Two legitimate second forms, neither of them a second language:
  *
- * Five candidates went side by side on the component page and the offset ring
- * won (task #150). `ring-offset-2 ring-offset-quebi-bg` puts a 2px band of page
- * colour into that seam, so the same ink reads as a ring *around* the field.
- * Nothing about the colour moved, and it could not have: `--q-brand-mark` has
- * 0.45 of headroom over WCAG 1.4.11's 3:1 on the light page (task #96) and
- * nothing to spend on translucency, which is why the levers left were geometry
- * and trigger. `mark-contrast.test.ts` owns the colour; this file owns the gap.
+ * - A control with no room outside itself — a cell in a calendar grid, a row
+ *   in a table or a sidebar — draws the same ring `ring-inset`, taking the
+ *   offset out of itself rather than out of its neighbour.
+ * - An indicator inside another control's chrome (a tag's ✕, a dialog's close)
+ *   stays `ring-offset-0`: there is no page colour at that seam to offset into.
  *
- * ## The rule, and the one legitimate second form
- *
- * Where a class list paints a brand-mark **border** and a brand-mark **ring**
- * under the same variant — the bloom shape, exactly — the ring must either
- *
- * - carry `ring-offset-2 ring-offset-quebi-bg` under that same variant, or
- * - be drawn `ring-inset`.
- *
- * The second is not a second focus language. A control with no room outside
- * itself — a cell in a calendar grid, a row in a table or a sidebar — takes the
- * offset out of itself instead of out of its neighbour, because an outward ring
- * there paints over the row above. It is the same ring with the gap on the
- * other side.
- *
- * ## Why per `cn()` call and not per string literal
- *
- * `InputOTP` writes the border on one line and the ring on the next, and a
- * literal-by-literal scan would see two unrelated halves and pass. The class
- * list is the unit that reaches the element, so it is the unit the rule is
- * stated over — the same choice `focus-precedence.test.ts` makes, for the same
- * reason.
+ * Text fields are the one exception the design makes on purpose: they are
+ * underline-only, and focus thickens the underline to 2px instead of drawing a
+ * ring. Input is the canonical copy of that and is checked by name.
  */
 import { readdirSync, readFileSync } from "node:fs"
 import { join } from "node:path"
@@ -104,68 +79,59 @@ function byVariant(list: string): Map<string, Set<string>> {
   return buckets
 }
 
-const RING_WIDTH = /^(?:inset-)?ring-\d+$/
+const RING_WIDTH = /^(?:inset-)?ring(?:-\d+)?$/
 const detached = (utilities: Set<string>) =>
-  utilities.has("ring-offset-2") && [...utilities].some((u) => u.startsWith("ring-offset-quebi-"))
+  [...utilities].some((u) => /^ring-offset-[1-9]$/.test(u)) &&
+  [...utilities].some((u) => u.startsWith("ring-offset-quebi-"))
 const inward = (utilities: Set<string>) =>
   utilities.has("ring-inset") || [...utilities].some((u) => u.startsWith("inset-ring-"))
+/** A ring tight to the chrome it sits in on purpose: a tag's ✕, a dialog's close. */
+const tight = (utilities: Set<string>) => utilities.has("ring-offset-0")
 
-/** Class lists that paint a brand-mark border and a brand-mark ring under one variant. */
-const blooms = SOURCES.flatMap(({ path, source }) =>
+/** Every variant under which a class list paints the focus ring. */
+const rings = SOURCES.flatMap(({ path, source }) =>
   allClassLists(source).flatMap((list) =>
     [...byVariant(list)]
       .filter(
         ([variant, utilities]) =>
-          variant !== "" &&
-          utilities.has("border-quebi-brand-mark") &&
-          utilities.has("ring-quebi-brand-mark") &&
+          /(?:^|:)(?:focus|focus-visible|focus-within|group-focus-visible\/[\w-]+|data-\[focus-visible\])$/.test(variant) &&
+          utilities.has("ring-quebi-focus") &&
           [...utilities].some((u) => RING_WIDTH.test(u)),
       )
       .map(([variant, utilities]) => ({ path, variant, utilities })),
   ),
 )
 
-describe("a brand-mark ring is never flush against a brand-mark border", () => {
-  test("the scan found the shape — an empty sweep would pass vacuously", () => {
-    // Input, Textarea, Select (twice), ColorField, TagField, DateField and
-    // TimeField (twice each), DatePicker, DateRangePicker, MultipleSelect,
-    // AsyncSelect, InputOTP, and the two raw fields in the ColorPicker examples.
-    // The floor guards against the parser going quiet, not against the count
-    // moving.
-    expect(blooms.length).toBeGreaterThanOrEqual(15)
+describe("the focus ring is the design's ring", () => {
+  test("the scan found the rings — an empty sweep would pass vacuously", () => {
+    expect(rings.length).toBeGreaterThanOrEqual(20)
   })
 
-  test("every one of them is offset, or drawn inward", () => {
-    const flush = blooms
-      .filter(({ utilities }) => !detached(utilities) && !inward(utilities))
+  test("every one of them is offset, drawn inward, or deliberately tight", () => {
+    const flush = rings
+      .filter(({ utilities }) => !detached(utilities) && !inward(utilities) && !tight(utilities))
       .map(({ path, variant }) => `${path}: ${variant}:`)
-
-    // Add `<variant>:ring-offset-2 <variant>:ring-offset-quebi-bg` to the list
-    // named below — or `<variant>:ring-inset` if the control has no room
-    // outside itself. See the Input doc comment for which is which.
+    // Add `<variant>:ring-offset-3 <variant>:ring-offset-quebi-bg` — or
+    // `<variant>:ring-inset` if the control has no room outside itself.
     expect(flush).toEqual([])
   })
 })
 
-describe("the canonical copy", () => {
-  test("Input carries the whole treatment on one line", () => {
-    const input = readFileSync(join(ROOT, "src", "components", "input.tsx"), "utf8")
-    for (const utility of [
-      "focus:border-quebi-brand-mark",
-      "focus:ring-2",
-      "focus:ring-quebi-brand-mark",
-      "focus:ring-offset-2",
-      "focus:ring-offset-quebi-bg",
-    ]) {
-      expect(input).toContain(utility)
-    }
+describe("a text field draws an underline, not a ring", () => {
+  const input = readFileSync(join(ROOT, "src", "components", "input.tsx"), "utf8")
+
+  test("Input is underline-only and thickens the line on focus", () => {
+    expect(input).toContain("border-b-quebi-rule")
+    expect(input).toContain("focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]")
   })
 
-  test("the comparison sheet it was chosen from is gone", () => {
-    // `input.examples.tsx` is copied verbatim by agents through
-    // `/api/components/input.json`, so five candidate treatments left behind
-    // propagate as if one of them were a pattern. The decision aid ships until
-    // the decision is made, and not after it.
+  test("and puts no focus ring around itself", () => {
+    expect(input).not.toMatch(/focus(?:-visible)?:ring-\d/)
+  })
+
+  test("the comparison sheet the old ring was chosen from is gone", () => {
+    // `input.examples.tsx` is copied verbatim by agents, so a set of candidate
+    // treatments left behind would propagate as if one of them were a pattern.
     const examples = readFileSync(join(ROOT, "src", "registry", "input.examples.tsx"), "utf8")
     expect(examples).not.toContain("focusTreatments")
   })

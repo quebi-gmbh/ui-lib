@@ -225,10 +225,10 @@ const columns: DataTableColumn<Product>[] = [
       <span className="inline-flex items-center gap-2">
         <span
           aria-hidden="true"
-          className="size-3.5 rounded-quebi-sm border border-quebi-line/20"
+          className="size-3.5 border border-quebi-hairline"
           style={{ background: row.colour }}
         />
-        <span className="font-mono text-xs">{row.colour}</span>
+        <span className="font-mono text-quebi-caption">{row.colour}</span>
       </span>
     ),
     editor: ({ field, label }) => <ConformColorPicker field={field} label={label} />,
@@ -302,7 +302,7 @@ function EditableProducts() {
         rule fire: the form behind a cell is the whole row, so "active needs
         stock" is a rule it can actually check.
       </Note>
-      <p className="text-quebi-fg-subtle text-sm">
+      <p className="text-quebi-body-s text-quebi-fg-subtle">
         A click, <Kbd>Enter</Kbd>, <Kbd>F2</Kbd> or typing edits ·{" "}
         <Kbd>Tab</Kbd> commits and moves · <Kbd>Esc</Kbd> cancels · arrows move
         between cells, and move the caret once a cell is open.
@@ -407,7 +407,7 @@ function BulkEditProducts() {
         bulkActions={() => (
           <Button intent="outline" size="xs" onPress={() => setIsOpen(true)}>
             <Pencil data-slot="icon" aria-hidden="true" />
-            Edit {selected.length} rows
+            edit {selected.length} rows
           </Button>
         )}
       />

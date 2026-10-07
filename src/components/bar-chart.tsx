@@ -24,7 +24,7 @@ import {
  *
  * A high-level wrapper around the `Chart` primitive that renders grouped,
  * stacked, or percent (100%) bar charts from a `config` + `data` pair. Bars
- * use the teal-led quebi series palette, with an interactive legend that
+ * use the ink series palette, with an interactive legend that
  * focuses a single series on click. Pass `children` to fully control the bars.
  *
  * Requires the `recharts` npm package as a peer dependency.
@@ -116,14 +116,12 @@ export function BarChart<TValue extends ValueType, TName extends NameType>({
           {!hideGridLines && <CartesianGrid strokeDasharray="4 4" />}
           <XAxis
             hide={hideXAxis}
-            className="**:[text]:fill-quebi-fg-muted"
             displayEdgeLabelsOnly={displayEdgeLabelsOnly}
             intervalType={intervalType}
             {...xAxisProps}
           />
           <YAxis
             hide={hideYAxis}
-            className="**:[text]:fill-quebi-fg-muted"
             tickFormatter={type === "percent" ? valueToPercent : valueFormatter}
             {...yAxisProps}
           />

@@ -100,7 +100,7 @@ export function ColorFieldGroup({ children, className }: ColorFieldGroupProps) {
       className={cn(
         "relative isolate block w-full",
         // Room for the chip the swatch draws over the start of the field.
-        "[&_input]:ps-10",
+        "[&_input]:ps-8",
         className,
       )}
     >
@@ -135,8 +135,8 @@ export function ColorFieldSwatch({ className, ...props }: ColorSwatchProps) {
       color={liveColor(state) ?? undefined}
       className={composeRenderProps(className, (resolved) =>
         cn(
-          "pointer-events-none absolute start-3 top-1/2 z-10 size-5 -translate-y-1/2",
-          "rounded-quebi-sm in-data-[disabled]:opacity-50",
+          "pointer-events-none absolute start-0 top-1/2 z-10 size-5 -translate-y-1/2",
+          "in-data-[disabled]:opacity-50",
           resolved,
         ),
       )}
@@ -172,16 +172,13 @@ export function ColorInput({ className, ...props }: InputProps) {
         cn(
           "relative block w-full appearance-none text-sm text-quebi-fg tabular-nums uppercase",
           "placeholder:text-quebi-fg-subtle placeholder:normal-case",
-          "rounded-quebi-sm border border-quebi-line/20 bg-quebi-surface/[0.02] px-3 py-2.5",
-          "transition-[border-color,box-shadow] duration-200",
-          // `not-focus` guards against hover *beating* focus: `enabled:hover:` is
-          // (0,3,0) specificity and `focus:` is (0,2,0), so unguarded a hovered,
-          // focused field loses its mint border and keeps only the ring — a halo.
-          "enabled:not-focus:hover:border-quebi-line/40",
-          "outline-none focus:outline-none focus:border-quebi-brand-mark focus:ring-2 focus:ring-quebi-brand-mark focus:ring-offset-2 focus:ring-offset-quebi-bg",
-          "invalid:border-red-500 focus:invalid:ring-red-500/50",
+          // `Input`'s underline at `md`; focus thickens it to 2px, no ring.
+          "border-y border-t-transparent border-b-quebi-rule bg-transparent px-0 py-2.5",
+          "transition-[border-color,box-shadow] duration-150",
+          "outline-none focus:outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+          "invalid:border-b-quebi-danger data-invalid:border-b-quebi-danger",
+          "focus:invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)] focus:data-invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
           "disabled:cursor-not-allowed disabled:opacity-50 in-disabled:opacity-50",
-          "scheme-dark",
           resolved,
         ),
       )}

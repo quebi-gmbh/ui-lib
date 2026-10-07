@@ -18,7 +18,7 @@
  * - **WCAG 2.4.13 Focus Appearance (AAA)** — at least the area of a 2px
  *   perimeter, and 3:1 between the focused and unfocused states.
  *
- * `--q-brand-mark` clears 3:1 on both themes with 0.45 to spare (task #96), so
+ * `--q-focus` clears 3:1 on both themes with 0.45 to spare (task #96), so
  * a variant here fails on geometry or on translucency, never on hue.
  */
 
@@ -286,7 +286,7 @@ export const focusGroups: FocusGroup[] = [
       {
         id: "elevation",
         name: "Elevation",
-        css: "box-shadow: var(--q-glow-strong);\nborder-color: var(--accent);",
+        css: "box-shadow: var(--q-shadow-float);\nborder-color: var(--accent);",
         note: "The field lifts. quebi's glow is mint light coming off the surface rather than a drop shadow, so it reads on the dark page and nearly vanishes on the light one.",
         verdict: "conditional",
         verdictWhy: "A glow has no measurable edge. It passes here only because of the opaque border under it.",

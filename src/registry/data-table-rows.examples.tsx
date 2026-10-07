@@ -57,7 +57,7 @@ const SelectionShowcase = () => {
         bulkActions={() => (
           <Button intent="outline" size="xs">
             <Trash2 data-slot="icon" aria-hidden="true" />
-            Archive
+            archive
           </Button>
         )}
         defaultPageSize={8}
@@ -166,7 +166,7 @@ const ActionsShowcase = () => {
         // Conditional formatting: the row says what it is, in a class the
         // consumer chooses rather than one the table invents.
         rowClassName={(order) =>
-          order.amount > 700 ? "bg-emerald-500/5" : order.status === "Refunded" ? "bg-red-500/5" : undefined
+          order.amount > 700 ? "bg-quebi-raised" : order.status === "Refunded" ? "bg-quebi-danger/5" : undefined
         }
         onRowReorder={(keys, targetKey, position) =>
           setRows((current) => {
@@ -186,10 +186,10 @@ const ActionsShowcase = () => {
               ⋯
             </MenuTrigger>
             <MenuContent placement="bottom end">
-              <MenuItem id="open">Open</MenuItem>
-              <MenuItem id="duplicate">Duplicate</MenuItem>
+              <MenuItem id="open">open</MenuItem>
+              <MenuItem id="duplicate">duplicate</MenuItem>
               <MenuItem id="delete" intent="danger">
-                Delete
+                delete
               </MenuItem>
             </MenuContent>
           </Menu>

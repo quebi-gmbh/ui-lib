@@ -2,18 +2,19 @@
 
 import {
   composeRenderProps,
+  Label as LabelPrimitive,
   Switch as SwitchPrimitive,
   type SwitchProps,
 } from "react-aria-components"
-import { Label } from "@/components/field"
 import { cn } from "@/lib/utils"
 
 /**
  * Switch — quebi design system
  *
- * Built on react-aria-components. A 44x24 toggle: the off track is a subtle
- * cyan-tinted surface, the on track fills with brand teal, and a white thumb
- * slides 20px to the right when selected. Focus uses the quebi teal ring.
+ * Built on react-aria-components. A 44x24 pill: off is a `rule`-edged track
+ * with an ink thumb, on fills the track with `action` ink and turns the thumb
+ * `on-action` as it slides 20px right. Focus is the outward ring. A string
+ * child is set as running text, not as the mono field label.
  */
 export function Switch({ children, className, ...props }: SwitchProps) {
   return (
@@ -40,16 +41,11 @@ export function Switch({ children, className, ...props }: SwitchProps) {
             className={cn(
               // 44x24 track, pill-shaped.
               "relative isolate inline-flex h-6 w-11 shrink-0 rounded-full border",
-              "transition-colors duration-200",
-              "border-quebi-line/30 bg-quebi-surface/10",
-              // The on track's boundary is the mark token, not the fill token:
-              // mint on the light page is 1.74:1, so a mint track edged in mint
-              // left the switch with no outline there (task #145). Teal-600 is
-              // 3.45:1 against the page; on dark the two tokens are the same
-              // value, so nothing changes.
-              values.isSelected && "border-quebi-brand-mark bg-quebi-brand",
+              "transition-colors duration-150",
+              "border-quebi-rule bg-transparent",
+              values.isSelected && "border-quebi-action bg-quebi-action",
               values.isFocusVisible &&
-                "ring-2 ring-quebi-brand-mark ring-offset-2 ring-offset-quebi-bg",
+                "ring-2 ring-quebi-focus ring-offset-3 ring-offset-quebi-bg",
             )}
           >
             <span
@@ -61,9 +57,9 @@ export function Switch({ children, className, ...props }: SwitchProps) {
                 // visible gap is `px`, not `0.5`. That leaves 44 - 2*2 - 20 = 20px
                 // of travel, which is what `translate-x-5` covers, so the on state
                 // lands 2px from the right edge and the thumb is centered either way.
-                "pointer-events-none absolute top-px left-px size-5 rounded-full bg-quebi-inverse-bg shadow-quebi-glow",
-                "transition-transform duration-200",
-                values.isSelected && "translate-x-5",
+                "pointer-events-none absolute top-px left-px size-5 rounded-full bg-quebi-action",
+                "transition-[translate,background-color] duration-150",
+                values.isSelected && "translate-x-5 bg-quebi-on-action",
               )}
             />
           </span>
@@ -80,6 +76,14 @@ export function Switch({ children, className, ...props }: SwitchProps) {
   )
 }
 
-export function SwitchLabel(props: React.ComponentProps<typeof Label>) {
-  return <Label elementType="span" {...props} />
+/** The switch's own label: running text beside the track. */
+export function SwitchLabel({ className, ...props }: React.ComponentProps<typeof LabelPrimitive>) {
+  return (
+    <LabelPrimitive
+      data-slot="label"
+      elementType="span"
+      {...props}
+      className={cn("select-none text-sm text-quebi-fg", className)}
+    />
+  )
 }

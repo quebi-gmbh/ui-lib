@@ -16,8 +16,8 @@ const EditableSchedule = () => {
   return (
     <div className="w-full max-w-md">
       <div className="mb-5 flex items-baseline justify-between">
-        <div className="font-bold text-quebi-fg tracking-tight">wed 20 aug</div>
-        <span className="text-[10.5px] text-quebi-fg-subtle">snaps to 15 min</span>
+        <div className="font-medium text-quebi-fg tracking-tight">wed 20 aug</div>
+        <span className="text-quebi-caption text-quebi-fg-subtle">snaps to 15 min</span>
       </div>
       <DaySchedule spans={spans} onSpansChange={setSpans} />
     </div>
@@ -64,8 +64,8 @@ const TypedTimes = () => {
   return (
     <div className="w-full max-w-md">
       <div className="mb-5 flex items-baseline justify-between">
-        <div className="font-bold text-quebi-fg tracking-tight">wed 20 aug</div>
-        <span className="text-[10.5px] text-quebi-fg-subtle">type a time, or drag</span>
+        <div className="font-medium text-quebi-fg tracking-tight">wed 20 aug</div>
+        <span className="text-quebi-caption text-quebi-fg-subtle">type a time, or drag</span>
       </div>
       <DaySchedule spans={spans} onSpansChange={setSpans} timeLabels="editable" height={400} />
     </div>
@@ -78,8 +78,8 @@ const UprightTimes = () => {
   return (
     <div className="w-full max-w-md">
       <div className="mb-5 flex items-baseline justify-between">
-        <div className="font-bold text-quebi-fg tracking-tight">wed 20 aug</div>
-        <span className="text-[10.5px] text-quebi-fg-subtle">times read left to right</span>
+        <div className="font-medium text-quebi-fg tracking-tight">wed 20 aug</div>
+        <span className="text-quebi-caption text-quebi-fg-subtle">times read left to right</span>
       </div>
       <DaySchedule
         spans={spans}
@@ -118,8 +118,8 @@ const HorizontalSchedule = () => {
   return (
     <div className="w-full">
       <div className="mb-5 flex items-baseline justify-between">
-        <div className="font-bold text-quebi-fg tracking-tight">wed 20 aug</div>
-        <span className="text-[10.5px] text-quebi-fg-subtle">the day runs across</span>
+        <div className="font-medium text-quebi-fg tracking-tight">wed 20 aug</div>
+        <span className="text-quebi-caption text-quebi-fg-subtle">the day runs across</span>
       </div>
       <DaySchedule spans={spans} onSpansChange={setSpans} orientation="horizontal" />
     </div>

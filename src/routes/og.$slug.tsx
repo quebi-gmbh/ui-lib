@@ -3,6 +3,8 @@ import { useEffect, useState } from "react"
 import { useParams } from "react-router"
 import { metaRegistry } from "@/registry/meta"
 import { ogScenes } from "@/registry/og"
+import { Logo } from "@/components/logo"
+import { StageGlyph } from "@/components/stage"
 
 /**
  * The share image, as a page.
@@ -286,28 +288,22 @@ export default function OgImage() {
       // The one place in the app that is measured in pixels rather than in
       // tokens: this box *is* the file the screenshot writes.
       style={{ width: OG_WIDTH, height: OG_HEIGHT }}
-      className="relative flex flex-col overflow-hidden bg-quebi-bg text-quebi-fg"
+      className="relative isolate flex flex-col overflow-hidden bg-quebi-stage text-quebi-fg"
     >
       {/* In the body rather than the head: it has to reach the overlays this
           route portals out of itself, and this is a screenshot canvas, not a
           document anyone will read the metadata of. */}
       <style>{NO_CSS_ANIMATION}</style>
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-quebi-grid" />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-40 left-1/2 size-96 -translate-x-1/2 rounded-full bg-quebi-brand/25 blur-3xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-40 -right-20 size-80 rounded-full bg-quebi-accent/20 blur-3xl"
-      />
+      {/* The one ornament the system has: the quebi mark, huge, inside the
+          frame, behind everything — as on every Stage. */}
+      <StageGlyph className="pointer-events-none absolute top-14 right-16 -z-10 size-110 text-quebi-glyph" />
 
       {/* z-60, not z-10: a scene that opens a modal, a sheet or a drawer paints
           a scrim across the whole viewport at z-50, and the one thing this
           image cannot afford to lose behind it is the component's name. */}
       <div className="relative z-60 flex items-center justify-between px-16 pt-14">
-        <img src="/quebi-logo.svg" alt="quebi" width={173} height={50} />
-        <span className="text-xl font-medium uppercase tracking-widest text-quebi-brand">
+        <Logo height={40} />
+        <span className="font-mono text-xl font-medium tracking-[0.12em] text-quebi-fg-subtle uppercase">
           {eyebrow}
         </span>
       </div>
@@ -347,8 +343,8 @@ export default function OgImage() {
         )}
       </div>
 
-      <div className="relative z-60 px-16 pb-14">
-        <p className={`${titleSize(title)} font-bold leading-none tracking-tight text-quebi-fg`}>
+      <div className="relative z-60 mx-16 mb-14 border-t border-quebi-hairline pt-6">
+        <p className={`${titleSize(title)} font-display font-extralight leading-none text-quebi-fg lowercase`}>
           {title}
         </p>
       </div>

@@ -1,169 +1,127 @@
 /*
- * quebi GmbH — Tailwind v4 theme (from the quebi-styleguide skill).
- * Imported after "tailwindcss" in main.css. The @theme block registers
- * tokens that Tailwind turns into utilities (bg-quebi-brand, font-sans,
- * shadow-quebi-glow, rounded-quebi-md, max-w-quebi-content, etc.).
+ * quebi GmbH — Tailwind v4 theme: Ink & Paper.
+ *
+ * Imported after "tailwindcss" in main.css. This file is the whole answer to
+ * "what does quebi look like", and since the move to the Ink & Paper design
+ * system that answer is short: ink and paper, one display face, white space,
+ * hairline rules, square controls, and one soft directional light on a stage.
+ * No mint, no teal, no other hue — the original mint is retired.
+ *
+ * Two themes that are the same design lit differently: **Daylight** (`.light`,
+ * the default) and **Cinematic** (`.dark`). `<html>` always carries one of the
+ * two classes, set before paint by the no-flash script in root.tsx; `.dark` is
+ * also what chart.tsx's ChartStyle selector targets.
+ *
+ * The design system's semantic tokens map onto utilities one to one:
+ *
+ *   design token        utility colour          Daylight     Cinematic
+ *   bg-000              quebi-bg                white        ink-950
+ *   bg-100              quebi-raised            gray-200     gray-900
+ *   bg-200              quebi-pressed           gray-250     gray-800
+ *   text                quebi-fg                ink-950      gray-50
+ *   text-body           quebi-fg-muted          gray-800     gray-300
+ *   text-muted          quebi-fg-subtle         gray-600     gray-400
+ *   line                quebi-hairline          ink 25%      white 20%
+ *   line-strong         quebi-rule              ink-950      gray-50
+ *   glyph               quebi-glyph             ink 6%       white 7%
+ *   action / on-action  quebi-action / -on-     ink / white  gray-50 / ink
+ *   focus               quebi-focus             ink-950      gray-50
+ *   glow-from / -to     quebi-glow-from / -to   white/250    gray-800/ink
+ *
+ * Use semantic tokens only; the raw ramp below exists to feed them.
  */
 
 /*
  * ---------------- Theme-aware tokens ----------------
- * The `--color-quebi-*` tokens are declared `inline` so their utilities
- * (bg-quebi-bg, text-quebi-fg, border-quebi-line, …) resolve to the runtime
- * `--q-*` variables directly. Those runtime variables are flipped per theme by
- * the `:root, .dark` / `.light` blocks below, so every quebi utility re-themes
- * without touching markup. `<html>` always carries an explicit `dark` or
- * `light` class (set by the no-flash script in root.tsx); `.dark` is also what
- * chart.tsx's ChartStyle selector targets.
- *
- * The `--shadow-quebi-*` tokens are in here for the same reason, and only since
- * task #117 — see the elevation section at the end of this block for what being
- * stuck in the plain `@theme` block did to them.
+ * Declared `inline` so their utilities (bg-quebi-bg, text-quebi-fg,
+ * border-quebi-hairline, …) resolve to the runtime `--q-*` variables directly.
+ * Those runtime variables are flipped per theme by the `:root, .light` / `.dark`
+ * blocks below, so every quebi utility re-themes without touching markup.
  */
 @theme inline {
-  /* Surfaces & text */
-  --color-quebi-bg:           var(--q-bg);          /* page background */
+  /* ---- Grounds ---- */
+  /* Page ground. Everything sits on this. */
+  --color-quebi-bg:           var(--q-bg);
+  /* bg-100: raised or inset areas, inputs that need a ground, hovered rows,
+     tags. Every text token holds AA on it. */
+  --color-quebi-raised:       var(--q-raised);
+  /* bg-200: second level on `raised` — pressed states, selected rows. */
+  --color-quebi-pressed:      var(--q-pressed);
+  /* The surface of something that floats above the page: a popover, a menu, a
+     list box, a dialog panel, a toast. Paper in Daylight (the float shadow
+     separates it); graphite in Cinematic, where a raised surface is lighter. A
+     surface that is flush with the page — a navbar, a docked sidebar, an
+     input — stays on `quebi-bg`. */
+  --color-quebi-elevated:     var(--q-elevated);
 
-  /* The surface of something that floats ABOVE the page: a popover, a menu, a
-     list box, a dialog panel, a toast, the `float` navbar and sidebar. Not the
-     same question as `--color-quebi-bg`, which is what the page itself is
-     painted in — and the two only look like the same question on dark, where
-     they share a value.
+  /* ---- Ink ---- */
+  --color-quebi-fg:           var(--q-fg);          /* text: headlines, nav, links */
+  --color-quebi-fg-muted:     var(--q-fg-muted);    /* text-body: running text */
+  --color-quebi-fg-subtle:    var(--q-fg-subtle);   /* text-muted: labels, captions, numbers */
 
-     In light the page is `#f4f6f6` and a default Card tints *down* from it
-     (`bg-quebi-surface/[0.02]` is ink at 2%, ≈ `#eff1f2`), so an overlay painted
-     in the page colour renders ~2% *lighter* than the card it sits in, edged by
-     a 10%-alpha hairline: a pale patch rather than something raised. White is
-     what a light theme actually elevates with, and it puts the overlay a clear
-     step above both the card and the page.
+  /* ---- Rules ---- */
+  /* line: hairline rules — under the nav, above the low title, between index
+     rows, the edge of a card. Decorative separation, never the only cue. Already
+     translucent: do not add an /opacity to it. */
+  --color-quebi-hairline:     var(--q-hairline);
+  /* line-strong: a rule that carries structure — the top rule of an index, a
+     control border, a frame. ≥14:1 on every surface. */
+  --color-quebi-rule:         var(--q-rule);
 
-     Dark keeps `#030712`, so this is a no-op there by value and the dark theme
-     is unchanged — on dark, elevation is the glow's job (below).
+  /* ---- Action & focus ---- */
+  /* The fill of the one solid button per view, of a checked box, of a selected
+     segment. Put `quebi-on-action` on top of it. */
+  --color-quebi-action:       var(--q-action);
+  --color-quebi-action-hover: var(--q-action-hover);
+  --color-quebi-on-action:    var(--q-on-action);
+  /* Focus ring: 2px solid, 3px offset, on every element that can take focus. */
+  --color-quebi-focus:        var(--q-focus);
 
-     Use it for portal surfaces and for the `float`/inset chrome variants. A
-     surface that is *flush* with the page — a default navbar, a docked sidebar,
-     a table's pinned column, an input — stays on `--color-quebi-bg`, or it will
-     stop matching the page it is welded to. */
-  --color-quebi-elevated:     var(--q-elevated);    /* overlay / floating surface */
-
-  --color-quebi-fg:           var(--q-fg);          /* primary foreground */
-  --color-quebi-fg-muted:     var(--q-fg-muted);    /* body copy */
-  /* Captions / meta — timestamps, helper text, table meta, placeholders. The
-     third rung of the type hierarchy, and the one that is set smallest, so it
-     is *text* at 4.5:1 and not a decoration at 3:1. Both values are off
-     Tailwind's ladder on purpose: gray-500 is 4.16:1 on the dark surface and
-     4.46:1 on the light one, so the step that looks right misses in both
-     themes and the next step up is already `--q-fg-muted`. See the theme
-     blocks below for the numbers. */
-  --color-quebi-fg-subtle:    var(--q-fg-subtle);   /* captions / meta */
-
-  /* Brand, as a *fill*: the mint a button, a badge tint or a selected control is
-     painted in. Deliberately the same value in both themes — see `--q-brand`
-     below. Put `--color-quebi-on-brand` on top of it, never
-     `--color-quebi-fg`. A border belongs here only when it is the *edge* of such
-     a fill; a border that is on its own is a mark, not a fill. */
-  --color-quebi-brand:        var(--q-brand);
-  --color-quebi-brand-hover:  var(--q-brand-hover);
-
-  /* Brand, as *text or a glyph* on a page surface. A separate token because the
-     two roles cannot share a value: the mint fill has to stay mint in light
-     mode, and mint text on the light surface is 1.74:1 — WCAG 1.4.3 asks 4.5:1.
-     Identical to `--q-brand` on dark, where the fill value is already legible,
-     so this split costs the dark theme nothing. Reach for it for any
-     `text-`/`decoration-` utility; for a `ring-`/`stroke-`/`outline-` one reach
-     for `--color-quebi-brand-mark` below, and for `bg-` for `--color-quebi-brand`. */
-  --color-quebi-brand-text:       var(--q-brand-text);
-  --color-quebi-brand-text-hover: var(--q-brand-text-hover);
-
-  /* Brand, as a *thin graphical mark* on a page surface: a focus ring, a focus
-     border, an SVG stroke. A third token because it answers a third question.
-     The fill has no contrast duty of its own; text is judged at WCAG 1.4.3's
-     4.5:1; a mark is judged at 1.4.11 / 2.4.11's 3:1 — so the mark may be the
-     *brightest* teal that clears its own bar rather than inheriting the text
-     token's stricter budget. Identical to `--q-brand` on dark, like the text
-     token, so the split costs the dark theme nothing.
-
-     Reach for it for `ring-`/`stroke-`/`outline-` and for a lone `border-` that
-     is the only thing marking a state. Use `--color-quebi-brand` when the border
-     is the *edge of a mint fill* (`border-quebi-brand bg-quebi-brand`), and for
-     the low-alpha tint borders, where the label carries the meaning.
-
-     Draw it opaque. 50% of any teal on `#f4f6f6` is under 2:1, and — less
-     obviously — the old `ring-quebi-brand/50` was only 3.29:1 on *dark* too
-     once composited over `#030712`. `tests/mark-contrast.test.ts` recomputes
-     every alpha it finds rather than trusting that. */
-  --color-quebi-brand-mark:   var(--q-brand-mark);
-
-  /* Tint base for the low-alpha `white/[0.0x]` surfaces & borders. Flips the
-     tint direction (white on dark, ink on light); keep using with /opacity. */
+  /* ---- Tint base ---- */
+  /* Ink on Daylight, white on Cinematic, for the low-alpha tints a token
+     cannot express (`bg-quebi-surface/[0.04]` behind a drag preview, a
+     skeleton bar). Prefer `raised`/`pressed` wherever a solid ground works. */
   --color-quebi-surface:      var(--q-surface);
-  /* Hairline color behind the cyan-500/N borders/rings/dividers. Keep /opacity;
-     light gets a visible ink hairline instead of near-invisible cyan. */
-  --color-quebi-line:         var(--q-line);
 
-  /* Text/glyph sitting ON a brand fill — stays dark in BOTH themes. */
-  --color-quebi-on-brand:     var(--q-on-brand);
-  /* The inverse ("white") button surface. */
-  --color-quebi-inverse-bg:   var(--q-inverse-bg);
-  --color-quebi-inverse-fg:   var(--q-inverse-fg);
+  /* ---- Stage ---- */
+  /* The one ornament: the giant quebi mark behind a Stage (`text-quebi-glyph`
+     on the mark's `currentColor`), and the two ends of the stage light. Only
+     inside a stage background. */
+  --color-quebi-glyph:        var(--q-glyph);
+  --color-quebi-glow-from:    var(--q-glow-from);
+  --color-quebi-glow-to:      var(--q-glow-to);
 
-  /* Semantic state text (flips 400-level on dark → 700/800-level on light).
-     These are text values first: every one of them clears 4.5:1 on its own
-     theme's surface, and on the 10% tint a Badge paints behind it. The handful
-     of `bg-`/`border-` uses are all /5 or /30, where the step barely shows. */
+  /* ---- State ----
+     The one place a hue survives, and only because these carry state that must
+     not be missed: an invalid field, a destructive action, a failed or passed
+     check. Each is a *text* value first and clears 4.5:1 on `bg`, `raised` and
+     on the 10% tint a Badge paints behind it. Never decorative: a category, a
+     series or an emphasis is ink, size or weight. */
   --color-quebi-danger:       var(--q-danger);
   --color-quebi-warn:         var(--q-warn);
   --color-quebi-success:      var(--q-success);
-  --color-quebi-info:         var(--q-info);
-  --color-quebi-accent:       var(--q-accent);
 
-  /* ---------------- Elevation (theme-aware) ----------------
-     These live in the `inline` block for exactly the reason the colours do, and
-     until task #117 they did not: declared in the plain `@theme` block below,
-     they were the one thing in this file that could not re-theme, so both
-     themes got the same mint bloom.
-
-     An emissive glow is a dark-first idea. It reads as light coming *off* a
-     surface, which needs a dark backdrop to read at all; on `#f4f6f6` it does
-     not say "raised", it says "shiny" — and because the overlay surface had no
-     contrast against its container either (see `--color-quebi-elevated`), that
-     bloom was the *only* thing separating a popover from the card behind it,
-     doing the one job it is worst at. Light gets what a light surface actually
-     takes its depth from: a neutral, downward, occlusion-shaped shadow.
-
-     The names do not move, so no markup does either. `shadow-quebi-glow` still
-     means "this is raised" everywhere it is used — a card hover, a slider thumb,
-     a selected toggle — it just stops meaning "mint" in the theme that has no
-     use for mint light. Both names are also listed under `shadow` in
-     `extendTailwindMerge` in `src/lib/utils.ts`; keep them in step. */
-  --shadow-quebi-glow:        var(--q-glow);
-  --shadow-quebi-glow-strong: var(--q-glow-strong);
+  /* ---- Elevation ---- */
+  /* shadow-float: menus, popovers, toasts, dialogs. Nothing in the page flow
+     takes a shadow — depth there comes from the stage light and from rules. In
+     Cinematic it is a 1px light ring plus a deep cast, because a shadow alone
+     does not read on ink. Also listed under `shadow` in `extendTailwindMerge`
+     in `src/lib/utils.ts`; keep the two in step. */
+  --shadow-quebi-float:       var(--q-shadow-float);
 }
 
-/* ---------------- Outfit, self-hosted ---------------- */
+/* ---------------- Fonts, self-hosted ---------------- */
 /*
- * These two files are byte-for-byte what fonts.gstatic.com serves for Outfit
- * v15 — copied into `public/fonts/`, not rebuilt — so nothing about the
- * rendering changes. What changes is where they come from. Until task #172 the
- * first line of main.css was an `@import` of a Google Fonts stylesheet, which
- * put two extra origins on the critical path of every first visit: the browser
- * had to download and parse the root CSS before it could even discover
- * fonts.googleapis.com, fetch a stylesheet from there to discover
- * fonts.gstatic.com, and only then fetch the font. Two cold TLS handshakes,
- * none of it visible to the preload scanner because the URL lived inside a CSS
- * file. Same-origin, the font shares the connection the page is already using
- * and root.tsx can preload it from the HTML.
+ * Three variable faces, all same-origin so they share the page's connection
+ * and root.tsx can preload them from the HTML:
  *
- * Outfit is a *variable* font (fvar/gvar/HVAR/MVAR/STAT), so one file covers
- * the whole 100–900 axis. The old `@import` asked for five weights and got
- * five @font-face rules pointing at this same one file; asking for fewer would
- * not have saved a byte. The range below is the axis the file actually has, so
- * `font-light` would render as real Light rather than a synthesised one, at no
- * cost — though as of today the repo uses only 400/500/600/700.
+ * - **Outfit** (display) — the wordmark's own face. Weights 100–400 for
+ *   headlines; one word may be set at 600 for emphasis.
+ * - **Inter** (text) — running text, captions, buttons, form controls.
+ * - **JetBrains Mono** (mono) — labels (always uppercase) and code.
  *
- * The latin-ext face is declared but deliberately NOT preloaded: `unicode-range`
- * means the browser fetches it only if a codepoint in that range renders, and a
- * scan of src/ finds none (German is entirely inside the latin subset). It is
- * 14.8 kB of insurance that costs nothing on the wire until something needs it.
+ * Never set running text in Outfit or headlines in Inter. The latin-ext Outfit
+ * face is `unicode-range` gated and costs nothing until a codepoint needs it.
  */
 
 /* latin-ext */
@@ -189,244 +147,272 @@
     U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-@theme {
-  /* Tailwind also keeps its full default palette — cyan-500, amber-500, red-500,
-     purple-400 are still available as supporting hues, no need to redeclare. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/fonts/inter-latin.woff2") format("woff2");
+}
 
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url("/fonts/jetbrains-mono-latin.woff2") format("woff2");
+}
+
+@theme {
   /* ---------------- Typography ---------------- */
-  /* Override the default font-sans stack so `font-sans` (Tailwind's default) is Outfit. */
-  --font-sans: "Outfit", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* `font-sans` is Tailwind's default family, so every unclassed element is
+     set in Inter. Headlines opt into `font-display`; labels and code into
+     `font-mono`. */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* The type scale, as `text-quebi-*` size utilities that carry their own
+     line-height, tracking and weight. The display roles also want
+     `font-display`; `label` and `code` want `font-mono`. Listed under `text` in
+     `extendTailwindMerge` so tailwind-merge knows they are sizes, not colours.
+
+       display-xl  Outfit Thin        gallery headline, one per page
+       display-l   Outfit ExtraLight  page headline in editorial layouts
+       display-m   Outfit ExtraLight  the low stage title
+       display-s   Outfit Light       section headings
+       title       Outfit Light       index rows, card titles
+       link        Outfit             text links that are calls to action
+       nav         Outfit             top navigation
+       body        Inter              running text
+       body-s      Inter              text beside a headline, card copy
+       caption     Inter              metadata, footnotes, table cells
+       tag         Inter Medium       the pill a Tag/Badge is set in
+       button      Inter Medium       button labels
+       label       Mono Medium        kickers, scene labels — uppercase
+       code        Mono               inline and block code */
+  --text-quebi-display-xl: 4.75rem;
+  --text-quebi-display-xl--line-height: 0.92;
+  --text-quebi-display-xl--letter-spacing: -0.01em;
+  --text-quebi-display-xl--font-weight: 100;
+  --text-quebi-display-l: 3.625rem;
+  --text-quebi-display-l--line-height: 1;
+  --text-quebi-display-l--letter-spacing: 0.01em;
+  --text-quebi-display-l--font-weight: 200;
+  --text-quebi-display-m: 2.625rem;
+  --text-quebi-display-m--line-height: 1.02;
+  --text-quebi-display-m--font-weight: 200;
+  --text-quebi-display-s: 1.875rem;
+  --text-quebi-display-s--line-height: 1.1;
+  --text-quebi-display-s--letter-spacing: 0.02em;
+  --text-quebi-display-s--font-weight: 300;
+  --text-quebi-title: 1.4375rem;
+  --text-quebi-title--line-height: 1.15;
+  --text-quebi-title--letter-spacing: 0.02em;
+  --text-quebi-title--font-weight: 300;
+  --text-quebi-link: 1.0625rem;
+  --text-quebi-link--line-height: 1.3;
+  --text-quebi-link--letter-spacing: 0.03em;
+  --text-quebi-link--font-weight: 400;
+  --text-quebi-nav: 0.875rem;
+  --text-quebi-nav--line-height: 1.3;
+  --text-quebi-nav--letter-spacing: 0.04em;
+  --text-quebi-nav--font-weight: 400;
+  --text-quebi-body: 0.9375rem;
+  --text-quebi-body--line-height: 1.5;
+  --text-quebi-body-s: 0.84375rem;
+  --text-quebi-body-s--line-height: 1.5;
+  --text-quebi-tag: 0.78125rem;
+  --text-quebi-tag--line-height: 1;
+  --text-quebi-tag--font-weight: 500;
+  --text-quebi-caption: 0.75rem;
+  --text-quebi-caption--line-height: 1.4;
+  --text-quebi-button: 0.875rem;
+  --text-quebi-button--line-height: 1;
+  --text-quebi-button--font-weight: 500;
+  --text-quebi-label: 0.6875rem;
+  --text-quebi-label--line-height: 1.3;
+  --text-quebi-label--letter-spacing: 0.12em;
+  --text-quebi-label--font-weight: 500;
+  --text-quebi-code: 0.8125rem;
+  --text-quebi-code--line-height: 1.5;
 
   /* ---------------- Radii ---------------- */
-  /* `xs` is not a smaller `sm`, it is the radius of a *mark* — a glyph small
-     enough that the control radius would round it away. `sm` is 8px because a
-     38px button wants 8px; on the 18px checkbox indicator the maximum possible
-     radius is 9px, so 8px left a 2px flat run per side and the checkbox was a
-     circle with four dents. Shape is the only thing that says whether a group
-     takes one answer or several, so at 8px every multi-select in the library
-     read as single-select (task #199). 4px is half the maximum: a rounded
-     square at a glance, still a member of the same family as the input above
-     it. Use it for a mark under about 24px, not for a small surface — a chip
-     or a swatch is a surface and keeps `sm`. */
-  --radius-quebi-xs:   0.25rem;  /* 4px  — marks: checkbox indicator */
-  --radius-quebi-sm:   0.5rem;   /* 8px  — buttons, inputs */
-  --radius-quebi-md:   0.75rem;  /* 12px — cards */
-  --radius-quebi-lg:   1rem;     /* 16px — large surfaces */
+  /* Square by default: buttons, inputs, cards, rules and index rows take no
+     radius at all, which is Tailwind's default and needs no token. Three
+     exceptions, each with one job:
+     - `rounded-quebi-s` (6px) — small floating UI: tooltips, menus, popovers.
+     - `rounded-quebi-l` (22px) — the outer frame of a Stage or media block
+       embedded inside another page. Nowhere else.
+     - `rounded-full` — tags, and things that are round by nature (a radio, an
+       avatar, a status dot, a switch track). */
+  --radius-quebi-s: 6px;
+  --radius-quebi-l: 22px;
+
+  /* ---------------- Spacing ---------------- */
+  /* The design's space scale. Steps 1–7 are Tailwind's own 4px rungs
+     (`gap-1` … `gap-7`); the three large steps are named here. */
+  --spacing-quebi-8: 2.75rem;   /* 44px — nav to scene label */
+  --spacing-quebi-9: 4rem;      /* 64px — stage padding on desktop, between sections */
+  --spacing-quebi-10: 7.5rem;   /* 120px — section rhythm on long pages */
 
   /* ---------------- Scrollbar geometry ---------------- */
   /* One bar, two implementations: `quebi-scrollbar` paints the native bars and
-     `.os-theme-quebi` the OverlayScrollbars ones, and both read these. Theme
-     tokens rather than theme *values* — a scrollbar is the same size in both
-     themes, the way a radius is.
-
-     `size` is the whole bar: the track's thickness and, at `pad: 0`, the pill's
-     too. `pad` is the gap between pill and container edge, and it is zero
-     because a scrollbar is a chrome element at the edge of a surface — padding
-     it in costs gutter to draw nothing and leaves the pill stranded in the
-     middle of a rounded corner. `width` is Firefox's only lever, which takes a
-     keyword and not a length. Override them per surface with
-     `quebi-scrollbar-floating` / `quebi-scrollbar-none` /
-     `quebi-scrollbar-arrows`. */
+     `.os-theme-quebi` the OverlayScrollbars ones, and both read these. `size`
+     is the whole bar; `pad` the gap between thumb and edge; `width` is
+     Firefox's only lever. Override per surface with `quebi-scrollbar-floating`
+     / `quebi-scrollbar-none` / `quebi-scrollbar-arrows`. */
   --q-scroll-size:  6px;
   --q-scroll-pad:   0px;
   --q-scroll-width: thin;
-  /* Steppers, as a switch rather than a rule. `none` is the default and the
-     right answer nearly everywhere; `quebi-scrollbar-arrows` sets it to `block`
-     on a surface that has square corners for the buttons to square off
-     against. It is a `display` value and not a boolean because that is the
-     property it lands in, and a variant that has to restate the button's rules
-     to turn them on is a second scrollbar racing the first. */
+  /* Steppers, as a `display` value: `none` by default, `block` under
+     `quebi-scrollbar-arrows`. */
   --q-scroll-button: none;
-  /* The shortest a handle may get, however long the content is — below about
-     this a pill stops reading as a grabbable thing and starts reading as a
-     dot. Shared for the same reason as the rest: two scrollbars that agree on
-     their width and disagree on their minimum are still two scrollbars. */
+  /* The shortest a thumb may get before it stops reading as grabbable. */
   --q-scroll-min:   32px;
 
   /* ---------------- Motion ---------------- */
-  /* The curve for something that *travels* — a band of months stepping one
-     month sideways, a row widening to hold another one — as opposed to
-     something that merely arrives.
-
-     `ease-out` is the house default and it is right for arriving: an overlay is
-     already at speed when it enters the frame and all the reader sees is it
-     settling. It is wrong for a thing that starts from rest in front of you,
-     because it begins at full speed, and a calendar that leaves at full speed
-     reads as a jump caught halfway rather than as a movement. This one is
-     symmetric — it comes out of rest and back into it — which is what makes a
-     press feel like it moved the months rather than replaced them.
-
-     Cubic in and out: strong enough to be felt at the ends over the ~400ms a
-     cell-wide step takes, mild enough not to look like it is being animated
-     *at* you. `prefers-reduced-motion` drops the transition entirely, so this
-     is a curve for readers who asked for motion. */
+  /* Small and functional. `fast` for colour and underline changes, `base` for
+     the index row shift and reveals; both are Tailwind's `duration-150` /
+     `duration-300` too. Everything turns off under `prefers-reduced-motion`
+     (see the base layer). */
+  --duration-quebi-fast: 150ms;
+  --duration-quebi-base: 300ms;
+  /* The curve for something that *travels* — a band of months stepping
+     sideways — rather than something that arrives: symmetric, out of rest and
+     back into it. */
   --ease-quebi-travel: cubic-bezier(0.65, 0, 0.35, 1);
 
-  /* ---------------- Shadows / glows ---------------- */
-  /* Moved to the `@theme inline` block above, where they can flip per theme —
-     nothing belongs here that has a light value and a dark one. */
-
   /* ---------------- Container widths ---------------- */
-  /* `--container-*` tokens become `max-w-*` utilities in v4. Two measures, and
-     they answer different questions:
-     - `content` is how wide a *line of prose* may get before it stops being
-       readable. Put it on paragraphs.
-     - `shell` is how wide the *app* is. Put it on the outermost container of a
-       page region (see the `quebi-shell` utility below), never on a paragraph. */
-  --container-quebi-content: 48rem;  /* matches max-w-3xl, just named */
-  --container-quebi-shell:   90rem;  /* 1440px — the app's outer width */
+  /* `content` is how wide a line of prose may get (38–60 characters below a
+     headline is the target; this is the outer bound). `shell` is how wide the
+     app is — the design's 1200px page. */
+  --container-quebi-content: 48rem;
+  --container-quebi-shell:   75rem;
 }
 
 /*
  * ---------------- Theme value sets ----------------
- * quebi is dark-first: dark is the default (`:root`), light overrides under
- * `.light`. `.dark` is listed explicitly so an intentional `dark` class wins.
+ * Daylight is the default (`:root`), Cinematic overrides under `.dark`. `.light`
+ * is listed explicitly so a `.light` subtree inside a dark page re-themes.
+ *
+ * The raw ramp exists to feed the semantic values and is not exposed as
+ * utilities: ink-950 #030712 · gray-900 #111827 · gray-800 #1f2937 ·
+ * gray-700 #374151 · gray-600 #4b5563 · gray-400 #9ca3af · gray-300 #d1d5db ·
+ * gray-250 #d9dce1 · gray-200 #e5e7eb · gray-100 #f3f4f6 · gray-50 #f9fafb ·
+ * white #ffffff.
+ *
+ * Contrast (WCAG): every text token holds ≥4.5:1 on every ground and on both
+ * ends of the stage glow, in both themes — the lowest is `fg-subtle` on
+ * `glow-to` in Daylight, 5.5:1. Never put gray-400 text on a light ground or
+ * gray-600 on a dark one.
  */
 :root,
-.dark {
-  --q-bg:          #030712;
-  /* The same value as the page, on purpose: on dark an overlay does not need a
-     lighter surface to read as raised, because the glow below already carries
-     it. The token exists so light can differ; here it costs nothing. */
-  --q-elevated:    #030712;
-  --q-fg:          #ffffff;
-  --q-fg-muted:    #9ca3af;  /* gray-400 — 7.93:1 */
-  /* Between gray-500 and gray-400: 5.14:1, and still 4.61:1 once a
-     `bg-quebi-surface/[0.06]` card tint has lightened the backdrop under it.
-     gray-500 itself was 4.16:1 and 3.74:1 on that same tint. */
-  --q-fg-subtle:   #7a818e;
-  --q-brand:       #2dd4a8;
-  --q-brand-hover: #5eead4;
-  /* On dark the fill value is already 10.64:1 as text, so the text token is the
-     fill token. The split only bites in light mode. */
-  --q-brand-text:       #2dd4a8;
-  --q-brand-text-hover: #5eead4;
-  /* Same again for the mark role: 10.64:1 on #030712 as a stroke. */
-  --q-brand-mark:       #2dd4a8;
-  --q-surface:     #ffffff;  /* white tint on dark */
-  --q-line:        #06b6d4;  /* cyan-500 hairline */
-  --q-on-brand:    #052e22;  /* dark ink on mint — both themes */
-  --q-inverse-bg:  #ffffff;
-  --q-inverse-fg:  #0b1120;
-  --q-danger:      #f87171;  /* red-400 */
-  --q-warn:        #fbbf24;  /* amber-400 */
-  --q-success:     #34d399;  /* emerald-400 */
-  --q-info:        #22d3ee;  /* cyan-300 */
-  --q-accent:      #c4b5fd;  /* purple-300 */
-  /* The signature: depth as light coming off the surface. Symmetrical, mint,
-     no direction — it is a glow and not a shadow, and it only reads that way
-     against a near-black page. Unchanged; this is the value the token has
-     always had, now written where the light theme can disagree with it. */
-  --q-glow:        0 0 20px rgb(45 212 168 / 0.15);
-  --q-glow-strong: 0 0 30px rgb(45 212 168 / 0.30);
-
-  /* Scrollbar thumb — see the `.light` block for the argument. These three are
-     the values both scrollbar systems have always used on dark, now named:
-     cyan-500 at 25% is 1.50:1 against this page, 2.14:1 on hover and 4.28:1
-     while dragging. Unchanged by task #146. */
-  --q-scroll-thumb:        rgb(6 182 212 / 0.25);
-  --q-scroll-thumb-hover:  rgb(6 182 212 / 0.40);
-  --q-scroll-thumb-active: rgb(45 212 168 / 0.60); /* quebi-brand on drag */
+.light {
+  --q-bg:           #ffffff;
+  --q-raised:       #e5e7eb;
+  --q-pressed:      #d9dce1;
+  --q-elevated:     #ffffff;
+  --q-fg:           #030712;
+  --q-fg-muted:     #1f2937;
+  --q-fg-subtle:    #4b5563;
+  --q-hairline:     #03071240;
+  --q-rule:         #030712;
+  --q-action:       #030712;
+  --q-action-hover: #1f2937;
+  --q-on-action:    #ffffff;
+  --q-focus:        #030712;
+  --q-surface:      #030712;
+  --q-glyph:        #0307120f;
+  --q-glow-from:    #ffffff;
+  --q-glow-to:      #d9dce1;
+  --q-stage-light:  radial-gradient(110% 90% at 85% 0%, #ffffff 0%, #f3f4f6 45%, #d9dce1 100%);
+  /* 800-level, because they are read as 12px text: each clears 4.5:1 on
+     white, on gray-200 and under a 10% tint of itself. */
+  --q-danger:       #991b1b;  /* red-800 */
+  --q-warn:         #92400e;  /* amber-800 */
+  --q-success:      #065f46;  /* emerald-800 */
+  --q-shadow-float: 0 1px 2px #0307120f, 0 12px 32px #03071214;
+  /* Chart series: the gray ramp, alternating dark and light. */
+  --q-chart-1:  #030712;
+  --q-chart-2:  #9ca3af;
+  --q-chart-3:  #4b5563;
+  --q-chart-4:  #d1d5db;
+  --q-chart-5:  #1f2937;
+  --q-chart-6:  #e5e7eb;
+  --q-chart-7:  #374151;
+  --q-chart-8:  #d9dce1;
+  --q-chart-9:  #111827;
+  --q-chart-10: #6b7280;
+  /* Scrollbar thumb: ink, a monotone ladder from rest to drag. */
+  --q-scroll-thumb:        rgb(3 7 18 / 0.35);
+  --q-scroll-thumb-hover:  rgb(3 7 18 / 0.5);
+  --q-scroll-thumb-active: rgb(3 7 18 / 0.8);
+  color-scheme: light;
 }
 
-.light {
-  --q-bg:          #f4f6f6;
-  /* Pure white, two steps up: above the page (#f4f6f6) and above the ink-tinted
-     card a component is usually shown inside (≈ #eff1f2). That ordering is the
-     point — the overlay used to be the page colour exactly, which left it a
-     rung *below* where it belongs and only ~2% off the card, a pale patch.
-     Every text token gains a little contrast here rather than losing it, since
-     white is lighter than the surface they were measured against. */
-  --q-elevated:    #ffffff;
-  --q-fg:          #0b1120;
-  /* gray-700, one step down from the gray-600 this was. Body copy gets darker
-     for the same reason the state colours did in #94 — but here it is also what
-     makes room: `--q-fg-subtle` has to rise to 5.51:1 to be legible, and against
-     a 6.97:1 muted that left a 1.31 step between two greys that are read at
-     12px. At 9.50:1 the step is 1.72, close to the 2.50 the hierarchy had while
-     subtle was unreadable. */
-  --q-fg-muted:    #374151;
-  /* Between gray-600 and gray-500: 5.51:1, and 4.87:1 on the ink tint a card
-     paints. The old #8b95a5 was 2.79:1 — under even the 3:1 large text would be
-     allowed, so it failed on any reading of the threshold. */
-  --q-fg-subtle:   #5b6472;
-  --q-brand:       #2dd4a8;  /* unchanged — mint fills stay dark-first */
-  --q-brand-hover: #14b88f;
-  /* teal-700/800. The mint darkened until it is readable *as text* on #f4f6f6
-     (5.05:1, and 4.75:1 on the mint tint a brand Badge paints behind it). Not
-     emerald, which is `--q-success`: the two would be a hue apart. */
-  --q-brand-text:       #0f766e;
-  --q-brand-text-hover: #115e59;
-  /* teal-600 — 3.45:1 on #f4f6f6, and the brightest step on the teal ladder
-     that clears 1.4.11's 3:1 at all: teal-500 (#14b8a6) is 2.29:1 and the
-     light brand-hover (#14b88f) is 2.34:1. One step lighter than the text
-     token, which is the whole reason this is not just `--q-brand-text` under
-     another name — a mark that only has to reach 3:1 gets to stay mintier. */
-  --q-brand-mark:       #0d9488;
-  --q-surface:     #0b1120;  /* ink tint on light */
-  --q-line:        #0b1120;  /* ink hairline */
-  --q-on-brand:    #052e22;  /* unchanged — it sits ON mint, which has not moved */
-  --q-inverse-bg:  #0b1120;
-  --q-inverse-fg:  #ffffff;
-  /* One step down from the 600s these used to be, because a 600 is a fill value
-     and these are read as 12px text. Each is the lowest step on its own ladder
-     that clears 4.5:1 against the tint a Badge paints behind it, with margin —
-     600-level cleared the bare surface and then lost it again under the tint
-     (red-600 was 4.45:1 before the tint even touched it). */
-  --q-danger:      #b91c1c;  /* red-700 */
-  --q-warn:        #92400e;  /* amber-800 — amber-700 is 4.31:1 on the tint */
-  --q-success:     #065f46;  /* emerald-800 */
-  --q-info:        #155e75;  /* cyan-800 */
-  --q-accent:      #6d28d9;  /* violet-700 */
-  /* Depth as occlusion, not emission: a tight contact shadow under the edge
-     plus a wide soft one below it, both cast downward and both in the same ink
-     (`#0b1120`) the light theme already tints surfaces and hairlines with — so
-     the shadow is a darker version of the page, never a grey from somewhere
-     else. The alphas are low because what they fall on is near-white; this is
-     the pair doing the separating a mint bloom cannot do here. */
-  --q-glow:        0 1px 2px rgb(11 17 32 / 0.06), 0 8px 24px rgb(11 17 32 / 0.08);
-  --q-glow-strong: 0 2px 4px rgb(11 17 32 / 0.08), 0 16px 40px rgb(11 17 32 / 0.16);
-
-  /* Scrollbar thumb — ink, where dark uses cyan, for the reason `--q-line`
-     flips: cyan at a low alpha vanishes on a light surface. The dark values
-     gave the light card a 1.26:1 thumb (task #146), and #103 already rejected
-     that number for a *divider*; a thumb has the stronger claim, because it is
-     a control the user has to find and drag rather than a line they read past.
-
-     So this is the one place the "tracks stay cyan" rule of #103 does not
-     reach: a thumb is not the track it runs in. The ladder is monotone on
-     purpose — 2.24:1 at rest, 3.45:1 on hover, 4.83:1 while dragging, each
-     against the ink-tinted light Card, which is the darkest surface either
-     scrollbar system is drawn on. Drag stays teal (`--q-brand-text`, the
-     darkest teal the light theme owns) so the brand still marks the grab in
-     both themes.
-
-     Firefox constrains the answer: it gets `scrollbar-color` and can neither
-     inset nor round the thumb, so whatever is chosen has to read as a flat
-     colour. A solid ink alpha does; a `color-mix` gradient would not. */
-  --q-scroll-thumb:        rgb(11 17 32 / 0.35);
-  --q-scroll-thumb-hover:  rgb(11 17 32 / 0.50);
-  --q-scroll-thumb-active: rgb(15 118 110 / 1); /* quebi-brand-text on drag */
+.dark {
+  --q-bg:           #030712;
+  --q-raised:       #111827;
+  --q-pressed:      #1f2937;
+  --q-elevated:     #111827;
+  --q-fg:           #f9fafb;
+  --q-fg-muted:     #d1d5db;
+  --q-fg-subtle:    #9ca3af;
+  --q-hairline:     #ffffff33;
+  --q-rule:         #f9fafb;
+  --q-action:       #f9fafb;
+  --q-action-hover: #d1d5db;
+  --q-on-action:    #030712;
+  --q-focus:        #f9fafb;
+  --q-surface:      #ffffff;
+  --q-glyph:        #ffffff12;
+  --q-glow-from:    #1f2937;
+  --q-glow-to:      #030712;
+  --q-stage-light:  radial-gradient(120% 90% at 80% 10%, #1f2937 0%, #030712 60%);
+  --q-danger:       #f87171;  /* red-400 */
+  --q-warn:         #fbbf24;  /* amber-400 */
+  --q-success:      #34d399;  /* emerald-400 */
+  --q-shadow-float: 0 0 0 1px #ffffff1a, 0 12px 32px #00000099;
+  --q-chart-1:  #f9fafb;
+  --q-chart-2:  #4b5563;
+  --q-chart-3:  #9ca3af;
+  --q-chart-4:  #374151;
+  --q-chart-5:  #d1d5db;
+  --q-chart-6:  #1f2937;
+  --q-chart-7:  #e5e7eb;
+  --q-chart-8:  #6b7280;
+  --q-chart-9:  #d9dce1;
+  --q-chart-10: #f3f4f6;
+  --q-scroll-thumb:        rgb(255 255 255 / 0.25);
+  --q-scroll-thumb-hover:  rgb(255 255 255 / 0.4);
+  --q-scroll-thumb-active: rgb(255 255 255 / 0.7);
+  color-scheme: dark;
 }
 
 /* ---------------- Custom utilities (v4 @utility syntax) ---------------- */
 
-/* The signature uppercase teal kicker. Use as `<span class="quebi-eyebrow">`. */
+/* The Label role: mono, uppercase, tracked, always `fg-subtle` — kickers,
+   scene labels, timecodes, counts ("04 entries"). Write it lowercase in the
+   source; this sets the caps. Use an em dash with spaces between parts:
+   "scene 01 — the studio". Never more than one line. It sets no `display`:
+   a label is a `<p>`, a `<span>`, a `<th>` or a list header, and forcing one
+   box type on all of them takes a header cell out of its table row. */
 @utility quebi-eyebrow {
-  display: inline-block;
-  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-quebi-label);
+  line-height: var(--text-quebi-label--line-height);
   font-weight: 500;
+  letter-spacing: var(--text-quebi-label--letter-spacing);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-quebi-brand);
+  color: var(--color-quebi-fg-subtle);
 }
 
-/* Hero grid overlay. Use as `<div class="bg-quebi-grid">`. */
-@utility bg-quebi-grid {
-  background-image:
-    linear-gradient(rgb(255 255 255 / 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 0.03) 1px, transparent 1px);
-  background-size: 48px 48px;
+/* The stage light: one soft directional glow from the top right. White over
+   cool grey in Daylight, graphite over ink in Cinematic. Only on a Stage; no
+   gradients anywhere else. */
+@utility bg-quebi-stage {
+  background: var(--q-stage-light);
 }
 
 /*
@@ -706,7 +692,7 @@
    each spelling out its own `color-mix`/`rgb()` (task #146). Two blocks that
    are *meant* to hold the same value should read it from one place — that is
    also what lets `tests/components/scroll-area.test.tsx` pin them to each
-   other by token instead of by matching literals. The thumb is cyan on dark
+   other by token instead of by matching literals. The thumb is white on dark
    and ink on light; see the theme blocks above for why and for the ratios.
 
    The two scrollbar models are declared under `@supports`, never together.
@@ -917,6 +903,18 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
+
+  /* Motion is small and functional, and all of it turns off for a reader who
+     asked for less. Overlays still close: react-aria resolves an exit at once
+     when the element has no animation. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
 }
 
 /* ---------------- Shiki code blocks (dual theme) ---------------- */
@@ -926,11 +924,11 @@
    forced transparent by `[&_pre]:bg-transparent!` on the CodeBlock surface. */
 .shiki,
 .shiki span {
-  color: var(--shiki-dark);
-}
-.light .shiki,
-.light .shiki span {
   color: var(--shiki-light);
+}
+.dark .shiki,
+.dark .shiki span {
+  color: var(--shiki-dark);
 }
 
 /* ---------------- Scrollbars (OverlayScrollbars) ---------------- */

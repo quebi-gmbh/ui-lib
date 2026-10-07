@@ -1,4 +1,3 @@
-import { ArrowRight } from "lucide-react"
 import { LinkButton } from "@/components/link-button"
 import type { OgScene } from "./types"
 
@@ -7,8 +6,7 @@ export const linkButtonOgScene: OgScene = {
   render: () => (
     <div className="flex items-center gap-4">
       <LinkButton href="#" intent="primary" size="lg">
-        Read the docs
-        <ArrowRight data-slot="icon" aria-hidden="true" />
+        read the docs →
       </LinkButton>
       <LinkButton href="#" intent="outline" size="lg">
         GitHub

@@ -113,7 +113,7 @@ describe("a className that overrides a variant says which variant it means", () 
       <Button
         aria-label={\`Clear \${filter.label} filter\`}
         onPress={() => onClear(filter.column)}
-        className="flex size-4 shrink-0 items-center justify-center rounded-full text-quebi-brand-text/80 outline-none transition-colors hover:bg-quebi-brand/20 hover:text-quebi-brand-text focus-visible:ring-2 focus-visible:ring-quebi-brand-mark"
+        className="flex size-4 shrink-0 items-center justify-center rounded-full text-quebi-fg/80 outline-none transition-colors hover:bg-quebi-action/20 hover:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-focus"
       >`
     const [tag] = openingTags(shipped, "Button")
     expect(unnamedVariants(tag.attrs)).toEqual(["size", "intent"])

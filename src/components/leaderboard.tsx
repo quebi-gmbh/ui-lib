@@ -12,9 +12,10 @@ import { cn } from "@/lib/utils"
 /**
  * Leaderboard — quebi design system
  *
- * A compact ranked list where each row is a react-aria ProgressBar whose
- * fill encodes its value relative to the leader. The fill is a translucent
- * brand-teal track that brightens on hover for actionable rows. Compose from
+ * A ranked index list where each row is a react-aria ProgressBar whose value
+ * relative to the leader is drawn as an ink rule along the row's foot, over
+ * the hairline that separates it from the next. Actionable rows are raised and
+ * shift right on hover, like any index row that goes somewhere. Compose from
  * Leaderboard, LeaderboardHeader, LeaderboardTitle, LeaderboardAction,
  * LeaderboardContent, LeaderboardItem, LeaderboardStart, and LeaderboardEnd.
  */
@@ -45,7 +46,7 @@ export function LeaderboardTitle({ className, ...props }: React.ComponentProps<"
   return (
     <div
       data-slot="leaderboard-title"
-      className={cn("text-balance font-semibold text-base/6 text-quebi-fg", className)}
+      className={cn("text-balance font-display text-quebi-title text-quebi-fg", className)}
       {...props}
     />
   )
@@ -65,7 +66,11 @@ export function LeaderboardContent({ className, ...props }: React.ComponentProps
   return (
     <ul
       data-slot="leaderboard-content"
-      className={cn("flex max-h-96 list-none flex-col gap-y-1", className)}
+      className={cn(
+        "flex max-h-96 list-none flex-col border-t border-quebi-rule",
+        "*:border-b *:border-quebi-hairline",
+        className,
+      )}
       {...props}
     />
   )
@@ -89,10 +94,10 @@ export function LeaderboardItem({
         minValue={minValue}
         className={composeRenderProps(className, (resolved) =>
           cn(
-            "relative overflow-hidden rounded-quebi-sm px-2 py-1.5 text-sm/6 text-quebi-fg outline-none",
-            "transition-colors duration-150",
-            "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
-            onAction ? "cursor-pointer hover:bg-quebi-surface/[0.02]" : "cursor-default",
+            "relative overflow-hidden px-1 py-3 text-sm/6 text-quebi-fg outline-none",
+            "transition-[padding,background-color] duration-300",
+            "focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-quebi-focus",
+            onAction ? "cursor-pointer hover:bg-quebi-raised hover:pl-3" : "cursor-default",
             "[&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
             resolved,
           ),
@@ -101,15 +106,12 @@ export function LeaderboardItem({
       >
         {(values) => (
           <>
-            <span className="relative z-[2] flex items-center justify-between font-medium">
+            <span className="relative z-[2] flex items-center justify-between">
               {typeof children === "function" ? children(values) : children}
             </span>
             <span
               data-slot="leaderboard-fill"
-              className={cn(
-                "absolute inset-y-0 start-0 z-[1] rounded-e-quebi-sm bg-quebi-brand/15 transition-colors duration-150",
-                onAction ? "group-hover:bg-quebi-brand/25" : "",
-              )}
+              className="absolute start-0 bottom-0 z-[1] h-0.5 bg-quebi-action forced-colors:bg-[CanvasText]"
               style={{ width: `${values.percentage}%` }}
             />
           </>
@@ -123,7 +125,7 @@ export function LeaderboardStart({ className, ...props }: LabelProps) {
   return (
     <Label
       data-slot="leaderboard-start"
-      className={cn("flex items-center gap-x-2", className)}
+      className={cn("flex items-center gap-x-3 font-display text-lg/6 font-light tracking-wide", className)}
       {...props}
     />
   )
@@ -133,7 +135,7 @@ export function LeaderboardEnd({ className, ...props }: React.ComponentProps<"di
   return (
     <div
       data-slot="leaderboard-end"
-      className={cn("tabular-nums text-quebi-fg-muted", className)}
+      className={cn("font-mono text-quebi-code tabular-nums text-quebi-fg-muted", className)}
       {...props}
     />
   )

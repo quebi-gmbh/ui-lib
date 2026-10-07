@@ -23,10 +23,10 @@ export const drawerExamples: ComponentExample[] = [
     description: "A bottom drawer with a notch, header, body, and footer.",
     render: () => (
       <Drawer>
-        <DrawerTrigger>Open drawer</DrawerTrigger>
+        <DrawerTrigger>open drawer</DrawerTrigger>
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>Mobile menu</DrawerTitle>
+            <DrawerTitle>mobile menu</DrawerTitle>
             <DrawerDescription>Drag down or tap a button to dismiss.</DrawerDescription>
           </DrawerHeader>
           <DrawerBody>
@@ -36,8 +36,8 @@ export const drawerExamples: ComponentExample[] = [
             </p>
           </DrawerBody>
           <DrawerFooter>
-            <DrawerClose intent="outline">Cancel</DrawerClose>
-            <Button intent="primary">Continue</Button>
+            <DrawerClose intent="outline">cancel</DrawerClose>
+            <Button intent="primary">continue</Button>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -48,10 +48,10 @@ export const drawerExamples: ComponentExample[] = [
     description: "Set `side` to slide the panel in from any edge.",
     render: () => (
       <Drawer>
-        <DrawerTrigger intent="outline">Open settings</DrawerTrigger>
+        <DrawerTrigger intent="outline">open settings</DrawerTrigger>
         <DrawerContent side="right" notch={false}>
           <DrawerHeader>
-            <DrawerTitle>Settings</DrawerTitle>
+            <DrawerTitle>settings</DrawerTitle>
             <DrawerDescription>Manage your workspace preferences.</DrawerDescription>
           </DrawerHeader>
           <DrawerBody>
@@ -60,8 +60,8 @@ export const drawerExamples: ComponentExample[] = [
             </p>
           </DrawerBody>
           <DrawerFooter>
-            <DrawerClose intent="ghost">Close</DrawerClose>
-            <Button intent="primary">Save</Button>
+            <DrawerClose intent="ghost">close</DrawerClose>
+            <Button intent="primary">save</Button>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
@@ -69,22 +69,22 @@ export const drawerExamples: ComponentExample[] = [
   },
   {
     title: "Floating",
-    description: "`isFloat` insets the panel from the edges with rounded corners.",
+    description: "`isFloat` insets the panel from the edges and rules it all round.",
     render: () => (
       <Drawer>
-        <DrawerTrigger intent="secondary">Open floating</DrawerTrigger>
+        <DrawerTrigger intent="secondary">open floating</DrawerTrigger>
         <DrawerContent side="left" isFloat notch={false}>
           <DrawerHeader>
-            <DrawerTitle>Navigation</DrawerTitle>
+            <DrawerTitle>navigation</DrawerTitle>
             <DrawerDescription>A floating left drawer.</DrawerDescription>
           </DrawerHeader>
           <DrawerBody>
             <p className="text-sm text-quebi-fg-muted">
-              Floating drawers detach from the viewport edge, rounded on every side.
+              Floating drawers detach from the viewport edge, ruled on every side.
             </p>
           </DrawerBody>
           <DrawerFooter>
-            <DrawerClose intent="outline">Done</DrawerClose>
+            <DrawerClose intent="outline">done</DrawerClose>
           </DrawerFooter>
         </DrawerContent>
       </Drawer>

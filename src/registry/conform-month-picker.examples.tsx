@@ -31,7 +31,7 @@ const ReportForm = () => {
         description="Submitted as the first of the month; slice(0, 7) if your API wants 2026-03."
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

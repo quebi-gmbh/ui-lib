@@ -1,20 +1,14 @@
 /**
- * ShowMore's chips hover like the Buttons they sit beside (task #185).
+ * ShowMore's chips are the Buttons they sit beside (task #185).
  *
- * `show-more.tsx` carried its own transcription of the pre-#178 Button hover —
- * `transition-all duration-200 ease-out hover:scale-[1.02] active:scale-100`,
- * and `selected:hover:shadow-quebi-glow-strong` on the selected chip. Task #178
- * (PR #129) took all three off `Button`: the overlay rung became one neutral
- * `hover:shadow-md` declared in `base` so every intent lifts identically, the
- * scale went (a control that grows under the pointer nudges its neighbours'
- * optical alignment), and `transition-all` narrowed to the properties that
- * actually move. The copy here did not follow, so a row of chips grew and
- * glowed next to Buttons that lifted — on the same gallery page, which is what
- * made it visible.
+ * `show-more.tsx` used to carry its own transcription of an older Button
+ * hover — `transition-all`, a scale, a glow on the selected chip — and when
+ * `Button` dropped them this copy did not follow, so a row of chips grew and
+ * glowed next to Buttons that did not.
  *
  * The fix is that there is no copy: the pill is
  * `buttonStyles({ intent: isSelected ? "primary" : "outline", size: "sm",
- * isCircle: true })`. These assertions are the counterpart of the five in
+ * isCircle: true })`. These assertions are the counterpart of the ones in
  * `button.test.tsx`, and they read the class list *off the rendered element*
  * rather than off the source — an intent chosen per render state only matches
  * `Button` if the recipe's output survives to the DOM, and a `selected:`
@@ -43,35 +37,20 @@ test("the resting chip renders the Button recipe's outline intent, not a copy of
 
 test("the selected chip is the primary intent, token for token", () => {
   // The `selected:` block used to transcribe `primary` by hand. Naming the
-  // intent means the mark-token edge (task #145) and the hover fill track
-  // `Button` instead of being re-derived here.
+  // intent means the edge and the hover fill track `Button` instead of being
+  // re-derived here.
   expect(chipClasses({ defaultSelected: true }).join(" ")).toBe(
     buttonStyles({ intent: "primary", size: "sm", isCircle: true }),
   )
 })
 
-test("neither state lifts on the overlay token", () => {
-  // `shadow-quebi-glow-strong` is what a *floating surface* takes — the command
-  // palette, the active Stepper bullet. A chip on a divider is neither, and
-  // this file was the last consumer of it outside those two.
+test("neither state casts a shadow", () => {
+  // A chip on a divider is in the page flow, and nothing there casts one —
+  // the same rule `button.test.tsx` pins on every intent.
   for (const selected of [false, true]) {
-    expect(
-      chipClasses({ defaultSelected: selected }),
-      `the ${selected ? "selected" : "resting"} chip is back on the overlay rung`,
-    ).not.toContain("hover:shadow-quebi-glow-strong")
+    const shadows = chipClasses({ defaultSelected: selected }).filter((c) => /(^|:)shadow-/.test(c))
+    expect(shadows, `the ${selected ? "selected" : "resting"} chip casts a shadow`).toEqual([])
   }
-})
-
-test("both states lift by the one neutral rung Button gives every intent", () => {
-  const rungs = new Set(
-    [false, true].map((selected) =>
-      chipClasses({ defaultSelected: selected })
-        .filter((c) => c.startsWith("hover:shadow-"))
-        .join(" "),
-    ),
-  )
-  expect(rungs.size, `the chip's hover lift changes with selection: ${JSON.stringify([...rungs])}`).toBe(1)
-  expect([...rungs][0]).toBe("hover:shadow-md")
 })
 
 test("nothing grows under the pointer, in any state", () => {
@@ -91,11 +70,10 @@ test("the transition names its properties instead of animating all of them", () 
   expect(transition, "the chip no longer takes Button's explicit transition list").toBeString()
 
   const animated = (transition as string).slice("transition-[".length, -1).split(",")
-  expect(animated).toContain("box-shadow")
   expect(animated).toContain("background-color")
   expect(animated).toContain("border-color")
   expect(animated).toContain("color")
-  // The chip is `disabled:opacity-50` like any Button; `all` used to ease it.
+  // The chip is `disabled:opacity-45` like any Button; `all` used to ease it.
   expect(animated).toContain("opacity")
 })
 
@@ -105,5 +83,5 @@ test("the pill is still a pill", () => {
   // if `isCircle` stopped winning, the chip would quietly square off.
   const classes = chipClasses()
   expect(classes).toContain("rounded-full")
-  expect(classes).not.toContain("rounded-quebi-sm")
+  expect(classes).not.toContain("rounded-none")
 })

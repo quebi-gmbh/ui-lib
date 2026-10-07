@@ -31,7 +31,7 @@ const CompanyForm = () => {
         description="Submitted as January 1 of the year, so it parses like any other date."
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

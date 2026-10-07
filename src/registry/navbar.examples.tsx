@@ -17,25 +17,25 @@ export const navbarExamples: ComponentExample[] = [
   {
     title: "Default",
     description:
-      "A top navigation bar with a brand mark, primary links, and trailing actions. The active link shows the brand-teal indicator.",
+      "A top navigation bar with the mark at the start, primary links, and trailing actions. The current link is underlined; a hairline runs under the bar.",
     render: () => (
       <NavbarProvider>
         <Navbar>
           <NavbarStart>
-            <span className="font-semibold text-quebi-fg">quebi</span>
+            <span className="font-display font-light text-quebi-fg text-xl">quebi</span>
           </NavbarStart>
           <NavbarGap />
           <NavbarSection>
-            <NavbarItem isCurrent>Dashboard</NavbarItem>
-            <NavbarItem>Sessions</NavbarItem>
-            <NavbarItem>Pricing</NavbarItem>
-            <NavbarItem>Settings</NavbarItem>
+            <NavbarItem isCurrent>dashboard</NavbarItem>
+            <NavbarItem>sessions</NavbarItem>
+            <NavbarItem>pricing</NavbarItem>
+            <NavbarItem>settings</NavbarItem>
           </NavbarSection>
           <NavbarSpacer />
           <NavbarSection>
-            <NavbarItem>Help</NavbarItem>
+            <NavbarItem>help</NavbarItem>
             <NavbarSeparator />
-            <NavbarItem>Sign out</NavbarItem>
+            <NavbarItem>sign out</NavbarItem>
           </NavbarSection>
         </Navbar>
       </NavbarProvider>
@@ -49,17 +49,17 @@ export const navbarExamples: ComponentExample[] = [
       <NavbarProvider>
         <NavbarMobile>
           <NavbarTrigger />
-          <span className="font-semibold text-quebi-fg">quebi</span>
+          <span className="font-display font-light text-quebi-fg text-xl">quebi</span>
         </NavbarMobile>
         <Navbar>
           <NavbarStart>
-            <span className="font-semibold text-quebi-fg">quebi</span>
+            <span className="font-display font-light text-quebi-fg text-xl">quebi</span>
           </NavbarStart>
           <NavbarGap />
           <NavbarSection>
-            <NavbarItem isCurrent>Home</NavbarItem>
-            <NavbarItem>Reports</NavbarItem>
-            <NavbarItem>Team</NavbarItem>
+            <NavbarItem isCurrent>home</NavbarItem>
+            <NavbarItem>reports</NavbarItem>
+            <NavbarItem>team</NavbarItem>
           </NavbarSection>
         </Navbar>
       </NavbarProvider>
@@ -72,13 +72,13 @@ export const navbarExamples: ComponentExample[] = [
       <NavbarProvider>
         <Navbar isSticky placement="top">
           <NavbarStart>
-            <span className="font-semibold text-quebi-fg">quebi</span>
+            <span className="font-display font-light text-quebi-fg text-xl">quebi</span>
           </NavbarStart>
           <NavbarGap />
           <NavbarSection>
-            <NavbarItem isCurrent>Overview</NavbarItem>
-            <NavbarItem>Analytics</NavbarItem>
-            <NavbarItem>Billing</NavbarItem>
+            <NavbarItem isCurrent>overview</NavbarItem>
+            <NavbarItem>analytics</NavbarItem>
+            <NavbarItem>billing</NavbarItem>
           </NavbarSection>
           <NavbarSpacer />
           <NavbarSection>
@@ -89,19 +89,39 @@ export const navbarExamples: ComponentExample[] = [
     ),
   },
   {
+    title: "Plain",
+    description:
+      "No hairline under the bar — for a navbar that sits on a Stage, where the low title carries the rule.",
+    render: () => (
+      <NavbarProvider>
+        <Navbar intent="plain">
+          <NavbarStart>
+            <span className="font-display font-light text-quebi-fg text-xl">quebi</span>
+          </NavbarStart>
+          <NavbarSpacer />
+          <NavbarSection>
+            <NavbarItem isCurrent>work</NavbarItem>
+            <NavbarItem>studio</NavbarItem>
+            <NavbarItem>contact</NavbarItem>
+          </NavbarSection>
+        </Navbar>
+      </NavbarProvider>
+    ),
+  },
+  {
     title: "Float intent",
-    description: "A floating, rounded navbar surface that detaches from the page edge.",
+    description: "A navbar that detaches from the page edge and floats above it, like any other floating surface.",
     render: () => (
       <NavbarProvider>
         <Navbar intent="float">
           <NavbarStart>
-            <span className="font-semibold text-quebi-fg">quebi</span>
+            <span className="font-display font-light text-quebi-fg text-xl">quebi</span>
           </NavbarStart>
           <NavbarGap />
           <NavbarSection>
-            <NavbarItem isCurrent>Discover</NavbarItem>
-            <NavbarItem>Library</NavbarItem>
-            <NavbarItem>Account</NavbarItem>
+            <NavbarItem isCurrent>discover</NavbarItem>
+            <NavbarItem>library</NavbarItem>
+            <NavbarItem>account</NavbarItem>
           </NavbarSection>
         </Navbar>
       </NavbarProvider>

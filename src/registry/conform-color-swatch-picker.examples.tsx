@@ -49,10 +49,10 @@ const ColorsForm = () => {
       />
       <div className="flex gap-2">
         <Button type="submit" size="sm">
-          Submit
+          submit
         </Button>
         <Button type="reset" intent="outline" size="sm">
-          Reset
+          reset
         </Button>
       </div>
     </form>
@@ -76,7 +76,7 @@ const EmptyForm = () => {
     >
       <ConformColorSwatchPicker field={fields.colors} label="Device colors" />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )
@@ -109,10 +109,10 @@ const MirroredColorsForm = () => {
       </TagGroup>
       <div className="flex gap-2">
         <Button type="submit" size="sm">
-          Submit
+          submit
         </Button>
         <Button type="reset" intent="outline" size="sm">
-          Reset
+          reset
         </Button>
       </div>
     </form>

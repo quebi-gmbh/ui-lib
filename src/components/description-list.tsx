@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils"
  *
  * A responsive term/description grid (`<dl>`). Single column on small
  * screens, a two-column term + description layout on `sm` and up. Terms
- * read in muted foreground, descriptions in white, with subtle cyan
- * dividers separating each row.
+ * read in the subtle ink, descriptions in full ink, and a hairline runs
+ * between rows — the meta row of the design, stacked.
  */
 export function DescriptionList({ className, ref, ...props }: React.ComponentProps<"dl">) {
   return (
@@ -14,7 +14,7 @@ export function DescriptionList({ className, ref, ...props }: React.ComponentPro
       ref={ref}
       data-slot="description-list"
       className={cn(
-        "grid grid-cols-1 text-base/6 sm:grid-cols-[min(50%,calc(var(--spacing)*80))_auto] sm:text-sm/6",
+        "grid grid-cols-1 text-quebi-body-s sm:grid-cols-[min(50%,calc(var(--spacing)*80))_auto]",
         className,
       )}
       {...props}
@@ -28,7 +28,7 @@ export function DescriptionTerm({ className, ref, ...props }: React.ComponentPro
       ref={ref}
       data-slot="description-term"
       className={cn(
-        "col-start-1 border-t border-quebi-line/10 pt-3 text-quebi-fg-muted first:border-none sm:py-3",
+        "col-start-1 border-t border-quebi-hairline pt-3 text-quebi-fg-subtle first:border-none sm:py-3",
         className,
       )}
       {...props}
@@ -42,7 +42,7 @@ export function DescriptionDetails({ className, ref, ...props }: React.Component
       ref={ref}
       data-slot="description-details"
       className={cn(
-        "pt-1 pb-3 text-quebi-fg sm:border-t sm:border-quebi-line/10 sm:nth-2:border-none sm:py-3",
+        "pt-1 pb-3 text-quebi-fg sm:border-t sm:border-quebi-hairline sm:nth-2:border-none sm:py-3",
         className,
       )}
       {...props}

@@ -6,7 +6,7 @@ export const colorThumbExamples: ComponentExample[] = [
   {
     title: "The default handle, and one of your own",
     description:
-      "A ColorThumb only means anything inside a color picker, and the reason to reach for it directly is ColorArea's `children`: the area renders `{children ?? <ColorThumb />}`, so a thumb you pass replaces its default rather than joining it. On the left the area draws that default; on the right the same component is larger, square-cornered and ringed in quebi teal. Both grow and take a teal focus ring when you tab to them.",
+      "A ColorThumb only means anything inside a color picker, and the reason to reach for it directly is ColorArea's `children`: the area renders `{children ?? <ColorThumb />}`, so a thumb you pass replaces its default rather than joining it. On the left the area draws that default; on the right the same component is larger, square-cornered and ringed in the focus ink. Both grow and take the focus ring when you tab to them.",
     render: () => (
       <div className="flex flex-wrap items-start gap-6">
         <div className="flex flex-col gap-2">
@@ -28,7 +28,7 @@ export const colorThumbExamples: ComponentExample[] = [
             aria-label="Saturation and brightness, custom thumb"
             className="size-40"
           >
-            <ColorThumb className="size-8 rounded-quebi-sm ring-2 ring-quebi-brand-mark disabled:opacity-100" />
+            <ColorThumb className="size-8 rounded-none ring-2 ring-quebi-focus disabled:opacity-100" />
           </ColorArea>
         </div>
       </div>
@@ -47,7 +47,7 @@ export const colorThumbExamples: ComponentExample[] = [
         aria-label="Saturation and brightness, disabled"
         className="size-40"
       >
-        <ColorThumb className="size-8 rounded-quebi-sm ring-2 ring-quebi-brand-mark disabled:opacity-100" />
+        <ColorThumb className="size-8 rounded-none ring-2 ring-quebi-focus disabled:opacity-100" />
       </ColorArea>
     ),
   },

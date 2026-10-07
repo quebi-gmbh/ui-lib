@@ -48,7 +48,7 @@ const CodeForm = () => {
         </InputOTPGroup>
       </ConformInputOTP>
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

@@ -55,10 +55,10 @@ const usePaginationSize = (own?: PaginationSize): PaginationSize => {
 
 const navTargetClasses = [
   "inline-flex shrink-0 items-center justify-center",
-  "rounded-quebi-sm border border-solid",
+  "border border-solid border-quebi-rule",
   "font-sans font-medium leading-none select-none",
-  "transition-[color,background-color,border-color] duration-150 ease-out",
-  "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+  "transition-[color,background-color] duration-150 ease-out",
+  "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
 ].join(" ")
 
 // `size-*` is border-box, so these are the same numbers `Button`'s `sq-xs` and
@@ -69,19 +69,16 @@ const navTargetSizes = {
   sm: "size-9.5 *:data-[slot=icon]:size-4",
 } as const satisfies Record<PaginationSize, string>
 
-const navTargetInteractive = [
-  "cursor-pointer border-quebi-line/20 bg-transparent text-quebi-fg-muted",
-  "hover:border-quebi-brand-mark hover:text-quebi-brand-text hover:bg-quebi-surface/[0.04]",
-].join(" ")
+// The arrows are outline buttons: a line-strong edge, a raised fill on hover.
+const navTargetInteractive = "cursor-pointer text-quebi-fg hover:bg-quebi-raised"
 
-const navTargetDisabled = "cursor-not-allowed border-quebi-line/10 bg-transparent text-quebi-fg-subtle"
+const navTargetDisabled = "cursor-not-allowed text-quebi-fg opacity-45"
 
 const pageTargetClasses = [
   "inline-flex shrink-0 items-center justify-center",
-  "rounded-quebi-sm",
   "font-sans font-medium leading-none tabular-nums select-none",
   "transition-[color,background-color] duration-150 ease-out",
-  "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+  "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
 ].join(" ")
 
 // A page number is text, so its height is set rather than derived from padding:
@@ -94,13 +91,10 @@ const pageTargetSizes = {
 
 const pageTargetInteractive = [
   "cursor-pointer text-quebi-fg-muted",
-  "hover:bg-quebi-surface/[0.04] hover:text-quebi-fg",
+  "hover:bg-quebi-raised hover:text-quebi-fg",
 ].join(" ")
 
-const pageTargetCurrent = [
-  "cursor-default bg-quebi-brand text-quebi-on-brand",
-  "aria-[current=page]:bg-quebi-brand aria-[current=page]:text-quebi-on-brand",
-].join(" ")
+const pageTargetCurrent = "cursor-default bg-quebi-action text-quebi-on-action"
 
 interface TargetProps extends Omit<LinkProps, "children" | "className"> {
   className: string
@@ -277,7 +271,7 @@ const FirstIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth={1.75}
+    strokeWidth={1.5}
     strokeLinecap="round"
     strokeLinejoin="round"
     data-slot="icon"
@@ -293,7 +287,7 @@ const PrevIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth={1.75}
+    strokeWidth={1.5}
     strokeLinecap="round"
     strokeLinejoin="round"
     data-slot="icon"
@@ -309,7 +303,7 @@ const NextIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth={1.75}
+    strokeWidth={1.5}
     strokeLinecap="round"
     strokeLinejoin="round"
     data-slot="icon"
@@ -325,7 +319,7 @@ const LastIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth={1.75}
+    strokeWidth={1.5}
     strokeLinecap="round"
     strokeLinejoin="round"
     data-slot="icon"
@@ -386,7 +380,7 @@ const PaginationGap = ({
 const PaginationInfo = ({ className, ...props }: React.ComponentProps<"p">) => (
   <p
     className={cn(
-      "text-[13px] text-quebi-fg-muted *:[strong]:font-semibold *:[strong]:text-quebi-fg",
+      "text-quebi-caption text-quebi-fg-subtle tabular-nums *:[strong]:font-medium *:[strong]:text-quebi-fg",
       className,
     )}
     {...props}
@@ -422,7 +416,7 @@ export interface PaginationJumpProps {
  * 15" is a message under the input rather than a query that comes back empty
  * and looks like a table with no rows.
  *
- * `Go` is the field's verb, so it shares the field's edge rather than floating
+ * `go` is the field's verb, so it sits against the field rather than floating
  * beside it, and the label sits beside the control rather than above it — a
  * pager is a row of chrome, and a label-above stack would make it a line
  * taller. The error keeps the line underneath to itself.
@@ -493,18 +487,6 @@ const PaginationJump = ({
             "[&>[data-slot=label]]:whitespace-nowrap",
             "[&>[slot=errorMessage]]:basis-full",
             "[&>[data-slot=control]]:w-16",
-            // The group squares its children's inner corners, but this child is
-            // a whole field rather than a control: the corner that meets `Go`
-            // belongs to the input two levels down — and so does the focus
-            // indicator, which `NumberInput` draws as a ring on the wrapper
-            // around that input so every segment of a number field highlights
-            // together. Squaring only the input left the two disagreeing about
-            // where the field stops: a square border inside a ring that still
-            // curved away from the seam and stood 4px proud of it, top and
-            // bottom. Both corners go, so the indicator ends where the field
-            // does.
-            "[&_input]:rounded-e-none",
-            "[&>[data-slot=control]]:rounded-e-none",
           )}
         >
           <Label>{label}</Label>
@@ -518,7 +500,7 @@ const PaginationJump = ({
           {error !== undefined && <FieldError>{error}</FieldError>}
         </NumberField>
         <Button type="submit" intent="outline" size={resolved}>
-          Go
+          go
         </Button>
       </ButtonGroup>
     </Form>

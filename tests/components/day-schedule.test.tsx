@@ -388,8 +388,8 @@ describe("the name column", () => {
         (el) => el.textContent === text && el.style.left && el.style.top,
       )?.className
 
-    expect(classOf("deep work")).toContain("text-quebi-brand-text")
-    expect(classOf("review")).toContain("text-quebi-info")
+    expect(classOf("deep work")).toContain("text-quebi-fg")
+    expect(classOf("review")).toContain("text-quebi-fg")
   })
 })
 

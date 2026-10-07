@@ -22,9 +22,8 @@ import { cn } from "@/lib/utils"
  * Range Calendar — quebi design system
  *
  * An accessible date-range calendar built on react-aria-components and
- * @internationalized/date. Restyled to quebi tokens: the range endpoints fill
- * with brand teal, the days in-between get a faint brand wash, and today is
- * marked with a brand dot. Composes the shared header, body and grid header
+ * @internationalized/date. Square cells: the range endpoints fill with ink,
+ * the days in-between take the raised ground, and today is underlined. Composes the shared header, body and grid header
  * from the Calendar component — including its `variant`, so the month/year
  * control swaps the Month Picker into this calendar's body exactly as it does
  * in a single-month one, and the chevron-stepper header is available too.
@@ -71,30 +70,35 @@ function RangeCalendar<T extends DateValue>({
                         date={date}
                         className={cn(
                           "group/calendar-cell relative size-9 shrink-0 cursor-default text-sm text-quebi-fg outline-hidden",
-                          // in-between (selected, not an endpoint) days get a faint brand wash
-                          "selected:bg-quebi-brand/15",
-                          // round the range ends
-                          "selection-start:rounded-s-quebi-sm data-selection-end:rounded-e-quebi-sm",
+                          // the whole span sits on the raised ground; the
+                          // endpoints paint their ink over it
+                          "selected:bg-quebi-raised",
                           "data-outside-month:text-quebi-fg-subtle",
                         )}
                       >
-                        {({ formattedDate, isSelected, isSelectionStart, isSelectionEnd, isDisabled }) => (
+                        {({
+                          formattedDate,
+                          isSelected,
+                          isSelectionStart,
+                          isSelectionEnd,
+                          isDisabled,
+                          isUnavailable,
+                          isFocusVisible,
+                        }) => (
                           <span
                             className={cn(
-                              "flex size-full items-center justify-center rounded-quebi-sm tabular-nums transition-colors",
+                              "flex size-full items-center justify-center tabular-nums transition-colors duration-150",
                               isSelected && (isSelectionStart || isSelectionEnd)
-                                ? // endpoints: solid brand teal on quebi background
-                                  "bg-quebi-brand text-quebi-on-brand hover:bg-quebi-brand-hover"
+                                ? "bg-quebi-action text-quebi-on-action hover:bg-quebi-action-hover"
                                 : isSelected
-                                  ? // in-between days: faint brand wash, darker on hover
-                                    "group-hover/calendar-cell:bg-quebi-brand/25"
-                                  : // unselected days: faint white wash on hover
-                                    "group-hover/calendar-cell:bg-quebi-surface/[0.04]",
-                              // today marker dot
+                                  ? "group-hover/calendar-cell:bg-quebi-pressed"
+                                  : "group-hover/calendar-cell:bg-quebi-raised",
+                              // today: an underline, in whichever ink the cell is
                               date.compare(now) === 0 &&
-                                !(isSelected && (isSelectionStart || isSelectionEnd)) &&
-                                "relative after:pointer-events-none after:absolute after:bottom-1 after:left-1/2 after:size-1 after:-translate-x-1/2 after:rounded-full after:bg-quebi-brand",
+                                "font-medium underline decoration-1 underline-offset-4",
                               isDisabled && "text-quebi-fg-subtle",
+                              isUnavailable && "text-quebi-fg-subtle line-through",
+                              isFocusVisible && "ring-2 ring-quebi-focus ring-inset",
                             )}
                           >
                             {formattedDate}

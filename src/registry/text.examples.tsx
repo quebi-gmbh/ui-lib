@@ -4,7 +4,7 @@ import type { ComponentExample } from "./types"
 export const textExamples: ComponentExample[] = [
   {
     title: "Paragraph",
-    description: "Muted body copy that scales down at the sm breakpoint.",
+    description: "Running text: Inter in the muted ink.",
     render: () => (
       <Text>
         Quebi pairs your roster against the brief and surfaces the strongest matches in seconds, so
@@ -14,7 +14,7 @@ export const textExamples: ComponentExample[] = [
   },
   {
     title: "With emphasis",
-    description: "Strong brightens to white to pull a phrase out of muted body text.",
+    description: "Strong steps up to full ink to pull a phrase out of the running text.",
     render: () => (
       <Text>
         Every match ships with a <Strong>confidence score</Strong> and a short rationale you can
@@ -24,7 +24,7 @@ export const textExamples: ComponentExample[] = [
   },
   {
     title: "With a link",
-    description: "Inline TextLink carries the brand-teal underline every Link has at rest.",
+    description: "Inline TextLink carries the ink underline every Link has at rest, and opens it on hover.",
     render: () => (
       <Text>
         Need the full breakdown? Read the{" "}

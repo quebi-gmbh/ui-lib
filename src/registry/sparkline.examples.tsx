@@ -32,7 +32,7 @@ export const sparklineExamples: ComponentExample[] = [
     description:
       "`line` is the default. `area` fills under it for a series whose magnitude matters as much as its direction; `bars` is for a discrete series where the individual values are the point. All three are one `<svg>` element with one shape in it, computed during render.",
     render: () => (
-      <div className="flex flex-col gap-4 text-quebi-brand-text">
+      <div className="flex flex-col gap-4 text-quebi-fg">
         {(["line", "area", "bars"] as const).map((variant) => (
           <div key={variant} className="flex items-center gap-3">
             <span className="w-12 text-xs text-quebi-fg-subtle">{variant}</span>
@@ -52,7 +52,7 @@ export const sparklineExamples: ComponentExample[] = [
         <Sparkline
           data={SIGNUPS}
           marker
-          className="text-quebi-brand-text"
+          className="text-quebi-fg"
           aria-label="Signups over twelve weeks, rising"
         >
           <FormattedNumber value={SIGNUPS[SIGNUPS.length - 1]} />
@@ -88,7 +88,7 @@ export const sparklineExamples: ComponentExample[] = [
                   min={REGION_DOMAIN.min}
                   max={REGION_DOMAIN.max}
                   marker
-                  className="text-quebi-brand-text"
+                  className="text-quebi-fg"
                   aria-label={`${region.id}, last twelve weeks`}
                 />
               </TableCell>

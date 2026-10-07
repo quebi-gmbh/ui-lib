@@ -20,10 +20,10 @@ const OpenOnTarget = () => {
           <Card className="px-10 py-8 text-sm text-quebi-fg-muted">Right-click here</Card>
         </ContextMenuTrigger>
         <ContextMenuContent>
-          <ContextMenuItem>Edit</ContextMenuItem>
-          <ContextMenuItem>Duplicate</ContextMenuItem>
+          <ContextMenuItem>edit</ContextMenuItem>
+          <ContextMenuItem>duplicate</ContextMenuItem>
           <ContextMenuSeparator />
-          <ContextMenuItem intent="danger">Delete</ContextMenuItem>
+          <ContextMenuItem intent="danger">delete</ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
     </div>

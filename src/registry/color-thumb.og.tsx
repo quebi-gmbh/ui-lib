@@ -25,7 +25,7 @@ export const colorThumbOgScene: OgScene = {
         aria-label="Saturation and brightness, custom thumb"
         className="size-36"
       >
-        <ColorThumb className="size-8 rounded-quebi-sm ring-2 ring-quebi-brand" />
+        <ColorThumb className="size-8 rounded-none ring-2 ring-quebi-action" />
       </ColorArea>
     </div>
   ),

@@ -64,7 +64,7 @@ const PlanForm = () => {
         )}
       </ConformChoiceBox>
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )
@@ -104,7 +104,7 @@ const AddonsForm = () => {
         )}
       </ConformChoiceBox>
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

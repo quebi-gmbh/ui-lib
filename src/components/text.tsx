@@ -1,14 +1,13 @@
-import { tv } from "tailwind-variants"
 import { composeRenderProps } from "react-aria-components"
 import { Link } from "@/components/link"
-import { cn } from "@/lib/utils"
+import { cn, tv } from "@/lib/utils"
 
 /**
  * Text — quebi design system
  *
  * Typographic primitives for body copy: a paragraph (`Text`), an inline
- * `TextLink`, emphasized `Strong`, and inline `Code`. Body copy is muted;
- * strong text brightens to white for emphasis. Restyled onto quebi tokens.
+ * `TextLink`, emphasized `Strong`, and inline `Code`. Body copy is Inter in
+ * the muted ink; strong text steps up to full ink for emphasis.
  */
 
 export function Text({ className, ...props }: React.ComponentPropsWithoutRef<"p">) {
@@ -16,24 +15,27 @@ export function Text({ className, ...props }: React.ComponentPropsWithoutRef<"p"
     <p
       data-slot="text"
       {...props}
-      className={cn("font-sans text-base/6 text-quebi-fg-muted sm:text-sm/6", className)}
+      className={cn("font-sans text-quebi-body text-quebi-fg-muted text-pretty", className)}
     />
   )
 }
 
 /**
- * What a TextLink adds to a `Link`, which is only the icon layout: the brand
- * colour and the resting underline are the Link's own base styles now, so the
- * prose link and every other link cannot drift apart.
+ * What a TextLink adds to a `Link`, which is only the icon layout: the ink
+ * and the resting underline are the Link's own base styles, so the prose link
+ * and every other link cannot drift apart.
  */
 export const textLinkStyles = tv({
   base: "has-data-[slot=icon]:inline-flex has-data-[slot=icon]:items-center has-data-[slot=icon]:gap-x-1",
 })
 
 export function TextLink({ className, ...props }: React.ComponentPropsWithoutRef<typeof Link>) {
-  return <Link {...props} className={composeRenderProps(className, (resolved) =>
-                            cn(textLinkStyles(), resolved),
-                          )} />
+  return (
+    <Link
+      {...props}
+      className={composeRenderProps(className, (resolved) => cn(textLinkStyles(), resolved))}
+    />
+  )
 }
 
 export function Strong({ className, ...props }: React.ComponentPropsWithoutRef<"strong">) {
@@ -45,7 +47,7 @@ export function Code({ className, ...props }: React.ComponentPropsWithoutRef<"co
     <code
       {...props}
       className={cn(
-        "rounded-quebi-sm border border-quebi-line/10 bg-quebi-bg px-1 py-0.5 font-mono text-sm font-medium text-quebi-fg sm:text-[0.8125rem]",
+        "bg-quebi-raised px-1.25 py-px font-mono text-[0.8125rem] text-quebi-fg",
         className,
       )}
     />

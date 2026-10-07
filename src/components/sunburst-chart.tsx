@@ -18,7 +18,7 @@ import {
  *
  * The same hierarchy a `Treemap` shows as nested rectangles, drawn as concentric
  * rings: the inner ring is the top-level branches and every ring outwards is one
- * level deeper. Each branch takes one hue from the quebi palette and its
+ * level deeper. Each branch takes one step of the ink palette and its
  * descendants inherit it, so a ring segment's color says which branch it belongs
  * to. Override a branch's color with a `config` entry under its name.
  *
@@ -35,7 +35,7 @@ import {
 export type SunburstDatum = SunburstData
 
 /**
- * Paint each top-level branch with one palette hue and hand it down. Recharts
+ * Paint each top-level branch with one palette step and hand it down. Recharts
  * resolves a segment's fill from the node itself before falling back to its
  * parent's, so writing it on every node keeps the rings of one branch together.
  */

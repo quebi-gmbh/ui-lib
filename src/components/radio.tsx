@@ -3,19 +3,22 @@
 import type { RadioGroupProps, RadioProps } from "react-aria-components"
 import {
   composeRenderProps,
+  Label as LabelPrimitive,
   RadioGroup as RadioGroupPrimitive,
   Radio as RadioPrimitive,
 } from "react-aria-components"
-import { Label } from "@/components/field"
 import { cn } from "@/lib/utils"
 
 /**
  * Radio — quebi design system
  *
- * Built on react-aria-components. An 18px circle with a cyan-tinted border;
- * selected state fills with brand teal, rings it in the brand *mark* token so
- * the control has a boundary on the light page, and shows a dark `on-brand`
- * center dot. Focus uses the quebi teal ring; invalid uses red.
+ * Built on react-aria-components. An 18px circle edged in `rule`; selected
+ * draws an ink dot in its centre. Round because it is the single-answer
+ * control — the square beside it is the checkbox. Focus is the outward ring;
+ * invalid edges the circle (and colours the dot) in `danger`.
+ *
+ * The group's own `Label` is the mono field label; an option's label is
+ * running text, which is what `RadioLabel` sets.
  */
 export function RadioGroup({ className, ...props }: RadioGroupProps) {
   return (
@@ -24,8 +27,8 @@ export function RadioGroup({ className, ...props }: RadioGroupProps) {
       data-slot="control"
       className={composeRenderProps(className, (className) =>
         cn(
-          "flex flex-col gap-3 **:data-[slot=label]:font-normal",
-          "has-[[slot=description]]:gap-6 has-[[slot=description]]:**:data-[slot=label]:font-medium",
+          "flex flex-col gap-3",
+          "has-[[slot=description]]:gap-6",
           className,
         ),
       )}
@@ -58,23 +61,15 @@ export function Radio({ className, children, ...props }: RadioProps) {
             <span
               data-slot="indicator"
               className={cn(
-                "relative flex size-[18px] shrink-0 items-center justify-center rounded-full border bg-transparent",
+                "relative flex size-[18px] shrink-0 items-center justify-center rounded-full border border-quebi-rule bg-transparent",
                 "transition-colors duration-150",
-                "border-quebi-line/30",
                 "before:content-[''] before:size-2 before:rounded-full",
-                // Boundary in the mark token, dot in `on-brand`: mint edged in
-                // mint is 1.74:1 on the light page and a `--q-bg` dot on mint
-                // is 1.74:1 too, so on light the whole selected state was one
-                // flat pale patch (task #145). Teal-600 gives the ring 3.45:1
-                // against the page and the dot 7.81:1 against the fill; on dark
-                // `--q-brand-mark` is `--q-brand`, so only the dot moves there
-                // (10.64:1 → 7.81:1, both far clear).
-                isSelected && "border-quebi-brand-mark bg-quebi-brand before:bg-quebi-on-brand",
+                isSelected && "before:bg-quebi-action",
                 isFocusVisible &&
-                  "ring-2 ring-quebi-brand-mark ring-offset-2 ring-offset-quebi-bg",
-                isInvalid && "border-red-500",
-                isInvalid && isSelected && "bg-red-500",
-                isInvalid && isFocusVisible && "ring-red-500/50",
+                  "ring-2 ring-quebi-focus ring-offset-3 ring-offset-quebi-bg",
+                isInvalid && "border-quebi-danger",
+                isInvalid && isSelected && "before:bg-quebi-danger",
+                isInvalid && isFocusVisible && "ring-quebi-danger/50",
               )}
             />
             {content}
@@ -85,6 +80,18 @@ export function Radio({ className, children, ...props }: RadioProps) {
   )
 }
 
-export function RadioLabel(props: React.ComponentProps<typeof Label>) {
-  return <Label elementType="span" {...props} />
+/**
+ * An option's label: running text, not the mono field label. Medium weight
+ * when the option carries a description under it, so the two read as a title
+ * and its gloss.
+ */
+export function RadioLabel({ className, ...props }: React.ComponentProps<typeof LabelPrimitive>) {
+  return (
+    <LabelPrimitive
+      data-slot="label"
+      elementType="span"
+      {...props}
+      className={cn("select-none text-sm text-quebi-fg", className)}
+    />
+  )
 }

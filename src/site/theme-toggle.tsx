@@ -7,8 +7,8 @@ type Theme = "light" | "dark"
 const STORAGE_KEY = "quebi-theme"
 
 function currentTheme(): Theme {
-  if (typeof document === "undefined") return "dark"
-  return document.documentElement.classList.contains("light") ? "light" : "dark"
+  if (typeof document === "undefined") return "light"
+  return document.documentElement.classList.contains("dark") ? "dark" : "light"
 }
 
 function applyTheme(theme: Theme) {

@@ -88,17 +88,17 @@ export function ConformDaySchedule({
       />
 
       {label && (
-        <Label className={cn("text-sm", hasErrors && "text-red-500")}>
+        <Label className={cn(hasErrors && "text-quebi-danger")}>
           {label}
-          {isRequired && <span className="ml-1 text-quebi-brand-text">*</span>}
+          {isRequired && <span className="ml-1 text-quebi-fg">*</span>}
         </Label>
       )}
 
       <div
         data-slot="control"
         className={cn(
-          "rounded-quebi-md border p-4 transition-colors duration-150",
-          hasErrors ? "border-red-500" : "border-quebi-line/10",
+          "border p-4 transition-colors duration-150",
+          hasErrors ? "border-quebi-danger" : "border-quebi-hairline",
         )}
       >
         <DaySchedule

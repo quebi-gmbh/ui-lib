@@ -250,7 +250,7 @@ describe("a cell that opens in place", () => {
     const user = userEvent.setup()
     await user.click(cell("1", "name"))
 
-    expect(cell("1", "name")).toHaveClass("py-[3px]")
+    expect(cell("1", "name")).toHaveClass("py-0.75")
     expect(cell("1", "name")).not.toHaveClass("py-3")
   })
 

@@ -13,10 +13,11 @@ import { cn } from "@/lib/utils"
 /**
  * Breadcrumbs — quebi design system
  *
- * Compact navigation trail. Intermediate crumbs render as brand-teal links
- * dimmed to text-quebi-fg-muted; the current crumb is text-quebi-fg and
- * semibold. The separator glyph (chevron or slash) is subtle. Built on
- * react-aria-components for the accessibility baseline.
+ * Compact navigation trail, set in the design's nav role (Outfit 14px).
+ * Intermediate crumbs are links in the body ink that turn to full ink and
+ * underline on hover, like the top navigation; the current crumb is full ink
+ * and never underlines. The separator glyph (chevron or slash) is subtle.
+ * Built on react-aria-components for the accessibility baseline.
  */
 
 type BreadcrumbsContextProps = { separator?: "chevron" | "slash" | boolean }
@@ -32,7 +33,7 @@ const Breadcrumbs = <T extends object>({
     <BreadcrumbsProvider value={{ separator: props.separator }}>
       <BreadcrumbsPrimitive
         {...props}
-        className={cn("flex items-center gap-2 font-sans text-sm", className)}
+        className={cn("flex items-center gap-2 font-display text-quebi-nav", className)}
       />
     </BreadcrumbsProvider>
   )
@@ -68,8 +69,8 @@ const BreadcrumbsItem = ({
               "has-data-[slot=icon]:inline-flex has-data-[slot=icon]:items-center has-data-[slot=icon]:gap-x-2",
               "*:data-[slot=icon]:size-4",
               isCurrent
-                ? "cursor-default font-semibold text-quebi-fg hover:text-quebi-fg hover:no-underline"
-                : "font-normal text-quebi-fg-muted hover:text-quebi-fg hover:no-underline *:data-[slot=icon]:text-quebi-fg-muted hover:*:data-[slot=icon]:text-quebi-fg",
+                ? "cursor-default text-quebi-fg hover:no-underline"
+                : "text-quebi-fg-muted hover:text-quebi-fg hover:*:data-[slot=icon]:text-quebi-fg",
             )}
             href={href}
             {...props}
@@ -84,16 +85,16 @@ const BreadcrumbsItem = ({
 const ChevronRightIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 20 20"
-    fill="currentColor"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.5}
+    strokeLinecap="round"
+    strokeLinejoin="round"
     aria-hidden="true"
     data-slot="icon"
   >
-    <path
-      fillRule="evenodd"
-      d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02Z"
-      clipRule="evenodd"
-    />
+    <path d="m9 6 6 6-6 6" />
   </svg>
 )
 
@@ -105,7 +106,7 @@ const Separator = ({
   return (
     <span className="*:shrink-0 *:text-quebi-fg-subtle *:data-[slot=icon]:size-3.5">
       {separator === "chevron" && <ChevronRightIcon />}
-      {separator === "slash" && <span className="text-quebi-fg-subtle">/</span>}
+      {separator === "slash" && <span>/</span>}
     </span>
   )
 }

@@ -154,7 +154,7 @@ const [error, setError] = useState<string>()
 <Checkbox name="terms" isSelected={accepted} onChange={setAccepted} isInvalid={!!error}>
   I accept the terms
 </Checkbox>
-{error && <p className="text-sm text-red-500">{error}</p>}`,
+{error && <p className="text-sm text-quebi-danger">{error}</p>}`,
       right: `import { ConformCheckbox } from "@/components/conform-checkbox"
 
 <ConformCheckbox field={fields.terms} label="I accept the terms" />`,

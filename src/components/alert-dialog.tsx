@@ -45,8 +45,8 @@ import {
  * is never more than one on screen.
  */
 
-/** Colour ramp for the confirming button. */
-export type ConfirmIntent = "primary" | "danger" | "accent"
+/** The confirming button: ink (`primary`), or `danger` when the answer destroys something. */
+export type ConfirmIntent = "primary" | "danger"
 
 export interface ConfirmOptions {
   /** The question. Also the dialog's accessible name. */
@@ -57,7 +57,7 @@ export interface ConfirmOptions {
   confirmLabel?: string
   /** Label on the cancelling button. Default "Cancel". */
   cancelLabel?: string
-  /** Colour ramp for the confirming button. Default "primary". */
+  /** The confirming button's intent. Default "primary". */
   intent?: ConfirmIntent
 }
 

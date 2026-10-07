@@ -38,7 +38,7 @@ const NotificationsForm = () => {
         description="We only mail about things you asked for."
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

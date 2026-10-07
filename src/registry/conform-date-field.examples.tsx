@@ -34,7 +34,7 @@ const BookingForm = () => {
     >
       <ConformDateField field={fields.startDate} label="Start date" />
       <Button type="submit" size="sm">
-        Book
+        book
       </Button>
     </form>
   )

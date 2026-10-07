@@ -48,9 +48,10 @@ import { cn } from "@/lib/utils"
  * Chart — quebi design system
  *
  * A themeable recharts wrapper: provides a `Chart` container plus styled
- * axes, grid, tooltip, and an interactive legend. Series colors come from a
- * teal-led quebi palette (the brand teal is the primary series) and can be
- * overridden per-key via the `config` prop.
+ * axes, grid, tooltip, and an interactive legend. Series colors come from an
+ * ink ramp (`chart-1` is the ink itself) and can be overridden per-key via the
+ * `config` prop. The chrome is hairline grid, subtle caption-size ticks and a
+ * floating tooltip — the data carries the contrast, the frame does not.
  *
  * Requires the `recharts` npm package as a peer dependency.
  */
@@ -88,22 +89,24 @@ type ChartConfig = {
   )
 }
 
-// Quebi teal-led series palette. chart-1 is the brand teal; the rest are
-// complementary hues tuned for the dark quebi surface. chart-6 to chart-10 are
-// the overflow ring: hierarchical charts (Treemap, Sunburst) routinely have more
-// branches than a five-series line chart ever does, and cycling five hues twice
-// makes two unrelated branches look like the same one.
+// Ink & Paper series palette: no hue, only ink. Each step is a rung of the
+// gray ramp, ordered so that neighbouring series alternate dark and light and
+// never sit on adjacent rungs; the values flip with the theme through the
+// `--q-chart-*` variables in quebi-theme.css. chart-6 to chart-10 are the
+// overflow ring for hierarchical charts (Treemap, Sunburst), which routinely
+// have more branches than a five-series line chart. Past five series, label
+// the marks — grey alone cannot carry ten categories.
 const CHART_COLORS = {
-  "chart-1": "var(--color-quebi-brand)",
-  "chart-2": "#a78bfa", // violet
-  "chart-3": "#38bdf8", // sky
-  "chart-4": "#fbbf24", // amber
-  "chart-5": "#f472b6", // pink
-  "chart-6": "#34d399", // emerald
-  "chart-7": "#fb923c", // orange
-  "chart-8": "#818cf8", // indigo
-  "chart-9": "#fb7185", // rose
-  "chart-10": "#a3e635", // lime
+  "chart-1": "var(--q-chart-1)",
+  "chart-2": "var(--q-chart-2)",
+  "chart-3": "var(--q-chart-3)",
+  "chart-4": "var(--q-chart-4)",
+  "chart-5": "var(--q-chart-5)",
+  "chart-6": "var(--q-chart-6)",
+  "chart-7": "var(--q-chart-7)",
+  "chart-8": "var(--q-chart-8)",
+  "chart-9": "var(--q-chart-9)",
+  "chart-10": "var(--q-chart-10)",
 } as const
 
 type ChartColorKeys = keyof typeof CHART_COLORS | (string & {})
@@ -111,7 +114,7 @@ type ChartColorKeys = keyof typeof CHART_COLORS | (string & {})
 const DEFAULT_COLORS = ["chart-1", "chart-2", "chart-3", "chart-4", "chart-5"] as const
 
 /**
- * The full ten-hue ring. `DEFAULT_COLORS` stays at five so the series charts
+ * The full ten-step ring. `DEFAULT_COLORS` stays at five so the series charts
  * keep the palette they were designed against; pass this where a chart has more
  * categories than series, such as a Treemap or a Sunburst.
  */
@@ -297,10 +300,10 @@ const Chart = ({
         data-chart={chartId}
         ref={ref}
         className={cn(
-          "z-20 flex w-full justify-center text-xs text-quebi-fg-muted",
-          "[&_.recharts-cartesian-axis-tick_text]:fill-quebi-fg-muted [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-quebi-line/10 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-quebi-line/20 [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-quebi-line/10 [&_.recharts-radial-bar-background-sector]:fill-quebi-surface/5 [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-quebi-surface/5 [&_.recharts-reference-line_[stroke='#ccc']]:stroke-quebi-line/20 [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-hidden [&_.recharts-surface]:outline-hidden",
+          "z-20 flex w-full justify-center text-quebi-caption text-quebi-fg-subtle",
+          "[&_.recharts-cartesian-axis-tick_text]:fill-quebi-fg-subtle [&_.recharts-polar-angle-axis-tick_text]:fill-quebi-fg-subtle [&_.recharts-polar-radius-axis-tick_text]:fill-quebi-fg-subtle [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-quebi-hairline [&_.recharts-curve.recharts-tooltip-cursor]:stroke-quebi-hairline [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-quebi-hairline [&_.recharts-radial-bar-background-sector]:fill-quebi-raised [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-quebi-raised [&_.recharts-reference-line_[stroke='#ccc']]:stroke-quebi-hairline [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-hidden [&_.recharts-surface]:outline-hidden",
           "[&_.recharts-dot[fill='#fff']]:fill-(--line-color)",
-          "[&_.recharts-active-dot>.recharts-dot]:stroke-quebi-surface/10",
+          "[&_.recharts-active-dot>.recharts-dot]:stroke-quebi-hairline",
           "[&_.recharts-surface_g]:focus:outline-hidden",
           className,
         )}
@@ -354,7 +357,8 @@ type ChartTooltipProps<TValue extends ValueType, TName extends NameType> = Recha
 const tooltipWrapperStyle = { outline: "none" } as const
 
 // Theme-aware cursor tint: quebi-surface flips (white on dark, ink on light),
-// so the hover cursor stays a faint neutral wash in both themes.
+// so the hover cursor stays a faint neutral wash in both themes. A wash, not
+// `raised`: the cursor sits over the marks, and a solid ground would hide them.
 const cursorTint = "color-mix(in oklab, var(--color-quebi-surface) 6%, transparent)"
 
 const cursorStyleRadial = {
@@ -419,7 +423,10 @@ const XAxis = ({
   const tick = layout === "horizontal" ? tickHorizontal : undefined
   return (
     <XAxisPrimitive
-      className={cn("text-quebi-fg-muted text-xs **:[text]:fill-quebi-fg-muted", className)}
+      className={cn(
+        "font-mono text-quebi-fg-subtle text-quebi-caption tabular-nums **:[text]:fill-quebi-fg-subtle",
+        className,
+      )}
       interval={displayEdgeLabelsOnly ? "preserveStartEnd" : intervalType}
       tick={tick}
       ticks={ticks}
@@ -456,7 +463,10 @@ const YAxis = ({
 
   return (
     <YAxisPrimitive
-      className={cn("text-quebi-fg-muted text-xs **:[text]:fill-quebi-fg-muted", className)}
+      className={cn(
+        "font-mono text-quebi-fg-subtle text-quebi-caption tabular-nums **:[text]:fill-quebi-fg-subtle",
+        className,
+      )}
       // Both of these used to bind tighter than intended — `width ?? layout ===
       // "horizontal"` is a boolean, so an explicit `width` was always discarded,
       // and `type || layout === "horizontal"` made every axis numeric, so
@@ -478,7 +488,7 @@ const CartesianGrid = ({ className, ...props }: CartesianGridPrimitiveProps) => 
   const { layout } = useChart()
   return (
     <CartesianGridPrimitive
-      className={cn("stroke-1 stroke-quebi-line/10", className)}
+      className={cn("stroke-1 stroke-quebi-hairline", className)}
       horizontal={layout !== "vertical"}
       vertical={layout === "vertical"}
       {...props}
@@ -551,7 +561,7 @@ const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
     <div
       ref={ref}
       className={cn(
-        "grid min-w-48 items-start rounded-quebi-md border border-quebi-line/10 bg-quebi-elevated/70 p-3 py-2 text-xs text-quebi-fg backdrop-blur-lg",
+        "grid min-w-48 items-start rounded-quebi-s border border-quebi-hairline bg-quebi-elevated px-3 py-2 text-quebi-caption text-quebi-fg shadow-quebi-float",
         className,
       )}
     >
@@ -559,7 +569,7 @@ const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
         <>
           {!nestLabel ? <span className="font-medium">{tooltipLabel}</span> : null}
           {labelSeparator && (
-            <span aria-hidden className="mt-2 mb-3 block h-px w-full bg-quebi-line/20" />
+            <span aria-hidden className="mt-2 mb-3 block h-px w-full bg-quebi-hairline" />
           )}
         </>
       )}
@@ -616,7 +626,7 @@ const ChartTooltipContent = <TValue extends ValueType, TName extends NameType>({
                     </div>
 
                     {item.value && (
-                      <span className="font-mono font-medium text-quebi-fg tabular-nums">
+                      <span className="font-mono text-quebi-fg tabular-nums">
                         {item.value.toString()}
                       </span>
                     )}
@@ -697,9 +707,12 @@ const ChartLegendContent = ({
             key={key}
             id={key}
             className={cn(
-              "flex items-center gap-2 rounded-quebi-sm px-2 py-1 text-quebi-fg-muted *:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:size-2.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-quebi-fg-muted",
-              "selected:bg-quebi-surface/[0.06] selected:text-quebi-fg",
-              "hover:bg-quebi-surface/[0.06] hover:text-quebi-fg",
+              "flex items-center gap-2 px-2 py-1 text-quebi-caption text-quebi-fg-muted *:data-[slot=icon]:-mx-0.5 *:data-[slot=icon]:size-2.5 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:text-quebi-fg-muted",
+              // Selected is ink and an underline: no fill, because the swatch
+              // beside the label is itself ink-on-paper and a ground would eat it.
+              "selected:text-quebi-fg selected:underline selected:decoration-1 selected:underline-offset-5",
+              "hover:text-quebi-fg",
+              "outline-hidden focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset",
               "cursor-pointer transition-colors duration-150",
             )}
             aria-label={"Legend Item"}

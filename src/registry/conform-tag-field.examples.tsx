@@ -39,7 +39,7 @@ const TopicsForm = () => {
         description="Enter, comma, or semicolon commits a tag."
       />
       <Button type="submit" size="sm">
-        Submit
+        submit
       </Button>
     </form>
   )

@@ -17,7 +17,7 @@ const CITIES = [
 /**
  * Scrolled a little way in before the picture is taken, because the two things
  * worth photographing here only exist once the content has moved: the edge fade
- * and the teal pill. A fixed offset, not a smooth scroll — the image has to be
+ * and the ink pill. A fixed offset, not a smooth scroll — the image has to be
  * the same one twice.
  */
 const ScrolledList = () => {

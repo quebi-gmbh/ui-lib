@@ -47,10 +47,10 @@ const MINIMAP_EDGE_PX = 1
 const MINIMAP_MIN_LINE_PX = 3
 
 /**
- * The corner radius of the viewport rectangle when it is nowhere near an edge.
- * See `rectRadius` for the case that matters.
+ * The corner radius of the viewport rectangle when it is nowhere near an edge:
+ * square, like the strip. See `rectRadius` for a strip a consumer has rounded.
  */
-const MINIMAP_RECT_MIN_RADIUS_PX = 2
+const MINIMAP_RECT_MIN_RADIUS_PX = 0
 
 /**
  * What the strip measures before it has been measured — its rendered width at
@@ -62,8 +62,8 @@ const MINIMAP_RECT_MIN_RADIUS_PX = 2
  * the right one for the default, and one frame stale for anything else.
  */
 const MINIMAP_FALLBACK_INNER_WIDTH_PX = 34
-/** `rounded-quebi-sm` (8px) less that same 1px border. Same reasoning. */
-const MINIMAP_FALLBACK_INNER_RADIUS_PX = 7
+/** The strip is square by default, so its inner radius is too. Same reasoning. */
+const MINIMAP_FALLBACK_INNER_RADIUS_PX = 0
 
 /**
  * Where an hour rule is drawn. Midnight and 24:00 are missing on purpose: they
@@ -176,7 +176,8 @@ export function minimapScrollTop(fraction: number, scrollHeight: number, clientH
 /**
  * The corner radius for one end of the viewport rectangle.
  *
- * The strip is rounded with `overflow-hidden`, so a square-cornered rectangle
+ * The strip is square by default, but if a consumer rounds it, its
+ * `overflow-hidden` means a square-cornered rectangle
  * sitting against the top or the bottom gets its corners clipped off by the
  * curve — visibly, and only at the two scroll positions a user reaches most
  * often. Sliding the radius with the distance to that edge makes the rectangle
@@ -187,12 +188,16 @@ function rectRadius(innerRadiusPx: number, gapPx: number) {
   return Math.max(MINIMAP_RECT_MIN_RADIUS_PX, innerRadiusPx - Math.max(0, gapPx))
 }
 
+/**
+ * The two tones. The names are historical — both are ink now: `brand` the full
+ * ink, `cyan` the subtle grey. Deliberately the schedule's own, so a line and
+ * its bar match.
+ */
 export type DayScheduleMinimapTone = "brand" | "cyan"
 
-/** The two accents, as fills. Deliberately the schedule's own, so a line and its bar match. */
 const MINIMAP_TONES: Record<DayScheduleMinimapTone, string> = {
-  brand: "bg-quebi-brand",
-  cyan: "bg-cyan-500",
+  brand: "bg-quebi-action",
+  cyan: "bg-quebi-fg-subtle",
 }
 
 export interface DayScheduleMinimapSpan {
@@ -364,7 +369,7 @@ export function DayScheduleMinimap({
       onPointerCancel={endDrag}
       className={cn(
         "relative w-9 flex-none cursor-pointer touch-none select-none overflow-hidden",
-        "rounded-quebi-sm border border-quebi-line/10 bg-quebi-bg",
+        "border border-quebi-hairline bg-quebi-bg",
         className,
       )}
       {...props}
@@ -373,7 +378,7 @@ export function DayScheduleMinimap({
         {MINIMAP_RULE_MINUTES.map((minute) => (
           <div
             key={minute}
-            className="absolute inset-x-0 h-px bg-quebi-line/[0.08]"
+            className="absolute inset-x-0 h-px bg-quebi-hairline"
             style={{ top: toPercent(minute) }}
           />
         ))}

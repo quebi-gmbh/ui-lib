@@ -365,7 +365,7 @@ describe("the registered control stays focusable for Conform's focus-on-error", 
     const active = document.activeElement as HTMLElement
     expect(active).not.toBe(registered)
     expect(active?.tagName).toBe("BUTTON")
-    expect(active?.textContent).toContain("Browse")
+    expect(active?.textContent?.toLowerCase()).toContain("browse")
   })
 
   test("the swatch grid's forward lands on a swatch option", async () => {

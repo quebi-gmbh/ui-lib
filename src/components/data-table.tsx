@@ -784,7 +784,7 @@ function DataTableCards<T extends RowData>({
     (a, b) => (a.columnDef.meta?.priority ?? 0) - (b.columnDef.meta?.priority ?? 0),
   )
   if (rows.length === 0) {
-    return <p className="py-8 text-center text-quebi-fg-muted text-sm">No rows.</p>
+    return <p className="py-8 text-center text-quebi-body-s text-quebi-fg-muted">No rows.</p>
   }
   return (
     <ul className="flex flex-col gap-2">
@@ -794,7 +794,7 @@ function DataTableCards<T extends RowData>({
             <CardContent className="flex flex-col gap-1.5 p-3">
               {columns.map((column) => (
                 <div key={column.id} className="flex items-baseline justify-between gap-3 text-sm">
-                  <span className="text-quebi-fg-subtle text-xs uppercase tracking-[0.08em]">
+                  <span className="quebi-eyebrow">
                     {column.columnDef.meta?.label ?? column.id}
                   </span>
                   <span className="text-end text-quebi-fg">

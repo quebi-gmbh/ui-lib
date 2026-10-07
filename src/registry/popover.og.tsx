@@ -18,10 +18,10 @@ export const popoverOgScene: OgScene = {
   align: "top",
   render: () => (
     <Popover defaultOpen>
-      <PopoverTrigger>Workspace</PopoverTrigger>
+      <PopoverTrigger>workspace</PopoverTrigger>
       <PopoverContent>
         <PopoverHeader>
-          <PopoverTitle>Workspace</PopoverTitle>
+          <PopoverTitle>workspace</PopoverTitle>
           <PopoverDescription>Manage members and projects.</PopoverDescription>
         </PopoverHeader>
         <PopoverBody>
@@ -30,8 +30,8 @@ export const popoverOgScene: OgScene = {
           </p>
         </PopoverBody>
         <PopoverFooter>
-          <PopoverClose intent="outline">Close</PopoverClose>
-          <Button intent="primary">Invite</Button>
+          <PopoverClose intent="outline">close</PopoverClose>
+          <Button intent="primary">invite</Button>
         </PopoverFooter>
       </PopoverContent>
     </Popover>

@@ -4,7 +4,7 @@ export const badgeMeta: ComponentMeta = {
   slug: "badge",
   name: "Badge",
   description:
-    "Pill-shaped status indicator styled with the quebi design system. Nine intents plus an optional state dot for live labels.",
+    "The quebi tag: a lowercase pill on the raised ground. Nine intents — only success, warning and danger take a colour — plus an optional state dot for live labels.",
   category: "Display",
   tags: ["badge", "label", "status", "pill", "tag"],
 }

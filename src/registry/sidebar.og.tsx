@@ -20,30 +20,31 @@ import type { OgScene } from "./types"
  *
  * Three rows and no count badge. The badge is a 10px numeral, the smallest type
  * in the component and four pixels wide in an unfurl, and it was setting the
- * scale for everything else in the picture.
+ * scale for everything else in the picture. The scale is set by the section
+ * label instead: an 11px mono eyebrow, which 1.7 lifts just over the 18px floor.
  */
 export const sidebarOgScene: OgScene = {
-  scale: 1.6,
+  scale: 1.7,
   render: () => (
     <Card className="h-52 w-144 overflow-hidden p-0">
       <SidebarProvider className="h-full">
         <Sidebar>
           <SidebarHeader>
-            <span className="px-2 font-semibold text-quebi-fg">quebi</span>
+            <span className="px-2 font-display font-light text-quebi-fg text-xl">quebi</span>
           </SidebarHeader>
           <SidebarContent>
-            <SidebarSection label="Overview">
+            <SidebarSection label="overview">
               <SidebarItem isCurrent href="#dashboard">
                 <Home data-slot="icon" aria-hidden="true" />
-                <SidebarLabel>Dashboard</SidebarLabel>
+                <SidebarLabel>dashboard</SidebarLabel>
               </SidebarItem>
               <SidebarItem href="#roster">
                 <Users data-slot="icon" aria-hidden="true" />
-                <SidebarLabel>Roster</SidebarLabel>
+                <SidebarLabel>roster</SidebarLabel>
               </SidebarItem>
               <SidebarItem href="#settings">
                 <Settings data-slot="icon" aria-hidden="true" />
-                <SidebarLabel>Settings</SidebarLabel>
+                <SidebarLabel>settings</SidebarLabel>
               </SidebarItem>
             </SidebarSection>
           </SidebarContent>
@@ -51,7 +52,7 @@ export const sidebarOgScene: OgScene = {
         <SidebarInset>
           <SidebarNav>
             <SidebarTrigger />
-            <span className="text-sm text-quebi-fg-muted">Dashboard</span>
+            <span className="text-quebi-body-s text-quebi-fg-muted">dashboard</span>
           </SidebarNav>
           <div className="p-6 text-sm text-quebi-fg-muted">Main content area.</div>
         </SidebarInset>

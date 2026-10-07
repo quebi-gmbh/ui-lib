@@ -8,11 +8,11 @@ import { cn } from "@/lib/utils"
 /**
  * BarList — quebi design system
  *
- * A horizontal bar chart for ranked categorical data. Each row is a
- * translucent brand-teal bar whose width encodes its value relative to the
- * largest entry, with the value rendered in a fixed column on the right.
- * Rows become clickable Buttons when `onValueChange` is provided, and the
- * bar brightens on hover. Names with an `href` render as a sibling Link.
+ * A horizontal bar chart for ranked categorical data. Each row is a flat
+ * gray bar whose width encodes its value relative to the largest entry, with
+ * the value rendered in a fixed mono column on the right. Rows become
+ * clickable Buttons when `onValueChange` is provided; a hovered row takes the
+ * raised ground behind its bar. Names with an `href` render as a sibling Link.
  */
 type Bar<T> = T & {
   key?: string
@@ -71,17 +71,16 @@ export function BarList<T>({
               onValueChange?.(item)
             }}
             className={cn(
-              "group w-full rounded-quebi-sm outline-none",
-              "focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+              "group w-full outline-none",
+              "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
               onValueChange &&
-                "m-0! cursor-pointer transition-colors duration-150 hover:bg-cyan-500/5",
+                "m-0! cursor-pointer transition-colors duration-150 hover:bg-quebi-raised",
             )}
           >
             <div
               className={cn(
-                "flex items-center rounded-quebi-sm bg-quebi-brand/15 transition-colors duration-150",
+                "flex items-center bg-quebi-pressed transition-colors duration-150",
                 rowHeight,
-                onValueChange && "group-hover:bg-quebi-brand/25",
                 index === sortedData.length - 1 && "mb-0",
               )}
               style={{ width: `${widths[index]}%` }}
@@ -90,7 +89,7 @@ export function BarList<T>({
                 {item.href ? (
                   <Link
                     href={item.href}
-                    className="truncate whitespace-nowrap rounded-quebi-sm font-normal text-sm/6 text-quebi-fg no-underline hover:text-quebi-brand-text-hover hover:underline hover:underline-offset-2"
+                    className="truncate whitespace-nowrap text-sm/6 text-quebi-fg underline decoration-1 underline-offset-5 transition-[text-underline-offset] duration-150 hover:underline-offset-8"
                     target="_blank"
                     rel="noreferrer"
                     onClick={(event) => event.stopPropagation()}
@@ -115,7 +114,7 @@ export function BarList<T>({
               index === sortedData.length - 1 ? "mb-0" : "mb-1.5",
             )}
           >
-            <p className="truncate whitespace-nowrap text-quebi-fg-muted text-sm leading-none">
+            <p className="truncate whitespace-nowrap font-mono text-quebi-caption text-quebi-fg-subtle tabular-nums leading-none">
               {valueFormatter(item.value)}
             </p>
           </div>

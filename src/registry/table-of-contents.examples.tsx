@@ -14,39 +14,39 @@ interface Section {
 // Ids are prefixed per example: every example is on the same page, and an id
 // is a document-wide name.
 const GUIDE: Section[] = [
-  { id: "guide-install", title: "Installation", level: 2 },
-  { id: "guide-requirements", title: "Requirements", level: 3 },
-  { id: "guide-cli", title: "Using the CLI", level: 3 },
-  { id: "guide-usage", title: "Usage", level: 2 },
-  { id: "guide-items", title: "Items as data", level: 3 },
-  { id: "guide-spy", title: "Scroll-spy", level: 3 },
-  { id: "guide-a11y", title: "Accessibility", level: 2 },
+  { id: "guide-install", title: "installation", level: 2 },
+  { id: "guide-requirements", title: "requirements", level: 3 },
+  { id: "guide-cli", title: "using the CLI", level: 3 },
+  { id: "guide-usage", title: "usage", level: 2 },
+  { id: "guide-items", title: "items as data", level: 3 },
+  { id: "guide-spy", title: "scroll-spy", level: 3 },
+  { id: "guide-a11y", title: "accessibility", level: 2 },
   { id: "guide-faq", title: "FAQ", level: 2 },
 ]
 
 const CHANGELOG: Section[] = [
-  { id: "log-2-4", title: "2.4 — Table of contents", level: 2 },
-  { id: "log-2-3", title: "2.3 — Quick actions", level: 2 },
-  { id: "log-2-2", title: "2.2 — Stat groups", level: 2 },
-  { id: "log-2-1", title: "2.1 — Lists", level: 2 },
+  { id: "log-2-4", title: "2.4 — table of contents", level: 2 },
+  { id: "log-2-3", title: "2.3 — quick actions", level: 2 },
+  { id: "log-2-2", title: "2.2 — stat groups", level: 2 },
+  { id: "log-2-1", title: "2.1 — lists", level: 2 },
 ]
 
 const RAIL: Section[] = [
-  { id: "rail-overview", title: "Overview", level: 2 },
-  { id: "rail-billing", title: "Billing", level: 2 },
-  { id: "rail-invoices", title: "Invoices", level: 3 },
-  { id: "rail-tax", title: "Tax details", level: 3 },
-  { id: "rail-team", title: "Team", level: 2 },
-  { id: "rail-danger", title: "Danger zone", level: 2 },
+  { id: "rail-overview", title: "overview", level: 2 },
+  { id: "rail-billing", title: "billing", level: 2 },
+  { id: "rail-invoices", title: "invoices", level: 3 },
+  { id: "rail-tax", title: "tax details", level: 3 },
+  { id: "rail-team", title: "team", level: 2 },
+  { id: "rail-danger", title: "danger zone", level: 2 },
 ]
 
 const REFERENCE: Section[] = [
-  { id: "ref-props", title: "Props", level: 2 },
+  { id: "ref-props", title: "props", level: 2 },
   { id: "ref-items", title: "items", level: 3 },
   { id: "ref-active", title: "activeId", level: 3 },
-  { id: "ref-hooks", title: "Hooks", level: 2 },
+  { id: "ref-hooks", title: "hooks", level: 2 },
   { id: "ref-collect", title: "collectTableOfContents", level: 3 },
-  { id: "ref-styling", title: "Styling", level: 2 },
+  { id: "ref-styling", title: "styling", level: 2 },
 ]
 
 const PARAGRAPH =
@@ -111,7 +111,7 @@ export const tableOfContentsExamples: ComponentExample[] = [
     title: "A long document",
     description:
       "h2 sections with h3s under them. The flat list is nested by `level`; scroll the panel and the current heading follows.",
-    render: () => <PanelDocument sections={GUIDE} label="On this page" />,
+    render: () => <PanelDocument sections={GUIDE} label="on this page" />,
   },
   {
     title: "A flat list",
@@ -124,7 +124,7 @@ export const tableOfContentsExamples: ComponentExample[] = [
     description:
       "The rail on the left of the content, with `collapsible`: the label is a button that folds the list away. The links stay in the HTML while it is closed, and the scroll-spy keeps tracking, so it opens on the current heading.",
     render: () => (
-      <PanelDocument sections={REFERENCE} label="On this page" side="start" collapsible />
+      <PanelDocument sections={REFERENCE} label="on this page" side="start" collapsible />
     ),
   },
   {
@@ -139,7 +139,7 @@ export const tableOfContentsExamples: ComponentExample[] = [
         </div>
         <TableOfContents
           items={toItems(RAIL)}
-          label="On this page"
+          label="on this page"
           sticky
           className="w-56 shrink-0 self-start"
         />

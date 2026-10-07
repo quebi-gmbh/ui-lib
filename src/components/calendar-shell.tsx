@@ -69,123 +69,103 @@ import { Popover, PopoverContent } from "@/components/popover"
 /**
  * The calendar palette, as classes.
  *
- * `calendarColorNames` in `@/lib/calendar` fixes the *order* — it is the
- * `dataviz` skill's validated categorical ordering, whose adjacent pairs clear
- * the colour-vision gate in both themes — and this is the only place that turns
- * a slot into pixels. Three rules from that skill shape what each entry says:
+ * Ink & Paper has no decorative hue, so the eight slots are eight treatments of
+ * ink rather than eight colours. The names (`blue`, `orange`, `brand`, …) are
+ * kept because they are API — `CalendarColorName` in `@/lib/calendar`, stored
+ * in consumers' event and calendar records — but they no longer describe what
+ * is drawn. Each slot is a *ground* crossed with an *edge*:
  *
- * - **The fill is a wash, not a block.** The hue at low opacity, with the solid
- *   hue kept for a 2px edge that reads as the series line. A saturated block
- *   behind text is the thing that makes a week view look like a bar chart.
- * - **Text wears text tokens.** The title is `quebi-fg`, never the series hue,
- *   so it keeps its contrast whichever slot the calendar landed in.
- * - **Colour is never the only channel.** Every block carries its title and its
- *   time as text, and a timeline row is labelled with the calendar's name, so
- *   the hue is a second signal rather than the signal.
+ * | slot      | ground                   | edge (2px, left) | dot                  |
+ * |-----------|--------------------------|------------------|----------------------|
+ * | `blue`    | pressed (bg-200)         | solid ink        | filled, subtle ink   |
+ * | `orange`  | hatched paper            | solid ink        | hatched, ink ring    |
+ * | `brand`   | raised (bg-100)          | solid ink        | filled ink           |
+ * | `amber`   | paper with a 5% ink tint | solid ink        | ink ring             |
+ * | `pink`    | raised                   | dashed ink       | dashed ink ring      |
+ * | `emerald` | pressed                  | dashed ink       | pressed, subtle ring |
+ * | `violet`  | hatched paper            | dashed ink       | dashed subtle ring   |
+ * | `rose`    | tinted paper             | dashed ink       | subtle ring          |
  *
- * **The wash is opaque.** A tint spelled `bg-blue-500/15` is 85% transparent, so
- * the hour lines, the sub-slot lines and the column rules the grid draws *under*
- * an event are all still legible through it — the bar reads as a pane of tinted
- * glass laid over the grid rather than as an object sitting on it (task #165).
- * Each entry therefore names the colour that tint *resolves to* over the page:
- * `color-mix(in oklab, <hue> 15%, var(--color-quebi-bg))`, at alpha 1. The
- * apparent colour is unchanged in both themes — `--color-quebi-bg` is the
- * theme-aware token the surface is already painted in — but nothing shows
- * through. `band` converts with `block`: the all-day band and the month chip sit
- * over the day-column rules rather than over hour lines, which is the same
- * defect with a different line under it.
+ * In `calendarColorNames` order every adjacent pair differs in ground or edge,
+ * so the assignment rule there — assign in order, never cycle — still holds.
+ * Grey cannot carry eight categories on its own, and it is not asked to: every
+ * block carries its title and time as text, and a timeline row is labelled
+ * with its calendar's name. The treatment is the second channel.
  *
- * The eight pairs are written out rather than built by a helper because a
- * Tailwind v4 class only exists if its full text appears in a scanned file. A
- * helper interpolating the hue would emit `bg-[color-mix(…var(--color-blue-500)…)]`
- * at runtime and Tailwind would never have generated a rule for it, so every bar
- * would paint transparent. Theme tokens (`--q-calendar-tint-*`) would compile,
- * but they would move eight values a consumer copying this file cannot see into
- * a stylesheet they have to copy too — and self-containment is why the palette
- * uses Tailwind's own scales in the first place.
+ * **Every ground is opaque.** Hour lines, sub-slot lines and column rules are
+ * drawn *under* the events; a translucent block would let them through and read
+ * as a pane of glass over the grid rather than an object on it. The tint is
+ * therefore a `color-mix` against `--color-quebi-bg` at alpha 1, and the hatch
+ * is laid over `bg-quebi-bg` rather than over nothing. Text wears text tokens
+ * (`quebi-fg`, `quebi-fg-muted`) on every ground, which is why no slot is an
+ * ink *fill*: the title would vanish into it.
  *
- * **Selection wears the event's own hue.** `selected` is the colour of the ring
- * drawn round a selected event (task #168). It used to be `quebi-brand-mark`
- * for every calendar, which made the highlight a second colour system arguing
- * with the first — teal over a blue bar — and made selection indistinguishable
- * from focus, which is that same brand ring. Focus keeps the brand mark;
- * selection is now a saturated version of what the event is already painted in,
- * so the two differ by hue as well as by position. It is an `outline-` rather
- * than a `ring-` utility because the ring these views draw is *inset*, and an
- * inset ring lands exactly on top of the 2px `edge` — selecting an event used
- * to erase the one piece of chrome saying which calendar it belongs to. An
- * outline sits outside the border box, so the accent survives being selected,
- * and it rides a different CSS property from the focus ring, so a bar that is
- * both focused and selected shows both. `brand` is the one entry whose value is
- * chosen rather than derived: `-quebi-brand-mark`, matching its `edge`, and
- * never bare `-quebi-brand`, which `tests/mark-contrast.test.ts` rejects for a
- * stroke.
+ * **Selection is an ink outline** (`selected`), never the inset ring focus
+ * uses: an inset ring lands on the 2px edge and erases it, and an outline rides
+ * a different CSS property, so a block both focused and selected shows both.
  *
- * The scales here are Tailwind's rather than quebi tokens because quebi has one
- * accent, and one accent cannot tell eight calendars apart. That is the same
- * argument `chart.tsx` makes for its series palette, and the same exception
- * `no-hardcoded-design-values` already grants the library source — the values
- * are argued about here, once, instead of in a consumer's lint run.
+ * The strings are written out rather than built by a helper because a Tailwind
+ * v4 class only exists if its full text appears in a scanned file.
  */
 export const CALENDAR_COLORS: Record<
   CalendarColorName,
   { block: string; edge: string; dot: string; band: string; selected: string }
 > = {
   blue: {
-    block: "bg-[color-mix(in_oklab,var(--color-blue-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-blue-500)_25%,var(--color-quebi-bg))]",
-    edge: "border-l-blue-500",
-    dot: "bg-blue-500",
-    band: "bg-[color-mix(in_oklab,var(--color-blue-500)_20%,var(--color-quebi-bg))]",
-    selected: "outline-blue-500",
+    block: "bg-quebi-pressed hover:bg-[color-mix(in_oklab,var(--color-quebi-surface)_20%,var(--color-quebi-bg))]",
+    edge: "border-l-quebi-fg",
+    dot: "bg-quebi-fg-subtle",
+    band: "bg-quebi-pressed",
+    selected: "outline-quebi-fg",
   },
   orange: {
-    block: "bg-[color-mix(in_oklab,var(--color-orange-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-orange-500)_25%,var(--color-quebi-bg))]",
-    edge: "border-l-orange-500",
-    dot: "bg-orange-500",
-    band: "bg-[color-mix(in_oklab,var(--color-orange-500)_20%,var(--color-quebi-bg))]",
-    selected: "outline-orange-500",
+    block: "bg-quebi-bg bg-[repeating-linear-gradient(135deg,var(--color-quebi-hairline)_0_1px,transparent_1px_6px)] hover:bg-quebi-raised",
+    edge: "border-l-quebi-fg",
+    dot: "border border-quebi-fg bg-quebi-bg bg-[repeating-linear-gradient(135deg,var(--color-quebi-hairline)_0_1px,transparent_1px_6px)]",
+    band: "bg-quebi-bg bg-[repeating-linear-gradient(135deg,var(--color-quebi-hairline)_0_1px,transparent_1px_6px)]",
+    selected: "outline-quebi-fg",
   },
   brand: {
-    block: "bg-[color-mix(in_oklab,var(--color-quebi-brand)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-quebi-brand)_25%,var(--color-quebi-bg))]",
-    edge: "border-l-quebi-brand-mark",
-    dot: "bg-quebi-brand",
-    band: "bg-[color-mix(in_oklab,var(--color-quebi-brand)_20%,var(--color-quebi-bg))]",
-    selected: "outline-quebi-brand-mark",
+    block: "bg-quebi-raised hover:bg-quebi-pressed",
+    edge: "border-l-quebi-fg",
+    dot: "bg-quebi-fg",
+    band: "bg-quebi-raised",
+    selected: "outline-quebi-fg",
   },
   amber: {
-    block: "bg-[color-mix(in_oklab,var(--color-amber-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-amber-500)_25%,var(--color-quebi-bg))]",
-    edge: "border-l-amber-500",
-    dot: "bg-amber-500",
-    band: "bg-[color-mix(in_oklab,var(--color-amber-500)_20%,var(--color-quebi-bg))]",
-    selected: "outline-amber-500",
+    block: "bg-[color-mix(in_oklab,var(--color-quebi-surface)_5%,var(--color-quebi-bg))] hover:bg-quebi-raised",
+    edge: "border-l-quebi-fg",
+    dot: "border border-quebi-fg",
+    band: "bg-[color-mix(in_oklab,var(--color-quebi-surface)_5%,var(--color-quebi-bg))]",
+    selected: "outline-quebi-fg",
   },
   pink: {
-    block: "bg-[color-mix(in_oklab,var(--color-pink-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-pink-500)_25%,var(--color-quebi-bg))]",
-    edge: "border-l-pink-500",
-    dot: "bg-pink-500",
-    band: "bg-[color-mix(in_oklab,var(--color-pink-500)_20%,var(--color-quebi-bg))]",
-    selected: "outline-pink-500",
+    block: "bg-quebi-raised hover:bg-quebi-pressed",
+    edge: "border-dashed border-l-quebi-fg",
+    dot: "border border-dashed border-quebi-fg",
+    band: "bg-quebi-raised",
+    selected: "outline-quebi-fg",
   },
   emerald: {
-    block: "bg-[color-mix(in_oklab,var(--color-emerald-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-emerald-500)_25%,var(--color-quebi-bg))]",
-    edge: "border-l-emerald-500",
-    dot: "bg-emerald-500",
-    band: "bg-[color-mix(in_oklab,var(--color-emerald-500)_20%,var(--color-quebi-bg))]",
-    selected: "outline-emerald-500",
+    block: "bg-quebi-pressed hover:bg-[color-mix(in_oklab,var(--color-quebi-surface)_20%,var(--color-quebi-bg))]",
+    edge: "border-dashed border-l-quebi-fg",
+    dot: "border border-quebi-fg-subtle bg-quebi-pressed",
+    band: "bg-quebi-pressed",
+    selected: "outline-quebi-fg",
   },
   violet: {
-    block: "bg-[color-mix(in_oklab,var(--color-violet-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-violet-500)_25%,var(--color-quebi-bg))]",
-    edge: "border-l-violet-500",
-    dot: "bg-violet-500",
-    band: "bg-[color-mix(in_oklab,var(--color-violet-500)_20%,var(--color-quebi-bg))]",
-    selected: "outline-violet-500",
+    block: "bg-quebi-bg bg-[repeating-linear-gradient(135deg,var(--color-quebi-hairline)_0_1px,transparent_1px_6px)] hover:bg-quebi-raised",
+    edge: "border-dashed border-l-quebi-fg",
+    dot: "border border-dashed border-quebi-fg-subtle",
+    band: "bg-quebi-bg bg-[repeating-linear-gradient(135deg,var(--color-quebi-hairline)_0_1px,transparent_1px_6px)]",
+    selected: "outline-quebi-fg",
   },
   rose: {
-    block: "bg-[color-mix(in_oklab,var(--color-rose-500)_15%,var(--color-quebi-bg))] hover:bg-[color-mix(in_oklab,var(--color-rose-500)_25%,var(--color-quebi-bg))]",
-    edge: "border-l-rose-500",
-    dot: "bg-rose-500",
-    band: "bg-[color-mix(in_oklab,var(--color-rose-500)_20%,var(--color-quebi-bg))]",
-    selected: "outline-rose-500",
+    block: "bg-[color-mix(in_oklab,var(--color-quebi-surface)_5%,var(--color-quebi-bg))] hover:bg-quebi-raised",
+    edge: "border-dashed border-l-quebi-fg",
+    dot: "border border-quebi-fg-subtle",
+    band: "bg-[color-mix(in_oklab,var(--color-quebi-surface)_5%,var(--color-quebi-bg))]",
+    selected: "outline-quebi-fg",
   },
 }
 
@@ -861,20 +841,20 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
     <div
       data-slot="calendar-shell"
       className={cn(
-        "flex w-full flex-col overflow-hidden rounded-quebi-md",
-        "border border-quebi-line/10 bg-quebi-bg",
+        "flex w-full flex-col overflow-hidden",
+        "border border-quebi-hairline bg-quebi-bg",
         className,
       )}
     >
       {showDayHeaders ? (
-        <div className="flex border-quebi-line/10 border-b">
+        <div className="flex border-quebi-hairline border-b">
           <div className="shrink-0" style={{ width: axisWidth }} />
           <div className="grid flex-1" style={columns}>
             {days.map((day, index) => (
               <div
                 key={day.toString()}
                 data-slot="calendar-day-header"
-                className="border-quebi-line/10 border-l px-2 py-2 text-center first:border-l-0"
+                className="border-quebi-hairline border-l px-2 py-2 text-center first:border-l-0"
               >
                 {renderDayHeader ? (
                   renderDayHeader(day, index)
@@ -893,7 +873,7 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
       ) : null}
 
       {allDayRow ? (
-        <div data-slot="calendar-all-day-row" className="flex border-quebi-line/10 border-b">
+        <div data-slot="calendar-all-day-row" className="flex border-quebi-hairline border-b">
           <div
             className="shrink-0 px-2 py-1 text-right text-quebi-fg-subtle text-xs"
             style={{ width: axisWidth }}
@@ -918,14 +898,10 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
         </div>
       ) : null}
 
-      {/* The one scrolling surface in the shell, and it took the platform's bar
-          until now — stepper arrows on Linux, a grey slab everywhere, next to
-          the quebi pill every other scroll surface in the library draws.
-          `quebi-scrollbar` is that pill; see the utility in `quebi-theme.css`.
-          No `quebi-scrollbar-corners` here: this viewport is a square box, and
-          the rounded corner the bar has to curve away from belongs to
-          `calendar-shell` above, whose `overflow-hidden rounded-quebi-md`
-          already clips the bar with it. */}
+      {/* The one scrolling surface in the shell. `quebi-scrollbar` is the
+          library's bar rather than the platform's; see the utility in
+          `quebi-theme.css`. No `quebi-scrollbar-corners`: the viewport and the
+          shell around it are both square, so there is no corner to clear. */}
       <div
         data-slot="calendar-viewport"
         className="quebi-scrollbar relative overflow-y-auto"
@@ -937,7 +913,7 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
               ? hours.map((hour) => (
                   <div
                     key={hour}
-                    className="-translate-y-1/2 absolute right-2 text-quebi-fg-subtle text-xs tabular-nums"
+                    className="-translate-y-1/2 absolute right-2 font-mono text-quebi-fg-subtle text-xs tabular-nums"
                     style={{ top: toTop(hour * 60) }}
                   >
                     {hour === axisStart ? null : formatHourLabel(firstDay, hour, locale, timeZone)}
@@ -956,7 +932,7 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
               {hours.map((hour) => (
                 <div
                   key={hour}
-                  className="absolute inset-x-0 border-quebi-line/10 border-t"
+                  className="absolute inset-x-0 border-quebi-hairline border-t"
                   style={{ top: toTop(hour * 60) }}
                 />
               ))}
@@ -965,7 +941,7 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
                     subSlots(slotMinutes).map((offset) => (
                       <div
                         key={`${hour}:${offset}`}
-                        className="absolute inset-x-0 border-quebi-line/5 border-t"
+                        className="absolute inset-x-0 border-quebi-hairline border-t"
                         style={{ top: toTop(hour * 60 + offset) }}
                       />
                     )),
@@ -976,7 +952,7 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
             {days.map((day, index) => (
               <div
                 key={day.toString()}
-                className="relative border-quebi-line/10 border-l first:border-l-0"
+                className="relative border-quebi-hairline border-l first:border-l-0"
               >
                 {packed
                   .filter((segment) => segment.dayIndex === index)
@@ -1082,18 +1058,19 @@ interface DayHeadingProps {
   isToday: boolean
 }
 
-/** `Mo` over `21`, with today's number filled in brand teal. */
+/** `Mo` over `21`, with today's number filled in ink — the column header has
+ * no selection to confuse it with, so "current" takes the ink fill here. */
 export function DayHeading({ day, locale, timeZone, isToday }: DayHeadingProps) {
   const date = dayToDate(day, timeZone)
   return (
     <div className="flex flex-col items-center gap-0.5">
-      <span className="text-quebi-fg-subtle text-xs uppercase">
+      <span className="quebi-eyebrow">
         {getDateTimeFormat(locale, { weekday: "short", timeZone }).format(date)}
       </span>
       <span
         className={cn(
-          "flex h-7 w-7 items-center justify-center rounded-full font-semibold text-sm tabular-nums",
-          isToday ? "bg-quebi-brand text-quebi-on-brand" : "text-quebi-fg",
+          "flex h-7 w-7 items-center justify-center text-sm tabular-nums",
+          isToday ? "bg-quebi-action text-quebi-on-action" : "text-quebi-fg",
         )}
       >
         {getDateTimeFormat(locale, { day: "numeric", timeZone }).format(date)}
@@ -1215,7 +1192,7 @@ function TimedBlock<E extends CalendarEvent>({
       className={cn(
         "cursor-pointer overflow-hidden text-left",
         "border-l-2 px-1.5 py-0.5 transition-colors duration-150",
-        "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
+        "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset",
         // Movable blocks are positioned by the wrapper that carries the
         // gesture, and fill it; everything else positions itself.
         // The raise goes on whichever element carries the geometry: a static
@@ -1223,10 +1200,6 @@ function TimedBlock<E extends CalendarEvent>({
         isMovable ? "h-full w-full cursor-grab active:cursor-grabbing" : cn("absolute", raised),
         palette.block,
         palette.edge,
-        // A segment continuing past midnight loses the radius on that edge, so
-        // the two halves of one event read as one thing cut, not two events.
-        segment.continuesBefore ? "rounded-t-none" : "rounded-tr-quebi-sm",
-        segment.continuesAfter ? "rounded-b-none" : "rounded-br-quebi-sm",
         // Selection is an outline, not the inset ring focus uses: it sits
         // outside the border box, so it neither overpaints `edge` nor
         // vanishes when the same block takes focus. `outline-solid` is
@@ -1383,14 +1356,14 @@ function MovePreviewBlock<E extends CalendarEvent>({
       }}
       className={cn(
         "pointer-events-none absolute z-10 overflow-hidden px-1.5 py-0.5",
-        "rounded-quebi-sm outline-2 outline-quebi-brand-mark outline-dashed",
+        "outline-2 outline-quebi-focus outline-dashed",
         palette.block,
         palette.edge,
         "border-l-2",
       )}
     >
       <span className="flex flex-col gap-0.5 text-xs leading-tight">
-        <span className="truncate font-semibold text-quebi-fg">{preview.event.title}</span>
+        <span className="truncate font-medium text-quebi-fg">{preview.event.title}</span>
         <span className="truncate text-quebi-fg-muted tabular-nums">
           {formatEventTime(preview.start, locale, timeZone)}
           {" – "}
@@ -1421,7 +1394,7 @@ function BlockText({ event, locale, timeZone, height }: BlockTextProps) {
   if (height < 34) {
     return (
       <span className="flex items-baseline gap-1.5 truncate text-xs leading-tight">
-        <span className="font-semibold text-quebi-fg">{event.title}</span>
+        <span className="font-medium text-quebi-fg">{event.title}</span>
         <span className="text-quebi-fg-subtle tabular-nums">{time}</span>
       </span>
     )
@@ -1429,7 +1402,7 @@ function BlockText({ event, locale, timeZone, height }: BlockTextProps) {
 
   return (
     <span className="flex flex-col gap-0.5 text-xs leading-tight">
-      <span className="truncate font-semibold text-quebi-fg">{event.title}</span>
+      <span className="truncate font-medium text-quebi-fg">{event.title}</span>
       <span className="truncate text-quebi-fg-muted tabular-nums">
         {time}
         {" – "}
@@ -1442,7 +1415,7 @@ function BlockText({ event, locale, timeZone, height }: BlockTextProps) {
   )
 }
 
-/** The red line across today's column, with the clock time in the gutter end. */
+/** The ink line across today's column, with the clock time in the gutter end. */
 function NowMarker({ top, label }: { top: number; label: string }) {
   return (
     <div
@@ -1454,8 +1427,8 @@ function NowMarker({ top, label }: { top: number; label: string }) {
           horizontal rule at a y offset is not information a screen reader can
           recover, and `aria-label` on a plain div is dropped. */}
       <span className="sr-only">{label}</span>
-      <span className="-ml-1 h-2 w-2 shrink-0 rounded-full bg-red-500" aria-hidden="true" />
-      <span className="h-px flex-1 bg-red-500" aria-hidden="true" />
+      <span className="-ml-1 h-2 w-2 shrink-0 rounded-full bg-quebi-fg" aria-hidden="true" />
+      <span className="h-px flex-1 bg-quebi-fg" aria-hidden="true" />
     </div>
   )
 }
@@ -1499,7 +1472,7 @@ function AllDayBand<E extends CalendarEvent>({
     <div className="relative flex-1 py-1" style={{ minHeight: 28 }}>
       <div className="grid" style={columns}>
         {days.map((day) => (
-          <div key={day.toString()} className="border-quebi-line/10 border-l first:border-l-0">
+          <div key={day.toString()} className="border-quebi-hairline border-l first:border-l-0">
             <div style={{ height: lanes * 22 }} />
           </div>
         ))}
@@ -1524,22 +1497,14 @@ function AllDayBand<E extends CalendarEvent>({
             className={cn(
               "absolute flex h-5 cursor-pointer items-center gap-1.5 overflow-hidden px-2 text-left",
               "border-l-2 text-xs transition-colors duration-150",
-              "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
+              "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset",
               palette.band,
               palette.edge,
-              // Square on the accent, rounded on the trailing edge — the same
-              // treatment `TimedBlock` gives its own edge, and for the same
-              // reason (task #176): an 8px radius on a 20px band bends the 2px
-              // series line into a crescent. The left is already square, so
-              // `continuesBefore` has nothing left to change on that side;
-              // `continuesAfter` still squares a band cut at the week boundary.
-              "rounded-l-none",
-              band.continuesAfter ? "rounded-r-none" : "rounded-r-quebi-sm",
               selectedId === band.event.id &&
                 cn("outline-2 outline-solid outline-offset-0", palette.selected),
             )}
           >
-            <span className="truncate font-semibold text-quebi-fg">{band.event.title}</span>
+            <span className="truncate font-medium text-quebi-fg">{band.event.title}</span>
           </Button>
         )
       })}
@@ -1607,19 +1572,18 @@ export interface CalendarLegendProps {
 
 const LEGEND_VARIANTS: Record<CalendarLegendVariant, string> = {
   plain: "",
-  // The chart tooltip's treatment, for the same reason: a translucent elevated
-  // surface over data reads as floating above it, and the blur keeps the row
-  // legible without hiding what it covers. `shadow-lg` is the neutral occlusion
-  // shadow, never the mint glow — see the note in `popover.tsx`.
+  // The chart tooltip's treatment, for the same reason: a legend laid over the
+  // grid floats above data, so it takes the floating surface — elevated ground,
+  // hairline edge, the small radius and the one shadow the system has.
   overlay:
-    "rounded-quebi-md border border-quebi-line/20 bg-quebi-elevated/80 px-2.5 py-1.5 shadow-lg backdrop-blur-sm",
+    "rounded-quebi-s border border-quebi-hairline bg-quebi-elevated px-2.5 py-1.5 shadow-quebi-float",
 }
 
 /**
  * The key: one dot and one name per calendar.
  *
- * Two or more series always get a legend — that is the rule that keeps hue a
- * second channel rather than the only one — and it lives in the library because
+ * Two or more series always get a legend — that is the rule that keeps the
+ * palette treatment a second channel rather than the only one — and it lives in the library because
  * the palette does. An app that hand-rolled this row would be writing the series
  * colours into its own markup, which is the thing `no-hardcoded-design-values`
  * exists to stop; `CalendarTimeline` needs no legend because every row is
@@ -1728,7 +1692,7 @@ export interface CalendarEventRowProps<E extends CalendarEvent = CalendarEvent> 
   /**
    * Draw the row as the ghost at a drag's target rather than as the event.
    *
-   * Same chip, dashed in the brand mark, and inert: not a button, not in the
+   * Same chip, dashed in the focus ink, and inert: not a button, not in the
    * tab order, and hidden from the accessibility tree, because the drop is
    * announced in words by the view's live region and one ghost per frame is
    * not. It is here rather than in `MonthView` for the reason the rest of this
@@ -1772,23 +1736,13 @@ export function CalendarEventRow<E extends CalendarEvent>({
   const classes = cn(
     "flex h-5 cursor-pointer items-center gap-1.5 overflow-hidden px-1.5 text-left text-xs",
     "transition-colors duration-150",
-    "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
-    // The radius is the row's, not the caller's, because it is the same
-    // decision as the accent and only the row knows whether it draws one: an
-    // 8px radius on a 20px row bends the 2px `edge` into a hook that thins to
-    // nothing at both ends, so a row with the accent is square on that side —
-    // the treatment `TimedBlock` and the all-day band already give their own
-    // edge (task #176). Callers still cut corners further; `className` is
-    // merged after this.
-    "rounded-quebi-sm",
-    filled
-      ? cn(palette.band, "border-l-2", palette.edge, "rounded-l-none")
-      : "hover:bg-quebi-surface/[0.06]",
+    "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset",
+    filled ? cn(palette.band, "border-l-2", palette.edge) : "hover:bg-quebi-raised",
     // Selection is an outline, not the inset ring focus uses: it sits
     // outside the border box, so it neither overpaints `edge` nor vanishes
     // when the same row takes focus. `outline-solid` is load-bearing — it
     // is what displaces the `outline-none` above, which would otherwise
-    // leave the outline styled away (task #168).
+    // leave the outline styled away.
     isSelected && cn("outline-2 outline-solid outline-offset-0", palette.selected),
     className,
     // Last, and after `className`, because the ghost's dashed edge is the one
@@ -1796,7 +1750,7 @@ export function CalendarEventRow<E extends CalendarEvent>({
     // a picture of a drop and not an event.
     isPreview &&
       cn(
-        "pointer-events-none z-10 outline-2 outline-quebi-brand-mark outline-dashed",
+        "pointer-events-none z-10 outline-2 outline-quebi-focus outline-dashed",
         !filled && "bg-quebi-bg",
       ),
   )
@@ -1811,7 +1765,7 @@ export function CalendarEventRow<E extends CalendarEvent>({
           {formatEventTime(event.start, locale, timeZone)}
         </span>
       )}
-      <span className="truncate font-semibold text-quebi-fg">{event.title}</span>
+      <span className="truncate font-medium text-quebi-fg">{event.title}</span>
     </>
   )
 
@@ -1869,7 +1823,7 @@ export function DayOverflowPanel<E extends CalendarEvent>({
     <Dialog data-slot="calendar-day-panel" className="flex flex-col gap-1 p-2 outline-none">
       {({ close }) => (
         <>
-          <Heading slot="title" className="px-1.5 pb-1 font-semibold text-quebi-fg text-xs">
+          <Heading slot="title" className="px-1.5 pb-1 font-medium text-quebi-fg text-xs">
             {getDateTimeFormat(locale, {
               weekday: "long",
               day: "numeric",
@@ -1926,10 +1880,10 @@ export function MoreLink({ count, label, onPress, children }: MoreLinkProps) {
       data-more-count={count}
       onPress={children ? undefined : () => onPress?.()}
       className={cn(
-        "w-full cursor-pointer truncate rounded-quebi-sm px-1 text-left text-xs",
+        "w-full cursor-pointer truncate px-1 text-left text-xs",
         "text-quebi-fg-subtle transition-colors duration-150",
-        "hover:bg-quebi-surface/[0.06] hover:text-quebi-fg",
-        "outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-inset",
+        "hover:bg-quebi-raised hover:text-quebi-fg",
+        "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset",
       )}
     >
       {label(count)}

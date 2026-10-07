@@ -6,8 +6,8 @@ export const breadcrumbsOgScene: OgScene = {
   scale: 2,
   render: () => (
     <Breadcrumbs>
-      <BreadcrumbsItem href="/">Catalog</BreadcrumbsItem>
-      <BreadcrumbsItem href="/devices">Devices</BreadcrumbsItem>
+      <BreadcrumbsItem href="/">catalog</BreadcrumbsItem>
+      <BreadcrumbsItem href="/devices">devices</BreadcrumbsItem>
       <BreadcrumbsItem>iPhone 15 Pro</BreadcrumbsItem>
     </Breadcrumbs>
   ),

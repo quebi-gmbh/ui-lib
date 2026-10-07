@@ -32,7 +32,7 @@ type TooltipRenderProps = Partial<TooltipContentProps<number, string>>
 
 /**
  * A tooltip surface of your own. It is a `Card` rather than a hand-rolled div:
- * a rounded, bordered box is a surface the library already ships.
+ * a bordered box is a surface the library already ships.
  */
 function SessionsTooltip({ active, payload, label }: TooltipRenderProps) {
   if (!active || !payload?.length) {
@@ -61,14 +61,14 @@ export const lineChartExamples: ComponentExample[] = [
   {
     title: "Default",
     description:
-      "A config-driven line chart with two teal-led series, an interactive legend, and a tooltip.",
+      "A config-driven line chart with two ink series, an interactive legend, and a tooltip.",
     render: () => (
       <LineChart config={config} data={data} dataKey="month" containerHeight={280} />
     ),
   },
   {
     title: "Single series",
-    description: "One brand-teal line driven entirely by the config.",
+    description: "One ink line driven entirely by the config.",
     render: () => (
       <LineChart config={singleConfig} data={data} dataKey="month" containerHeight={280} />
     ),
@@ -175,7 +175,7 @@ export const lineChartExamples: ComponentExample[] = [
             <ReferenceArea
               x1="Mar"
               x2="Apr"
-              fill="var(--color-quebi-brand)"
+              fill="var(--color-quebi-action)"
               fillOpacity={0.07}
             />
             <ReferenceLine
@@ -193,7 +193,7 @@ export const lineChartExamples: ComponentExample[] = [
               x="Feb"
               y={305}
               r={5}
-              fill="var(--color-quebi-brand)"
+              fill="var(--color-quebi-action)"
               stroke="var(--color-quebi-bg)"
               strokeWidth={2}
             />

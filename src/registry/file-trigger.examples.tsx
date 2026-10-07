@@ -42,14 +42,14 @@ export const fileTriggerExamples: ComponentExample[] = [
   {
     title: "Custom label",
     description: "Pass children to override the default label.",
-    render: () => <FileTrigger intent="primary">Upload avatar</FileTrigger>,
+    render: () => <FileTrigger intent="primary">upload avatar</FileTrigger>,
   },
   {
     title: "Pending",
     description: "Shows the quebi Loader while a file is processing.",
     render: () => (
       <FileTrigger isPending intent="primary">
-        Uploading
+        uploading
       </FileTrigger>
     ),
   },
@@ -71,7 +71,7 @@ export const fileTriggerExamples: ComponentExample[] = [
               setName(list[0]?.name ?? null)
             }}
           >
-            Choose a file
+            choose a file
           </FileTrigger>
           <span className="text-sm text-quebi-fg-muted">
             {name ? `Selected: ${name}` : "No file selected"}

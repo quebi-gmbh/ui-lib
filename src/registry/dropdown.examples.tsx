@@ -39,25 +39,25 @@ export const dropdownExamples: ComponentExample[] = [
     description: "Plain items with hover and keyboard focus on the dark surface.",
     render: () => (
       <Surface aria-label="Actions" selectionMode="none">
-        <DropdownItem>Profile</DropdownItem>
-        <DropdownItem>Billing</DropdownItem>
-        <DropdownItem>Team</DropdownItem>
-        <DropdownItem>Subscription</DropdownItem>
+        <DropdownItem>profile</DropdownItem>
+        <DropdownItem>billing</DropdownItem>
+        <DropdownItem>team</DropdownItem>
+        <DropdownItem>subscription</DropdownItem>
       </Surface>
     ),
   },
   {
     title: "Selection",
-    description: "Selected rows fill with brand teal and a check indicator.",
+    description: "The selected row is marked with an ink check, not a fill.",
     render: () => (
       <Surface
         aria-label="View"
         selectionMode="single"
         defaultSelectedKeys={["board"]}
       >
-        <DropdownItem id="list">List</DropdownItem>
-        <DropdownItem id="board">Board</DropdownItem>
-        <DropdownItem id="calendar">Calendar</DropdownItem>
+        <DropdownItem id="list">list</DropdownItem>
+        <DropdownItem id="board">board</DropdownItem>
+        <DropdownItem id="calendar">calendar</DropdownItem>
       </Surface>
     ),
   },
@@ -68,12 +68,12 @@ export const dropdownExamples: ComponentExample[] = [
       <Surface aria-label="Account" selectionMode="none">
         <DropdownItem textValue="Profile">
           <User data-slot="icon" />
-          <DropdownLabel>Profile</DropdownLabel>
+          <DropdownLabel>profile</DropdownLabel>
           <DropdownKeyboard>⌘P</DropdownKeyboard>
         </DropdownItem>
         <DropdownItem textValue="Settings">
           <Settings data-slot="icon" />
-          <DropdownLabel>Settings</DropdownLabel>
+          <DropdownLabel>settings</DropdownLabel>
           <DropdownKeyboard>⌘,</DropdownKeyboard>
         </DropdownItem>
       </Surface>
@@ -85,11 +85,11 @@ export const dropdownExamples: ComponentExample[] = [
     render: () => (
       <Surface aria-label="Plans" selectionMode="single" defaultSelectedKeys={["pro"]}>
         <DropdownItem id="free" textValue="Free">
-          <DropdownLabel>Free</DropdownLabel>
+          <DropdownLabel>free</DropdownLabel>
           <DropdownDescription>For getting started.</DropdownDescription>
         </DropdownItem>
         <DropdownItem id="pro" textValue="Pro">
-          <DropdownLabel>Pro</DropdownLabel>
+          <DropdownLabel>pro</DropdownLabel>
           <DropdownDescription>For growing teams.</DropdownDescription>
         </DropdownItem>
       </Surface>
@@ -100,20 +100,20 @@ export const dropdownExamples: ComponentExample[] = [
     description: "Group with a titled section, divide with a separator, and flag destructive actions.",
     render: () => (
       <Surface aria-label="Workspace" selectionMode="none">
-        <DropdownSection title="Workspace">
+        <DropdownSection title="workspace">
           <DropdownItem textValue="Members">
             <User data-slot="icon" />
-            <DropdownLabel>Members</DropdownLabel>
+            <DropdownLabel>members</DropdownLabel>
           </DropdownItem>
           <DropdownItem textValue="Settings">
             <Settings data-slot="icon" />
-            <DropdownLabel>Settings</DropdownLabel>
+            <DropdownLabel>settings</DropdownLabel>
           </DropdownItem>
         </DropdownSection>
         <DropdownSeparator />
         <DropdownItem intent="danger" textValue="Delete workspace">
           <Trash2 data-slot="icon" />
-          <DropdownLabel>Delete workspace</DropdownLabel>
+          <DropdownLabel>delete workspace</DropdownLabel>
         </DropdownItem>
       </Surface>
     ),

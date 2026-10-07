@@ -144,7 +144,7 @@ export const calendarShellExamples: ComponentExample[] = [
   {
     title: "Several days, and one that crosses midnight",
     description:
-      "Any run of days works — three, five, fourteen. An event running past midnight is cut into one block per day and loses the rounded edge at the seam, so the two halves read as one thing.",
+      "Any run of days works — three, five, fourteen. An event running past midnight is cut into one block per day and cut square at the seam, so the two halves read as one thing.",
     render: () => <ThreeDays />,
   },
   {

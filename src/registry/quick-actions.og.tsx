@@ -19,20 +19,20 @@ import type { OgScene } from "./types"
 export const quickActionsOgScene: OgScene = {
   render: () => (
     <QuickActions defaultOpen>
-      <QuickActionsTrigger>Actions</QuickActionsTrigger>
+      <QuickActionsTrigger>actions</QuickActionsTrigger>
       <QuickActionsContent side="bottom">
         <QuickActionsItem id="edit" icon={Pencil}>
-          Edit
+          edit
         </QuickActionsItem>
         <QuickActionsItem id="share" icon={Share2}>
-          Share
+          share
         </QuickActionsItem>
         <QuickActionsItem id="invite" icon={UserPlus}>
-          Invite
+          invite
         </QuickActionsItem>
         <QuickActionsSeparator />
         <QuickActionsItem id="delete" icon={Trash2} intent="danger">
-          Delete
+          delete
         </QuickActionsItem>
       </QuickActionsContent>
     </QuickActions>

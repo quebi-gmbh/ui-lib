@@ -3,9 +3,11 @@ import { cn } from "@/lib/utils"
 /**
  * Heading — quebi design system
  *
- * Renders a semantic h1–h4 with a quebi-tuned type scale. Headings are white,
- * font-semibold with tight tracking. The `level` controls both the element and
- * the size; pass `className` to override.
+ * Renders a semantic h1–h4 on the display type scale: Outfit at light
+ * weights, in ink. Level 1 is `display-l`, 2 is `display-s` (section heads),
+ * 3 is `title`, 4 a light 18px. The `level` controls both the element and the
+ * size; pass `className` to override. Write headlines lowercase, ending in a
+ * full stop when they are a statement.
  */
 type HeadingElement = "h1" | "h2" | "h3" | "h4"
 
@@ -20,11 +22,11 @@ export function Heading({ className, level = 1, ...props }: HeadingProps) {
   return (
     <Element
       className={cn(
-        "font-sans font-semibold text-quebi-fg tracking-tight",
-        level === 1 && "text-xl/8 sm:text-2xl/8",
-        level === 2 && "text-lg/6 sm:text-xl/8",
-        level === 3 && "text-base/6 sm:text-lg/6",
-        level === 4 && "text-base/6",
+        "font-display text-quebi-fg text-balance",
+        level === 1 && "text-quebi-display-l",
+        level === 2 && "text-quebi-display-s",
+        level === 3 && "text-quebi-title",
+        level === 4 && "text-lg/6 font-light tracking-wide",
         className,
       )}
       {...props}

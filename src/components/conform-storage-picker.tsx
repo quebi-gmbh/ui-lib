@@ -119,9 +119,9 @@ export function ConformStoragePicker({
       />
 
       {label && (
-        <Label className={cn(hasErrors && "text-red-500")}>
+        <Label className={cn(hasErrors && "text-quebi-danger")}>
           {label}
-          {field.required && <span className="ml-1 text-quebi-brand-text">*</span>}
+          {field.required && <span className="ml-1 text-quebi-fg">*</span>}
         </Label>
       )}
 
@@ -153,11 +153,11 @@ export function ConformStoragePicker({
               aria-pressed={isSelected}
               onPress={() => selection.toggle(value)}
               className={cn(
-                "rounded-quebi-sm px-3 py-1.5 font-medium text-sm transition-all duration-150",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-brand-mark focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
+                "border px-3 py-1.5 font-medium text-sm transition-colors duration-150",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
                 isSelected
-                  ? "bg-quebi-brand text-quebi-on-brand shadow-quebi-glow hover:bg-quebi-brand-hover"
-                  : "border border-quebi-line/20 bg-transparent text-quebi-fg-muted hover:-translate-y-0.5 hover:text-quebi-fg",
+                  ? "border-quebi-action bg-quebi-action text-quebi-on-action hover:border-quebi-action-hover hover:bg-quebi-action-hover"
+                  : "border-quebi-rule bg-transparent text-quebi-fg hover:bg-quebi-raised",
               )}
             >
               {value}

@@ -309,7 +309,7 @@ export interface TableToolbarProps {
 export function TableToolbar({ children, actions, caption, className }: TableToolbarProps) {
   return (
     <div className={cn("flex flex-col gap-2 print:hidden", className)}>
-      {caption && <div className="text-quebi-fg-muted text-sm">{caption}</div>}
+      {caption && <div className="text-quebi-body-s text-quebi-fg-muted">{caption}</div>}
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex flex-1 flex-wrap items-center gap-2">{children}</div>
         <div className="flex flex-none items-center gap-1.5">{actions}</div>
@@ -640,7 +640,7 @@ export function TablePager({
         {/* `aria-live` is the only thing in this column with no visual trace:
             the numbers below say which page you are on, and this says what is
             on it — to a reader who cannot see either move. */}
-        <PaginationInfo className="text-sm tabular-nums" aria-live="polite">
+        <PaginationInfo className="text-quebi-caption text-quebi-fg-subtle tabular-nums" aria-live="polite">
           {rowsOnPage === 0 ? (
             "No rows"
           ) : (
@@ -776,8 +776,8 @@ export function TableBulkBar({
     !isAll && onSelectAllMatching && count === pageCount && pageCount > 0 && total !== pageCount
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-quebi-md border border-quebi-brand/20 bg-quebi-brand/5 px-3 py-2 print:hidden">
-      <p className="font-medium text-quebi-fg text-sm" aria-live="polite">
+    <div className="flex flex-wrap items-center gap-2 bg-quebi-raised px-3 py-2 print:hidden">
+      <p className="font-medium text-quebi-fg text-quebi-body-s" aria-live="polite">
         {count == null ? (
           "Every row matching your filters is selected"
         ) : (
@@ -910,7 +910,7 @@ export function TableRowEditor({
 
   return (
     <ChromeForm id={form.id} onSubmit={form.onSubmit} className="flex flex-col gap-3">
-      {title && <p className="font-medium text-quebi-fg text-sm">{title}</p>}
+      {title && <p className="quebi-eyebrow">{title}</p>}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {editFields.map((field) => {
           const meta = fields[field.name]
@@ -1388,11 +1388,11 @@ export function TableUnsavedBar({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-2 rounded-quebi-md border border-quebi-warn/30 bg-quebi-warn/5 px-3 py-2 print:hidden",
+        "flex flex-wrap items-center gap-2 border-t border-quebi-warn bg-quebi-warn/10 px-3 py-2 print:hidden",
         className,
       )}
     >
-      <p className="font-medium text-quebi-fg text-sm" aria-live="polite">
+      <p className="font-medium text-quebi-fg text-quebi-body-s" aria-live="polite">
         <FormattedNumber value={count} />
         {count === 1 ? " unsaved change" : " unsaved changes"}
       </p>
