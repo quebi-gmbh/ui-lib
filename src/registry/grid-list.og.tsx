@@ -3,7 +3,7 @@ import type { OgScene } from "./types"
 
 /** Four rows, one selected. */
 export const gridListOgScene: OgScene = {
-  scale: 1.8,
+  scale: 1.68,
   render: () => (
     <GridList
       aria-label="Favorite frameworks"

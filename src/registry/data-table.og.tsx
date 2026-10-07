@@ -28,7 +28,7 @@ const columns: DataTableColumn<Order>[] = [
 ]
 
 export const dataTableOgScene: OgScene = {
-  scale: 1.5,
+  scale: 1.46,
   render: () => (
     <div className="w-176">
       <DataTable<Order>

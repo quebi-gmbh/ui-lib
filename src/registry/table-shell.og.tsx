@@ -52,6 +52,6 @@ const Rows = () => {
 }
 
 export const tableShellOgScene: OgScene = {
-  scale: 1.5,
+  scale: 1.44,
   render: () => <Rows />,
 }

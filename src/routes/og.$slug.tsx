@@ -51,6 +51,23 @@ const NO_CSS_ANIMATION = `*,*::before,*::after{
   transition-duration:0s!important;transition-delay:0s!important;
 }`
 
+/**
+ * The thumbnail type step. A share image is read at a fraction of its size, so
+ * the audit holds every line to 18px after the stage's magnification — and
+ * Ink & Paper's small roles (the 11px mono label, the 12px caption, the 12.5px
+ * tag, the 13.5px small body) sit just under that at the scales a scene can
+ * afford without leaving the stage. So the canvas sets those four roles one
+ * step up, here and for everything portalled out of the stage, which is the
+ * thumbnail's equivalent of a print stylesheet: the same components, set for
+ * the medium. Nothing outside `/og/*` sees it.
+ */
+const THUMBNAIL_TYPE = `:root{
+  --text-quebi-label:0.8125rem;
+  --text-quebi-caption:0.8125rem;
+  --text-quebi-tag:0.8125rem;
+  --text-quebi-body-s:0.875rem;
+}`
+
 /** The OG spec's canvas. Not a design token — the size is the format. */
 const OG_WIDTH = 1200
 const OG_HEIGHT = 630
@@ -293,7 +310,7 @@ export default function OgImage() {
       {/* In the body rather than the head: it has to reach the overlays this
           route portals out of itself, and this is a screenshot canvas, not a
           document anyone will read the metadata of. */}
-      <style>{NO_CSS_ANIMATION}</style>
+      <style>{`${NO_CSS_ANIMATION}\n${THUMBNAIL_TYPE}`}</style>
       {/* The one ornament the system has: the quebi mark, huge, inside the
           frame, behind everything — as on every Stage. */}
       <StageGlyph className="pointer-events-none absolute top-14 right-16 -z-10 size-110 text-quebi-glyph" />

@@ -14,7 +14,7 @@ import type { OgScene } from "./types"
  * date picker is; `aria-label` keeps the accessible name a field needs.
  */
 export const datePickerOgScene: OgScene = {
-  scale: 1.13,
+  scale: 1.06,
   align: "top",
   render: () => (
     <DatePicker aria-label="Event date" className="w-64" defaultValue={OG_DAY} defaultOpen>

@@ -4,6 +4,6 @@ import type { OgScene } from "./types"
 
 /** Twelve locale-formatted months and a year stepper, with March taken. */
 export const monthPickerOgScene: OgScene = {
-  scale: 1.7,
+  scale: 1.62,
   render: () => <MonthPicker aria-label="Month" defaultValue={OG_DAY} />,
 }

@@ -7,7 +7,7 @@ import type { OgScene } from "./types"
  * including the one about the label, which is in `date-picker.og.tsx`.
  */
 export const dateRangePickerOgScene: OgScene = {
-  scale: 1.09,
+  scale: 1.03,
   align: "top",
   render: () => (
     <DateRangePicker

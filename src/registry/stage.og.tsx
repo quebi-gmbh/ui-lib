@@ -11,7 +11,7 @@ import type { OgScene } from "./types"
  * watermark is cropped by the Stage's own overflow, as it is on the page.
  */
 export const stageOgScene: OgScene = {
-  scale: 1.7,
+  scale: 1.66,
   render: () => (
     <Stage className="h-54 min-h-0 w-155 px-7 md:min-h-0 md:px-7">
       <Eyebrow>scene 01 — the studio</Eyebrow>

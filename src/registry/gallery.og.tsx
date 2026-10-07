@@ -14,7 +14,7 @@ const ITEMS: GalleryItem[] = [
 ]
 
 export const galleryOgScene: OgScene = {
-  scale: 1.2,
+  scale: 1.12,
   render: () => (
     <div className="w-80">
       <Gallery items={ITEMS} />
