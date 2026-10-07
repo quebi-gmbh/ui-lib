@@ -31,7 +31,7 @@ const EVENTS: CalendarEvent[] = Array.from({ length: 92 }, (_, offset) =>
  */
 export const yearViewOgScene: OgScene = {
   // The largest scale at which the three cards and the legend clear the stage.
-  scale: 1.33,
+  scale: 1.28,
   render: () => (
     <YearView
       className="w-3xl"
