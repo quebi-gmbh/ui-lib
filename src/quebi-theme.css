@@ -286,9 +286,10 @@
   /* ---------------- Container widths ---------------- */
   /* `content` is how wide a line of prose may get (38–60 characters below a
      headline is the target; this is the outer bound). `shell` is how wide the
-     app is — the design's 1200px page. */
+     app is — 1440px, wider than the design sample's 1200px landing page,
+     because the gallery and the tables want the room. */
   --container-quebi-content: 48rem;
-  --container-quebi-shell:   75rem;
+  --container-quebi-shell:   90rem;
 }
 
 /*
