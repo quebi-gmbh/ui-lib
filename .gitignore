@@ -31,3 +31,9 @@ public/robots.txt
 src/registry/skill.generated.ts
 src/registry/rules/highlighted.generated.ts
 public/skills/
+
+# Local agent tooling and scratch (per-machine MCP wiring, indexes, uploads)
+.mcp.json
+.serena/
+.orama-cache/
+.claude-uploads/
