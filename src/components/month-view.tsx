@@ -1644,7 +1644,7 @@ function MonthWeek<E extends CalendarEvent>({
                   onPress={() => onDayClick?.(day)}
                   isDisabled={!onDayClick}
                   className={cn(
-                    "flex h-6 min-w-6 items-center justify-center px-1.5",
+                    "flex h-6 min-w-6 items-center justify-center rounded-(--q-radius-mark) px-1.5",
                     "text-xs tabular-nums transition-colors duration-150",
                     "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset",
                     onDayClick &&

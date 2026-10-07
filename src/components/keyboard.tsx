@@ -30,7 +30,8 @@ export function Keyboard({
 }
 
 /**
- * Kbd — a single keyboard key glyph: a square hairline box around mono type.
+ * Kbd — a single keyboard key glyph: a hairline box at the mark radius around
+ * mono type.
  *
  * Use inside `Keyboard` (or standalone) to render individual keys.
  */
@@ -40,7 +41,7 @@ export function Kbd({ className, ...props }: React.ComponentProps<"kbd">) {
       data-slot="kbd"
       className={cn(
         "inline-flex h-5 min-w-5 items-center justify-center px-1.5",
-        "border border-quebi-hairline",
+        "rounded-(--q-radius-mark) border border-quebi-hairline",
         "font-mono text-quebi-label leading-none tracking-normal text-quebi-fg-muted",
         className,
       )}

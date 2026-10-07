@@ -5,7 +5,7 @@ import type { ComponentExample } from "./types"
 export const rangeCalendarExamples: ComponentExample[] = [
   {
     title: "Default",
-    description: "Pick a start and end date; the endpoints fill with ink.",
+    description: "Pick a start and end date; the endpoints fill with the signal colour.",
     render: () => <RangeCalendar aria-label="Trip dates" />,
   },
   {

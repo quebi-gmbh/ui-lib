@@ -40,7 +40,7 @@ import { cn } from "@/lib/utils"
  * Built on react-aria-components. A ruled table in the shape of the design's
  * index list: a strong rule across the top, column headers as mono labels over
  * a second strong rule, hairlines between rows. Rows lift to the raised ground
- * on hover and sit on the pressed ground when selected. `variant="plain"` drops
+ * on hover and take the selected ground (icons in the signal) when selected. `variant="plain"` drops
  * the top rule and the page fill. Supports selection, sorting, dragging,
  * resizable columns, striping, and grid lines.
  */
@@ -479,7 +479,10 @@ const TableRow = <T extends object>({
               isFocusVisibleWithin &&
               "bg-quebi-raised text-quebi-fg",
             isFocusVisible && "bg-quebi-raised ring-2 ring-quebi-focus ring-inset",
-            isSelected && "bg-quebi-pressed text-quebi-fg",
+            // Selection is state, so it is the signal: the selected ground,
+            // its text, and the row's icons in the signal itself.
+            isSelected &&
+              "bg-quebi-selected text-quebi-on-selected **:data-[slot=icon]:text-quebi-signal",
             isDragging && "cursor-grabbing bg-quebi-pressed text-quebi-fg",
             isDisabled && "opacity-50",
             className,

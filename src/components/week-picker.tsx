@@ -238,12 +238,12 @@ export function WeekPicker({
               aria-label={label}
               className={({ isSelected, isDisabled: isItemDisabled, isFocusVisible }) =>
                 cn(
-                  "flex cursor-default items-center gap-1 px-0.5 py-0.5 outline-hidden transition-colors duration-150 hover:bg-quebi-raised",
-                  isCurrentWeek && !isSelected && "ring-1 ring-inset ring-quebi-focus",
-                  isSelected && "bg-quebi-action hover:bg-quebi-action-hover",
+                  "flex cursor-default items-center gap-1 rounded-(--q-radius-control) px-0.5 py-0.5 outline-hidden transition-colors duration-150 hover:bg-quebi-raised",
+                  isCurrentWeek && !isSelected && "ring-1 ring-inset ring-quebi-fg",
+                  isSelected && "bg-quebi-signal hover:bg-quebi-signal",
                   isItemDisabled && "hover:bg-transparent",
                   isFocusVisible &&
-                    "ring-2 ring-quebi-focus ring-offset-3 ring-offset-quebi-bg",
+                    "ring-2 ring-quebi-focus ring-offset-2 ring-offset-quebi-bg",
                 )
               }
             >
@@ -253,7 +253,7 @@ export function WeekPicker({
                     <span
                       className={cn(
                         "w-8 text-center text-xs tabular-nums transition-colors duration-150",
-                        isSelected ? "text-quebi-on-action/80" : "text-quebi-fg-muted",
+                        isSelected ? "text-quebi-on-signal/80" : "text-quebi-fg-muted",
                       )}
                     >
                       {numberFormatter.format(weekNumber)}
@@ -264,9 +264,9 @@ export function WeekPicker({
                       key={day.toString()}
                       className={cn(
                         "flex size-9 items-center justify-center text-sm tabular-nums transition-colors duration-150",
-                        isSelected ? "text-quebi-on-action" : "text-quebi-fg",
+                        isSelected ? "text-quebi-on-signal" : "text-quebi-fg",
                         day.month !== visibleMonth.month &&
-                          (isSelected ? "text-quebi-on-action/70" : "text-quebi-fg-subtle"),
+                          (isSelected ? "text-quebi-on-signal/70" : "text-quebi-fg-subtle"),
                         isItemDisabled && !isSelected && "text-quebi-fg-subtle",
                         // Today's dot, the same marker Range Calendar uses.
                         day.compare(now) === 0 &&
@@ -296,13 +296,14 @@ export interface WeekPickerFieldProps extends Omit<WeekPickerProps, "autoFocus">
 
 /**
  * The trigger is field-shaped, so it is drawn like `SelectTrigger`: `Input`'s
- * underline at `sm` (38px), thickened to 2px while focused or open, no ring.
+ * box at `sm` (38px), its edge and a 1px shadow in the focus colour while
+ * focused or open.
  */
 const fieldTriggerStyles = cn(
-  "inline-flex cursor-default items-center justify-between gap-x-2 bg-transparent py-2 text-sm text-quebi-fg tabular-nums",
+  "inline-flex cursor-default items-center justify-between gap-x-2 px-(--q-field-px) py-2 text-sm text-quebi-fg tabular-nums",
   "quebi-field",
   "transition-[border-color,box-shadow] duration-150",
-  "outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)] aria-expanded:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+  "outline-none focus:shadow-(--q-field-focus) aria-expanded:shadow-(--q-field-focus)",
   "disabled:cursor-not-allowed disabled:opacity-50",
   "*:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0",
 )

@@ -63,13 +63,17 @@ Always start from **${BASE_URL}/llms.txt**, which documents the workflow and lis
 - Form components have **Conform-bound variants** named \`conform-*\` (e.g. \`conform-checkbox\`,
   \`conform-select\`, \`conform-date-picker\`). Use these when building forms with the Conform library;
   they bind name/validity/errors from field metadata.
-- The library assumes Tailwind v4 and the quebi Ink & Paper theme (\`quebi-bg\`, \`quebi-fg\`,
-  \`quebi-hairline\`, \`quebi-action\`, \`text-quebi-display-*\`, …). If the target project lacks them,
-  bring in the quebi theme too.
-- Ink and paper, no hue: \`quebi-action\` (with \`quebi-on-action\` on top) fills the one solid button
-  per view and every checked or selected control; \`quebi-hairline\` separates, \`quebi-rule\` carries
-  structure; \`quebi-danger/warn/success\` are text values reserved for state. Controls are square,
-  only floating surfaces take \`shadow-quebi-float\` and \`rounded-quebi-s\`.
+- The library assumes Tailwind v4 and the quebi theme (\`quebi-bg\`, \`quebi-fg\`,
+  \`quebi-hairline\`, \`quebi-action\`, \`quebi-signal\`, \`text-quebi-display-*\`, …). If the target
+  project lacks them, bring in the quebi theme too.
+- The app surface: ink and paper with one hue. \`quebi-action\` (slate, \`quebi-on-action\` on top) fills
+  the one primary button per view; \`quebi-signal\` (dusty blue) only ever means state — a checked box,
+  progress, a link, focus — and a selected row or item is \`bg-quebi-selected text-quebi-on-selected\`;
+  toasts and tooltips are \`bg-quebi-overlay\`. \`quebi-hairline\` separates and edges controls,
+  \`quebi-rule\` is the structural line under a table header; \`quebi-danger/warn/success\` are text
+  values reserved for state. Controls round through \`rounded-(--q-radius-control)\` (6px), cards and
+  dialogs \`rounded-(--q-radius-surface)\` (10px); only floating surfaces take \`shadow-quebi-float\`.
+  The website surface (Stage, the home page) lives inside \`quebi-editorial\`: square, ink, no hue.
 
 ## Rules — how to write JSX against this library
 

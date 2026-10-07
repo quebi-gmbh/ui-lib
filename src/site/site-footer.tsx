@@ -19,17 +19,17 @@ export function Footer() {
           <Link to="/rules" className="hover:text-quebi-fg hover:underline hover:underline-offset-5">
             rules
           </Link>
-          <UiLink href="https://quebi.de/en/imprint" className="no-underline hover:text-quebi-fg hover:underline">
+          <UiLink href="https://quebi.de/en/imprint" className="text-quebi-fg-subtle no-underline hover:text-quebi-fg hover:underline">
             impressum
           </UiLink>
-          <UiLink href="https://quebi.de/en/privacy" className="no-underline hover:text-quebi-fg hover:underline">
+          <UiLink href="https://quebi.de/en/privacy" className="text-quebi-fg-subtle no-underline hover:text-quebi-fg hover:underline">
             datenschutz
           </UiLink>
           <UiLink
             href="https://github.com/quebi-gmbh/ui-lib/blob/main/LICENSE"
             target="_blank"
             rel="noreferrer"
-            className="no-underline hover:text-quebi-fg hover:underline"
+            className="text-quebi-fg-subtle no-underline hover:text-quebi-fg hover:underline"
           >
             license
           </UiLink>
@@ -37,7 +37,7 @@ export function Footer() {
             href="https://github.com/quebi-gmbh"
             target="_blank"
             rel="noreferrer"
-            className="no-underline hover:text-quebi-fg hover:underline"
+            className="text-quebi-fg-subtle no-underline hover:text-quebi-fg hover:underline"
           >
             github
           </UiLink>

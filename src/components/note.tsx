@@ -55,8 +55,8 @@ const XCircleIcon = (props: IconProps) => (
 /**
  * Note — quebi design system
  *
- * An inline callout / alert for contextual feedback: a square, hairline-ruled
- * box in the page flow, words in ink. Five intents. `default` is the bare box;
+ * An inline callout / alert for contextual feedback: a hairline-ruled box at
+ * the control radius in the page flow, words in ink, links in signal. Five intents. `default` is the bare box;
  * the others thicken the leading edge to a 2px rule and add a status icon —
  * `info` in ink, `success`, `warning` and `danger` in their state tokens. The
  * hue goes on the rule and the icon only; the surface is never filled.
@@ -71,8 +71,8 @@ export interface NoteProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "t
 
 const noteStyles = tv({
   base: [
-    "flex w-full gap-3 border border-quebi-hairline p-4 text-sm/5 text-pretty text-quebi-fg-muted",
-    "**:[a]:text-quebi-fg **:[a]:underline **:[a]:decoration-1 **:[a]:underline-offset-5 **:[a]:transition-[text-underline-offset] **:[a]:duration-150 **:[a]:hover:underline-offset-8",
+    "flex w-full gap-3 rounded-(--q-radius-control) border border-quebi-hairline p-4 text-sm/5 text-pretty text-quebi-fg-muted",
+    "**:[a]:text-quebi-signal **:[a]:underline **:[a]:decoration-1 **:[a]:underline-offset-3 **:[a]:transition-[text-underline-offset] **:[a]:duration-150 **:[a]:hover:underline-offset-5",
     "**:[strong]:font-medium **:[strong]:text-quebi-fg **:[.text-muted-fg]:text-quebi-fg-subtle",
   ],
   variants: {

@@ -12,8 +12,9 @@ import { cn } from "@/lib/utils"
 /**
  * Radio — quebi design system
  *
- * Built on react-aria-components. An 18px circle edged in `rule`; selected
- * draws an ink dot in its centre. Round because it is the single-answer
+ * Built on react-aria-components. An 18px circle edged in `fg-muted`;
+ * selected is state, so it edges the circle in `signal` and draws a `signal`
+ * dot in its centre. Round because it is the single-answer
  * control — the square beside it is the checkbox. Focus is the outward ring;
  * invalid edges the circle (and colours the dot) in `danger`.
  *
@@ -61,12 +62,12 @@ export function Radio({ className, children, ...props }: RadioProps) {
             <span
               data-slot="indicator"
               className={cn(
-                "relative flex size-[18px] shrink-0 items-center justify-center rounded-full border border-quebi-rule bg-transparent",
+                "relative flex size-[18px] shrink-0 items-center justify-center rounded-full border border-quebi-fg-muted bg-transparent",
                 "transition-colors duration-150",
                 "before:content-[''] before:size-2 before:rounded-full",
-                isSelected && "before:bg-quebi-action",
+                isSelected && "border-quebi-signal before:bg-quebi-signal",
                 isFocusVisible &&
-                  "ring-2 ring-quebi-focus ring-offset-3 ring-offset-quebi-bg",
+                  "ring-2 ring-quebi-focus ring-offset-2 ring-offset-quebi-bg",
                 isInvalid && "border-quebi-danger",
                 isInvalid && isSelected && "before:bg-quebi-danger",
                 isInvalid && isFocusVisible && "ring-quebi-danger/50",

@@ -1,11 +1,22 @@
 /*
- * quebi GmbH — Tailwind v4 theme: Ink & Paper.
+ * quebi GmbH — Tailwind v4 theme: Ink & Paper, app surface.
  *
  * Imported after "tailwindcss" in main.css. This file is the whole answer to
  * "what does quebi look like", and since the move to the Ink & Paper design
  * system that answer is short: ink and paper, one display face, white space,
- * hairline rules, square controls, and one soft directional light on a stage.
- * No mint, no teal, no other hue — the original mint is retired.
+ * hairline rules, and one soft directional light on a stage. No mint, no teal.
+ *
+ * The design system has two surfaces, and this library is the second one:
+ *
+ * - **The website** — stage, low title, editorial type, square controls, ink
+ *   hairlines. Lives on in the brand components (Stage, LowTitle, NavBar,
+ *   IndexList, MetaRow, Logo) and inside `quebi-editorial`, the scope Stage
+ *   puts around itself, which restores the website's values.
+ * - **The app** (quebi cloud, and every tool people use all day) — the default
+ *   here. Same ink, type, mark and voice, eased for long sessions: 6px
+ *   controls, boxed fields, `app-line` rules, a slate primary, and one hue,
+ *   the dusty-blue `signal`, which only ever means state (focus, selection,
+ *   a checked box, progress, a link).
  *
  * Two themes that are the same design lit differently: **Daylight** (`.light`,
  * the default) and **Cinematic** (`.dark`). `<html>` always carries one of the
@@ -14,19 +25,21 @@
  *
  * The design system's semantic tokens map onto utilities one to one:
  *
- *   design token        utility colour          Daylight     Cinematic
- *   bg-000              quebi-bg                white        ink-950
- *   bg-100              quebi-raised            gray-200     gray-900
- *   bg-200              quebi-pressed           gray-250     gray-800
- *   text                quebi-fg                ink-950      gray-50
- *   text-body           quebi-fg-muted          gray-800     gray-300
- *   text-muted          quebi-fg-subtle         gray-600     gray-400
- *   line                quebi-hairline          ink 25%      white 20%
- *   line-strong         quebi-rule              ink-950      gray-50
- *   glyph               quebi-glyph             ink 6%       white 7%
- *   action / on-action  quebi-action / -on-     ink / white  gray-50 / ink
- *   focus               quebi-focus             ink-950      gray-50
- *   glow-from / -to     quebi-glow-from / -to   white/250    gray-800/ink
+ *   design token          utility colour          Daylight     Cinematic
+ *   app-bg                quebi-bg                #ffffff      #111827
+ *   app-surface           quebi-raised            #f3f4f6      #182131
+ *   app-line (2nd level)  quebi-pressed           #e5e7eb      #273142
+ *   app-text              quebi-fg                #030712      #f9fafb
+ *   app-text-2            quebi-fg-muted          #374151      #d1d5db
+ *   app-text-muted        quebi-fg-subtle         #5b6472      #9ca3af
+ *   app-line              quebi-hairline          #e5e7eb      #273142
+ *   app-action (rule)     quebi-rule              #374151      #f9fafb
+ *   app-action / on-      quebi-action / -on-     slate/white  gray-50/ink
+ *   app-signal (focus)    quebi-focus             #3b5a86      #a7bbdc
+ *   app-signal / on- / -inverse   quebi-signal …
+ *   app-selected / on-    quebi-selected / -on-   #e6ebf3      #243149
+ *   app-overlay / on- / -ring     quebi-overlay …  slate        ink
+ *   glyph, glow-from/-to  quebi-glyph, -glow-*    (the website's, unchanged)
  *
  * Use semantic tokens only; the raw ramp below exists to feed them.
  */
@@ -60,22 +73,47 @@
   --color-quebi-fg-subtle:    var(--q-fg-subtle);   /* text-muted: labels, captions, numbers */
 
   /* ---- Rules ---- */
-  /* line: hairline rules — under the nav, above the low title, between index
-     rows, the edge of a card. Decorative separation, never the only cue. Already
-     translucent: do not add an /opacity to it. */
+  /* app-line: row dividers, panel borders, control borders — every edge a
+     button, a field or a card draws. Decorative separation, never the only
+     cue. Do not add an /opacity to it (in `quebi-editorial` it is translucent
+     already). */
   --color-quebi-hairline:     var(--q-hairline);
-  /* line-strong: a rule that carries structure — the top rule of an index, a
-     control border, a frame. ≥14:1 on every surface. */
+  /* A rule that carries structure: the slate line under a table header, the
+     top rule of an index or a list. Not a control border — that is the
+     hairline. ≥10:1 on every ground. */
   --color-quebi-rule:         var(--q-rule);
 
   /* ---- Action & focus ---- */
-  /* The fill of the one solid button per view, of a checked box, of a selected
-     segment. Put `quebi-on-action` on top of it. */
+  /* Slate: the fill of the one primary button per view, and of anything that
+     is *the thing chosen* in a strip of options (a selected day). Put
+     `quebi-on-action` on top of it. A checked box, a progress fill or a
+     selected row is state, and state is `signal` / `selected` below. */
   --color-quebi-action:       var(--q-action);
   --color-quebi-action-hover: var(--q-action-hover);
   --color-quebi-on-action:    var(--q-on-action);
-  /* Focus ring: 2px solid, 3px offset, on every element that can take focus. */
+  /* Focus ring: the signal, 2px, on every element that can take focus. */
   --color-quebi-focus:        var(--q-focus);
+
+  /* ---- Signal ---- */
+  /* Dusty blue, the only hue, and it only ever means state: a checked box, a
+     switch that is on, a progress or meter fill, a link, the active icon, the
+     text of a selected row. Never decoration, headings or illustrations.
+     `signal-inverse` is the same signal on a dark ground (a toast, an overlay
+     bar). `selected` is the ground of a selected row, item or segment, with
+     `on-selected` as its text. */
+  --color-quebi-signal:         var(--q-signal);
+  --color-quebi-on-signal:      var(--q-on-signal);
+  --color-quebi-signal-inverse: var(--q-signal-inverse);
+  --color-quebi-selected:       var(--q-selected);
+  --color-quebi-on-selected:    var(--q-on-selected);
+
+  /* ---- Overlay ---- */
+  /* The dark chip that floats over the workspace: a toast, a tooltip, the
+     selection bar. Slate in Daylight, ink with a 1px slate ring in
+     Cinematic. Menus and popovers are not overlays — they are `elevated`. */
+  --color-quebi-overlay:        var(--q-overlay);
+  --color-quebi-on-overlay:     var(--q-on-overlay);
+  --color-quebi-overlay-ring:   var(--q-overlay-ring);
 
   /* ---- Tint base ---- */
   /* Ink on Daylight, white on Cinematic, for the low-alpha tints a token
@@ -108,6 +146,10 @@
      does not read on ink. Also listed under `shadow` in `extendTailwindMerge`
      in `src/lib/utils.ts`; keep the two in step. */
   --shadow-quebi-float:       var(--q-shadow-float);
+  /* shadow-overlay: the toast, tooltip and selection bar — a 1px ring in the
+     overlay's own slate, so an ink overlay still reads on an ink page. Belongs
+     on a surface painted `bg-quebi-overlay`. */
+  --shadow-quebi-overlay:     var(--q-shadow-overlay);
 }
 
 /* ---------------- Fonts, self-hosted ---------------- */
@@ -238,10 +280,10 @@
   --text-quebi-code--line-height: 1.5;
 
   /* ---------------- Radii ---------------- */
-  /* Square by default: buttons, inputs, cards, rules and index rows take no
-     radius at all, which is Tailwind's default and needs no token. Three
-     exceptions, each with one job:
-     - `rounded-quebi-s` (6px) — small floating UI: tooltips, menus, popovers.
+  /* Controls, cards and marks round through the shape variables below
+     (`rounded-(--q-radius-control)` and friends), which is what lets
+     `quebi-editorial` square them off again. Three fixed radii besides:
+     - `rounded-quebi-s` (6px) — floating UI: menus, popovers, list boxes.
      - `rounded-quebi-l` (22px) — the outer frame of a Stage or media block
        embedded inside another page. Nowhere else.
      - `rounded-full` — tags, and things that are round by nature (a radio, an
@@ -311,22 +353,23 @@
 /*
  * ---------------- Shape ----------------
  * The structural decisions a design system makes besides its colours, as
- * runtime variables the components read. The values here *are* Ink & Paper —
- * square, 1px, no shadow, underline fields — so they change nothing on their
- * own; they exist so an imported or edited theme (see /theme) can make the
- * same components boxed, rounded, thick-ruled or hard-shadowed without a
- * line of component code changing.
+ * runtime variables the components read. The values here are the app
+ * surface's — app-radius 6px on controls, app-radius-l 10px on cards and
+ * dialogs, app-radius-s 4px on marks, boxed fields — and `quebi-editorial`
+ * sets them back to the website's square, underlined ones. An imported or
+ * edited theme (see /theme) sets them the same way.
  *
- *   --q-radius-control   buttons, fields, toggles
- *   --q-radius-surface   cards, dialogs
- *   --q-radius-mark      the checkbox box
+ *   --q-radius-control   buttons, fields, toggles, menu and sidebar items
+ *   --q-radius-surface   cards, dialogs, previews, empty states
+ *   --q-radius-mark      the checkbox box, badges, tooltips
  *   --q-border-control   border width of buttons, fields, marks
  *   --q-border-surface   border width of cards
  *   --q-press            how far a button travels into its shadow on press
  *   --q-font-control     the face of buttons and tags
  *   --q-field-*          the field frame: side border, whether the top edge
- *                        is drawn (0 or 1), inline padding, ground — 0 / 0 /
- *                        0 / transparent is the underline; a box sets all four
+ *                        is drawn (0 or 1), inline padding, ground, and the
+ *                        focus shadow — 0 / 0 / 0 / transparent / an inset
+ *                        underline is the underline; a box sets all five
  *   --q-page-image-size  the tile size of the page pattern (the pattern
  *                        itself, `--q-page-image`, carries ink: per theme)
  *
@@ -335,52 +378,74 @@
  * list them beside its own shadow.
  */
 :root {
-  --q-radius-control: 0px;
-  --q-radius-surface: 0px;
-  --q-radius-mark: 0px;
+  --q-radius-control: 6px;
+  --q-radius-surface: 10px;
+  --q-radius-mark: 4px;
   --q-border-control: 1px;
   --q-border-surface: 1px;
   --q-press: 0px;
   --q-font-control: var(--font-sans);
-  --q-field-border-x: 0px;
-  --q-field-boxed: 0;
-  --q-field-px: 0px;
-  --q-field-bg: transparent;
+  --q-field-border-x: var(--q-border-control);
+  --q-field-boxed: 1;
+  --q-field-px: 12px;
+  /* The field's ground, its resting edge and its focus shadow read colours,
+     so they are declared with the colours in each theme block below — a
+     `var()` here would resolve once, on <html>, and a `.dark` box on a light
+     page would inherit the light values. */
   --q-page-image-size: auto;
 }
 
 :root,
 .light {
   --q-bg:           #ffffff;
-  --q-raised:       #e5e7eb;
-  --q-pressed:      #d9dce1;
+  --q-raised:       #f3f4f6;
+  --q-pressed:      #e5e7eb;
   --q-elevated:     #ffffff;
   --q-fg:           #030712;
-  --q-fg-muted:     #1f2937;
-  --q-fg-subtle:    #4b5563;
-  --q-hairline:     #03071240;
-  --q-rule:         #030712;
-  --q-action:       #030712;
-  --q-action-hover: #1f2937;
+  --q-fg-muted:     #374151;
+  --q-fg-subtle:    #5b6472;
+  --q-hairline:     #e5e7eb;
+  --q-rule:         #374151;
+  --q-action:       #374151;
+  --q-action-hover: #4b5563;
   --q-on-action:    #ffffff;
-  --q-focus:        #030712;
+  --q-focus:        #3b5a86;
+  --q-signal:         #3b5a86;
+  --q-on-signal:      #ffffff;
+  --q-signal-inverse: #c9d6ec;
+  --q-selected:       #e6ebf3;
+  --q-on-selected:    #24344f;
+  --q-overlay:        #374151;
+  --q-on-overlay:     #ffffff;
+  --q-overlay-ring:   #374151;
   --q-surface:      #030712;
   --q-glyph:        #0307120f;
   --q-glow-from:    #ffffff;
   --q-glow-to:      #d9dce1;
   --q-stage-light:  radial-gradient(110% 90% at 85% 0%, #ffffff 0%, #f3f4f6 45%, #d9dce1 100%);
-  /* 800-level, because they are read as 12px text: each clears 4.5:1 on
-     white, on gray-200 and under a 10% tint of itself. */
-  --q-danger:       #991b1b;  /* red-800 */
+  /* Read as 12px text, so each clears 4.5:1 on white, on `raised` and under
+     a 10% tint of itself. Danger is the design's app-danger; warn and success
+     stay one step darker than its app-warning (#b45309) and app-success
+     (#15803d), which fall to 4.0:1 under the tint a Badge paints. */
+  --q-danger:       #b91c1c;  /* red-700, app-danger */
   --q-warn:         #92400e;  /* amber-800 */
   --q-success:      #065f46;  /* emerald-800 */
   --q-shadow-float: 0 1px 2px #0307120f, 0 12px 32px #03071214;
+  --q-shadow-overlay: 0 0 0 1px #374151, 0 12px 32px #03071240;
   --q-shadow-control: 0 0 #0000;
   --q-shadow-action: 0 0 #0000;
   --q-shadow-surface: 0 0 #0000;
-  /* The ground of a card. The page itself in Ink & Paper; a design whose
-     boxes sit on a tinted page sets it apart. */
+  /* The ground of a card: the page itself; a design whose boxes sit on a
+     tinted page sets it apart. */
   --q-card: var(--q-bg);
+  /* The field frame's colours (see Shape above). Focus turns the edge `focus`
+     and this shadow doubles it: a 2px signal frame on a box, a 2px line under
+     an underline. The resting edge is app-line on a box, the rule under an
+     underline. */
+  --q-field-bg: var(--q-card);
+  --q-field-line: var(--q-hairline);
+  --q-field-focus: 0 0 0 1px var(--q-focus);
+  --q-field-focus-danger: 0 0 0 1px var(--q-danger);
   --q-page-image: none;
   /* Chart series: the gray ramp, alternating dark and light. */
   --q-chart-1:  #030712;
@@ -401,32 +466,45 @@
 }
 
 .dark {
-  --q-bg:           #030712;
-  --q-raised:       #111827;
-  --q-pressed:      #1f2937;
+  --q-bg:           #111827;
+  --q-raised:       #182131;
+  --q-pressed:      #273142;
   --q-elevated:     #111827;
   --q-fg:           #f9fafb;
   --q-fg-muted:     #d1d5db;
   --q-fg-subtle:    #9ca3af;
-  --q-hairline:     #ffffff33;
+  --q-hairline:     #273142;
   --q-rule:         #f9fafb;
   --q-action:       #f9fafb;
-  --q-action-hover: #d1d5db;
+  --q-action-hover: #e5e7eb;
   --q-on-action:    #030712;
-  --q-focus:        #f9fafb;
+  --q-focus:        #a7bbdc;
+  --q-signal:         #a7bbdc;
+  --q-on-signal:      #111827;
+  --q-signal-inverse: #a7bbdc;
+  --q-selected:       #243149;
+  --q-on-selected:    #dde6f5;
+  --q-overlay:        #030712;
+  --q-on-overlay:     #f9fafb;
+  --q-overlay-ring:   #374151;
   --q-surface:      #ffffff;
   --q-glyph:        #ffffff12;
   --q-glow-from:    #1f2937;
   --q-glow-to:      #030712;
   --q-stage-light:  radial-gradient(120% 90% at 80% 10%, #1f2937 0%, #030712 60%);
-  --q-danger:       #f87171;  /* red-400 */
+  --q-danger:       #fca5a5;  /* red-300, app-danger */
   --q-warn:         #fbbf24;  /* amber-400 */
-  --q-success:      #34d399;  /* emerald-400 */
+  --q-success:      #4ade80;  /* green-400, app-success */
   --q-shadow-float: 0 0 0 1px #ffffff1a, 0 12px 32px #00000099;
+  --q-shadow-overlay: 0 0 0 1px #374151, 0 12px 32px #00000099;
   --q-shadow-control: 0 0 #0000;
   --q-shadow-action: 0 0 #0000;
   --q-shadow-surface: 0 0 #0000;
   --q-card: var(--q-bg);
+  --q-field-bg: var(--q-card);
+  --q-field-line: var(--q-hairline);
+  --q-field-focus: 0 0 0 1px var(--q-focus);
+  --q-field-focus-danger: 0 0 0 1px var(--q-danger);
   --q-page-image: none;
   --q-chart-1:  #f9fafb;
   --q-chart-2:  #4b5563;
@@ -442,6 +520,82 @@
   --q-scroll-thumb-hover:  rgb(255 255 255 / 0.4);
   --q-scroll-thumb-active: rgb(255 255 255 / 0.7);
   color-scheme: dark;
+}
+/*
+ * ---------------- The website, inside the app ----------------
+ * `quebi-editorial` puts the website surface back for one subtree: ink
+ * grounds, translucent hairlines, the ink rule and action, the ink focus ring,
+ * square controls and underline fields. Stage wears it, so a stage on an app
+ * page is the website's stage — and the contrast promises the website makes
+ * on the glow are the ones that hold inside it.
+ */
+.quebi-editorial {
+  --q-raised:       #e5e7eb;
+  /* red-800: the app's red-700 falls under 4.5:1 on a tint over gray-200. */
+  --q-danger:       #991b1b;
+  --q-pressed:      #d9dce1;
+  --q-fg-muted:     #1f2937;
+  --q-fg-subtle:    #4b5563;
+  --q-hairline:     #03071240;
+  --q-rule:         #030712;
+  --q-action:       #030712;
+  --q-action-hover: #1f2937;
+  --q-focus:        #030712;
+  --q-radius-control: 0px;
+  --q-radius-surface: 0px;
+  --q-radius-mark: 0px;
+  --q-field-border-x: 0px;
+  --q-field-boxed: 0;
+  --q-field-px: 0px;
+  --q-card: var(--q-bg);
+  --q-field-bg: transparent;
+  /* No hue on the website: what is signal in the app is ink here — a checked
+     box, a selected day — on the website's pressed grey. */
+  --q-signal:       #030712;
+  --q-on-signal:    #ffffff;
+  --q-selected:     #d9dce1;
+  --q-on-selected:  #030712;
+  --q-field-focus: inset 0 -1px 0 var(--q-focus);
+  --q-field-focus-danger: inset 0 -1px 0 var(--q-danger);
+  --q-field-line: var(--q-rule);
+}
+
+.dark .quebi-editorial {
+  --q-bg:           #030712;
+  --q-danger:       #f87171;
+  --q-raised:       #111827;
+  --q-pressed:      #1f2937;
+  --q-elevated:     #111827;
+  --q-fg-muted:     #d1d5db;
+  --q-fg-subtle:    #9ca3af;
+  --q-hairline:     #ffffff33;
+  --q-rule:         #f9fafb;
+  --q-action:       #f9fafb;
+  --q-action-hover: #d1d5db;
+  --q-focus:        #f9fafb;
+  --q-signal:       #f9fafb;
+  --q-on-signal:    #030712;
+  --q-selected:     #1f2937;
+  --q-on-selected:  #f9fafb;
+  /* Restated so they read this scope's ink, not the page's. */
+  --q-card: var(--q-bg);
+  --q-field-bg: transparent;
+  --q-field-focus: inset 0 -1px 0 var(--q-focus);
+  --q-field-focus-danger: inset 0 -1px 0 var(--q-danger);
+  --q-field-line: var(--q-rule);
+}
+
+
+/*
+ * ---------------- State on an overlay ----------------
+ * A toast is slate in Daylight and ink in Cinematic — a dark ground in both —
+ * so its state colours are the light ones in both: red-800 on slate is 1.6:1.
+ * `quebi-on-overlay` (on the overlay's root) swaps them for that subtree.
+ */
+.quebi-on-overlay {
+  --q-danger:       #fca5a5;
+  --q-warn:         #fbbf24;
+  --q-success:      #4ade80;
 }
 
 /* ---------------- Custom utilities (v4 @utility syntax) ---------------- */
@@ -466,20 +620,27 @@
    cool grey in Daylight, graphite over ink in Cinematic. Only on a Stage; no
    gradients anywhere else. */
 /* The frame every field-shaped control draws: an input, a select trigger, a
-   date group. Underline by default (see the shape variables above); a theme
-   that sets `--q-field-border-x`, `--q-field-boxed` and `--q-field-px` turns all
-   of them into boxes at once. Colours and focus stay with the component. */
+   date group. A box by default — app-line edges, app-radius corners — and an
+   underline inside `quebi-editorial` (see the shape variables above). The
+   edge colour, its focus and its invalid state live here; the focus shadow is
+   the component's `shadow-(--q-field-focus)`. */
 @utility quebi-field {
   /* One edge colour for the whole frame, so an invalid field turns every
      drawn edge red, not only the underline. The top edge is always there (it
      keeps the height symmetric) and is mixed in only when fields are boxed. */
-  --q-field-edge: var(--color-quebi-rule);
+  --q-field-edge: var(--q-field-line);
   border-style: solid;
   border-width: var(--q-border-control) var(--q-field-border-x);
   border-color: color-mix(in srgb, var(--q-field-edge) calc(var(--q-field-boxed) * 100%), transparent)
     var(--q-field-edge) var(--q-field-edge);
+  /* Focus turns the edge the focus colour; the component adds
+     `shadow-(--q-field-focus)` beside it. Listed before invalid, so an invalid
+     field stays red while it has focus. */
+  &:is(:focus, :focus-within, [data-focused], [data-focus-within], [data-open]) {
+    --q-field-edge: var(--q-focus);
+  }
   &:is([data-invalid], [aria-invalid="true"]) {
-    --q-field-edge: var(--color-quebi-danger);
+    --q-field-edge: var(--q-danger);
   }
   border-radius: var(--q-radius-control);
   background-color: var(--q-field-bg);

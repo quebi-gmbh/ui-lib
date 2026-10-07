@@ -25,7 +25,7 @@ const BoldIcon = () => (
 export const toggleExamples: ComponentExample[] = [
   {
     title: "Intents",
-    description: "Outline is bordered; plain is borderless. Both fill with ink when selected.",
+    description: "Outline is bordered; plain is borderless. Both take the selected tint when selected.",
     render: () => (
       <Row>
         <Toggle intent="outline">outline</Toggle>

@@ -21,8 +21,8 @@ import { cn } from "@/lib/utils"
  * toggles and separators — into a single keyboard-navigable surface. Built on
  * react-aria-components for roving-focus and arrow-key navigation.
  *
- * Drawn as a ruled tray: a hairline box, square, no fill of its own — the
- * controls inside carry their own edges.
+ * Drawn as a ruled tray: a hairline box at the surface radius, no fill of its
+ * own — the controls inside carry their own edges.
  *
  * Two kinds of item, and the choice between them is not cosmetic:
  * `ToolbarItem` is a Toggle, so it has an on state that fills with ink and
@@ -62,7 +62,7 @@ const Toolbar = ({ orientation = "horizontal", isCircle, className, ...props }: 
           cn(
             "group inline-flex gap-1.5 border border-quebi-hairline p-1.5",
             "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-            isCircle && "rounded-full",
+            isCircle ? "rounded-full" : "rounded-(--q-radius-surface)",
             orientation === "horizontal"
               ? "flex-row items-center"
               : "flex-col items-start",

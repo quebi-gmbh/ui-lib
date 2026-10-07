@@ -20,11 +20,13 @@ import { Button } from "react-aria-components"
  * a context-backed queue renders a fixed, portalled stack with an aria-live
  * region for accessibility.
  *
- * Every toast is the same floating surface — elevated, hairline edge, small
- * radius, float shadow — with ink text. The intent is carried by the icon and
- * a 2px rule down the leading edge: `success`, `warning` and `danger` in their
- * state tokens, `info` in ink, `default` with neither. The surface itself is
- * never tinted. Auto-dismiss after `duration` ms (set to 0 to keep until
+ * Every toast is the same overlay — `bg-quebi-overlay text-quebi-on-overlay`
+ * with the overlay shadow (slate in Light, ink with a 1px ring in Dark) and
+ * the control radius. The intent is carried by the icon's shape and a 2px
+ * rule down the leading edge: `success`, `warning` and `danger` in their state
+ * tokens, `info` in the overlay's own text colour, `default` with neither. The
+ * icon stays `on-overlay`: the state tokens are text colours for light grounds
+ * and do not clear contrast on slate. The surface itself is never tinted. Auto-dismiss after `duration` ms (set to 0 to keep until
  * dismissed).
  *
  * Usage:
@@ -153,8 +155,13 @@ const iconMap = {
 const toastStyles = tv({
   base: [
     "pointer-events-auto relative flex w-full max-w-sm items-start gap-3 overflow-hidden",
-    "rounded-quebi-s border border-quebi-hairline bg-quebi-elevated p-4 shadow-quebi-float",
-    "text-sm/5 text-pretty text-quebi-fg-muted",
+    // `quebi-on-overlay` swaps the state tokens for their light values: the
+    // overlay is a dark ground in both themes.
+    "quebi-on-overlay rounded-(--q-radius-control) bg-quebi-overlay p-4 shadow-quebi-overlay",
+    "text-sm/5 text-pretty text-quebi-on-overlay/80",
+    // Links and actions inside a toast sit on a dark ground: the inverse signal.
+    "**:[a]:text-quebi-signal-inverse **:[a]:underline",
+    "forced-colors:border forced-colors:border-[CanvasText]",
     // The intent rule: a 2px bar on the leading edge, clipped to the radius.
     "before:absolute before:inset-y-0 before:start-0 before:w-0.5",
     "transition-all duration-200 ease-out",
@@ -165,7 +172,7 @@ const toastStyles = tv({
       success: "before:bg-quebi-success *:data-[slot=toast-icon]:text-quebi-success",
       warning: "before:bg-quebi-warn *:data-[slot=toast-icon]:text-quebi-warn",
       danger: "before:bg-quebi-danger *:data-[slot=toast-icon]:text-quebi-danger",
-      info: "before:bg-quebi-rule *:data-[slot=toast-icon]:text-quebi-fg",
+      info: "before:bg-quebi-on-overlay",
     },
   },
   defaultVariants: { intent: "default" },
@@ -191,20 +198,20 @@ function ToastItem({ toast, onDismiss }: { toast: ToastRecord; onDismiss: (id: s
 
   return (
     <div data-slot="toast" className={cn(toastStyles({ intent: toast.intent }))}>
-      {Icon && <Icon data-slot="toast-icon" className="mt-px size-5 shrink-0" />}
+      {Icon && <Icon data-slot="toast-icon" className="mt-px size-5 shrink-0 text-quebi-on-overlay" />}
       <div className="min-w-0 flex-1">
-        {/* Words stay ink on every intent: the hue is the icon's and the rule's,
+        {/* Words stay the overlay's text on every intent: the hue is the rule's,
             so a warning reads as a warning without a sentence set in amber. */}
-        <div className="font-medium text-quebi-fg">{toast.title}</div>
+        <div className="font-medium text-quebi-on-overlay">{toast.title}</div>
         {toast.description && <div className="mt-1">{toast.description}</div>}
       </div>
       <Button
         aria-label="Dismiss notification"
         onPress={() => onDismiss(toast.id)}
         className={cn(
-          "-mr-1 -mt-1 shrink-0 cursor-pointer p-1 text-quebi-fg-subtle",
-          "transition-colors duration-150 hover:bg-quebi-raised hover:text-quebi-fg",
-          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+          "-mr-1 -mt-1 shrink-0 cursor-pointer rounded-(--q-radius-mark) p-1 text-quebi-on-overlay/70",
+          "transition-colors duration-150 hover:bg-quebi-on-overlay/10 hover:text-quebi-on-overlay",
+          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-signal-inverse",
         )}
       >
         <CloseIcon className="size-4" />

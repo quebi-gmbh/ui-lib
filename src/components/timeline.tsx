@@ -860,7 +860,7 @@ export function Timeline({
       <div
         data-slot="timeline-empty"
         className={cn(
-          "border border-dashed border-quebi-hairline px-4 py-6 text-center text-quebi-body-s text-quebi-fg-muted",
+          "rounded-(--q-radius-surface) border border-dashed border-quebi-hairline px-4 py-6 text-center text-quebi-body-s text-quebi-fg-muted",
           className,
         )}
       >

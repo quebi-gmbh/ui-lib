@@ -17,7 +17,7 @@ export const calendarExamples: ComponentExample[] = [
   },
   {
     title: "Preselected date",
-    description: "Set the selected day with defaultValue — it fills with ink.",
+    description: "Set the selected day with defaultValue — it fills with the signal colour.",
     render: () => (
       <Calendar aria-label="Appointment" defaultValue={today(getLocalTimeZone())} />
     ),

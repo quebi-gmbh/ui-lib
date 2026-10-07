@@ -71,6 +71,53 @@ const INK_DARK = {
   focus: "#f9fafb",
 }
 
+/** The app tokens the updated design file adds, light and dark, as it declares them. */
+const APP_LIGHT = {
+  "app-bg": "#ffffff",
+  "app-surface": "#f3f4f6",
+  "app-line": "#e5e7eb",
+  "app-text": "#030712",
+  "app-text-2": "#374151",
+  "app-text-muted": "#5b6472",
+  "app-action": "#374151",
+  "app-on-action": "#ffffff",
+  "app-overlay": "#374151",
+  "app-on-overlay": "#ffffff",
+  "app-overlay-ring": "#374151",
+  "app-signal": "#3b5a86",
+  "app-on-signal": "#ffffff",
+  "app-signal-inverse": "#c9d6ec",
+  "app-selected": "#e6ebf3",
+  "app-on-selected": "#24344f",
+  "app-success": "#15803d",
+  "app-warning": "#b45309",
+  "app-danger": "#b91c1c",
+  "app-danger-line": "#fca5a5",
+}
+
+const APP_DARK = {
+  "app-bg": "#111827",
+  "app-surface": "#182131",
+  "app-line": "#273142",
+  "app-text": "#f9fafb",
+  "app-text-2": "#d1d5db",
+  "app-text-muted": "#9ca3af",
+  "app-action": "#f9fafb",
+  "app-on-action": "#030712",
+  "app-overlay": "#030712",
+  "app-on-overlay": "#f9fafb",
+  "app-overlay-ring": "#374151",
+  "app-signal": "#a7bbdc",
+  "app-on-signal": "#111827",
+  "app-signal-inverse": "#a7bbdc",
+  "app-selected": "#243149",
+  "app-on-selected": "#dde6f5",
+  "app-success": "#4ade80",
+  "app-warning": "#fbbf24",
+  "app-danger": "#fca5a5",
+  "app-danger-line": "#7f1d1d",
+}
+
 describe("the defaults are the library's own theme", () => {
   // Every `--q-*` literal the theme file declares for a token, per theme.
   const block = (selector: string) => {
@@ -104,6 +151,32 @@ describe("the defaults are the library's own theme", () => {
       }
     },
   )
+})
+
+describe("the design file with its app surface imports as the library default", () => {
+  const result = importTheme({ light: { ...INK_LIGHT, ...APP_LIGHT }, dark: { ...INK_DARK, ...APP_DARK } })
+
+  test.each([
+    ["bg", "#ffffff", "#111827"],
+    ["raised", "#f3f4f6", "#182131"],
+    ["pressed", "#e5e7eb", "#273142"],
+    ["fg-muted", "#374151", "#d1d5db"],
+    ["fg-subtle", "#5b6472", "#9ca3af"],
+    ["hairline", "#e5e7eb", "#273142"],
+    ["rule", "#374151", "#f9fafb"],
+    ["action", "#374151", "#f9fafb"],
+    ["focus", "#3b5a86", "#a7bbdc"],
+    ["signal", "#3b5a86", "#a7bbdc"],
+    ["selected", "#e6ebf3", "#243149"],
+    ["overlay", "#374151", "#030712"],
+  ])("%s", (key, light, dark) => {
+    expect(result.values.light[key]).toBe(light)
+    expect(result.values.dark?.[key]).toBe(dark)
+  })
+
+  test("every contrast check passes", () => {
+    expect(checks(result.values).filter((c) => !c.pass)).toEqual([])
+  })
 })
 
 describe("the quebi design system imports as the theme it was translated into", () => {
@@ -359,7 +432,7 @@ describe("colour parsing and the preview", () => {
     const values = defaultValues()
     values.light["radius-control"] = "8px"
     const style = previewStyle(values, "dark")
-    expect(style["--q-bg"]).toBe("#030712")
+    expect(style["--q-bg"]).toBe("#111827")
     expect(style["--q-radius-control"]).toBe("8px")
     expect(style["--font-display"]).toContain("Outfit")
     expect(style["--q-shadow-control"]).toBe("0 0 #0000")

@@ -26,8 +26,8 @@ import {
  * — menu / select / combo-box / multiple-select compose this overlay.
  *
  * Surface: `bg-quebi-elevated` with a hairline edge, `rounded-quebi-s`, and
- * `shadow-quebi-float` — the one shadow in the system, reserved for things
- * that float. Elevation is occlusion, not emission: no glow, no tint.
+ * `shadow-quebi-float` — the shadow reserved for elevated surfaces that
+ * float. Elevation is occlusion, not emission: no glow, no tint.
  */
 const Popover = (props: DialogTriggerProps) => {
   return <DialogTriggerPrimitive {...props} />

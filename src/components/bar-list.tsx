@@ -71,15 +71,15 @@ export function BarList<T>({
               onValueChange?.(item)
             }}
             className={cn(
-              "group w-full outline-none",
-              "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+              "group w-full rounded-(--q-radius-mark) outline-none",
+              "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
               onValueChange &&
                 "m-0! cursor-pointer transition-colors duration-150 hover:bg-quebi-raised",
             )}
           >
             <div
               className={cn(
-                "flex items-center bg-quebi-pressed transition-colors duration-150",
+                "flex items-center rounded-(--q-radius-mark) bg-quebi-pressed transition-colors duration-150",
                 rowHeight,
                 index === sortedData.length - 1 && "mb-0",
               )}
@@ -89,7 +89,7 @@ export function BarList<T>({
                 {item.href ? (
                   <Link
                     href={item.href}
-                    className="truncate whitespace-nowrap text-sm/6 text-quebi-fg underline decoration-1 underline-offset-5 transition-[text-underline-offset] duration-150 hover:underline-offset-8"
+                    className="truncate whitespace-nowrap text-sm/6 text-quebi-signal underline decoration-1 underline-offset-3 transition-[text-decoration-thickness] duration-150 hover:decoration-2"
                     target="_blank"
                     rel="noreferrer"
                     onClick={(event) => event.stopPropagation()}

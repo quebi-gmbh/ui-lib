@@ -40,35 +40,47 @@ build script can import under bun without pulling in React/JSX.
    `text-body-*`, `rounded-xs`). See the styling section below.
 6. **`@/` is the `src/` alias.** It's fine — shadcn's CLI rewrites it for consumers.
 
-## Quebi styling cheatsheet — Ink & Paper
+## Quebi styling cheatsheet — the app surface
 
 Pull from `src/quebi-theme.css` tokens; `quebi-design-system.html` is the design system they
-translate, and `tests/ink-and-paper.test.ts` holds the translation. Ink and paper, no hue, square,
-ruled, one directional light on a stage.
+translate, and `tests/ink-and-paper.test.ts` holds the translation. The library paints the design's
+*app* surface (quebi cloud): ink and paper, one hue that only means state, 6px controls, hairline
+rules. The *website* surface — square, ink, no hue — lives inside `quebi-editorial` (Stage, the home
+page); components get it for free there by using the shape variables below.
 
-- Grounds: page `bg-quebi-bg`; raised/inset/hovered/tags `bg-quebi-raised`; pressed/selected rows
-  `bg-quebi-pressed`. A surface that **floats above the page** — popover, menu, list box, dialog,
+- Grounds: page `bg-quebi-bg`; raised/inset/hovered/tags `bg-quebi-raised`; pressed
+  `bg-quebi-pressed`; a selected row, item or segment `bg-quebi-selected text-quebi-on-selected`. A surface that **floats above the page** — popover, menu, list box, dialog,
   toast — is `bg-quebi-elevated shadow-quebi-float`. A surface flush with the page (a docked
   sidebar, a navbar, an input) stays on `bg-quebi-bg` or transparent.
 - Ink: `text-quebi-fg` (headlines, nav, links), `text-quebi-fg-muted` (running text),
   `text-quebi-fg-subtle` (labels, captions, numbers). Never `text-white`.
-- Rules, not boxes: `border-quebi-hairline` between rows, around cards, under the nav — it is
-  already translucent, never add `/opacity`. `border-quebi-rule` for control borders and the top
-  rule of an index or table.
-- Action: the solid button, a checked box, a selected day — `bg-quebi-action text-quebi-on-action`,
-  hover `bg-quebi-action-hover`. At most one solid button per view.
-- No hue. Emphasis is size, weight or action ink. `quebi-danger` / `quebi-warn` / `quebi-success`
+- Rules: `border-quebi-hairline` between rows, around cards and panels, and as the edge of every
+  control (buttons, toggles, fields) — never add `/opacity`. `border-quebi-rule` (slate) only for
+  the structural line under a table header or on top of an index.
+- Action: the primary button — `bg-quebi-action text-quebi-on-action` (slate), hover
+  `bg-quebi-action-hover`. At most one per view.
+- Signal: `quebi-signal` (dusty blue) is the only hue and only means state — a checked box or radio,
+  a switch that is on, a progress or meter fill, a link, a selected day, the icon in a selected row
+  (`quebi-on-signal` on a signal fill). Never decoration, headings or chart series.
+- Overlays: a toast, a tooltip, a selection bar — `bg-quebi-overlay text-quebi-on-overlay
+  shadow-quebi-overlay`, links in `quebi-signal-inverse`; add `quebi-on-overlay` to the root so the
+  state colours flip to their light values.
+- Otherwise no hue. Emphasis is size, weight or action ink. `quebi-danger` / `quebi-warn` / `quebi-success`
   exist only for state that must not be missed (an invalid field, a destructive action) and are text
   values first. A component whose content *is* colour (colour pickers, the EU energy label) is the
   documented exception.
 - Import `tv` from `@/lib/utils`, never from "tailwind-variants": that `tv` carries the same
   tailwind-merge config as `cn`, so the quebi type scale and radius tokens merge correctly inside a
   variant.
-- Square: no radius by default. `rounded-quebi-s` (6px) for tooltips, menus and popovers;
-  `rounded-full` for tags and things round by nature; `rounded-quebi-l` (22px) only for an embedded
-  stage frame. If a variant changes the radius (`isCircle`, …), put the radius on *every* branch of
+- Radius through the shape variables, never a stock `rounded-*`: `rounded-(--q-radius-control)`
+  (6px) for buttons, fields, toggles, menu and sidebar items; `rounded-(--q-radius-surface)` (10px)
+  for cards, dialogs, empty states; `rounded-(--q-radius-mark)` (4px) for checkboxes, badges,
+  tooltips. `rounded-quebi-s` (6px) for menus and popovers; `rounded-full` for things round by
+  nature; `rounded-quebi-l` (22px) only for an embedded stage frame. The variables go to 0 inside
+  `quebi-editorial`. If a variant changes the radius (`isCircle`, …), put the radius on *every* branch of
   that variant and none of it in `base` — `tests/radius-merge.test.ts` enforces it.
-- Depth: `shadow-quebi-float` on floating surfaces only. Nothing in the page flow takes a shadow.
+- Depth: `shadow-quebi-float` on floating surfaces (`bg-quebi-elevated`), `shadow-quebi-overlay` on
+  overlays (`bg-quebi-overlay`). Nothing in the page flow takes a shadow.
 - Type: Inter (`font-sans`, the default) for running text and controls; Outfit (`font-display`) for
   headlines with the `text-quebi-display-{xl,l,m,s}` / `text-quebi-title` scale at weights 100–300;
   JetBrains Mono (`font-mono`) for code and the label role — `quebi-eyebrow` (mono, uppercase,
@@ -76,9 +88,10 @@ ruled, one directional light on a stage.
   text, never Inter for headlines.
 - Motion: `duration-150` for colour and underline changes, `duration-300` for row shifts. No scale on
   hover, no lift. Reduced motion is switched off globally.
-- Focus: `focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3
-  focus-visible:ring-offset-quebi-bg` — `ring-inset` for cells and rows with no room outside. Text
-  inputs are underline-only and thicken the underline to 2px on focus instead.
+- Focus: `focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2
+  focus-visible:ring-offset-quebi-bg` (the signal) — `ring-inset` for cells and rows with no room
+  outside. Field-shaped controls take `quebi-field` (boxed; underlined inside `quebi-editorial`) and
+  `focus:shadow-(--q-field-focus)` instead of a ring.
 - Invalid: `border-quebi-danger` / `text-quebi-danger`.
 - Content: lowercase for headlines, navigation, buttons, links and tags ("get started →"); sentences
   in running text stay sentence case. No emoji, no exclamation marks.

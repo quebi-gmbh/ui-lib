@@ -17,8 +17,8 @@ import { cn } from "@/lib/utils"
  * TagGroup — quebi design system
  *
  * Built on react-aria-components. Each tag is the design's Tag — a pill on the
- * raised ground in the muted ink, lowercase label — and a selected tag takes
- * the action-ink fill, like every other selected control. Removable tags
+ * raised ground in the muted ink, lowercase label — and a selected tag is
+ * state, so it takes the `selected` ground, like every other selected item. Removable tags
  * expose a small remove button. Focus is the outward ring; disabled dims.
  */
 export function TagGroup({ className, ...props }: TagGroupProps) {
@@ -54,9 +54,9 @@ export function Tag({ children, className, ...props }: TagProps) {
           "group inline-flex cursor-default items-center gap-x-1.5 rounded-full px-3 py-1.5 text-quebi-tag",
           "bg-quebi-raised text-quebi-fg-muted",
           "transition-colors duration-150",
-          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+          "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
           "hover:bg-quebi-pressed hover:text-quebi-fg",
-          "data-[selected]:bg-quebi-action data-[selected]:text-quebi-on-action",
+          "data-[selected]:bg-quebi-selected data-[selected]:text-quebi-on-selected",
           "data-[href]:cursor-pointer",
           allowsRemoving && "pr-1.5",
           isDisabled && "cursor-not-allowed opacity-50",
@@ -76,7 +76,7 @@ export function Tag({ children, className, ...props }: TagProps) {
                 "text-quebi-fg-subtle outline-none transition-colors duration-150",
                 "hover:bg-quebi-bg hover:text-quebi-fg",
                 "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-0",
-                "group-data-[selected]:text-quebi-on-action group-data-[selected]:hover:bg-quebi-action-hover group-data-[selected]:hover:text-quebi-on-action",
+                "group-data-[selected]:text-quebi-on-selected group-data-[selected]:hover:bg-quebi-bg group-data-[selected]:hover:text-quebi-on-selected",
               )}
             >
               <X className="size-3" strokeWidth={2.5} aria-hidden="true" />

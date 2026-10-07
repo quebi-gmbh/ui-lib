@@ -3,8 +3,8 @@ import { cn } from "@/lib/utils"
 /**
  * Card — quebi design system
  *
- * A surface for grouping related content: paper with a hairline round it,
- * square, and no shadow — structure comes from the rule, not from depth.
+ * A surface for grouping related content: paper with a hairline round it, the
+ * surface radius, and no shadow — structure comes from the rule, not depth.
  * Interactive cards answer hover with the raised ground, never with a lift.
  *
  * Note that a Card is *not* an overlay: it sits in the page flow on the page
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils"
  */
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** `feature` sets the card on the raised ground behind a stronger rule.
+  /** `feature` sets the card on the raised ground.
    * Reserve it for the one card in a set that carries the point — not every
    * card. */
   variant?: "default" | "feature"
@@ -34,10 +34,10 @@ const Card = ({ className, variant = "default", interactive = false, ...props }:
         // flex-col + h-full so a child with `mt-auto` (e.g. the action button)
         // pins to the bottom and buttons align across a row of cards.
         "flex flex-col h-full p-6 text-quebi-fg",
-        // Shape from the theme: square, 1px and flat in Ink & Paper.
+        // Shape from the theme: surface radius, 1px, flat; square under `.quebi-editorial`.
         "rounded-(--q-radius-surface) border-(length:--q-border-surface) shadow-(--q-shadow-surface)",
         variant === "feature"
-          ? "border-quebi-rule bg-quebi-raised"
+          ? "border-quebi-hairline bg-quebi-raised"
           : "border-quebi-hairline bg-(--q-card)",
         interactive &&
           "transition-[background-color,translate,box-shadow] duration-150 hover:translate-(--q-press) hover:bg-quebi-raised hover:shadow-none",

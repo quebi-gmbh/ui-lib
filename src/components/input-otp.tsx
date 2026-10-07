@@ -75,9 +75,10 @@ type InputOTPProps = DistributiveOmit<React.ComponentPropsWithoutRef<typeof OTPI
  * InputOTP — quebi design system
  *
  * One-time-password / verification-code input built on the `input-otp`
- * package. Each slot is its own underlined cell, drawn like `Input`: the
- * active slot's line thickens to 2px, no ring. Invalid turns the lines
- * `danger`; disabled dims the whole control.
+ * package. Each slot is its own cell, drawn like `Input` — boxed by default,
+ * underlined inside `quebi-editorial`: the active slot's frame turns `focus`
+ * and doubles, no ring. Invalid turns the frames `danger`; disabled dims the
+ * whole control.
  *
  * `size` reaches the slots through `FieldSizeContext` rather than through a
  * prop, because the slots are written by the caller — `<InputOTP><InputOTPSlot
@@ -185,8 +186,8 @@ export function InputOTPSlot({
         inputOtpSlotSizeStyles[size],
         "quebi-field outline-none",
         "transition-[border-color,box-shadow] duration-150",
-        "data-[active=true]:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
-        "aria-invalid:border-b-quebi-danger data-[active=true]:aria-invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
+        "data-[active=true]:shadow-(--q-field-focus)",
+        "aria-invalid:[--q-field-edge:var(--q-danger)] data-[active=true]:aria-invalid:shadow-(--q-field-focus-danger)",
         className,
       )}
       {...props}
@@ -200,7 +201,7 @@ export function InputOTPSlot({
       )}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-4 w-px animate-caret-blink bg-quebi-action duration-1000" />
+          <div className="h-4 w-px animate-caret-blink bg-quebi-fg duration-1000" />
         </div>
       )}
     </div>

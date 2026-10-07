@@ -253,7 +253,7 @@ export interface DaySpan {
 const TONES: Record<DayScheduleTone, { bar: string; node: string; text: string }> = {
   brand: {
     bar: "bg-quebi-action",
-    node: "border-quebi-rule",
+    node: "border-quebi-action",
     text: "text-quebi-fg",
   },
   cyan: {
@@ -1019,7 +1019,7 @@ export function DaySchedule({
                       "touch-none",
                       tone.bar,
                       interactive ? "cursor-grab active:cursor-grabbing" : "cursor-default",
-                      "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+                      "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
                     )}
                     style={
                       isHorizontal
@@ -1063,7 +1063,7 @@ export function DaySchedule({
                               isHorizontal ? "cursor-ew-resize" : "cursor-ns-resize",
                             )
                           : "cursor-default",
-                        "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+                        "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
                       )}
                       style={
                         isHorizontal

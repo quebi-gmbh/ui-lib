@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils"
  *
  * Built on react-aria-components. Underline tabs, no pills: the list sits on a
  * hairline, inactive tabs are subtle Outfit at nav size, and the selected tab
- * turns ink with a 2px action-ink rule over the hairline — along the bottom border when
+ * turns ink with a 2px signal rule over the hairline — along the bottom border when
  * horizontal, on the inline-start border when vertical. Orientation reaches `Tab` through
  * `TabsContext`, since react-aria exposes it to `TabList` but not to `Tab`.
  * Keyboard and focus handling come from react-aria.
@@ -99,13 +99,13 @@ export function Tab({ className, ref, ...props }: TabProps) {
           orientation === "vertical" && "ps-4",
           // Quiet until selected: subtle text, ink when hovered or selected.
           "text-quebi-fg-subtle selected:text-quebi-fg hover:text-quebi-fg",
-          "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+          "focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
           // Icons inside tabs.
           "*:data-[slot=icon]:-ms-0.5 *:data-[slot=icon]:me-2 *:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center",
           "disabled:opacity-50 disabled:cursor-not-allowed",
           "href" in props ? "cursor-pointer" : "cursor-default",
-          // The ink rule, square, laid over the list's hairline.
-          "after:absolute after:bg-quebi-action after:opacity-0 after:transition-opacity after:duration-150 selected:after:opacity-100",
+          // The signal rule — selection is state — laid over the list's hairline.
+          "after:absolute after:bg-quebi-signal after:opacity-0 after:transition-opacity after:duration-150 selected:after:opacity-100",
           orientation === "vertical"
             ? "after:inset-y-0 after:-start-px after:w-0.5"
             : "after:inset-x-0 after:-bottom-px after:h-0.5",

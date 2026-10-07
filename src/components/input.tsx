@@ -16,11 +16,12 @@ import { cn } from "@/lib/utils"
  * A field's height is line-height + padding + 1px of border top and bottom, so
  * `xs` (30px) and `sm` (38px) are exactly `Button`'s `xs` and `sm`: put one of
  * each in a row and they share a baseline and a height. `md` is the default
- * and is 42px. The top border is transparent — the field is drawn by its
- * underline alone — but it is kept so the arithmetic, and the row, still hold.
- *
- * No horizontal padding: an underlined field's text starts on the same line as
- * the label above it. `InputGroup` adds the inset an icon or addon needs.
+ * and is 42px. By default the field is a box — hairline edges, the control
+ * radius, `--q-field-px` of inline padding. Inside `quebi-editorial` it is an
+ * underline: the top border turns transparent but is kept, so the arithmetic,
+ * and the row, still hold, and the padding goes to 0 so the text starts on the
+ * same line as the label above it. `InputGroup` adds the inset an icon or
+ * addon needs on top of that padding.
  *
  * Kept as a plain record rather than imported from a sibling: the three field
  * primitives are copied out one at a time, and a shared module would make
@@ -37,18 +38,21 @@ export type InputSize = keyof typeof inputSizeStyles
 /**
  * Input — quebi design system
  *
- * Built on react-aria-components. Underline-only: no fill, no side or top
- * border, a `rule` line under the text. Invalid turns the line `danger`;
- * disabled dims and blocks interaction.
+ * Built on react-aria-components. Boxed by default: the `quebi-field` frame,
+ * hairline edges on the card ground at the control radius. Inside
+ * `quebi-editorial` it is underline-only — no fill, no side or top border, a
+ * `rule` line under the text. Invalid turns the frame `danger`; disabled dims
+ * and blocks interaction.
  *
  * ## Focus, which this component is the canonical copy of
  *
  * A text field is the one control in the library that draws no ring. Focus
- * thickens the underline to 2px with an inset shadow on top of the 1px border,
- * so nothing moves when the caret arrives. Every field-shaped trigger (Select,
+ * turns the frame `focus` and doubles it with `--q-field-focus` — a 1px
+ * shadow round a box, an inset one under an underline — on top of the 1px
+ * border, so nothing moves when the caret arrives. Every field-shaped trigger (Select,
  * ComboBox, the date pickers, NumberField, TagField, …) copies this so a form
  * reads as one family. Everything else — buttons, boxes, cells — keeps the
- * outward `ring-2 ring-offset-3` ring, or `ring-inset` where there is no room.
+ * outward `ring-2 ring-offset-2` ring, or `ring-inset` where there is no room.
  */
 interface InputProps extends Omit<PrimitiveInputProps, "size"> {
   ref?: React.RefObject<HTMLInputElement>
@@ -71,13 +75,13 @@ export function Input({ className, ref, size: sizeProp, ...props }: InputProps) 
         ref={ref}
         className={composeRenderProps(className, (resolved) =>
           cn(
-            "relative block w-full appearance-none bg-transparent text-quebi-fg placeholder:text-quebi-fg-subtle",
+            "relative block w-full appearance-none text-quebi-fg placeholder:text-quebi-fg-subtle",
             "quebi-field",
             inputSizeStyles[size],
             "transition-[border-color,box-shadow] duration-150",
-            "outline-none focus:outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
-            "invalid:border-b-quebi-danger focus:invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
-            "data-invalid:border-b-quebi-danger focus:data-invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
+            "outline-none focus:outline-none focus:shadow-(--q-field-focus)",
+            "invalid:[--q-field-edge:var(--q-danger)] focus:invalid:shadow-(--q-field-focus-danger)",
+            "data-invalid:[--q-field-edge:var(--q-danger)] focus:data-invalid:shadow-(--q-field-focus-danger)",
             "[&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:hidden",
             "disabled:cursor-not-allowed disabled:opacity-50",
             "in-disabled:opacity-50",
@@ -110,16 +114,17 @@ export function InputGroup({ className, ...props }: GroupProps) {
       className={composeRenderProps(className, (resolved) =>
         cn(
           "relative isolate block w-full",
-          // icon / text padding: the adornment sits on the field's edge, the
-          // text starts 8px past it.
-          "has-[>[data-slot=icon]:first-child]:[&_input]:ps-6 has-[>[data-slot=icon]:last-child]:[&_input]:pe-6",
-          "has-[>[data-slot=text]:first-child]:[&_input]:ps-7 has-[>[data-slot=text]:last-child]:[&_input]:pe-7",
+          // icon / text padding: the adornment sits at the field's inline
+          // padding (on its edge when the field is an underline), the text
+          // starts 8px past it.
+          "has-[>[data-slot=icon]:first-child]:[&_input]:ps-[calc(var(--q-field-px)+--spacing(6))] has-[>[data-slot=icon]:last-child]:[&_input]:pe-[calc(var(--q-field-px)+--spacing(6))]",
+          "has-[>[data-slot=text]:first-child]:[&_input]:ps-[calc(var(--q-field-px)+--spacing(7))] has-[>[data-slot=text]:last-child]:[&_input]:pe-[calc(var(--q-field-px)+--spacing(7))]",
           // icon positioning
           "*:data-[slot=icon]:pointer-events-none *:data-[slot=icon]:absolute *:data-[slot=icon]:top-1/2 *:data-[slot=icon]:z-10 *:data-[slot=icon]:size-4 *:data-[slot=icon]:-translate-y-1/2",
-          "[&>[data-slot=icon]:first-child]:start-0 [&>[data-slot=icon]:last-child]:end-0",
+          "[&>[data-slot=icon]:first-child]:start-(--q-field-px) [&>[data-slot=icon]:last-child]:end-(--q-field-px)",
           // text positioning
           "*:data-[slot=text]:pointer-events-none *:data-[slot=text]:absolute *:data-[slot=text]:top-1/2 *:data-[slot=text]:z-10 *:data-[slot=text]:-translate-y-1/2",
-          "[&>[data-slot=text]:first-child]:start-0 [&>[data-slot=text]:last-child]:end-0",
+          "[&>[data-slot=text]:first-child]:start-(--q-field-px) [&>[data-slot=text]:last-child]:end-(--q-field-px)",
           // button positioning
           "has-[>button:first-child]:[&_input]:ps-10 has-[>button:last-child]:[&_input]:pe-10",
           "*:[button]:absolute *:[button]:top-0 *:[button]:z-10 *:[button]:h-full",

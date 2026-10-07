@@ -9,7 +9,7 @@ export const badgeExamples: ComponentExample[] = [
   {
     title: "Intents",
     description:
-      "Nine intents, one hue-free tag. Only the three states take a colour; ai is the ink fill, outline a hairline.",
+      "Nine intents, one hue-free tag. Only the three states take a colour; ai is the slate fill, outline a hairline.",
     render: () => (
       <Row>
         <Badge intent="neutral">neutral</Badge>

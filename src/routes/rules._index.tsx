@@ -72,7 +72,7 @@ export default function Rules() {
                   <li key={id}>
                     <Link
                       to={`/rules/${id}`}
-                      className="outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg"
+                      className="outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg"
                     >
                       <Badge className="transition-colors duration-150 hover:bg-quebi-pressed">
                         {rulesRegistry.find((r) => r.id === id)?.navTitle ?? id}

@@ -21,7 +21,7 @@
  *    quebi token.
  *
  * Whatever neither pass finds is derived (a colour, from `bg` and `fg`) or
- * left at its Ink & Paper default, and the result says which.
+ * left at the library default, and the result says which.
  *
  * This module is pure; the browser half is `theme-extract.ts`.
  */
@@ -340,6 +340,12 @@ export function checks(values: ThemeValues, parse: Parse = parseColor): Check[] 
       for (const ground of ["bg", "card", "raised", "elevated"]) add(`${text} on ${ground}`, c[text], c[ground])
     }
     add("on-action on action", c["on-action"], c.action)
+    // The signal is text — a link — and the ground of a checked box.
+    for (const ground of ["bg", "card", "raised", "selected"]) add(`signal on ${ground}`, c.signal, c[ground])
+    add("on-signal on signal", c["on-signal"], c.signal)
+    add("on-selected on selected", c["on-selected"], c.selected)
+    add("on-overlay on overlay", c["on-overlay"], c.overlay)
+    add("signal-inverse on overlay", c["signal-inverse"], c.overlay)
     add("rule on bg (non-text, 3:1)", c.rule, c.bg, 3)
     add("focus on bg (non-text, 3:1)", c.focus, c.bg, 3)
     for (const state of ["danger", "warn", "success"]) add(`${state} on bg`, c[state], c.bg)
@@ -381,6 +387,9 @@ function fieldVariables(t: Record<string, string>): [string, string][] {
       ["--q-field-boxed", "0"],
       ["--q-field-px", "0px"],
       ["--q-field-bg", "transparent"],
+      ["--q-field-focus", "inset 0 -1px 0 var(--q-focus)"],
+      ["--q-field-focus-danger", "inset 0 -1px 0 var(--q-danger)"],
+      ["--q-field-line", "var(--q-rule)"],
     ]
   }
   return [
@@ -388,6 +397,9 @@ function fieldVariables(t: Record<string, string>): [string, string][] {
     ["--q-field-boxed", "1"],
     ["--q-field-px", t["field-px"] && isSafeValue(t["field-px"]) ? t["field-px"] : "12px"],
     ["--q-field-bg", "var(--q-card)"],
+    ["--q-field-focus", "0 0 0 1px var(--q-focus)"],
+    ["--q-field-focus-danger", "0 0 0 1px var(--q-danger)"],
+    ["--q-field-line", "var(--q-hairline)"],
   ]
 }
 

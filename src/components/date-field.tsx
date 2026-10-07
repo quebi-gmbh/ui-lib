@@ -16,8 +16,8 @@ import { fieldStyles } from "@/components/field"
  *
  * Built on react-aria-components. A segmented date entry control: each part
  * (day / month / year) is an individually editable segment. The wrapper is
- * drawn like `Input` — underline only, thickened on focus; the focused segment
- * is filled with `action` ink, the library's mark for "this one".
+ * drawn like `Input` — boxed, its edge turning the focus colour on focus; the
+ * focused segment takes the `signal` fill, the library's mark for "this one".
  *
  * Segment padding follows the locale, which is why `de-DE` renders `30.6.2026`
  * and not `30.06.2026`. Pass `shouldForceLeadingZeros` for the padded form —
@@ -56,7 +56,7 @@ const dateInputSizeStyles = {
 
 type DateInputSize = keyof typeof dateInputSizeStyles
 
-/** `bare` strips the input chrome (underline, focus treatment)
+/** `bare` strips the input chrome (box, focus treatment)
  *  so the DateInput can be composed inside a wrapper that owns those — e.g.
  *  a DatePickerTrigger which adds a calendar-icon button on the right. */
 interface DateInputComponentProps extends Omit<DateInputProps, "children"> {
@@ -87,14 +87,14 @@ export function DateInput({
             bare
               ? ["w-full border-0 bg-transparent outline-none", dateInputSizeStyles[size]]
               : [
-                  // `Input`'s underline: a transparent top border keeps the scale's
-                  // height; focus or an open picker thickens the line to 2px, no ring.
+                  // `Input`'s box: focus or an open picker turns the edge the focus
+                  // colour and adds a 1px shadow inside it, no ring.
                   "quebi-field",
                   dateInputSizeStyles[size],
                   "transition-[border-color,box-shadow] duration-150",
-                  "outline-none focus-within:outline-none focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
-                  "group-open:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
-                  "data-invalid:border-b-quebi-danger focus-within:data-invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
+                  "outline-none focus-within:outline-none focus-within:shadow-(--q-field-focus)",
+                  "group-open:shadow-(--q-field-focus)",
+                  "data-invalid:[--q-field-edge:var(--q-danger)] focus-within:data-invalid:shadow-(--q-field-focus-danger)",
                   "in-disabled:cursor-not-allowed in-disabled:opacity-50",
                 ],
             resolved,
@@ -106,10 +106,10 @@ export function DateInput({
           <DateSegment
             segment={segment}
             className={cn(
-              "inline shrink-0 px-1 py-0.5 text-quebi-fg tracking-wider caret-transparent outline-0 type-literal:px-0",
+              "inline shrink-0 rounded-(--q-radius-mark) px-1 py-0.5 text-quebi-fg tracking-wider caret-transparent outline-0 type-literal:px-0",
               textSize,
               "data-placeholder:text-quebi-fg-subtle data-[type=literal]:text-quebi-fg-muted",
-              "data-focused:bg-quebi-action data-focused:text-quebi-on-action",
+              "data-focused:bg-quebi-signal data-focused:text-quebi-on-signal",
               "data-invalid:text-quebi-danger data-focused:data-invalid:bg-quebi-danger data-focused:data-invalid:text-quebi-on-action",
               "forced-colors:data-focused:bg-[Highlight] forced-colors:data-focused:text-[HighlightText]",
               "forced-color-adjust-none forced-colors:text-[ButtonText]",

@@ -63,10 +63,11 @@ function NumberField({
  * field and the button beside it are the same height: `xs` is 30px and `sm`
  * 38px, matching `Button`'s `xs` and `sm`; `md` is the default.
  *
- * The underline belongs to the group, not the input, so it runs under the
- * addons and steppers too; the group's 1px border top (transparent) and
- * bottom is what the 1px per side in that arithmetic is. The addons and
- * steppers stretch to the input, so sizing the input sizes the whole group.
+ * The frame belongs to the group, not the input, so it runs round the addons
+ * and steppers too; the group's 1px border top (transparent when the field
+ * is an underline) and bottom is what the 1px per side in that arithmetic is.
+ * The addons and steppers stretch to the input, so sizing the input sizes the
+ * whole group.
  */
 const numberInputSizeStyles = {
   xs: "text-xs px-(--q-field-px) py-1.5",
@@ -146,7 +147,8 @@ const stepperStyles = cn(
 /**
  * NumberInput renders the input for a NumberField, with optional prefix/suffix
  * addons and increment / decrement steppers that read as one control: one
- * underline under all of them, thickened while anything inside has focus.
+ * frame round all of them (an underline inside `quebi-editorial`), doubled
+ * while anything inside has focus.
  */
 function NumberInput({
   prefix,
@@ -166,12 +168,12 @@ function NumberInput({
         "group/addons flex w-full items-stretch",
         "quebi-field",
         "transition-[border-color,box-shadow] duration-150",
-        "focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
-        "group-invalid/number-field:border-b-quebi-danger group-invalid/number-field:focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
+        "focus-within:shadow-(--q-field-focus)",
+        "group-invalid/number-field:[--q-field-edge:var(--q-danger)] group-invalid/number-field:focus-within:shadow-(--q-field-focus-danger)",
       )}
     >
       {prefix ? (
-        <span data-slot="addon" className={cn(addonStyles, "pe-2")}>
+        <span data-slot="addon" className={cn(addonStyles, "ps-(--q-field-px) pe-2")}>
           {prefix}
         </span>
       ) : null}
@@ -191,7 +193,7 @@ function NumberInput({
       {suffix ? (
         <span
           data-slot="addon"
-          className={cn(addonStyles, "ps-2")}
+          className={cn(addonStyles, "ps-2", hideStepper && "pe-(--q-field-px)")}
         >
           {suffix}
         </span>
@@ -208,7 +210,8 @@ function NumberInput({
           <Button
             slot="increment"
             aria-label="Increase"
-            className={cn(stepperStyles, "pe-0")}
+            // The last edge is the field's: its inline padding (0 on an underline).
+            className={cn(stepperStyles, "pe-(--q-field-px)")}
           >
             <IncrementIcon className="size-4" />
           </Button>

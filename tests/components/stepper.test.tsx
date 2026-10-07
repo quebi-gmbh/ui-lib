@@ -1,9 +1,9 @@
 /**
- * Stepper's states, read from ink alone.
+ * Stepper's states, read from fill and ring.
  *
- * There is no hue and no halo to carry the state, so the bullets' fill and ring
- * are the whole signal and are pinned here: `active` is the one solid action
- * fill, `done` an ink ring, `upcoming` a hairline ring. The two variants render
+ * There is no halo to carry the state, so the bullets' fill and ring are the
+ * whole cue and are pinned here: `active` is the one solid `signal` fill,
+ * `done` an `fg-muted` ring, `upcoming` a hairline ring. The two variants render
  * through separate components, which is exactly the shape that drifts if only
  * one of them is checked. `glow` survives as an accepted prop that draws
  * nothing, so an old caller neither breaks nor brings a shadow back.
@@ -46,12 +46,12 @@ describe.each(["admin", "kiosk"] as const)("Stepper variant=%s", (variant) => {
     render(<Stepper variant={variant} steps={steps} />)
     const [done, active, upcoming] = classes()
 
-    expect(active).toContain("bg-quebi-action")
-    expect(active).toContain("text-quebi-on-action")
-    expect(done).not.toContain("bg-quebi-action")
-    expect(done).toContain("border-quebi-rule")
+    expect(active).toContain("bg-quebi-signal")
+    expect(active).toContain("text-quebi-on-signal")
+    expect(done).not.toContain("bg-quebi-signal")
+    expect(done).toContain("border-quebi-fg-muted")
     expect(done).toContain("text-quebi-fg")
-    expect(upcoming).not.toContain("bg-quebi-action")
+    expect(upcoming).not.toContain("bg-quebi-signal")
     expect(upcoming).toContain("border-quebi-hairline")
   })
 

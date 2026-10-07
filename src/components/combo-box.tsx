@@ -28,7 +28,7 @@ import { Input } from "@/components/input"
  *
  * An autocomplete combo box: a quebi-styled text input paired with a filterable
  * dropdown of options. Built on react-aria-components, it composes the quebi
- * Input for the control — so it is underlined like every other field — and
+ * Input for the control — so it is framed like every other field — and
  * reuses the Dropdown surface/items inside a Popover.
  *
  * The list opens as soon as the input is focused (`menuTrigger="focus"`), so

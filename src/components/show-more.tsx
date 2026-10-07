@@ -43,8 +43,8 @@ const showMoreStyles = tv({
 /**
  * The pill, as a Button intent chosen by the toggle state.
  *
- * Resting is `outline`, selected is `primary` — the ink fill every selected
- * state in the library takes. Naming the intents instead of the classes keeps
+ * Resting is `outline`, expanded is `primary` — the slate action fill of a
+ * pressed button, not the signal of a selected row. Naming the intents instead of the classes keeps
  * the chip tracking the recipe: hover, focus ring, disabled treatment and
  * transition are whatever `Button` says they are.
  *

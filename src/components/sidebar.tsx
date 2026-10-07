@@ -37,8 +37,9 @@ import { cn } from "@/lib/utils"
  * react-aria-components. Flat: the sidebar sits on `bg-quebi-bg` and is told
  * apart from the page by a hairline edge, not a surface or a shadow — only the
  * mobile modal, which really does float, is `bg-quebi-elevated`. A hovered
- * item takes `bg-quebi-raised`; the current one is ink at medium weight with a
- * 1px rule at its start. Section labels are mono eyebrows.
+ * item takes `bg-quebi-raised`; the current one is state — the `selected`
+ * ground at medium weight, its icon in signal. Items take the control radius.
+ * Section labels are mono eyebrows.
  *
  * Compose a `SidebarProvider` around a `Sidebar` (containing `SidebarHeader`,
  * `SidebarContent` with `SidebarSection`/`SidebarItem`, and `SidebarFooter`)
@@ -484,7 +485,7 @@ const SidebarItem = ({
           cn([
             "href" in props ? "cursor-pointer" : "cursor-default",
             "w-full min-w-0 items-center text-start text-base/6 text-quebi-fg-muted no-underline transition-colors duration-150 hover:no-underline",
-            "group/sidebar-item relative col-span-full overflow-hidden focus-visible:outline-hidden",
+            "group/sidebar-item relative col-span-full overflow-hidden rounded-(--q-radius-control) focus-visible:outline-hidden",
             "grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] **:last:data-[slot=icon]:ms-auto supports-[grid-template-columns:subgrid]:grid-cols-subgrid sm:text-sm/5",
             "p-2 has-[a]:p-0",
             // icon
@@ -495,12 +496,13 @@ const SidebarItem = ({
             // avatar
             "**:data-[slot=avatar]:[--avatar-size:--spacing(5)]",
             "[&:has([data-slot=avatar]+[data-slot=sidebar-label])_[data-slot=avatar]:has(+[data-slot=sidebar-label])]:me-2",
-            // Current: ink at medium weight, and a 1px rule at the start edge.
+            // Current: state — the selected ground at medium weight, the icon in signal.
             isCurrent &&
-              "font-medium text-quebi-fg before:absolute before:inset-y-1.5 before:start-0 before:w-px before:bg-quebi-fg [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
+              "bg-quebi-selected font-medium text-quebi-on-selected [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-signal",
             isFocusVisible &&
               "outline-hidden ring-2 ring-quebi-focus ring-inset",
-            (isPressed || isHovered) &&
+            !isCurrent &&
+              (isPressed || isHovered) &&
               "bg-quebi-raised text-quebi-fg [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
             isDisabled && "opacity-50",
             className,
@@ -648,7 +650,7 @@ const SidebarDisclosureTrigger = ({
           (className, { isPressed, isFocusVisible, isHovered, isDisabled }) =>
             cn(
               "flex w-full min-w-0 items-center text-start font-medium text-base/6 text-quebi-fg transition-colors duration-150",
-              "group/sidebar-disclosure-trigger relative col-span-full overflow-hidden focus-visible:outline-hidden",
+              "group/sidebar-disclosure-trigger relative col-span-full overflow-hidden rounded-(--q-radius-control) focus-visible:outline-hidden",
               "**:data-[slot=icon]:size-5 **:data-[slot=icon]:shrink-0 **:data-[slot=icon]:text-quebi-fg-muted sm:**:data-[slot=icon]:size-4",
               "**:last:data-[slot=icon]:size-5 sm:**:last:data-[slot=icon]:size-4",
               "**:data-[slot=avatar]:size-6 sm:**:data-[slot=avatar]:size-5",

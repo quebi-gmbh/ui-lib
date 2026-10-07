@@ -153,11 +153,11 @@ export function ConformStoragePicker({
               aria-pressed={isSelected}
               onPress={() => selection.toggle(value)}
               className={cn(
-                "border px-3 py-1.5 font-medium text-sm transition-colors duration-150",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+                "rounded-(--q-radius-control) border px-3 py-1.5 font-medium text-sm transition-colors duration-150",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
                 isSelected
-                  ? "border-quebi-action bg-quebi-action text-quebi-on-action hover:border-quebi-action-hover hover:bg-quebi-action-hover"
-                  : "border-quebi-rule bg-transparent text-quebi-fg hover:bg-quebi-raised",
+                  ? "border-quebi-hairline bg-quebi-selected text-quebi-signal"
+                  : "border-quebi-hairline bg-transparent text-quebi-fg hover:bg-quebi-raised",
               )}
             >
               {value}

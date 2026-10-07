@@ -541,7 +541,7 @@ interface DayCellProps<E extends CalendarEvent> {
 const TODAY_RING = "outline-1 outline-solid outline-offset-1 outline-quebi-fg"
 
 /**
- * A pressable day takes a rule on hover. The focus ring is `Link`'s own; what
+ * A pressable day takes a subtle outline on hover. The focus ring is `Link`'s own; what
  * is taken away is the underline, which on a cell would underline one digit.
  *
  * Every `Link` here spreads `href` only when there is one: a press-only link
@@ -549,7 +549,7 @@ const TODAY_RING = "outline-1 outline-solid outline-offset-1 outline-quebi-fg"
  * React warns about.
  */
 const DAY_LINK =
-  "no-underline hover:no-underline hover:outline-1 hover:outline-solid hover:outline-quebi-rule"
+  "no-underline hover:no-underline hover:outline-1 hover:outline-solid hover:outline-quebi-fg-subtle"
 
 function DayCell<E extends CalendarEvent>(props: DayCellProps<E>) {
   if (props.variant === "list") return <ListDayCell {...props} />
@@ -557,7 +557,7 @@ function DayCell<E extends CalendarEvent>(props: DayCellProps<E>) {
   const { day, count, variant, level, isToday, number, countText, label, href, onAction } = props
   const isHeatmap = variant === "heatmap"
   const surface = cn(
-    "flex aspect-square flex-col items-center justify-center gap-0.5 text-xs tabular-nums",
+    "flex aspect-square flex-col items-center justify-center gap-0.5 rounded-(--q-radius-mark) text-xs tabular-nums",
     isHeatmap ? cn(HEATMAP_FILLS[level], HEATMAP_TEXT[level]) : "bg-quebi-raised",
     isToday && TODAY_RING,
   )
@@ -639,7 +639,7 @@ function ListDayCell<E extends CalendarEvent>({
   onEventClick,
 }: DayCellProps<E>) {
   const surface = cn(
-    "flex min-h-20 min-w-0 flex-col gap-0.5 bg-quebi-raised p-1 text-xs",
+    "flex min-h-20 min-w-0 flex-col gap-0.5 rounded-(--q-radius-mark) bg-quebi-raised p-1 text-xs",
     isToday && TODAY_RING,
   )
 

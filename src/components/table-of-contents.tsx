@@ -12,9 +12,10 @@ import { Link } from "@/components/link"
  * The "on this page" rail: a `<nav>` of links to the headings of the document
  * it sits beside, nested by heading level, with the heading you are reading
  * marked current. The list hangs off a hairline rail under a mono label; the
- * current row turns ink and lays a 1px ink rule over the rail — the sidebar's
- * current mark, on purpose, because it is the same kind of thing one level
- * down: the sidebar moves between pages, this moves within one.
+ * current row turns ink and lays a 1px signal rule over the rail — state, in
+ * the signal, like the sidebar's current item, on purpose, because it is the
+ * same kind of thing one level down: the sidebar moves between pages, this
+ * moves within one.
  *
  * **The items are data.** `items` is `{ id, title, level, children? }[]` and is
  * rendered on the first pass, so a prerendered page ships the whole list in its
@@ -102,12 +103,12 @@ export interface TableOfContentsProps
 }
 
 // `-ms-px border-s` lays each row's own start border over its list's rail, so
-// the current row's ink rule replaces a stretch of hairline rather than sitting
+// the current row's signal rule replaces a stretch of hairline rather than sitting
 // beside it.
 const ROW =
   "-ms-px block min-w-0 border-s px-3 py-1.5 text-sm/5 wrap-break-word no-underline transition-colors duration-150 hover:no-underline"
 const RESTING = "border-transparent font-normal text-quebi-fg-muted hover:text-quebi-fg"
-const CURRENT = "border-quebi-fg font-medium text-quebi-fg"
+const CURRENT = "border-quebi-signal font-medium text-quebi-fg"
 
 export function TableOfContents({
   items,

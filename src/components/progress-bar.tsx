@@ -12,8 +12,8 @@ import { cn } from "@/lib/utils"
 /**
  * ProgressBar — quebi design system
  *
- * Built on react-aria-components. A thin square track in `raised` with an ink
- * (`action`) fill that animates its width. Supports determinate and
+ * Built on react-aria-components. A thin square track in `hairline` with a
+ * `signal` fill — progress is state — that animates its width. Supports determinate and
  * indeterminate states, plus an optional header with label and value — the
  * value set in mono, like every count in the system.
  */
@@ -85,7 +85,7 @@ export function ProgressBarTrack({ className, ref, ...props }: React.ComponentPr
         ref={ref}
         data-slot="progress-container"
         className={cn(
-          "relative h-1 w-full min-w-52 overflow-hidden bg-quebi-raised will-change-transform",
+          "relative h-1 w-full min-w-52 overflow-hidden bg-quebi-hairline will-change-transform",
           className,
         )}
         {...props}
@@ -93,13 +93,13 @@ export function ProgressBarTrack({ className, ref, ...props }: React.ComponentPr
         {!isIndeterminate ? (
           <div
             data-slot="progress-content"
-            className="absolute start-0 top-0 h-full bg-quebi-action transition-[width] duration-200 ease-linear will-change-[width] motion-reduce:transition-none forced-colors:bg-[Highlight]"
+            className="absolute start-0 top-0 h-full bg-quebi-signal transition-[width] duration-200 ease-linear will-change-[width] motion-reduce:transition-none forced-colors:bg-[Highlight]"
             style={{ width: `${percentage}%` }}
           />
         ) : (
           <div
             data-slot="progress-content"
-            className="absolute top-0 h-full w-2/5 animate-[quebi-progress-slide_1500ms_ease-in-out_infinite] bg-quebi-action forced-colors:bg-[Highlight]"
+            className="absolute top-0 h-full w-2/5 animate-[quebi-progress-slide_1500ms_ease-in-out_infinite] bg-quebi-signal forced-colors:bg-[Highlight]"
           />
         )}
       </div>

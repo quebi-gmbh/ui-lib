@@ -29,9 +29,9 @@ import { PopoverContent } from "@/components/popover"
  * Select — quebi design system
  *
  * An accessible single/multiple select built on react-aria-components. The
- * trigger is drawn like `Input` — underline only, thickened to 2px while
- * focused or open, no ring; the chevron is muted; the options reuse the
- * dropdown surface and items. Foundational — Calendar and Conform Select
+ * trigger is drawn like `Input` — boxed by default, underlined inside
+ * `quebi-editorial`, its frame doubled while focused or open, no ring; the
+ * chevron is muted; the options reuse the dropdown surface and items. Foundational — Calendar and Conform Select
  * compose this.
  */
 
@@ -127,15 +127,16 @@ const SelectTrigger = ({ children, className, size: sizeProp, ...props }: Select
     <span data-slot="control" className="relative block w-full">
       <Button
         className={cn(
-          // `Input`'s underline: transparent top border so the height is the scale's.
+          // `Input`'s frame: a box, or an underline whose transparent top border
+          // keeps the height the scale's.
           "group/select-trigger flex w-full min-w-0 cursor-default items-center gap-x-2 text-start text-quebi-fg",
           "quebi-field",
           selectTriggerSizeStyles[size],
           "transition-[border-color,box-shadow] duration-150",
-          // focus / open → the underline thickens to 2px, inside the box.
-          "outline-none focus:outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
-          "group-open/select:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
-          "group-invalid/select:border-b-quebi-danger group-invalid/select:focus:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
+          // focus / open → the frame turns `focus` and doubles, as `Input`'s.
+          "outline-none focus:outline-none focus:shadow-(--q-field-focus)",
+          "group-open/select:shadow-(--q-field-focus)",
+          "group-invalid/select:[--q-field-edge:var(--q-danger)] group-invalid/select:focus:shadow-(--q-field-focus-danger)",
           // leading icons / loader, muted.
           "*:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0 *:data-[slot=icon]:self-center *:data-[slot=icon]:text-quebi-fg-subtle",
           "*:data-[slot=loader]:size-4 *:data-[slot=loader]:shrink-0 *:data-[slot=loader]:self-center *:data-[slot=loader]:text-quebi-fg-subtle",

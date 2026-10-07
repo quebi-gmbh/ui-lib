@@ -55,10 +55,10 @@ const usePaginationSize = (own?: PaginationSize): PaginationSize => {
 
 const navTargetClasses = [
   "inline-flex shrink-0 items-center justify-center",
-  "border border-solid border-quebi-rule",
+  "rounded-(--q-radius-control) border border-solid border-quebi-hairline",
   "font-sans font-medium leading-none select-none",
   "transition-[color,background-color] duration-150 ease-out",
-  "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+  "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
 ].join(" ")
 
 // `size-*` is border-box, so these are the same numbers `Button`'s `sq-xs` and
@@ -69,16 +69,16 @@ const navTargetSizes = {
   sm: "size-9.5 *:data-[slot=icon]:size-4",
 } as const satisfies Record<PaginationSize, string>
 
-// The arrows are outline buttons: a line-strong edge, a raised fill on hover.
+// The arrows are outline buttons: a hairline edge, a raised fill on hover.
 const navTargetInteractive = "cursor-pointer text-quebi-fg hover:bg-quebi-raised"
 
 const navTargetDisabled = "cursor-not-allowed text-quebi-fg opacity-45"
 
 const pageTargetClasses = [
-  "inline-flex shrink-0 items-center justify-center",
+  "inline-flex shrink-0 items-center justify-center rounded-(--q-radius-control)",
   "font-sans font-medium leading-none tabular-nums select-none",
   "transition-[color,background-color] duration-150 ease-out",
-  "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-3 focus-visible:ring-offset-quebi-bg",
+  "outline-none focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-offset-2 focus-visible:ring-offset-quebi-bg",
 ].join(" ")
 
 // A page number is text, so its height is set rather than derived from padding:
@@ -94,7 +94,9 @@ const pageTargetInteractive = [
   "hover:bg-quebi-raised hover:text-quebi-fg",
 ].join(" ")
 
-const pageTargetCurrent = "cursor-default bg-quebi-action text-quebi-on-action"
+// The current page is where you are, like a current nav item: state, so the
+// `selected` pair rather than a slate fill.
+const pageTargetCurrent = "cursor-default bg-quebi-selected text-quebi-on-selected"
 
 interface TargetProps extends Omit<LinkProps, "children" | "className"> {
   className: string

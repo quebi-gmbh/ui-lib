@@ -4,7 +4,7 @@ import type { ComponentExample } from "./types"
 export const linkToggleGroupExamples: ComponentExample[] = [
   {
     title: "Default",
-    description: "Each segment is a link; the current value fills with ink.",
+    description: "Each segment is a link; the current value takes the selected tint.",
     render: () => (
       <LinkToggleGroup
         ariaLabel="Calendar range"

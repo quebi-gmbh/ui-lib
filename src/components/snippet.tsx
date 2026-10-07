@@ -19,8 +19,8 @@ export interface SnippetProps extends Omit<React.ComponentProps<"div">, "childre
  * Snippet — quebi design system
  *
  * A single-line inline code surface (typically a shell command) with a
- * copy-to-clipboard button. An inset area — the raised ground, square, no
- * border — with the command in mono and a quiet copy button at the end.
+ * copy-to-clipboard button. An inset area — the raised ground at the control
+ * radius, no border — with the command in mono and a quiet copy button at the end.
  */
 export function Snippet({
   text,
@@ -40,7 +40,7 @@ export function Snippet({
   return (
     <div
       className={cn(
-        "group flex w-full items-center gap-3 overflow-hidden bg-quebi-raised py-2 ps-4 pe-2",
+        "group flex w-full items-center gap-3 overflow-hidden rounded-(--q-radius-control) bg-quebi-raised py-2 ps-4 pe-2",
         className,
       )}
       {...props}
@@ -57,7 +57,7 @@ export function Snippet({
         <Button
           onPress={copy}
           aria-label={copied ? "Copied" : "Copy command"}
-          className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-quebi-fg-subtle outline-none transition-colors duration-150 hover:bg-quebi-pressed hover:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset"
+          className="inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-(--q-radius-mark) px-2.5 py-1.5 text-xs font-medium text-quebi-fg-subtle outline-none transition-colors duration-150 hover:bg-quebi-pressed hover:text-quebi-fg focus-visible:ring-2 focus-visible:ring-quebi-focus focus-visible:ring-inset"
         >
           {copied ? (
             <Check className="size-3.5" strokeWidth={1.5} />

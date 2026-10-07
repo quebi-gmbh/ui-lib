@@ -20,7 +20,7 @@ export const tagGroupExamples: ComponentExample[] = [
   },
   {
     title: "Selection",
-    description: "Single-select tags; the active tag takes the ink fill.",
+    description: "Single-select tags; the active tag takes the selected tint.",
     render: () => (
       <TagGroup aria-label="Filter" selectionMode="single" defaultSelectedKeys={["all"]}>
         <TagList>

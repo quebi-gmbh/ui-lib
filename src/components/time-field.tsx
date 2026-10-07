@@ -15,8 +15,8 @@ import { fieldStyles } from "@/components/field"
  * TimeField — quebi design system
  *
  * Built on react-aria-components. A segmented time input (hour / minute /
- * second / AM-PM) drawn like `Input`: underline only, thickened on focus. The
- * segment being edited is filled with `action` ink; invalid turns the line and
+ * second / AM-PM) drawn like `Input`: boxed, its edge the focus colour on focus.
+ * The segment being edited takes the `signal` fill; invalid turns the edge and
  * the digits `danger`, and disabled dims the field.
  *
  * `shouldForceLeadingZeros` pads the hour segment to two digits — the same prop
@@ -88,14 +88,14 @@ export function TimeInput({ className, bare = false, size: sizeProp, ...props }:
                   timeInputSizeStyles[size],
                 ]
               : [
-                  // `Input`'s underline: a transparent top border keeps the scale's
-                  // height; focus or an open picker thickens the line to 2px, no ring.
+                  // `Input`'s box: focus or an open picker turns the edge the focus
+                  // colour and adds a 1px shadow inside it, no ring.
                   "quebi-field",
                   timeInputSizeStyles[size],
                   "transition-[border-color,box-shadow] duration-150",
-                  "outline-none focus-within:outline-none focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
-                  "group-open:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
-                  "data-invalid:border-b-quebi-danger focus-within:data-invalid:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
+                  "outline-none focus-within:outline-none focus-within:shadow-(--q-field-focus)",
+                  "group-open:shadow-(--q-field-focus)",
+                  "data-invalid:[--q-field-edge:var(--q-danger)] focus-within:data-invalid:shadow-(--q-field-focus-danger)",
                   "in-disabled:cursor-not-allowed in-disabled:opacity-50",
                 ],
             resolved,
@@ -118,9 +118,9 @@ export function TimeInput({ className, bare = false, size: sizeProp, ...props }:
             // below still name a colour, because they are states rather than a
             // resting style, and a state has to outrank what was inherited.
             className={cn(
-              "inline shrink-0 px-1 py-0.5 tracking-wider caret-transparent outline-0 type-literal:px-0",
+              "inline shrink-0 rounded-(--q-radius-mark) px-1 py-0.5 tracking-wider caret-transparent outline-0 type-literal:px-0",
               "data-placeholder:not-data-focused:text-quebi-fg-subtle",
-              "focus:bg-quebi-action focus:text-quebi-on-action",
+              "focus:bg-quebi-signal focus:text-quebi-on-signal",
               "focus:data-invalid:bg-quebi-danger focus:data-invalid:text-quebi-on-action",
               "forced-colors:focus:bg-[Highlight] forced-colors:focus:text-[HighlightText]",
               "forced-color-adjust-none forced-colors:text-[ButtonText]",

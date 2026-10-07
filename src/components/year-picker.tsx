@@ -180,13 +180,13 @@ export function YearPicker({
               textValue={formatter.format(yearStart(year).toDate("UTC"))}
               className={({ isSelected, isDisabled: isItemDisabled, isFocusVisible }) =>
                 cn(
-                  "flex h-10 w-20 cursor-default items-center justify-center text-sm text-quebi-fg tabular-nums outline-hidden transition-colors duration-150 hover:bg-quebi-raised",
+                  "flex h-10 w-20 cursor-default items-center justify-center rounded-(--q-radius-control) text-sm text-quebi-fg tabular-nums outline-hidden transition-colors duration-150 hover:bg-quebi-raised",
                   isOutsideDecade && "text-quebi-fg-subtle",
-                  year === now.year && !isSelected && "ring-1 ring-inset ring-quebi-focus",
-                  isSelected && "bg-quebi-action text-quebi-on-action hover:bg-quebi-action-hover",
+                  year === now.year && !isSelected && "ring-1 ring-inset ring-quebi-fg",
+                  isSelected && "bg-quebi-signal text-quebi-on-signal hover:bg-quebi-signal",
                   isItemDisabled && "text-quebi-fg-subtle hover:bg-transparent",
                   isFocusVisible &&
-                    "ring-2 ring-quebi-focus ring-offset-3 ring-offset-quebi-bg",
+                    "ring-2 ring-quebi-focus ring-offset-2 ring-offset-quebi-bg",
                 )
               }
             >
@@ -208,13 +208,14 @@ export interface YearPickerFieldProps extends Omit<YearPickerProps, "autoFocus">
 
 /**
  * The trigger is field-shaped, so it is drawn like `SelectTrigger`: `Input`'s
- * underline at `sm` (38px), thickened to 2px while focused or open, no ring.
+ * box at `sm` (38px), its edge and a 1px shadow in the focus colour while
+ * focused or open.
  */
 const fieldTriggerStyles = cn(
-  "inline-flex cursor-default items-center justify-between gap-x-2 bg-transparent py-2 text-sm text-quebi-fg tabular-nums",
+  "inline-flex cursor-default items-center justify-between gap-x-2 px-(--q-field-px) py-2 text-sm text-quebi-fg tabular-nums",
   "quebi-field",
   "transition-[border-color,box-shadow] duration-150",
-  "outline-none focus:shadow-[inset_0_-1px_0_var(--color-quebi-focus)] aria-expanded:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+  "outline-none focus:shadow-(--q-field-focus) aria-expanded:shadow-(--q-field-focus)",
   "disabled:cursor-not-allowed disabled:opacity-50",
   "*:data-[slot=icon]:size-4 *:data-[slot=icon]:shrink-0",
 )

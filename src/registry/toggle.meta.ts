@@ -4,7 +4,7 @@ export const toggleMeta: ComponentMeta = {
   slug: "toggle",
   name: "Toggle",
   description:
-    "A two-state pressable button built on react-aria-components, styled with the quebi design system. The selected state fills with ink.",
+    "A two-state pressable button built on react-aria-components, styled with the quebi design system. The selected state takes the selected tint with signal-coloured text.",
   category: "Actions",
   tags: ["action", "toggle", "interactive", "button"],
 }

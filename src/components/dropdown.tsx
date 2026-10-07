@@ -25,9 +25,10 @@ import { cn, tv } from "@/lib/utils"
  * Foundational building blocks shared by Menu, Select, Combo Box, and List Box.
  * These are not a standalone overlay; they render the surface, sections, items,
  * labels, descriptions, separators, and keyboard hints inside any
- * react-aria `ListBox`/`Menu` collection. Rows are square; hover and focus
- * lay `bg-quebi-raised` under them; the selected row is marked by an ink check,
- * not a fill; section headers are eyebrows and separators hairlines.
+ * react-aria `ListBox`/`Menu` collection. Rows take the control radius; hover
+ * and focus lay `bg-quebi-raised` under them; the selected row is state — the
+ * `selected` ground with a signal check; section headers are eyebrows and
+ * separators hairlines.
  */
 
 const dropdownSectionStyles = tv({
@@ -62,7 +63,7 @@ const dropdownItemStyles = tv({
     "min-w-0 [--me-icon:--spacing(2.5)] sm:[--me-icon:--spacing(2)]",
     "col-span-full grid grid-cols-[auto_1fr_1.5rem_0.5rem_auto] px-3 py-2 supports-[grid-template-columns:subgrid]:grid-cols-subgrid sm:px-2.5 sm:py-1.5",
     "not-has-[[slot=description]]:items-center",
-    "group relative cursor-default select-none rounded-none outline-0",
+    "group relative cursor-default select-none rounded-(--q-radius-control) outline-0",
     // text — 14/20 Inter in ink.
     "text-sm/5 text-quebi-fg forced-colors:text-[CanvasText]",
     // avatar
@@ -99,9 +100,12 @@ const dropdownItemStyles = tv({
       true: "opacity-50 forced-colors:text-[GrayText]",
     },
     isSelected: {
-      // Selected → the ink check mark (rendered by the item) and a heavier
-      // label. No fill: a fill would read as focus.
-      true: "font-medium text-quebi-fg [&_[data-slot='icon']:not([class*='text-'])]:text-quebi-fg",
+      // Selected → state: the `selected` ground, its text, and the check mark
+      // (rendered by the item) in signal. Hover and focus lay `raised` over it.
+      true: [
+        "bg-quebi-selected font-medium text-quebi-on-selected *:[[slot=label]]:text-quebi-on-selected",
+        "[&_[data-slot='icon']:not([class*='text-'])]:text-quebi-signal *:data-[slot=check-indicator]:text-quebi-signal",
+      ],
     },
     isFocused: {
       // Keyboard-focused → the same `raised` ground as hover.

@@ -682,7 +682,7 @@ export function CommitGraph({
     <div
       data-slot="commit-graph"
       className={cn(
-        "w-full overflow-hidden border border-quebi-hairline bg-quebi-bg",
+        "w-full overflow-hidden rounded-(--q-radius-surface) border border-quebi-hairline bg-quebi-bg",
         className,
       )}
       {...props}

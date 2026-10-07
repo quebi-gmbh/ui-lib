@@ -177,8 +177,8 @@ export function ConformColorSwatchPicker({
               "relative rounded-none outline-hidden",
               "*:rounded-none",
               "transition-opacity duration-150",
-              "data-[selected]:ring-2 data-[selected]:ring-quebi-fg data-[selected]:ring-offset-3 data-[selected]:ring-offset-quebi-bg",
-              "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-3 data-[focus-visible]:ring-offset-quebi-bg",
+              "data-[selected]:ring-2 data-[selected]:ring-quebi-fg data-[selected]:ring-offset-2 data-[selected]:ring-offset-quebi-bg",
+              "data-[focus-visible]:ring-2 data-[focus-visible]:ring-quebi-focus data-[focus-visible]:ring-offset-2 data-[focus-visible]:ring-offset-quebi-bg",
               "hover:opacity-90",
             )}
           >

@@ -55,9 +55,10 @@ export const multiSelectKey = (option: MultiSelectOption) => String(option.id)
  *
  * A chips-and-input box has no single line to pad, so the height is the box's
  * own padding plus the input row inside it: `xs` is 4 + 20 + 4 + 2px of border
- * (top transparent, bottom the underline) = 30px, `sm` 38px and `md` 42px,
+ * (top and bottom; the top goes transparent inside `quebi-editorial`) = 30px, `sm` 38px and `md` 42px,
  * which are `Input`'s three steps and `Button`'s `xs` and `sm` to the pixel.
- * Vertical padding only — like `Input`, the first chip starts under the label.
+ * Inline padding is `Input`'s `--q-field-px` — 0 on an underline, so the
+ * first chip starts under the label.
  * The text size rides along and the input inherits it, so a small field's
  * chips and caret shrink with the box.
  *
@@ -69,9 +70,9 @@ export const multiSelectKey = (option: MultiSelectOption) => String(option.id)
  * file.
  */
 const multiSelectControlSizeStyles = {
-  xs: "py-1 text-xs",
-  sm: "py-1.5 text-sm",
-  md: "py-2 text-sm",
+  xs: "px-(--q-field-px) py-1 text-xs",
+  sm: "px-(--q-field-px) py-1.5 text-sm",
+  md: "px-(--q-field-px) py-2 text-sm",
 } as const
 
 type MultiSelectControlSize = keyof typeof multiSelectControlSizeStyles
@@ -288,14 +289,14 @@ export function MultiSelectControl<T extends MultiSelectOption>({
         }}
         data-invalid={isInvalid || undefined}
         className={cn(
-          // `Input`'s underline, thickened to 2px while the input has focus.
-          "flex w-full flex-wrap items-center gap-1.5 bg-transparent",
+          // `Input`'s frame, doubled while the input has focus.
+          "flex w-full flex-wrap items-center gap-1.5",
           "quebi-field",
           multiSelectControlSizeStyles[size],
           "transition-[border-color,box-shadow] duration-150",
-          "focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-focus)]",
+          "focus-within:shadow-(--q-field-focus)",
           isInvalid &&
-            "border-b-quebi-danger focus-within:shadow-[inset_0_-1px_0_var(--color-quebi-danger)]",
+            "[--q-field-edge:var(--q-danger)] focus-within:shadow-(--q-field-focus-danger)",
           isDisabled ? "cursor-not-allowed opacity-50" : "cursor-text",
         )}
       >
@@ -419,7 +420,7 @@ export function MultiSelectControl<T extends MultiSelectOption>({
                   )}
                 >
                   <Check
-                    className={cn("size-4 shrink-0", isSel ? "opacity-100" : "opacity-0")}
+                    className={cn("size-4 shrink-0 text-quebi-signal", isSel ? "opacity-100" : "opacity-0")}
                     aria-hidden="true"
                   />
                   {renderOption ? (
