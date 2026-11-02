@@ -173,10 +173,15 @@ describe("the repo obeys the rules it publishes", () => {
     expect(unpublished).toEqual([])
   })
 
+  // An explicit timeout, because bun's default of 5s is not a budget anyone
+  // chose: this is the whole repo through Biome and every plugin, it takes 3–5s
+  // on CI's two-core runner and grows with each file and each rule. Task #250
+  // tipped it over the default with one slow plugin pattern — which was worth
+  // fixing, and was — but the next file should not fail CI for existing.
   test("`bun run lint` is clean", () => {
     const diagnostics = lint([])
     expect(diagnostics.map(describeDiagnostic)).toEqual([])
-  })
+  }, 30_000)
 
   test("a raw <button> in src/routes is reported", () => {
     // The negative control. Without it, "clean" above is also what a broken
