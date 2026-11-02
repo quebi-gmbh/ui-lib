@@ -76,7 +76,7 @@ const ComboBoxContent = <T extends object>({
       placement={popover?.placement ?? "bottom"}
       className={composeRenderProps(popover?.className, (resolved) =>
         cn(
-          "absolute min-w-(--trigger-width) scroll-py-1 overflow-y-auto overscroll-contain",
+          "absolute min-w-(--trigger-width) scroll-py-1 overflow-y-auto overflow-x-hidden overscroll-contain",
           resolved,
         ),
       )}
@@ -87,7 +87,7 @@ const ComboBoxContent = <T extends object>({
         orientation="vertical"
         className={composeRenderProps(className, (resolved) =>
           cn(
-            "relative grid max-h-96 w-full grid-cols-[auto_1fr] flex-col gap-y-1 overflow-y-auto p-1 outline-hidden *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
+            "relative grid max-h-96 w-full grid-cols-[auto_1fr] flex-col gap-y-1 overflow-y-auto overflow-x-hidden p-1 outline-hidden *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
             resolved,
           ),
         )}

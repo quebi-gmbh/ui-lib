@@ -137,6 +137,78 @@ describe(APPEARANCE, () => {
   })
 })
 
+const SCROLL = "scroll-on-one-axis-names-the-other"
+
+describe(SCROLL, () => {
+  test.each([
+    ["a sideways strip", `<TabList className="overflow-x-auto">{props.children}</TabList>`],
+    ["a downward list", `<div className="max-h-72 overflow-y-auto p-1">{props.children}</div>`],
+    ["overflow-x-scroll", `<div className="flex overflow-x-scroll">{props.children}</div>`],
+    ["a responsive prefix", `<div className="md:overflow-y-auto">{props.children}</div>`],
+    ["a container-query prefix", `<div className="@3xl/rail:overflow-y-auto">{props.children}</div>`],
+  ])("true positive: %s that leaves the other axis unsaid", (_case, jsx) => {
+    expect(fires(SCROLL, component(`    ${jsx}`))).toBe(true)
+  })
+
+  test("true positive: the same class list in a cn() call", () => {
+    const code = component(
+      `    <div className={cn("quebi-scrollbar overflow-y-auto overscroll-contain", props.className)}>{props.children}</div>`,
+    )
+    expect(fires(SCROLL, code)).toBe(true)
+  })
+
+  test.each([
+    ["x scrolls, y hidden", "overflow-x-auto overflow-y-hidden"],
+    ["y scrolls, x hidden", "overflow-y-auto overflow-x-hidden"],
+    ["y scrolls, x clipped", "overflow-y-auto overflow-x-clip"],
+    ["both, as one class", "overflow-auto"],
+    ["both, written longhand", "overflow-x-auto overflow-y-auto"],
+    ["a two-axis base with one axis opened", "overflow-hidden overflow-x-auto"],
+    ["the other axis behind the same prefix", "md:overflow-y-auto md:overflow-x-hidden"],
+  ])("true negative: %s", (_case, classes) => {
+    expect(fires(SCROLL, component(`    <div className="${classes}">{props.children}</div>`))).toBe(false)
+  })
+
+  test.each([
+    ["overscroll, which is not overflow", "overscroll-x-contain overscroll-y-none"],
+    ["scroll-padding and snapping", "snap-x scroll-px-4 scroll-smooth"],
+    ["a single-axis hidden", "overflow-x-hidden"],
+  ])("no false positive: %s", (_case, classes) => {
+    expect(fires(SCROLL, component(`    <div className="${classes}">{props.children}</div>`))).toBe(false)
+  })
+
+  test("each one-axis string is one finding", () => {
+    const code = component(
+      `    <div className={props.horizontal ? "overflow-x-auto" : "overflow-y-auto"}>{props.children}</div>`,
+    )
+    expect(fireCount(SCROLL, code)).toBe(2)
+  })
+
+  test("known false positive: two axes split across two strings of one cn()", () => {
+    // Documented as an exception on the record: the check reads one string at a
+    // time. The answer it asks for is to keep both axes in one string.
+    const code = component(
+      `    <div className={cn("overflow-x-auto", "overflow-y-hidden")}>{props.children}</div>`,
+    )
+    expect(fires(SCROLL, code)).toBe(true)
+  })
+
+  test("known blind spot: a class list built with a template literal is missed", () => {
+    const code = component(
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: the string is the fixture's source text, not a template literal that lost its backticks — the interpolation is the whole point of the case.
+      "    <div className={`overflow-x-auto ${props.tone}`}>{props.children}</div>",
+    )
+    expect(fires(SCROLL, code)).toBe(false)
+  })
+
+  test("true positive: library source is not excepted", () => {
+    // The tabs bug that commissioned this rule was a library component's
+    // overhang meeting a one-axis scroller, so the library is held to it too.
+    const code = component(`    <div className="overflow-x-auto">{props.children}</div>`)
+    expect(fires(SCROLL, code, "src/components/tabs.tsx")).toBe(true)
+  })
+})
+
 const TOKENS = "no-hardcoded-design-values"
 
 describe(TOKENS, () => {

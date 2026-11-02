@@ -17,7 +17,7 @@ export interface FailureMode {
 }
 
 export const RULES_LEDE =
-  "These rules are written for the code an agent writes. Not because agents are careless — because they optimise for the shortest path to something that looks right, and four specific detours are the predictable result."
+  "These rules are written for the code an agent writes. Not because agents are careless — because they optimise for the shortest path to something that looks right, and five specific detours are the predictable result."
 
 export const failureModes: FailureMode[] = [
   {
@@ -55,6 +55,12 @@ export const failureModes: FailureMode[] = [
       "no-client-sorting-on-a-server-driven-table",
       "position-scroll-containers",
     ],
+  },
+  {
+    id: "trusts-the-one-screen-it-checked",
+    title: "It trusts the one screen it checked",
+    body: "An agent verifies a layout the way it can: one render, one browser, one theme, often a screenshot with scrollbars that only appear while scrolling. CSS has defaults that are invisible in exactly that check — overflow-x-auto quietly scrolls vertically too, and the pixel an underline hangs past its box becomes a scrollbar on someone else's machine. The class that would have prevented it is one word, and nothing on the screen it looked at asked for it.",
+    ruleIds: ["scroll-on-one-axis-names-the-other"],
   },
   {
     id: "writes-oversized-files",

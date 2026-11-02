@@ -156,7 +156,7 @@ function VariantTile({ variant, trigger, state, surface }: DemoFieldProps & { su
         <DemoField variant={variant} trigger={trigger} state={state} />
       </div>
 
-      <pre className="relative overflow-x-auto bg-quebi-raised p-3 font-mono text-quebi-caption text-quebi-fg-muted">
+      <pre className="relative overflow-x-auto overflow-y-hidden bg-quebi-raised p-3 font-mono text-quebi-caption text-quebi-fg-muted">
         {variant.css}
       </pre>
 

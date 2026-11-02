@@ -87,7 +87,7 @@ const PopoverContent = ({
               </svg>
             </OverlayArrow>
           )}
-          <div data-slot="popover-inner" className="quebi-scrollbar relative max-h-[inherit] overflow-y-auto">
+          <div data-slot="popover-inner" className="quebi-scrollbar relative max-h-[inherit] overflow-y-auto overflow-x-hidden">
             {typeof children === "function" ? children(values) : children}
           </div>
         </>

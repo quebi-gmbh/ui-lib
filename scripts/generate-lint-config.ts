@@ -89,7 +89,7 @@ export interface LocalScope {
  * entries rather than one "tests are different" line: a rendering fixture is app
  * code that happens to assert instead of ship, so what it genuinely cannot do is
  * named one item at a time — the <form> element alone out of the tier-1 list,
- * the server-validation rule for fixtures that have no route action, and the two
+ * the server-validation rule for fixtures that have no route action, and the four
  * class-string rules for the tests of the library layer — and everything else is
  * left switched on. The plugin rules reach tests/ at all only because of
  * `localPluginIncludes` below; before task #225 they did not, and the
@@ -139,9 +139,10 @@ export const localScopes: LocalScope[] = [
       "no-hardcoded-design-values",
       "no-appearance-classes-on-layout-elements",
       "position-scroll-containers",
+      "scroll-on-one-axis-names-the-other",
     ],
     reason:
-      "A component test asserts what the library draws, and what the library draws is appearance: `toHaveClass(\"after:w-[2px]\")` pins the Tabs indicator, `toContain(\"bg-cyan-500\")` pins a DaySchedule lane colour, a query for `rounded-full border-2` finds a Stepper bullet. Both rules are a class-string match, so they read those assertions as a fixture hand-building a surface — but the string is the component's, quoted to check it, and the records already except src/components/** from both on the argument that the library owns appearance. This is that layer's tests. The scroll-container rule is the third class-string match and reads the same assertions the same wrong way — `toContain(\"overflow-y-auto\")` checks that a DaySchedule viewport scrolls, it does not build one — and unlike the other two it is not excused from src/components/**, so the classes being quoted have already been checked where they are written. Scoped to tests/components/: a fixture elsewhere in tests/ renders app-shaped code and is held to all three rules like src/routes.",
+      "A component test asserts what the library draws, and what the library draws is appearance: `toHaveClass(\"after:w-[2px]\")` pins the Tabs indicator, `toContain(\"bg-cyan-500\")` pins a DaySchedule lane colour, a query for `rounded-full border-2` finds a Stepper bullet. Both rules are a class-string match, so they read those assertions as a fixture hand-building a surface — but the string is the component's, quoted to check it, and the records already except src/components/** from both on the argument that the library owns appearance. This is that layer's tests. The two scroll-container rules are class-string matches too and read the same assertions the same wrong way — `toContain(\"overflow-y-auto\")` checks that a DaySchedule viewport scrolls, it does not build one — and unlike the other two they are not excused from src/components/**, so the classes being quoted have already been checked where they are written. Scoped to tests/components/: a fixture elsewhere in tests/ renders app-shaped code and is held to all four rules like src/routes.",
   },
   {
     includes: ["src/registry/og-scene.tsx"],

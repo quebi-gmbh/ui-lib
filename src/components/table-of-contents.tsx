@@ -204,7 +204,7 @@ export function TableOfContents({
       className={cn(
         "flex min-w-0 flex-col gap-y-1",
         sticky &&
-          "sticky top-[var(--quebi-rail-top,--spacing(6))] max-h-[calc(100dvh-var(--quebi-rail-top,--spacing(6))---spacing(6))] overflow-y-auto overscroll-contain",
+          "sticky top-[var(--quebi-rail-top,--spacing(6))] max-h-[calc(100dvh-var(--quebi-rail-top,--spacing(6))---spacing(6))] overflow-y-auto overflow-x-hidden overscroll-contain",
         className,
       )}
       {...props}
