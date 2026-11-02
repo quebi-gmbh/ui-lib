@@ -1,0 +1,43 @@
+// A scroller on one axis says what the other axis does
+// AUTO-GENERATED from https://ui-lib.quebi.de/api/rules/scroll-on-one-axis-names-the-other.json — do not edit by hand.
+//
+// https://ui-lib.quebi.de/rules/scroll-on-one-axis-names-the-other
+//
+// This file says what the rule is, not where it applies. A plugin listed in
+// the top-level `plugins` runs against every file Biome lints, so scope it
+// with an `overrides` entry — Biome resolves `includes` against the project
+// root, which is the one thing a $filename regex in here could not do:
+//
+//   {
+//     "overrides": [
+//       {
+//         "includes": [
+//           "app/**/*.{tsx,jsx}",
+//           "src/**/*.{tsx,jsx}"
+//         ],
+//         "plugins": [
+//           "./ui-lib-rules/scroll-on-one-axis-names-the-other.grit"
+//         ]
+//       }
+//     ]
+//   }
+
+language js;
+
+or { string(), JsxString() } as $classes where {
+  $classes <: or {
+    and {
+      r".*\boverflow-x-(?:auto|scroll)\b.*",
+      not r".*\boverflow-(?:y-[a-z]+|auto|scroll|hidden|clip|visible)\b.*"
+    },
+    and {
+      r".*\boverflow-y-(?:auto|scroll)\b.*",
+      not r".*\boverflow-(?:x-[a-z]+|auto|scroll|hidden|clip|visible)\b.*"
+    }
+  },
+  register_diagnostic(
+    span = $classes,
+    message = "A scroller on one axis scrolls on both: CSS turns the other axis's `visible` into `auto`, so a pixel hanging past the box (an underline, a focus ring) becomes a scrollbar. Name the other axis in the same class list — overflow-x-auto overflow-y-hidden, overflow-y-auto overflow-x-hidden — or write overflow-auto if both really scroll. See https://ui-lib.quebi.de/rules/scroll-on-one-axis-names-the-other",
+    severity = "warn"
+  )
+}

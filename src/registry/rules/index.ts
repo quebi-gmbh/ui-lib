@@ -13,6 +13,7 @@ import { noNestedCardRule } from "./no-nested-card.rule"
 import { noRawInteractiveElementsRule } from "./no-raw-interactive-elements.rule"
 import { positionScrollContainersRule } from "./position-scroll-containers.rule"
 import { renderFieldTextThroughTheFieldRule } from "./render-field-text-through-the-field.rule"
+import { scrollOnOneAxisNamesTheOtherRule } from "./scroll-on-one-axis-names-the-other.rule"
 import { seedTogglesWithDefaultSelectedRule } from "./seed-toggles-with-default-selected.rule"
 import { validateOnTheServerWithTheSameSchemaRule } from "./validate-on-the-server-with-the-same-schema.rule"
 import type { RuleGroup, RuleMeta, RuleSeverity } from "./types"
@@ -28,6 +29,7 @@ export { getRuleGroup, ruleGroups }
 export const rulesRegistry: RuleMeta[] = [
   noRawInteractiveElementsRule,
   noAppearanceClassesOnLayoutElementsRule,
+  scrollOnOneAxisNamesTheOtherRule,
   noHardcodedDesignValuesRule,
   importComponentsNotPrimitivesRule,
   keepFilesReadableRule,

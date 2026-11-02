@@ -198,7 +198,7 @@ const CommandMenuList = <T extends object>({ className, ...props }: MenuProps<T>
       <MenuPrimitive
         className={composeRenderProps(className, (resolved) =>
           cn(
-            "quebi-scrollbar relative grid max-h-full flex-1 grid-cols-[auto_1fr] content-start overflow-y-auto border-quebi-hairline border-t p-2 sm:max-h-110 *:[[role=group]]:mb-6 *:[[role=group]]:last:mb-0",
+            "quebi-scrollbar relative grid max-h-full flex-1 grid-cols-[auto_1fr] content-start overflow-y-auto overflow-x-hidden border-quebi-hairline border-t p-2 sm:max-h-110 *:[[role=group]]:mb-6 *:[[role=group]]:last:mb-0",
             resolved,
           ),
         )}

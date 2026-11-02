@@ -77,7 +77,7 @@ If your PR is green and nothing merges it, run the check before looking for a to
 
 ## The rules are not advice, they are lint
 
-`/rules` publishes sixteen rules about using this library. They are enforced here too, so the same
+`/rules` publishes seventeen rules about using this library. They are enforced here too, so the same
 messages you would give a consumer are the ones you get:
 
 - **Layout is yours. Appearance is the library's.** Raw `button`, `a`, `input`, `select`,
@@ -226,9 +226,9 @@ small. No route needs a `HydrateFallback`: every one of them is prerendered with
 
 - `bun run lint` is Biome's recommended set *plus* the rules this repo publishes, over `src/**`,
   `scripts/**`, `tests/**` and the root config files — including `src/components/**`. The
-  library source is excepted from nine of the sixteen by the records themselves; what still
-  applies there is the element ban minus `<input>`, the three platform-defaults rules and
-  `no-nested-card`, which the library has no reason to break and so no reason to be excused from.
+  library source is excepted from nine of the seventeen by the records themselves; what still
+  applies there is the element ban minus `<input>`, the three platform-defaults rules,
+  `no-nested-card` and `scroll-on-one-axis-names-the-other`, which the library has no reason to break and so no reason to be excused from.
   `position-scroll-containers` is the one that was written *because* of the library: an
   `overflow-auto` box with no position class let a toggle's hidden input scroll the modal frame. A raw `<button>` in a
   library component fails the pre-commit hook like anywhere else. Its
@@ -277,7 +277,7 @@ small. No route needs a `HydrateFallback`: every one of them is prerendered with
   second half was missing and no GritQL rule read `tests/` at all. Three things are named one at a
   time in `localScopes`: a raw `<form>` (a Conform form binds to one, and react-router's `<Form>`
   would need a router mounted around every test), `useForm` without `lastResult` (there is no route
-  action to return one), and the two class-string rules for `tests/components/**` only (a
+  action to return one), and the four class-string rules for `tests/components/**` only (a
   component test quotes the library's own classes to assert them). The `<form>` entry excuses that
   element and no other — a raw `<button>` in a fixture is reported exactly as it is in a route —
   and `repo-lint.test.ts` proves each entry is what changes the answer. Anything else is a

@@ -118,7 +118,7 @@ const DrawerContent = ({
                 side === "top" && (isFloat ? "inset-x-2 top-2" : "inset-x-0 top-0 border-b"),
                 side === "right" &&
                   [
-                    "fixed w-full max-w-xs overflow-y-auto",
+                    "fixed w-full max-w-xs overflow-y-auto overflow-x-hidden",
                     "**:[[slot=header]]:text-start",
                     isFloat ? "inset-y-2 right-2" : "inset-y-0 right-0 h-auto border-l",
                   ].join(" "),
@@ -126,7 +126,7 @@ const DrawerContent = ({
                   (isFloat ? "inset-x-2 bottom-2" : "inset-x-0 bottom-0 border-t"),
                 side === "left" &&
                   [
-                    "fixed w-full max-w-xs overflow-y-auto",
+                    "fixed w-full max-w-xs overflow-y-auto overflow-x-hidden",
                     "**:[[slot=header]]:text-start",
                     isFloat ? "inset-y-2 left-2" : "inset-y-0 left-0 h-auto border-r",
                   ].join(" "),

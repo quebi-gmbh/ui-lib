@@ -516,7 +516,7 @@ export function FilterPanel({
           {/* The scroll listener is what drives "load more on scroll". It adds
               no interaction of its own: every option inside is a real checkbox,
               and the list is fully reachable by keyboard without scrolling. */}
-          <div className="quebi-scrollbar relative max-h-56 overflow-y-auto" onScroll={onListScroll}>
+          <div className="quebi-scrollbar relative max-h-56 overflow-y-auto overflow-x-hidden" onScroll={onListScroll}>
             <ConformCheckboxGroup
               field={fields.values}
               aria-label={`${label} values`}

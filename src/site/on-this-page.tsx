@@ -46,7 +46,7 @@ export function OnThisPage({
         <TableOfContents
           items={contents}
           label="on this page"
-          className="sticky top-(--quebi-rail-top) max-h-[calc(100dvh-var(--quebi-rail-top)-1.5rem)] overflow-y-auto overscroll-contain"
+          className="sticky top-(--quebi-rail-top) max-h-[calc(100dvh-var(--quebi-rail-top)-1.5rem)] overflow-y-auto overflow-x-hidden overscroll-contain"
         />
       </aside>
     </div>

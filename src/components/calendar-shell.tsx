@@ -904,7 +904,7 @@ export function CalendarShell<E extends CalendarEvent = CalendarEvent>({
           shell around it are both square, so there is no corner to clear. */}
       <div
         data-slot="calendar-viewport"
-        className="quebi-scrollbar relative overflow-y-auto"
+        className="quebi-scrollbar relative overflow-y-auto overflow-x-hidden"
         style={{ maxHeight: height }}
       >
         <div className="flex" style={{ height: gridHeight }}>
