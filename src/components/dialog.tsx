@@ -103,7 +103,10 @@ const DialogBody = ({ className, ...props }: DialogBodyProps) => (
   <div
     data-slot="dialog-body"
     className={cn(
-      "isolate flex min-h-0 flex-1 flex-col overflow-auto px-(--gutter) py-1",
+      // Positioned because it scrolls: an absolutely positioned descendant is laid
+      // out in here rather than against the modal frame, so focusing it scrolls
+      // this box and never the frame (task #250, rule position-scroll-containers).
+      "relative isolate flex min-h-0 flex-1 flex-col overflow-auto px-(--gutter) py-1",
       "**:data-[slot=dialog-footer]:px-0 **:data-[slot=dialog-footer]:pt-0",
       className,
     )}

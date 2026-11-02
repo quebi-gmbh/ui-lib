@@ -273,6 +273,7 @@ describe("the repo obeys the rules it publishes", () => {
       "    <Card>",
       "      <Card>",
       '        <div className="bg-[#f00]" />',
+      '        <div className="max-h-40 overflow-y-auto" />',
       "      </Card>",
       "    </Card>",
       "  )",
@@ -283,6 +284,7 @@ describe("the repo obeys the rules it publishes", () => {
       "no-nested-card",
       "no-hardcoded-design-values",
       "validate-on-the-server-with-the-same-schema",
+      "position-scroll-containers",
     ]
     const reportedAt = (probe: string): string[] => {
       let diagnostics: Diagnostic[]
@@ -298,6 +300,7 @@ describe("the repo obeys the rules it publishes", () => {
     expect(reportedAt("tests/__lint_probe_plugins__.test.tsx")).toEqual([
       "no-nested-card",
       "no-hardcoded-design-values",
+      "position-scroll-containers",
     ])
     expect(reportedAt("tests/components/__lint_probe_plugins__.test.tsx")).toEqual([
       "no-nested-card",

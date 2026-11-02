@@ -576,7 +576,7 @@ export function FilterRail({
         // real catalogue's worth a static rail scrolls off the top and the
         // answer to "what else could I pick" is three screens back up.
         RAIL_STICKY,
-        "@3xl/rail-layout:overflow-y-auto",
+        "@3xl/rail-layout:sticky @3xl/rail-layout:overflow-y-auto",
         // The gutter the scroll box costs. Two ghost buttons in here are pulled
         // out past the column's end edge on purpose — a group's Clear by
         // `-me-2`, so that its *label* lines up with the counts above it rather

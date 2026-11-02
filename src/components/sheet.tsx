@@ -52,9 +52,9 @@ const sideVariants: Record<string, string> = {
   top: "entering:slide-in-from-top exiting:slide-out-to-top inset-x-0 top-0 border-b data-[float=true]:inset-x-2 data-[float=true]:top-2",
   bottom:
     "entering:slide-in-from-bottom exiting:slide-out-to-bottom inset-x-0 bottom-0 border-t data-[float=true]:inset-x-2 data-[float=true]:bottom-2",
-  left: "entering:slide-in-from-left exiting:slide-out-to-left-80 inset-y-0 left-0 h-auto w-3/4 overflow-y-auto border-r sm:max-w-80 data-[float=true]:inset-y-2 data-[float=true]:left-2",
+  left: "entering:slide-in-from-left exiting:slide-out-to-left-80 fixed inset-y-0 left-0 h-auto w-3/4 overflow-y-auto border-r sm:max-w-80 data-[float=true]:inset-y-2 data-[float=true]:left-2",
   right:
-    "entering:slide-in-from-right exiting:slide-out-to-right-80 inset-y-0 right-0 h-auto w-3/4 overflow-y-auto border-l sm:max-w-80 data-[float=true]:inset-y-2 data-[float=true]:right-2",
+    "entering:slide-in-from-right exiting:slide-out-to-right-80 fixed inset-y-0 right-0 h-auto w-3/4 overflow-y-auto border-l sm:max-w-80 data-[float=true]:inset-y-2 data-[float=true]:right-2",
 }
 
 const SheetContent = ({
@@ -79,7 +79,7 @@ const SheetContent = ({
       className={composeRenderProps(overlay?.className, (resolved) =>
         cn(
           // Backdrop — neutral scrim + subtle blur, as ModalContent's.
-          "fixed start-0 top-0 z-50 size-full overflow-hidden bg-black/60 backdrop-blur-sm",
+          "fixed start-0 top-0 z-50 size-full overflow-clip bg-black/60 backdrop-blur-sm",
           "entering:fade-in entering:animate-in exiting:fade-out exiting:animate-out duration-200 ease-in-out",
           resolved,
         ),

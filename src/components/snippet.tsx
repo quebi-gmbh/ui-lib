@@ -45,7 +45,7 @@ export function Snippet({
       )}
       {...props}
     >
-      <pre className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto font-mono text-sm leading-relaxed text-quebi-fg [scrollbar-width:none]">
+      <pre className="relative flex min-w-0 flex-1 items-center gap-2 overflow-x-auto font-mono text-sm leading-relaxed text-quebi-fg [scrollbar-width:none]">
         {symbol ? (
           <span aria-hidden="true" className="shrink-0 select-none text-quebi-fg-subtle">
             {symbol}

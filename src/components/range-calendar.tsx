@@ -53,7 +53,7 @@ function RangeCalendar<T extends DateValue>({
       <CalendarBodyModeProvider>
         <CalendarHeader variant={variant} />
         <CalendarBody>
-          <div className="flex snap-x items-start justify-stretch gap-6 overflow-auto sm:gap-10">
+          <div className="relative flex snap-x items-start justify-stretch gap-6 overflow-auto sm:gap-10">
             {Array.from({ length: visibleDuration?.months ?? 1 }).map((_, index) => {
               const id = index + 1
               return (

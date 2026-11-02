@@ -2,7 +2,7 @@ import type { RuleGroup } from "./types"
 
 /**
  * Rule groups. Element usage is the first one; form rules are the second. The
- * third is not a subject area but a reflex — the two rules about reaching for
+ * third is not a subject area but a reflex — the rules about reaching for
  * something the runtime already gives you — and it is deliberately small: a
  * group earns its place by having a principle worth stating, not by size.
  */
@@ -26,7 +26,7 @@ export const ruleGroups: RuleGroup[] = [
     title: "Platform defaults",
     principle: "The platform will do it for you. That is not the same as your app doing it.",
     description:
-      "Two rules about the shortcut the runtime hands you for free. alert() and confirm() draw a dialog with no import, no provider and no state — and no theme, no focus management and nothing to render in a test, because that dialog belongs to the browser rather than to the app. Sorting the array you are already holding reorders the table with no round trip — and no agreement with the server that produced the rows, which is the one thing a server-driven table is for. Both warn rather than fail: the fix is a change of shape, not a change of import, and that is a judgement the linter cannot make for you.",
+      "Three rules about the shortcut the runtime hands you for free. alert() and confirm() draw a dialog with no import, no provider and no state — and no theme, no focus management and nothing to render in a test, because that dialog belongs to the browser rather than to the app. Sorting the array you are already holding reorders the table with no round trip — and no agreement with the server that produced the rows, which is the one thing a server-driven table is for. And a box made to scroll with overflow-auto alone scrolls — but the browser also scrolls on its own, to reveal whatever takes focus, and a hidden input positioned against a frame above the box moves the frame instead. The sorting and scrolling rules warn rather than fail: each fix needs a look at what it changes, and that is a judgement the linter cannot make for you.",
   },
 ]
 

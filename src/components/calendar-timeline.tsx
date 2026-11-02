@@ -710,7 +710,7 @@ export function CalendarTimeline<E extends CalendarEvent = CalendarEvent>({
         />
       ) : null}
 
-      <div className="w-full overflow-x-auto border border-quebi-hairline bg-quebi-bg">
+      <div className="relative w-full overflow-x-auto border border-quebi-hairline bg-quebi-bg">
         <div style={{ minWidth: nameWidth + gridWidth }}>
           <div className="border-quebi-hairline border-b">
             <div className="flex">

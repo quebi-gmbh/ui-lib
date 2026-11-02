@@ -394,7 +394,7 @@ const SidebarContent = ({ className, ...props }: React.ComponentProps<"div">) =>
     <div
       data-slot="sidebar-content"
       className={cn(
-        "flex min-h-0 flex-1 scroll-mb-96 flex-col overflow-auto *:data-[slot=sidebar-section]:border-l-0",
+        "relative flex min-h-0 flex-1 scroll-mb-96 flex-col overflow-auto *:data-[slot=sidebar-section]:border-l-0",
         state === "collapsed" ? "items-center" : "mask-b-from-95%",
         className,
       )}

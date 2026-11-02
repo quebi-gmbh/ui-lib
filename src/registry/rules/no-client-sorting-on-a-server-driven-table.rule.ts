@@ -1,7 +1,7 @@
 import type { RuleMeta } from "./types"
 
 /**
- * Platform defaults, second of two — the array method standing in for a query.
+ * Platform defaults, second of three — the array method standing in for a query.
  *
  * Note the name. It was chosen over "server-paginated" when the component's
  * props had no pagination at all; they have since gained `page`, `pageSize`,

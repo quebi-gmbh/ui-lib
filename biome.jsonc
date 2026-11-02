@@ -354,6 +354,20 @@
     },
     {
       "includes": [
+        "app/**/*.{tsx,jsx}",
+        "src/**/*.{tsx,jsx}",
+        // local include — A rendering fixture is app code that asserts instead of ships, so it gets the plugin rules the same as src/routes — what it genuinely cannot do is a named entry in localScopes.
+        "tests/**/*.tsx",
+        // local scope, position-scroll-containers — A component test asserts what the library draws, and what the library draws is appearance: `toHaveClass("after:w-[2px]")` pins the Tabs indicator, `toContain("bg-cyan-500")` pins a DaySchedule lane colour, a query for `rounded-full border-2` finds a Stepper bullet.
+        "!tests/components/**/*.tsx"
+      ],
+      "plugins": [
+        // A scroll container is a positioning context
+        "./ui-lib-rules/position-scroll-containers.grit"
+      ]
+    },
+    {
+      "includes": [
         // no-raw-interactive-elements — Only <input>, and only there.
         // no-appearance-classes-on-layout-elements — Components are made of appearance-styled divs — that is what a component is.
         // no-hardcoded-design-values — The components resolve palette scales deliberately — a danger state on red-500, a Badge intent on emerald-500 — and they are not yours to re-token.

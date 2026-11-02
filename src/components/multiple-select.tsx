@@ -384,7 +384,7 @@ export function MultiSelectControl<T extends MultiSelectOption>({
           aria-multiselectable="true"
           aria-label={ariaLabel ?? "Options"}
           onScroll={handleScroll}
-          className="quebi-scrollbar max-h-72 overflow-y-auto overscroll-contain p-1"
+          className="quebi-scrollbar relative max-h-72 overflow-y-auto overscroll-contain p-1"
         >
           {options.length === 0 ? (
             <div className="flex items-center justify-center gap-2 py-6 text-quebi-fg-subtle text-sm">

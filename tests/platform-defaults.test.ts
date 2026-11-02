@@ -8,7 +8,7 @@
  * loudly; the severity is checked in tests/config.test.ts.
  */
 import { describe, expect, test } from "bun:test"
-import { component, fireCount, fires } from "./harness"
+import { component, fireCount, fires, rulesFiredOn } from "./harness"
 
 const DIALOGS = "no-browser-dialogs"
 
@@ -153,5 +153,87 @@ describe(SORTING, () => {
   test("each violation is reported once", () => {
     const code = table(`  const sorted = [...props.rows].sort(compare(props.sort))`)
     expect(fireCount(SORTING, code)).toBe(1)
+  })
+})
+
+const SCROLL = "position-scroll-containers"
+
+describe(SCROLL, () => {
+  test.each([
+    ["overflow-auto", "max-h-80 overflow-auto"],
+    ["overflow-y-auto", "max-h-80 overflow-y-auto"],
+    ["overflow-x-auto", "flex gap-2 overflow-x-auto"],
+    ["overflow-scroll", "h-40 overflow-scroll"],
+    ["a breakpoint-prefixed scroll", "flex flex-col md:overflow-y-auto"],
+  ])("true positive: %s with no position class is reported", (_label, classes) => {
+    expect(fires(SCROLL, component(`    <div className="${classes}">{props.children}</div>`))).toBe(true)
+  })
+
+  test("true positive: inside cn(), which is where a component's classes live", () => {
+    const code = `import { cn } from "@/lib/utils"\nexport const Body = (props: any) => <div className={cn("flex min-h-0 flex-col overflow-auto", props.className)} />\n`
+    expect(fires(SCROLL, code)).toBe(true)
+  })
+
+  test.each(["relative", "absolute", "fixed", "sticky", "sm:relative"])(
+    "true negative: %s in the same class string",
+    (position) => {
+      const code = component(`    <div className="${position} max-h-80 overflow-y-auto">{props.children}</div>`)
+      expect(fires(SCROLL, code)).toBe(false)
+    },
+  )
+
+  test("true negative: a box that clips rather than scrolls", () => {
+    // `overflow-hidden` is not banned: clipping is not the bug, an unpositioned
+    // scroll box is. The library's own frames moved to `overflow-clip`, which
+    // cannot be scrolled at all, but a consumer's hidden is left alone.
+    const code = component(`    <div className="overflow-hidden rounded-quebi-s">{props.children}</div>`)
+    expect(fires(SCROLL, code)).toBe(false)
+  })
+
+  test("no false positive: a one-axis hidden, or a class that only shares a word", () => {
+    const code = component(
+      `    <div className="overflow-x-hidden overscroll-contain scroll-auto">{props.children}</div>`,
+    )
+    expect(fires(SCROLL, code)).toBe(false)
+  })
+
+  test("no false negative: a utility that only contains a position word does not count", () => {
+    // `bg-fixed` is background-attachment, not position. The token edges in the
+    // pattern are what keep it from clearing the check.
+    const code = component(`    <div className="bg-fixed max-h-80 overflow-y-auto">{props.children}</div>`)
+    expect(fires(SCROLL, code)).toBe(true)
+  })
+
+  test("it reaches the library's own source, which is where the bug was", () => {
+    // No library-source exception, unlike the other class-string rules: the
+    // DialogBody that scrolled the modal frame was library code. The same
+    // string carries a surface, so the tier-2 rule shows the carve-out is there
+    // for that rule and not for this one.
+    const code = component(
+      `    <div data-slot="dialog-body" className="flex flex-col overflow-auto rounded-quebi-s border">{props.children}</div>`,
+    )
+    expect(rulesFiredOn(code, "src/components/dialog.tsx")).toEqual([SCROLL])
+  })
+
+  test("known blind spot: the position class in a sibling cn() argument is missed", () => {
+    // The check reads one string literal at a time. The element is positioned,
+    // but the string carrying the overflow class does not say so — so it is
+    // reported, and the fix the record names is to repeat the class there.
+    const code = `import { cn } from "@/lib/utils"\nexport const Panel = (props: any) => <div className={cn("fixed inset-y-0", props.side && "w-80 overflow-y-auto")} />\n`
+    expect(fires(SCROLL, code)).toBe(true)
+  })
+
+  test("known blind spot: a class list built in a template literal is missed", () => {
+    const code = component(`    <div className={\`max-h-80 \${props.scroll ? "overflow-y-auto" : ""}\`}>{props.children}</div>`)
+    // The literal inside the interpolation is still a string, and still caught;
+    // only the template's own text is invisible.
+    expect(fires(SCROLL, code)).toBe(true)
+    const templateOnly = component(`    <div className={\`max-h-80 overflow-y-auto \${props.extra}\`}>{props.children}</div>`)
+    expect(fires(SCROLL, templateOnly)).toBe(false)
+  })
+
+  test("each class string is reported once", () => {
+    const code = component(`    <div className="max-h-80 overflow-y-auto">{props.children}</div>`)
+    expect(fireCount(SCROLL, code)).toBe(1)
   })
 })

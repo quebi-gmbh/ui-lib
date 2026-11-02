@@ -11,6 +11,7 @@ import { noClientSortingOnAServerDrivenTableRule } from "./no-client-sorting-on-
 import { noHardcodedDesignValuesRule } from "./no-hardcoded-design-values.rule"
 import { noNestedCardRule } from "./no-nested-card.rule"
 import { noRawInteractiveElementsRule } from "./no-raw-interactive-elements.rule"
+import { positionScrollContainersRule } from "./position-scroll-containers.rule"
 import { renderFieldTextThroughTheFieldRule } from "./render-field-text-through-the-field.rule"
 import { seedTogglesWithDefaultSelectedRule } from "./seed-toggles-with-default-selected.rule"
 import { validateOnTheServerWithTheSameSchemaRule } from "./validate-on-the-server-with-the-same-schema.rule"
@@ -40,6 +41,7 @@ export const rulesRegistry: RuleMeta[] = [
   intentButtonsMustNotBeTypeButtonRule,
   noBrowserDialogsRule,
   noClientSortingOnAServerDrivenTableRule,
+  positionScrollContainersRule,
 ]
 
 export function getRule(id: string | undefined): RuleMeta | undefined {
