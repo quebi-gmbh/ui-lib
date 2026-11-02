@@ -179,10 +179,10 @@ export function ScrollArea({
         "quebi-scrollbar",
         SCROLLBAR_VARIANTS[scrollbar],
         orientation === "vertical"
-          ? "overflow-x-hidden overflow-y-auto"
+          ? "relative overflow-x-hidden overflow-y-auto"
           : orientation === "horizontal"
-            ? "overflow-x-auto overflow-y-hidden"
-            : "overflow-auto",
+            ? "relative overflow-x-auto overflow-y-hidden"
+            : "relative overflow-auto",
         scrollFade && [
           allowY &&
             "mask-t-from-[calc(100%-min(var(--fade-size,--spacing(6)),var(--scroll-area-overflow-y-start,0)))] mask-b-from-[calc(100%-min(var(--fade-size,--spacing(6)),var(--scroll-area-overflow-y-end,0)))]",

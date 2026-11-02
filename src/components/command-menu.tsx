@@ -120,7 +120,7 @@ const CommandMenu = ({
           isDismissable={isDismissable}
           className={composeRenderProps(overlay?.className, (resolved) =>
             cn(
-              "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-screen overflow-hidden bg-black/60 backdrop-blur-sm",
+              "fixed inset-0 z-50 h-(--visual-viewport-height,100vh) w-screen overflow-clip bg-black/60 backdrop-blur-sm",
               "grid grid-rows-[1fr_auto] justify-items-center text-center sm:grid-rows-[1fr_auto_3fr]",
               "entering:fade-in entering:animate-in entering:duration-300 entering:ease-out",
               "exiting:fade-out exiting:animate-out exiting:ease-in",
@@ -130,7 +130,7 @@ const CommandMenu = ({
         >
           <Modal
             className={cn(
-              "row-start-2 overflow-hidden border border-quebi-hairline bg-quebi-elevated text-start text-quebi-fg shadow-quebi-float outline-none md:row-start-1",
+              "row-start-2 overflow-clip border border-quebi-hairline bg-quebi-elevated text-start text-quebi-fg shadow-quebi-float outline-none md:row-start-1",
               "max-h-[calc(var(--visual-viewport-height)*0.8)] w-full sm:fixed sm:top-[10%] sm:left-1/2 sm:-translate-x-1/2",
               "sm:rounded-(--q-radius-surface)",
               sizes[size],
@@ -141,7 +141,7 @@ const CommandMenu = ({
           >
             <Dialog
               aria-label={props["aria-label"] ?? "Command Menu"}
-              className="flex max-h-[inherit] flex-col overflow-hidden outline-hidden"
+              className="flex max-h-[inherit] flex-col overflow-clip outline-hidden"
             >
               <Autocomplete filter={filter} {...props} />
             </Dialog>
@@ -198,7 +198,7 @@ const CommandMenuList = <T extends object>({ className, ...props }: MenuProps<T>
       <MenuPrimitive
         className={composeRenderProps(className, (resolved) =>
           cn(
-            "quebi-scrollbar grid max-h-full flex-1 grid-cols-[auto_1fr] content-start overflow-y-auto border-quebi-hairline border-t p-2 sm:max-h-110 *:[[role=group]]:mb-6 *:[[role=group]]:last:mb-0",
+            "quebi-scrollbar relative grid max-h-full flex-1 grid-cols-[auto_1fr] content-start overflow-y-auto border-quebi-hairline border-t p-2 sm:max-h-110 *:[[role=group]]:mb-6 *:[[role=group]]:last:mb-0",
             resolved,
           ),
         )}

@@ -29,7 +29,7 @@
  * name instead of silently shipping a blank card.
  */
 import { mkdir, rm } from "node:fs/promises"
-import { dirname, join, normalize, resolve } from "node:path"
+import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
 import { chromium } from "playwright"
 import { metaRegistry } from "../src/registry/meta"
@@ -40,6 +40,7 @@ import {
   STAGE_MARGIN_PX,
   TEXT_FLOOR_PX,
 } from "./og-audit"
+import { serveDist } from "./serve-dist"
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..")
 const DIST = join(ROOT, "build/client")
@@ -70,28 +71,6 @@ function arg(name: string): string | undefined {
   const index = process.argv.indexOf(flag)
   if (index !== -1) return process.argv[index + 1]
   return process.argv.find((a) => a.startsWith(`${flag}=`))?.slice(flag.length + 1)
-}
-
-/**
- * The built site, served the way GitHub Pages serves it: real files where they
- * exist, the SPA fallback everywhere else. `/og/<slug>` is deliberately not
- * prerendered, so it arrives through that fallback and hydrates client-side —
- * which is the whole reason this has to be a browser and not a renderer.
- */
-function serveDist(root: string) {
-  return Bun.serve({
-    port: 0,
-    async fetch(request) {
-      const pathname = decodeURIComponent(new URL(request.url).pathname)
-      const asset = Bun.file(join(root, normalize(pathname)))
-      if (await asset.exists()) return new Response(asset)
-      const fallback = Bun.file(join(root, "__spa-fallback.html"))
-      if (await fallback.exists()) {
-        return new Response(fallback, { headers: { "content-type": "text/html; charset=utf-8" } })
-      }
-      return new Response("Not found", { status: 404 })
-    },
-  })
 }
 
 async function main() {

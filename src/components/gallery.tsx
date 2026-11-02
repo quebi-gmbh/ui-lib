@@ -87,7 +87,7 @@ export function Gallery({ items, className, emptyState }: GalleryProps) {
           // p-1 (not just pb-1): overflow-x-auto also clips vertically, so the
           // selected thumbnail's ring needs room on every side or it's cut off.
           data-slot="gallery-thumbnails"
-          className="m-0 flex list-none gap-2 overflow-x-auto p-1"
+          className="relative m-0 flex list-none gap-2 overflow-x-auto p-1"
         >
           {items.map((item, index) => (
             <li key={item.id}>

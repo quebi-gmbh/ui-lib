@@ -32,7 +32,7 @@ const Tree = <T extends object>({ className, ...props }: TreeProps<T>) => {
     <TreePrimitive
       className={composeRenderProps(className, (resolved) =>
         cn(
-          "flex cursor-default flex-col overflow-auto outline-hidden forced-color-adjust-none",
+          "relative flex cursor-default flex-col overflow-auto outline-hidden forced-color-adjust-none",
           resolved,
         ),
       )}

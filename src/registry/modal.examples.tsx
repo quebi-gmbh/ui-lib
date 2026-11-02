@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Button } from "@/components/button"
+import { Checkbox, CheckboxGroup } from "@/components/checkbox"
 import {
   Modal,
   ModalBody,
@@ -12,6 +13,21 @@ import {
   ModalTrigger,
 } from "@/components/modal"
 import type { ComponentExample } from "./types"
+
+const NOTIFICATIONS = [
+  { id: "mentions", label: "Mentions" },
+  { id: "replies", label: "Replies" },
+  { id: "assigned", label: "Assignments" },
+  { id: "reviews", label: "Review requests" },
+  { id: "approvals", label: "Approvals" },
+  { id: "builds", label: "Failed builds" },
+  { id: "deploys", label: "Deploys" },
+  { id: "invites", label: "Invitations" },
+  { id: "billing", label: "Billing" },
+  { id: "security", label: "Security alerts" },
+  { id: "digest", label: "Weekly digest" },
+  { id: "product", label: "Product news" },
+]
 
 export const modalExamples: ComponentExample[] = [
   {
@@ -125,6 +141,43 @@ export const modalExamples: ComponentExample[] = [
               <ModalFooter>
                 <Button intent="primary" onPress={close}>
                   done
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+    ),
+  },
+  {
+    title: "Scrolling body",
+    description:
+      "When the content is taller than the screen, `ModalBody` is the box that scrolls; the header and footer stay put. Every control in it is positioned at its own root, so ticking the last checkbox scrolls nothing — the frame around the body clips with `overflow-clip`, which cannot be scrolled at all.",
+    render: () => (
+      <Modal>
+        <ModalTrigger intent="outline">notification settings</ModalTrigger>
+        <ModalContent>
+          {({ close }) => (
+            <>
+              <ModalHeader>
+                <ModalTitle>notifications</ModalTitle>
+                <ModalDescription>Choose what reaches your inbox.</ModalDescription>
+              </ModalHeader>
+              <ModalBody className="max-h-64">
+                <CheckboxGroup aria-label="Email notifications" defaultValue={["mentions", "reviews"]}>
+                  {NOTIFICATIONS.map((n) => (
+                    <Checkbox key={n.id} value={n.id}>
+                      {n.label}
+                    </Checkbox>
+                  ))}
+                </CheckboxGroup>
+              </ModalBody>
+              <ModalFooter>
+                <ModalClose intent="outline" onPress={close}>
+                  cancel
+                </ModalClose>
+                <Button intent="primary" onPress={close}>
+                  save
                 </Button>
               </ModalFooter>
             </>

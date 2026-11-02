@@ -1,0 +1,36 @@
+// A scroll container is a positioning context
+// AUTO-GENERATED from https://ui-lib.quebi.de/api/rules/position-scroll-containers.json — do not edit by hand.
+//
+// https://ui-lib.quebi.de/rules/position-scroll-containers
+//
+// This file says what the rule is, not where it applies. A plugin listed in
+// the top-level `plugins` runs against every file Biome lints, so scope it
+// with an `overrides` entry — Biome resolves `includes` against the project
+// root, which is the one thing a $filename regex in here could not do:
+//
+//   {
+//     "overrides": [
+//       {
+//         "includes": [
+//           "app/**/*.{tsx,jsx}",
+//           "src/**/*.{tsx,jsx}"
+//         ],
+//         "plugins": [
+//           "./ui-lib-rules/position-scroll-containers.grit"
+//         ]
+//       }
+//     ]
+//   }
+
+language js;
+
+or { string(), JsxString() } as $classes where {
+  $classes <: includes "overflow-",
+  $classes <: r".*(?:^|[^\w-])overflow-(?:[xy]-)?(?:auto|scroll)(?:$|[^\w-]).*",
+  $classes <: not r".*(?:^|[^\w-])(?:relative|absolute|fixed|sticky)(?:$|[^\w-]).*",
+  register_diagnostic(
+    span = $classes,
+    message = "A scroll container without a position class. The hidden input inside a Checkbox, Radio or Switch is position: absolute, so it is laid out against the nearest positioned ancestor above this box; focusing it makes the browser scroll that ancestor, even an overflow-hidden frame, and the frame slides out from under the content. Add relative to the same class string (absolute, fixed or sticky also count). See https://ui-lib.quebi.de/rules/position-scroll-containers",
+    severity = "warn"
+  )
+}

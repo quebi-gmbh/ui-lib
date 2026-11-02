@@ -49,8 +49,12 @@ export const failureModes: FailureMode[] = [
   {
     id: "takes-the-platform-shortcut",
     title: "It takes the shortcut the runtime offers",
-    body: "A global needs no import, no provider and no discovery. alert() is there; Array.prototype.sort is there; both produce something that works on the first click, in the one tab the agent can see. Neither is wrong as JavaScript, which is what makes them hard to catch in review. But alert() draws a dialog the design system does not own, cannot theme and cannot render in a test, and sorting the rows already in memory reorders the answer the server just gave rather than asking it a different question — so the table and the query behind it quietly stop agreeing. The shape that would have been right in both cases — a toast under a provider, an awaited confirmation under another, a re-query through the callback the component already exposes — costs an import and a round trip. The shortcut costs neither, and that is the whole of its appeal.",
-    ruleIds: ["no-browser-dialogs", "no-client-sorting-on-a-server-driven-table"],
+    body: "A global needs no import, no provider and no discovery. alert() is there; Array.prototype.sort is there; both produce something that works on the first click, in the one tab the agent can see. Neither is wrong as JavaScript, which is what makes them hard to catch in review. But alert() draws a dialog the design system does not own, cannot theme and cannot render in a test, and sorting the rows already in memory reorders the answer the server just gave rather than asking it a different question — so the table and the query behind it quietly stop agreeing. The shape that would have been right in both cases — a toast under a provider, an awaited confirmation under another, a re-query through the callback the component already exposes — costs an import and a round trip. The shortcut costs neither, and that is the whole of its appeal. The same goes for a panel made to scroll with one overflow class: it scrolls, so it looks finished, and the browser's own focus-scrolling — which reaches an overflow-hidden frame as readily as a scrollbar — is what moves the frame the first time a hidden input inside it takes focus.",
+    ruleIds: [
+      "no-browser-dialogs",
+      "no-client-sorting-on-a-server-driven-table",
+      "position-scroll-containers",
+    ],
   },
   {
     id: "writes-oversized-files",

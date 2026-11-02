@@ -77,7 +77,7 @@ If your PR is green and nothing merges it, run the check before looking for a to
 
 ## The rules are not advice, they are lint
 
-`/rules` publishes fifteen rules about using this library. They are enforced here too, so the same
+`/rules` publishes sixteen rules about using this library. They are enforced here too, so the same
 messages you would give a consumer are the ones you get:
 
 - **Layout is yours. Appearance is the library's.** Raw `button`, `a`, `input`, `select`,
@@ -106,7 +106,12 @@ messages you would give a consumer are the ones you get:
   that is `DataTable`, which sorts them with the TanStack row model on purpose. The two are named
   for the only question that chooses between them — who owns the query — and they are two
   assemblies of the same parts: `TableShell` draws rows, `TableControls` draws the chrome, and
-  neither mode depends on the other.
+  neither mode depends on the other. And a class list that makes a box scroll (`overflow-auto`,
+  `-x-auto`, `-y-auto`, `-scroll`) carries `relative` (or another position) in the *same string*:
+  the hidden `<input>` inside every Checkbox, Radio and Switch is `position: absolute`, and when it
+  is laid out against a frame above the scroll box, focusing it scrolls the frame — even an
+  `overflow-hidden` one. That warns too. The library's own frames clip with `overflow-clip`, which
+  cannot be scrolled at all.
 
 Each message names its replacement and links to the rule page. If a rule is wrong for a case you
 hit, the answer is a documented exception with a reason — either an `exceptions` entry on the
@@ -221,9 +226,11 @@ small. No route needs a `HydrateFallback`: every one of them is prerendered with
 
 - `bun run lint` is Biome's recommended set *plus* the rules this repo publishes, over `src/**`,
   `scripts/**`, `tests/**` and the root config files — including `src/components/**`. The
-  library source is excepted from nine of the fifteen by the records themselves; what still
-  applies there is the element ban minus `<input>`, the two platform-defaults rules and
-  `no-nested-card`, which the library has no reason to break and so no reason to be excused from. A raw `<button>` in a
+  library source is excepted from nine of the sixteen by the records themselves; what still
+  applies there is the element ban minus `<input>`, the three platform-defaults rules and
+  `no-nested-card`, which the library has no reason to break and so no reason to be excused from.
+  `position-scroll-containers` is the one that was written *because* of the library: an
+  `overflow-auto` box with no position class let a toggle's hidden input scroll the modal frame. A raw `<button>` in a
   library component fails the pre-commit hook like anywhere else. Its
   `biome-ignore lint/a11y/...` comments now land on rules that actually run, which is what let the
   directory back into the file list.

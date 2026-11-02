@@ -113,12 +113,12 @@ const DrawerContent = ({
           {({ state }) => (
             <DrawerRoot
               className={cn(
-                "fixed max-h-full touch-none overflow-hidden border-quebi-hairline bg-quebi-elevated align-middle text-quebi-fg shadow-quebi-float will-change-transform",
+                "fixed max-h-full touch-none overflow-clip border-quebi-hairline bg-quebi-elevated align-middle text-quebi-fg shadow-quebi-float will-change-transform",
                 isFloat && "rounded-(--q-radius-surface) border",
                 side === "top" && (isFloat ? "inset-x-2 top-2" : "inset-x-0 top-0 border-b"),
                 side === "right" &&
                   [
-                    "w-full max-w-xs overflow-y-auto",
+                    "fixed w-full max-w-xs overflow-y-auto",
                     "**:[[slot=header]]:text-start",
                     isFloat ? "inset-y-2 right-2" : "inset-y-0 right-0 h-auto border-l",
                   ].join(" "),
@@ -126,7 +126,7 @@ const DrawerContent = ({
                   (isFloat ? "inset-x-2 bottom-2" : "inset-x-0 bottom-0 border-t"),
                 side === "left" &&
                   [
-                    "w-full max-w-xs overflow-y-auto",
+                    "fixed w-full max-w-xs overflow-y-auto",
                     "**:[[slot=header]]:text-start",
                     isFloat ? "inset-y-2 left-2" : "inset-y-0 left-0 h-auto border-r",
                   ].join(" "),
@@ -183,7 +183,7 @@ const DrawerContent = ({
                 aria-labelledby={ariaLabelledby}
                 role={role}
                 className={cn(
-                  "relative flex flex-col overflow-hidden outline-hidden will-change-auto",
+                  "relative flex flex-col overflow-clip outline-hidden will-change-auto",
                   side === "top" || side === "bottom"
                     ? "mx-auto max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] max-w-lg"
                     : "h-full",
@@ -235,7 +235,7 @@ const DrawerBody = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement
   <div
     slot="body"
     className={cn(
-      "isolate flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-auto px-4 py-1 will-change-scroll",
+      "relative isolate flex max-h-[calc(var(--visual-viewport-height)-var(--visual-viewport-vertical-padding))] flex-col overflow-auto px-4 py-1 will-change-scroll",
       className,
     )}
     {...props}

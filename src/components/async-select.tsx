@@ -333,7 +333,7 @@ export function AsyncSelect<T extends AsyncSelectOption>({
           id={listboxId}
           aria-label={ariaLabel}
           onScroll={handleScroll}
-          className="quebi-scrollbar max-h-72 overflow-y-auto overscroll-contain p-1"
+          className="quebi-scrollbar relative max-h-72 overflow-y-auto overscroll-contain p-1"
         >
           {list.items.length === 0 ? (
             <div className="flex items-center justify-center gap-2 py-6 text-quebi-fg-subtle text-sm">

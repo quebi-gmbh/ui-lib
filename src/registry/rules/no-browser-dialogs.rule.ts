@@ -1,7 +1,7 @@
 import type { RuleMeta } from "./types"
 
 /**
- * Platform defaults, first of two — the dialog the runtime draws for you.
+ * Platform defaults, first of three — the dialog the runtime draws for you.
  *
  * This was the one rule here whose message could not end in an import, and it
  * warned for exactly that reason: `alert()` had `useToast()`, and `confirm()`

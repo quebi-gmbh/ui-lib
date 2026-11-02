@@ -900,8 +900,8 @@ export function DaySchedule({
           isZoomed
             ? cn(
                 isHorizontal
-                  ? "overflow-x-auto overscroll-x-contain"
-                  : "overflow-y-auto overscroll-y-contain",
+                  ? "relative overflow-x-auto overscroll-x-contain"
+                  : "relative overflow-y-auto overscroll-y-contain",
                 // The map replaces the bar rather than sitting next to it — which
                 // is exactly what `quebi-scrollbar-none` is for, so the two
                 // browsers' ways of saying "no bar" are declared in one place and

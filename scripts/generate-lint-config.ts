@@ -135,9 +135,13 @@ export const localScopes: LocalScope[] = [
   },
   {
     includes: ["tests/components/**/*.tsx"],
-    rules: ["no-hardcoded-design-values", "no-appearance-classes-on-layout-elements"],
+    rules: [
+      "no-hardcoded-design-values",
+      "no-appearance-classes-on-layout-elements",
+      "position-scroll-containers",
+    ],
     reason:
-      "A component test asserts what the library draws, and what the library draws is appearance: `toHaveClass(\"after:w-[2px]\")` pins the Tabs indicator, `toContain(\"bg-cyan-500\")` pins a DaySchedule lane colour, a query for `rounded-full border-2` finds a Stepper bullet. Both rules are a class-string match, so they read those assertions as a fixture hand-building a surface — but the string is the component's, quoted to check it, and the records already except src/components/** from both on the argument that the library owns appearance. This is that layer's tests. Scoped to tests/components/: a fixture elsewhere in tests/ renders app-shaped code and is held to both rules like src/routes.",
+      "A component test asserts what the library draws, and what the library draws is appearance: `toHaveClass(\"after:w-[2px]\")` pins the Tabs indicator, `toContain(\"bg-cyan-500\")` pins a DaySchedule lane colour, a query for `rounded-full border-2` finds a Stepper bullet. Both rules are a class-string match, so they read those assertions as a fixture hand-building a surface — but the string is the component's, quoted to check it, and the records already except src/components/** from both on the argument that the library owns appearance. This is that layer's tests. The scroll-container rule is the third class-string match and reads the same assertions the same wrong way — `toContain(\"overflow-y-auto\")` checks that a DaySchedule viewport scrolls, it does not build one — and unlike the other two it is not excused from src/components/**, so the classes being quoted have already been checked where they are written. Scoped to tests/components/: a fixture elsewhere in tests/ renders app-shaped code and is held to all three rules like src/routes.",
   },
   {
     includes: ["src/registry/og-scene.tsx"],

@@ -71,7 +71,7 @@ const WiredByHand = () => {
       <div className="flex gap-2">
         <div
           ref={viewportRef}
-          className="quebi-scrollbar-none min-w-0 flex-1 overflow-y-auto border border-quebi-hairline"
+          className="quebi-scrollbar-none relative min-w-0 flex-1 overflow-y-auto border border-quebi-hairline"
           style={{ height: 260 }}
         >
           <div className="relative" style={{ height: 260 * scale }}>

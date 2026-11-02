@@ -33,7 +33,7 @@ const ListBox = <T extends object>({ className, ...props }: ListBoxProps<T>) => 
     data-slot="list-box"
     className={composeRenderProps(className, (resolved) =>
       cn(
-        "quebi-scrollbar grid max-h-96 w-full min-w-56 scroll-py-1 grid-cols-[auto_1fr] flex-col overflow-y-auto overscroll-contain rounded-quebi-s border border-quebi-hairline bg-quebi-elevated p-1 shadow-quebi-float outline-hidden has-data-[slot=drag-icon]:grid-cols-[auto_auto_1fr] *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
+        "quebi-scrollbar relative grid max-h-96 w-full min-w-56 scroll-py-1 grid-cols-[auto_1fr] flex-col overflow-y-auto overscroll-contain rounded-quebi-s border border-quebi-hairline bg-quebi-elevated p-1 shadow-quebi-float outline-hidden has-data-[slot=drag-icon]:grid-cols-[auto_auto_1fr] *:[[role='group']+[role=group]]:mt-4 *:[[role='group']+[role=separator]]:mt-1",
         resolved,
       ),
     )}

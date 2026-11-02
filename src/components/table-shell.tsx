@@ -1114,7 +1114,7 @@ export function TableShell<T extends RowData>({
         isRefreshing && "opacity-60 transition-opacity",
         // The table element scrolls vertically itself (above); the wrapper only
         // has to keep a wide virtualized table from widening the page.
-        virtualize && "overflow-x-auto overflow-y-hidden",
+        virtualize && "relative overflow-x-auto overflow-y-hidden",
         className,
       )}
     >
@@ -1220,7 +1220,7 @@ export function TableShell<T extends RowData>({
         </Virtualizer>
       ) : height ? (
         <div
-          className="quebi-scrollbar quebi-scrollbar-corners overflow-auto"
+          className="quebi-scrollbar quebi-scrollbar-corners relative overflow-auto"
           style={{ maxHeight: height }}
         >
           {tableElement}

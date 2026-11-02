@@ -42,7 +42,11 @@ export function Radio({ className, children, ...props }: RadioProps) {
     <RadioPrimitive
       {...props}
       className={composeRenderProps(className, (className) =>
-        cn("group block disabled:opacity-50 disabled:cursor-not-allowed", className),
+        // `relative` keeps react-aria's visually hidden <input> (position: absolute)
+        // inside the control. Without it the input is laid out against the nearest
+        // positioned ancestor — a modal frame, say — and focusing it on click
+        // scrolls that frame instead of nothing (task #250).
+        cn("group relative block disabled:opacity-50 disabled:cursor-not-allowed", className),
       )}
     >
       {composeRenderProps(children, (children, { isSelected, isFocusVisible, isInvalid }) => {

@@ -34,7 +34,11 @@ export function Checkbox({ className, children, ...props }: CheckboxProps) {
     <CheckboxPrimitive
       data-slot="control"
       className={composeRenderProps(className, (className) =>
-        cn("group flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed", className),
+        // `relative` keeps react-aria's visually hidden <input> (position: absolute)
+        // inside the control. Without it the input is laid out against the nearest
+        // positioned ancestor — a modal frame, say — and focusing it on click
+        // scrolls that frame instead of nothing (task #250).
+        cn("group relative flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed", className),
       )}
       {...props}
     >

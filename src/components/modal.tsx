@@ -139,7 +139,10 @@ const ModalContent = ({
               : "sm:[--visual-viewport-vertical-padding:32px]",
             // The Dialog inside draws the surface and its hairline edge; the
             // panel adds only the float shadow, so the edge is not drawn twice.
-            "relative overflow-hidden rounded-(--q-radius-surface) bg-quebi-elevated text-quebi-fg shadow-quebi-float",
+            // `overflow-clip`, not `-hidden`: it clips the same way, but a clipped box
+            // is not a scroll container, so nothing focused inside can scroll the
+            // frame out from under its content (task #250).
+            "relative overflow-clip rounded-(--q-radius-surface) bg-quebi-elevated text-quebi-fg shadow-quebi-float",
             sizes[size],
             "entering:slide-in-from-bottom sm:entering:zoom-in-95 sm:entering:slide-in-from-bottom-0 entering:animate-in entering:duration-300 entering:ease-out",
             "exiting:slide-out-to-bottom sm:exiting:zoom-out-95 sm:exiting:slide-out-to-bottom-0 exiting:animate-out exiting:ease-in",
