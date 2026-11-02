@@ -25,6 +25,7 @@
 language js;
 
 or { string(), JsxString() } as $classes where {
+  $classes <: includes "overflow-",
   $classes <: r".*(?:^|[^\w-])overflow-(?:[xy]-)?(?:auto|scroll)(?:$|[^\w-]).*",
   $classes <: not r".*(?:^|[^\w-])(?:relative|absolute|fixed|sticky)(?:$|[^\w-]).*",
   register_diagnostic(

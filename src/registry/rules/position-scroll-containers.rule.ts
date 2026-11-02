@@ -78,9 +78,16 @@ export const positionScrollContainersRule: RuleMeta = {
     // `overflow-x-hidden` is not a scroll container. Neither the library nor
     // this rule bans `overflow-hidden` itself: clipping is not the bug, an
     // unpositioned scroll box is.
+    //
+    // The `includes` comes first and is not decoration: it is a substring test,
+    // and it spares the two regexes almost every string in a file. Without it
+    // the token-edge groups inside an unanchored `.*…*` ran on every string
+    // literal in the repo and doubled `bun run lint` on a two-core CI runner,
+    // which timed out the test that runs it.
     biome: {
       via: "plugin",
       pattern: `or { string(), JsxString() } as $classes where {
+  $classes <: includes "overflow-",
   $classes <: r".*(?:^|[^\\w-])overflow-(?:[xy]-)?(?:auto|scroll)(?:$|[^\\w-]).*",
   $classes <: not r".*(?:^|[^\\w-])(?:relative|absolute|fixed|sticky)(?:$|[^\\w-]).*"`,
     },
