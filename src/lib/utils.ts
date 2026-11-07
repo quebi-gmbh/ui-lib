@@ -62,7 +62,9 @@ const twMerge = extendTailwindMerge(QUEBI_MERGE)
  * `text-quebi-caption text-quebi-fg` would lose one of the two. Components
  * import `tv` from here, never from "tailwind-variants" directly.
  */
-export const tv = createTV({ twMergeConfig: QUEBI_MERGE })
+// tailwind-variants 4 takes the merger itself; `twMergeConfig` moved to
+// its `/config` entry, which would bundle a second tailwind-merge.
+export const tv = createTV({ twMerge })
 
 /**
  * Merge class names with Tailwind-aware conflict resolution.
