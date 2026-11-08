@@ -108,11 +108,13 @@ export const noNestedCardRule: RuleMeta = {
     kind: "lint",
     // The inner Card is what gets reported, because it is the one that has to
     // change. `within` counts the node itself, so a lone <Card> is inside a
-    // Card; what rules that out is `children = $kids ... contains $card` — an
-    // element's children cannot contain the element. The same clause is what
-    // leaves a Card passed as a prop (`footer={<Card />}`) alone: it is inside
-    // the outer element but not inside its children. `contains` reaches any
-    // depth, so a Card two <div>s or a `.map()` below another Card is found.
+    // Card; `$parent <: not $card` rules that out. `contains $card until $open`
+    // is "inside the outer Card's children": the search does not descend into
+    // the outer element's own opening tag, which is what leaves a Card passed
+    // as a prop (`footer={<Card />}`) alone. (Biome 2.6 dropped the
+    // `children` slot of JsxElement that this used to be written with.)
+    // `contains` reaches any depth, so a Card two <div>s or a `.map()` below
+    // another Card is found.
     //
     // No `bubble` on the `within`, and that is load-bearing: `$card` has to be
     // the same variable inside the clause as outside it. Passed in as
@@ -124,12 +126,10 @@ export const noNestedCardRule: RuleMeta = {
   JsxSelfClosingElement(name = $name)
 } as $card where {
   $name <: r"^Card$",
-  $card <: within JsxElement(
-    opening_element = JsxOpeningElement(name = $outer),
-    children = $kids
-  ) where {
-    $outer <: r"^Card$",
-    $kids <: contains $card
+  $card <: within JsxElement(opening_element = $open) as $parent where {
+    $open <: JsxOpeningElement(name = r"^Card$"),
+    $parent <: not $card,
+    $parent <: contains $card until $open
   }`,
     },
     message:

@@ -100,8 +100,11 @@ export const renderFieldTextThroughTheFieldRule: RuleMeta = {
     // A p/span/div rendering field errors with no id for the control's
     // aria-describedby to resolve to. Four parts, each earning its place
     // (tests/forms.test.ts covers all of them):
-    //  - `until JsxElement()` stops the search at the next element, so the
-    //    report lands on the message and not on every wrapper around it;
+    //  - the search runs over the element's expression children and stops at
+    //    the next element (`until and { JsxElement(), not $message }`: not at
+    //    the element itself, where every search starts), so the report lands
+    //    on the message and not on every wrapper around it. (Biome 2.6 dropped
+    //    the `children` slot of JsxElement that this used to be written with.)
     //  - the id guard is what lets the correct version pass;
     //  - the .errors.length guard keeps it off "{errors.length} problems found",
     //    which is a count, not a message;
@@ -123,12 +126,14 @@ export const renderFieldTextThroughTheFieldRule: RuleMeta = {
     //    for a form-level summary already says is not a field error.
     biome: {
       via: "plugin",
-      pattern: `JsxElement(opening_element = $open, children = $children) as $message where {
+      pattern: `JsxElement(opening_element = $open) as $message where {
   $open <: JsxOpeningElement(name = $el, attributes = $attrs),
   $el <: r"^(?:p|span|div)$",
-  $children <: contains \`$field.errors\` until JsxElement(),
-  $field <: r"^(?:[A-Za-z_$][A-Za-z0-9_$]*\\.)*(?:field|fields\\.[A-Za-z0-9_$]+(?:\\.[A-Za-z0-9_$]+)*)$",
-  $children <: not contains \`$field.errors.length\`,
+  $message <: contains JsxExpressionChild() as $child where {
+    $child <: contains \`$field.errors\`,
+    $field <: r"^(?:[A-Za-z_$][A-Za-z0-9_$]*\\.)*(?:field|fields\\.[A-Za-z0-9_$]+(?:\\.[A-Za-z0-9_$]+)*)$"
+  } until and { JsxElement(), not $message },
+  $message <: not contains JsxExpressionChild() as $count where { $count <: contains \`$field.errors.length\` },
   $attrs <: not contains JsxAttribute(name = r"^id$")`,
     },
     message:

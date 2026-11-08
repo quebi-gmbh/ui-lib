@@ -29,12 +29,10 @@ or {
   JsxSelfClosingElement(name = $name)
 } as $card where {
   $name <: r"^Card$",
-  $card <: within JsxElement(
-    opening_element = JsxOpeningElement(name = $outer),
-    children = $kids
-  ) where {
-    $outer <: r"^Card$",
-    $kids <: contains $card
+  $card <: within JsxElement(opening_element = $open) as $parent where {
+    $open <: JsxOpeningElement(name = r"^Card$"),
+    $parent <: not $card,
+    $parent <: contains $card until $open
   },
   register_diagnostic(
     span = $card,
