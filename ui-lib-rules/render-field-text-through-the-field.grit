@@ -26,12 +26,14 @@
 
 language js;
 
-JsxElement(opening_element = $open, children = $children) as $message where {
+JsxElement(opening_element = $open) as $message where {
   $open <: JsxOpeningElement(name = $el, attributes = $attrs),
   $el <: r"^(?:p|span|div)$",
-  $children <: contains `$field.errors` until JsxElement(),
-  $field <: r"^(?:[A-Za-z_$][A-Za-z0-9_$]*\.)*(?:field|fields\.[A-Za-z0-9_$]+(?:\.[A-Za-z0-9_$]+)*)$",
-  $children <: not contains `$field.errors.length`,
+  $message <: contains JsxExpressionChild() as $child where {
+    $child <: contains `$field.errors`,
+    $field <: r"^(?:[A-Za-z_$][A-Za-z0-9_$]*\.)*(?:field|fields\.[A-Za-z0-9_$]+(?:\.[A-Za-z0-9_$]+)*)$"
+  } until and { JsxElement(), not $message },
+  $message <: not contains JsxExpressionChild() as $count where { $count <: contains `$field.errors.length` },
   $attrs <: not contains JsxAttribute(name = r"^id$"),
   register_diagnostic(
     span = $message,
